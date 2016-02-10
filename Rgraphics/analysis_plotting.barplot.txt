@@ -1,0 +1,130 @@
+
+
+samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
+BarcodeFamily <- as.character(commandArgs(trailingOnly = TRUE)[2])
+PDFfilename <- paste(c(samplename, BarcodeFamily, "AmpliconErrorplots.pdf"), collapse="_")
+
+# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
+# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analysis-BOARAT")
+
+
+# Positional Composition plots
+
+calcReferenceFraction <- function(v) { 
+		max(as.numeric(v[3:6]), na.rm=T) / as.numeric(v[7]) 
+		}
+
+calcReferenceFraction.ConsNoSingletons <- function(v) { 
+		bases <- as.numeric(v[3:7])
+		bases[5] <- bases[5] - sum(bases[1:4] == 1, na.rm=T) # Decrement total depth by number of singletons
+		bases[bases == 1] <- NA # Set Singletons to NA
+		max(bases[1:4], na.rm=T) / bases[5]
+		}
+
+		
+posComp.raw <- read.delim(file=paste(c(samplename, ".rawPositionalComposition.txt"), collapse=""), header=F, colClasses=c("factor",rep("numeric", 6)))
+colnames(posComp.raw) <- c("Amplicon", "Position", "A", "C", "T", "G", "Depth")
+# str(posComp.raw)
+posComp.raw$PmajorBase <- apply(posComp.raw, 1, calcReferenceFraction )
+posComp.raw$Perror <- (1 - posComp.raw$PmajorBase)
+posComp.raw$PerrorLog <- log(posComp.raw$Perror, 10)
+# str(posComp.raw)
+
+
+# Load the requested BarcodeFamily consensusPositionalComposition file
+# CPfile <- paste(c(samplename, ".consensusPositionalComposition.bc3.txt"), collapse="")
+CPfile <- paste(c(samplename, ".consensusPositionalComposition.", BarcodeFamily, ".txt"), collapse="")
+posComp.consensus <- read.delim(file=CPfile, header=F, colClasses=c("factor",rep("numeric", 6)))
+
+colnames(posComp.consensus) <- c("Amplicon", "Position", "A", "C", "T", "G", "Depth")
+# str(posComp.consensus.bc10s)
+# posComp.consensus$PmajorBase <- apply(posComp.consensus, 1, calcReferenceFraction )
+posComp.consensus$PmajorBase <- apply(posComp.consensus, 1, calcReferenceFraction.ConsNoSingletons )  # Error rate when singletons are excluded
+posComp.consensus$Perror <- (1 - posComp.consensus$PmajorBase)
+
+# Set a minimum error rate for positions with no errors
+posComp.consensus$isMinError <- ifelse(posComp.consensus$Perror == 0, TRUE, FALSE) # Set a flag (needed later for plotting)
+posComp.consensus$Perror <- ifelse(posComp.consensus$isMinError, (1 / posComp.consensus$Depth), posComp.consensus$Perror) # Set a minimum error rate
+
+posComp.consensus$PerrorLog <- log(posComp.consensus$Perror, 10)
+# posComp.consensus$indexingFactor <- ( posComp.raw$Perror / posComp.consensus$Perror )
+# str(posComp.consensus.bc10s)
+
+
+
+
+library(ggplot2)
+# plot(posComp.raw$Perror, posComp.consensus$Perror)
+# qplot(posComp.raw$Perror, posComp.consensus$Perror, geom="point", log="xy")
+# ggsave(filename="qplot_xyscatterplot.pdf")
+
+# Combine the tables
+colnames(posComp.raw) <- paste(colnames(posComp.raw), "r", sep=".")
+colnames(posComp.consensus) <- paste(colnames(posComp.consensus), "c", sep=".")
+x <- cbind(posComp.raw, posComp.consensus)
+x$correctionFactor <- x$Perror.r / x$Perror.c
+write.table(x, file="positionalCompositionSummary.for_barplots.txt", quote=F, sep="\t")
+# str(x) # Print a summary of plottable variables
+
+
+# Quick demo plots
+#
+pdf(file=PDFfilename)
+
+# Sort by all positions
+x <- x[order(x$PerrorLog.c),]
+plot(x$PerrorLog.c, ylab="-log10 Error Rate", main="All error rates by Position", xlab="Position", 
+	ylim=c(-4.5, -2),  pch=20, cex=0.7,
+	col = ifelse(x$isMinError.c, "grey60", "black")
+	)
+points(x$PerrorLog.r, pch=20, col="darkred", cex=0.7)
+legend("topleft", legend=c("Raw Reads", "Consensus Reads"), fill=c("darkred", "black"))
+
+# Sort within amplicons
+x <- x[order(x$Amplicon.r),]
+for ( a in unique(x$Amplicon.r) ) { x[x$Amplicon.r == a,] <- x[x$Amplicon.r == a,][order(x$PerrorLog.c[x$Amplicon.r == a]),] }
+plot(x$PerrorLog.c, ylab="-log10 Error Rate", main="All error rates by Position, Amplicon", xlab="Position", 
+	ylim=c(-4.5, -2), pch=20, cex=0.7,
+	col = ifelse(x$isMinError.c, "grey60", "black")
+	)
+points(x$PerrorLog.r, pch=20, col="darkred", cex=0.7)
+legend("topleft", legend=c("Raw Reads", "Consensus Reads"), fill=c("darkred", "black"))
+
+# Plot each amplicon seperately
+for ( a in unique(x$Amplicon.r) ) { 
+	x.oneAmp <- x[x$Amplicon.r == a,] 
+	plot(x.oneAmp$PerrorLog.c, ylab="-log10 Error Rate", xlab="Position", 
+		main=paste(c("All error rates by Position, ", a), sep=""),
+		ylim=c(-4.5, -2), pch=20, cex=0.7,
+		col = ifelse(x.oneAmp$isMinError.c, "grey60", "black")
+		)
+	points(x.oneAmp$PerrorLog.r, pch=20, col="darkred", cex=0.7)
+	legend("topleft", legend=c("Raw Reads", "Consensus Reads"), fill=c("darkred", "black"))
+}
+
+
+
+
+
+# ecdf of correction factors
+# plot(ecdf(x$correctionFactor))
+plot(ecdf(log(x$correctionFactor, 10)), ylab="Cumulative Fraction", xlab="Log10 Correction Factor", main="Correction Factors, Consolidated")
+abline(v = median(log(x$correctionFactor, 10)))
+abline(v = 0) 
+summary(x$correctionFactor)
+sum(x$correctionFactor > 10) / length(x$correctionFactor)
+sum(x$correctionFactor < 1) / length(x$correctionFactor)
+
+
+graphics.off()
+
+
+
+
+ 
+ 
+
+ 
+
+
+# SVNID: $Id: analysis_plotting.barplot.txt 284 2015-04-01 22:39:03Z pkrzyzanowski $

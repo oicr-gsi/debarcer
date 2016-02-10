@@ -1,0 +1,1 @@
+generatePositionalCompositionFiles.sh

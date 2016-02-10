@@ -1,0 +1,92 @@
+
+
+
+
+samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
+PDFfilename <- paste(c(samplename, "positionErrorRates_ecdfs.pdf"), collapse="_")
+
+
+# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
+
+
+
+# Positional Composition plots
+
+calcReferenceFraction <- function(v) { 
+		max(as.numeric(v[3:6]), na.rm=T) / as.numeric(v[7]) 
+		}
+
+		
+posComp.raw <- read.delim(file=paste(c(samplename, ".rawPositionalComposition.txt"), collapse=""), header=F, colClasses=c("factor",rep("numeric", 6)))
+# str(posComp.raw)
+posComp.raw$PmajorBase <- apply(posComp.raw, 1, calcReferenceFraction )
+posComp.raw$Perror <- (1 - posComp.raw$PmajorBase)
+# str(posComp.raw)
+
+posComp.consensus <- read.delim(file=paste(c(samplename, ".consensusPositionalComposition.bc3.txt"), collapse=""), header=F, colClasses=c("factor",rep("numeric", 6)))
+# str(posComp.consensus)
+posComp.consensus$PmajorBase <- apply(posComp.consensus, 1, calcReferenceFraction )
+posComp.consensus$Perror <- (1 - posComp.consensus$PmajorBase)
+posComp.consensus$indexingFactor <- ( posComp.raw$Perror / posComp.consensus$Perror )
+# str(posComp.consensus)
+
+
+posComp.consensus.bc10 <- read.delim(file=paste(c(samplename, ".consensusPositionalComposition.bc10.txt"), collapse=""), header=F, colClasses=c("factor",rep("numeric", 6)))
+# str(posComp.consensus.bc10)
+posComp.consensus.bc10$PmajorBase <- apply(posComp.consensus.bc10, 1, calcReferenceFraction )
+posComp.consensus.bc10$Perror <- (1 - posComp.consensus.bc10$PmajorBase)
+posComp.consensus.bc10$indexingFactor <- ( posComp.raw$Perror / posComp.consensus.bc10$Perror )
+# str(posComp.consensus.bc10)
+
+
+posComp.consensus.bc20 <- read.delim(file=paste(c(samplename, ".consensusPositionalComposition.bc20.txt"), collapse=""), header=F, colClasses=c("factor",rep("numeric", 6)))
+# str(posComp.consensus.bc20)
+posComp.consensus.bc20$PmajorBase <- apply(posComp.consensus.bc20, 1, calcReferenceFraction )
+posComp.consensus.bc20$Perror <- (1 - posComp.consensus.bc20$PmajorBase)
+posComp.consensus.bc20$indexingFactor <- ( posComp.raw$Perror / posComp.consensus.bc20$Perror )
+# str(posComp.consensus.bc20)
+
+
+posComp.consensus.bc30 <- read.delim(file=paste(c(samplename, ".consensusPositionalComposition.bc30.txt"), collapse=""), header=F, colClasses=c("factor",rep("numeric", 6)))
+# str(posComp.consensus.bc30)
+posComp.consensus.bc30$PmajorBase <- apply(posComp.consensus.bc30, 1, calcReferenceFraction )
+posComp.consensus.bc30$Perror <- (1 - posComp.consensus.bc30$PmajorBase)
+posComp.consensus.bc30$indexingFactor <- ( posComp.raw$Perror / posComp.consensus.bc30$Perror )
+# str(posComp.consensus.bc30)
+
+
+
+# library(ggplot2)
+# plot(posComp.raw$Perror, posComp.consensus$Perror)
+# qplot(posComp.raw$Perror, posComp.consensus$Perror, geom="point", log="xy")
+
+
+x <- cbind(posComp.raw, posComp.consensus, posComp.consensus.bc10,  posComp.consensus.bc20,  posComp.consensus.bc30)
+write.table(x, file="positionalCompositionSummary.txt", quote=F, sep="\t")
+
+#str(x)
+
+# M.errs <- x[,c("Perror", "Perror.1", "Perror.2", "Perror.3", "Perror.4")]
+M.errs <- x[,c(9,18,28,38,48)]
+colnames(M.errs) <- c("Perror.raw", "Perror.Cons3", "Perror.Cons10", "Perror.Cons20", "Perror.Cons30")
+
+pdf(file=PDFfilename)
+M.errs2 <- log(M.errs + 10e-5, 10)
+plot(ecdf(M.errs2$Perror.raw), main="Position Error Rates", xlim=c(-5,-1))
+plot(ecdf(M.errs2$Perror.Cons3), add=T, col="blue", pch=20)
+plot(ecdf(M.errs2$Perror.Cons10), add=T, col="green", pch=20)
+plot(ecdf(M.errs2$Perror.Cons20), add=T, col="red", pch=20)
+plot(ecdf(M.errs2$Perror.Cons30), add=T, col="purple", pch=20)
+legend("bottomright", legend=c("Raw", "Consensus3", "Consensus10","Consensus20","Consensus30"), fill=c("black", "blue", "green", "red", "purple"))
+graphics.off()
+
+
+
+
+ 
+ 
+
+ 
+
+
+# SVNID: $Id: analysis_plotting.R.txt 317 2015-06-09 17:27:57Z pkrzyzanowski $

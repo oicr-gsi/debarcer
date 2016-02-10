@@ -1,0 +1,37 @@
+#%Module1.0
+##
+## Debarcer modulefile
+##
+## $Id$
+##
+proc ModulesHelp {} {
+	global version
+
+	puts stderr "\tThis module will set up the Decarcer environment\n"
+	puts stderr "\tDebarcer\n"
+	puts stderr "\tVersion $version\n"
+}
+
+# for Tcl script use only
+set     version     0.1.0
+
+module-whatis	"Debarcer tools version $version"
+
+# load samtools (as per the runDebarcer.sh script)
+if { ! [ is-loaded samtools ] } {
+	module load samtools/0.1.19
+}
+
+
+# setup a toplevel directory
+#set	sw_root	/oicr/local/analysis/sw
+#set	app_dir	${sw_root}/defuse/defuse-0.6.1/tools
+set	app_dir	/u/pkrzyzanowski/projects/EAC/molecular_barcoding/svn/0.1.0/BOARAT
+prepend-path	PATH	${app_dir}
+setenv BHOME ${app_dir}
+
+# Welcome Banner
+if { [ module-info mode load ] } {
+	        puts stderr  [ concat "Welcome to " [module-info name]]
+}
+
