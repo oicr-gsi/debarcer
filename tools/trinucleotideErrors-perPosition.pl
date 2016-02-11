@@ -189,5 +189,3 @@ sub outputTrinucRates {
 	
 }
 	
-
-# SVNID: $Id$

@@ -104,7 +104,3 @@ exit;
 
 #########################
 
-
-
-
-# SVNID: $Id: classifyOffTargetReads.pl 385 2016-02-09 19:03:22Z pkrzyzanowski $

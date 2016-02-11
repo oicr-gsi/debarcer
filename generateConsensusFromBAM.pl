@@ -508,4 +508,3 @@ below which positions aren't reported in the cons<depth>.txt files
 	return %depthCuts;
 }
 
-# SVNID: $Id: generateConsensusFromBAM.pl 387 2016-02-09 22:08:35Z pkrzyzanowski $

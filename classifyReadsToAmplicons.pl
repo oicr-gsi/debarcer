@@ -301,6 +301,3 @@ print STDERR "--- classifyReadsToAmplicons.pl Complete ---\n";
 exit;
 
 #########################
-
-
-# SVNID: $Id: classifyReadsToAmplicons.pl 319 2015-06-10 14:06:04Z pkrzyzanowski $

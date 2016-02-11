@@ -47,4 +47,3 @@ foreach my $amplicon ( keys %Amps ) {
 
 exit;
 	
-# SVNID: $Id: reportCommonConsensusSeqs.pl 224 2014-07-23 13:02:06Z pkrzyzanowski $
