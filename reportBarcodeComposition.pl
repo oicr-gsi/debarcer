@@ -57,5 +57,3 @@ foreach my $d ( 1..500 ) {
 
 exit;
 
-
-# SVNID: $Id: reportBarcodeComposition.pl 324 2015-06-10 18:10:33Z pkrzyzanowski $

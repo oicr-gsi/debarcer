@@ -57,5 +57,3 @@ foreach my $psl ( sort { $primerSets{$a} <=> $primerSets{$b} } keys %primerSets 
 
 exit;
 
-
-# SVNID: $Id: reportOffTargetAmpliconComposition.pl 268 2015-01-07 21:02:39Z pkrzyzanowski $

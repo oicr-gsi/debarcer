@@ -112,4 +112,3 @@ print STDERR "Total Amplicons (Including UNKNOWN if in raw mode) $AllAmpCount\n"
 
 print STDERR "--- reportCommonPositionBases.pl Complete ---\n";
 exit;
-	# SVNID: $Id: reportCommonPositionBases.pl 319 2015-06-10 14:06:04Z pkrzyzanowski $

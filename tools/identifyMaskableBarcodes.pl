@@ -101,4 +101,3 @@ sub getAmplicons {
 	return @amps;
 }
 
-# SVNID: $Id: $
