@@ -52,7 +52,9 @@ AMPLICON_TABLE="$BHOME/amplicon_tables/all_amplicons.txt";  # This is default
 # Some bwa mem files for future development
 #
 if [ ! -e $SAMPLENAME.$FASTQGZ.sorted.bam.touch ]; then
-	touch $SAMPLENAME.$FASTQGZ.sorted.bam.touch
+	echo "[Debarcer `date`] Running runBWA.sh" >> $MAINLOG;
+	$BHOME/tools/runBWA.sh $FASTQGZ $SAMPLENAME;
+	touch $SAMPLENAME.$FASTQGZ.sorted.bam.touch;
 fi
 echo "[Debarcer `date`] Raw reads mapped by bwa: `samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | wc -l`" >> $MAINLOG
 # samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
