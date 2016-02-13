@@ -44,7 +44,7 @@ fi
 echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 
 CONFIG_FILE="$BHOME/config_files/debarcer.conf"
-### Need to dump the config file to the log here ###
+### FIXME Need to dump the config file to the log here ###
 
 # Optional setting
 AMPLICON_TABLE="$BHOME/amplicon_tables/all_amplicons.txt";  # This is default
