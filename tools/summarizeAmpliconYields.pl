@@ -11,6 +11,9 @@ Summarize amplicon yields from information in the DeBarcEr.log file.
 
 use Getopt::Long;
 use Data::Dumper;
+use FindBin;
+use lib "$FindBin::Bin/../";
+use Debarcer;
 
 my %args = ();
 GetOptions(
@@ -20,6 +23,11 @@ GetOptions(
 
 my $raw_reads = '';
 my %a_data = ();  # Amplicon data structure
+
+my %ampliconInfo = ();
+&Debarcer::loadAmpliconData("$FindBin::Bin/../amplicon_tables/all_amplicons.txt", \%ampliconInfo); 
+my %positionAliases = &Debarcer::getPositionAliases("$FindBin::Bin/../amplicon_tables/all_amplicons.txt");
+print Dumper(\%positionAliases);
 
 while (<>) {
 
@@ -64,7 +72,8 @@ print "\n";
 
 print "All amplicons identified:\n";
 foreach my $a ( sort keys %a_data ) {
-	printf( "%s\t%d\n", $a, $a_data{$a}->{1}{"coverage"});
+	my $ampliconName = ( exists $positionAliases{$a} ) ? $positionAliases{$a} : "-";
+	printf( "%s\t%s\t%d\n", $a, $ampliconName, $a_data{$a}->{1}{"coverage"});
 }
 	
 # print Dumper(\%a_data);
