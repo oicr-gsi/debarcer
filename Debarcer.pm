@@ -30,7 +30,6 @@ sub identifyAmpliconBam {
 	$ampliconSeq = &revcom($ampliconSeq) if ( $isRev );
 	$whichAmplicon = "";  # The amplicon name will become the genomic start of the CIGAR alignment
 	
-	
 	return ($whichAmplicon, $bc_position, $barcode, $ampliconSeq);	
 } # End sub identifyAmpliconBAM
 
@@ -55,10 +54,10 @@ sub identifyAmplicon {
 			my $revMatch = &fuzzyMatch2($rev, $seq);
 			next unless ( $revMatch );
 			
-				$seq =~ m/$fwdMatch([ACTG]+?)$revMatch/g;
-				$ampliconSeq = $1;
-				$whichAmplicon = $ampID;
-				last;
+			$seq =~ m/$fwdMatch([ACTG]+?)$revMatch/g;
+			$ampliconSeq = $1;
+			$whichAmplicon = $ampID;
+			last;
 			
 		} else {
 
@@ -147,7 +146,6 @@ sub fuzzyMatch2 {
 			}
 		}
 		
-		
 	}
 	
 	return 0;
@@ -171,7 +169,7 @@ sub computeConsensus {
 		
 		push(@cons, $commonBase);		
 		
-		}
+	}
 	
 	my $c = join("", @cons);
 	
@@ -195,18 +193,19 @@ sub computeConsensusFromSeqarray {
 	my %CIGARs = ();
 	foreach my $set ( @{$aref} ) {
 		$CIGARs{$set->[2]}++;
-		}
+	}
 	
 	if ( (scalar keys %CIGARs > 1) & 0 ) {  # <--- Set 0/1 for printing.
 		printf("NSeqs=%d NumCIGARs=%s\n", $n_seqs, scalar keys %CIGARs);
 		# print Dumper($aref);
 		# print Dumper(\%CIGARs);
 		# <STDIN>;  # Show data and Pause
-		}
+	}
 
 	# Build the consensus
 	#
 	# Build the Position Weight Matrix
+	# FIXME: break the body of this loop into a couple of subroutines to improve readability
 	my %readData = ();
 	foreach my $set ( @{$aref} ) {
 		my ($seq, $quals, $CIGAR) = @$set;
@@ -229,9 +228,9 @@ sub computeConsensusFromSeqarray {
 					substr($seq, $D_index, 0, "-" x $1);
 					print "$seq\n" if ($test);
 					# <STDIN>;
-					}
 				}
 			}
+		}
 		
 		# Remove first 25-26 bases consisting of barcode and hairpin primer
 		# This helps reduce reported errors in the long form consensus seqs.
@@ -245,7 +244,7 @@ sub computeConsensusFromSeqarray {
 			$readData{$i}->{$bases[$i]}++;	
 		}
 	}
-	#
+
 	# print Dumper(\%readData); # For testing
 	# Identify common bases.
 	my @cons = '';
@@ -262,11 +261,11 @@ sub computeConsensusFromSeqarray {
 		if ( scalar @bases > 1 ) {
 			$commonBaseLong = join("", ("[", %{$readData{$i}}, "]"));
 		} else {
-			$commonBaseLong = $bases[0]; # Should be only one base!
+			$commonBaseLong = $bases[0]; # Should be only one base! FIXME: put in an assertion to check this...
 		}
 		push(@consLong, $commonBaseLong);		
 				
-		}
+	}
 	
 	my $c = join("", @cons);
 	my $cLong = join("", @consLong);
@@ -322,7 +321,7 @@ sub computeConsensus_strict {
 				
 		push(@cons, $commonBase);		
 		
-		}
+	}
 	
 	my $c = join("", @cons);
 	
@@ -356,7 +355,7 @@ sub computeConsensusLong {
 		
 		push(@cons, $commonBase);		
 		
-		}
+	}
 	
 	my $c = join("", @cons);
 	
@@ -380,25 +379,23 @@ sub identifyOffTarget {
 		if ( $seq =~ m/$fwd/g ) {
 			$primerList .= "$ampID" . '_F|' . pos($seq) . ';';
 			pos($seq) = 0;
-			}
+		}
 		if ( $seq =~ m/$rev/g ) {
 			$primerList .= "$ampID" . '_R|' . pos($seq) . ';';
 			pos($seq) = 0;
-			}
+		}
 	
-		# Now do the antisense
+		# Now do the antisense FIXME: what were we doing before??
 		$fwd = &revcom($fwd);
 		if ( $seq =~ m/$fwd/g ) {
 			$primerList .= "as$ampID" . '_F|' . pos($seq) . ';';
 			pos($seq) = 0;
-			}
+		}
 		$rev = &revcom($rev);
 		if ( $seq =~ m/$rev/g ) {
 			$primerList .= "as$ampID" . '_R|' . pos($seq) . ';';
 			pos($seq) = 0;
-			}
-	
-	
+		}
 	}
 	
 	# print "\n$seq\nAMPLICON= $whichAmplicon $barcode $primerList\n";
@@ -409,7 +406,7 @@ sub identifyOffTarget {
 
 
 sub listPrimers {
-	my $aref = shift @_;  # This is @ampliconsFile
+	my $aref = shift @_;  # This is @ampliconsFile - FIXME what is, the input parameter(s)?
 	
 	my %p = ();
 	foreach ( @$aref ) {
@@ -417,34 +414,34 @@ sub listPrimers {
 		my ( $n, $id, $f, $r, $seq, $note ) = split /\t/;
 		$r = &revcom($r);
 		@{$p{$id}} = ( $f, $r );
-		}
+	}
 			
 	return %p;
 }
 
 sub ampliconLengths {
-	my $aref = shift @_;  # This is @ampliconsFile
+	my $aref = shift @_;  # This is @ampliconsFile - FIXME same question as above
 	
 	my %h = ();
 	foreach ( @$aref ) {
 		next if (/^#/); chomp;
 		my ( $n, $id, $f, $r, $seq, $note ) = split /\t/;
 		$h{$id} = length($seq);
-		}
+	}
 	return %h;
 	
 } # end sub listAmplicons
 
 
 sub ampliconSequences {
-	my $aref = shift @_;  # This is @ampliconsFile
+	my $aref = shift @_;  # This is @ampliconsFile - FIXME same as above
 	
 	my %h = ();
 	foreach ( @$aref ) {
 		next if (/^#/); chomp;
 		my ( $n, $id, $f, $r, $seq, $note ) = split /\t/;
 		$h{$id} = $seq;
-		}
+	}
 	return %h;
 	
 } # end sub ampliconSequences
@@ -496,7 +493,9 @@ Deprecated.  Use extractBarcodeQuick instead.
 =cut
 
 	my $seq = shift @_;
-	
+
+	# FIXME whoa - what happened here? should the barcodeSuffix be in the config file or command-line parameters?
+
 	# my $barcodeSuffix = "ATGGGAAAGAGTGTCC"; # From Hair-Seq deck June 18th.
 	# my $barcodeSuffix = "ATGGGAAAGAGTGTGG"; # From Hair-Seq deck June 18th.
 	# my $barcodeSuffix = "ATGGGAAAGAGTGT[G{2}|C{2}]"; # From Hair-Seq deck June 18th.
@@ -544,7 +543,7 @@ sub detectAmplicons {
 	for (my $i = 0; $i < $plexity; $i++) {
 		print STDERR "$validKeys[$i]\n";
 		$validAmplicons{$validKeys[$i]}++;
-		}
+	}
 		
 	return %validAmplicons;
 		
@@ -663,7 +662,4 @@ sub revcom {
 	return $seq;
 } # end sub revcom
 
-
-
-# SVNID: $Id: Debarcer.pm 342 2015-07-21 14:59:43Z pkrzyzanowski $:
 1;
