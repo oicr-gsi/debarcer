@@ -27,7 +27,6 @@ my %a_data = ();  # Amplicon data structure
 my %ampliconInfo = ();
 &Debarcer::loadAmpliconData("$FindBin::Bin/../amplicon_tables/all_amplicons.txt", \%ampliconInfo); 
 my %positionAliases = &Debarcer::getPositionAliases("$FindBin::Bin/../amplicon_tables/all_amplicons.txt");
-print Dumper(\%positionAliases);
 
 while (<>) {
 
