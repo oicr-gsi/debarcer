@@ -32,13 +32,15 @@ use Debarcer;
 use Getopt::Long;
 use lib '/u/pkrzyzanowski/perl/usr/local/lib/perl/5.10.1/';
 use Data::Dumper;
-use Bio::DB::Sam;  # This needs to load on a compute node.
+use Bio::DB::Sam;
 use JSON::XS qw(encode_json decode_json);
+use Config::General qw(ParseConfig);
 
 print STDERR "--- Starting generateConsensusFromBAM.pl ---\n";
 my %args = ();
 
 GetOptions(
+	"config=s" => \$args{"configfile"},
 	"bam=s" => \$args{"bam"},
 	"sampleID=s" => \$args{"sampleID"},
 	"consDepth=s" => \$args{"consDepth"},  # Amplicon table filename
@@ -50,9 +52,14 @@ GetOptions(
 	"test" => \$args{"test"}   # test mode
 );
 
+# Section to load parameters from a Config::Simple format file
+die "Need to supply a config file.\n" unless ( $args{"configfile"} );
+my %config = ParseConfig($args{"configfile"});
+my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
+$nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
+
 $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
-my $nSites = ( $args{"plexity"} ) ? $args{"plexity"} : 5;  # Proxy for plexity
 print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
 
 my $uidDepthFile = $args{"sampleID"} . ".UIDdepths.txt.gz";
