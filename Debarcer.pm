@@ -9,6 +9,19 @@ our %primerSets = ();
 
 use lib "$ENV{'BHOME'}/utils/Text-Levenshtein-0.12/lib/";
 use Text::Levenshtein qw(distance);
+use Data::Dumper; # for logging calls
+use Log::Log4perl; # see http://search.cpan.org/~mschilli/Log-Log4perl-1.46/lib/Log/Log4perl.pm
+
+# FIXME: is this where the logging config file should go?
+Log::Log4perl::init_and_watch("$ENV{'BHOME'}/config/log4perl.conf");
+
+# $BHOME/config/log4perl.conf looks something like this:
+#--------------------
+# log4perl.logger.debarcer            = DEBUG, FileAppender
+# log4perl.appender.FileAppender      = Log::Log4perl::Appender::File
+# log4perl.appender.FileAppender.filename = debarcer.log
+# log4perl.appender.FileAppender.layout   = Log::Log4perl::Layout::SimpleLayout
+#--------------------
 
 sub identifyAmpliconBam {
 	my $seq = shift @_;
@@ -24,7 +37,6 @@ sub identifyAmpliconBam {
 	# Report unknown if there was no valid barcode
 	return ($whichAmplicon, $bc_position, $barcode, $ampliconSeq) unless ( $bc_position == 0 );	
 	
-	
 	$CIGAR =~ m/^(\d+)S.+(\d+)S$/g;
 	$ampliconSeq = substr($seq, $1, length($seq) - $1 - $2);
 	$ampliconSeq = &revcom($ampliconSeq) if ( $isRev );
@@ -39,6 +51,8 @@ sub identifyAmplicon {
 
 	my $fuzzyMatching = 1;
 	# my $fuzzyMatching = 0;
+
+	my $logger = Log::Log4perl->get_logger('debarcer');
 	
 	my ($bc_position, $barcode) = &extractBarcode($seq);
 	my $whichAmplicon = 'UNKNOWN';
@@ -71,8 +85,8 @@ sub identifyAmplicon {
 		}
 			
 	}
-	
-	# print "\n$seq\nAMPLICON= $whichAmplicon $barcode $ampliconSeq\n";
+
+	$logger->debug("\n$seq\nAMPLICON= $whichAmplicon $barcode $ampliconSeq\n");
 	
 	return ($whichAmplicon, $bc_position, $barcode, $ampliconSeq);	
 }
@@ -87,6 +101,7 @@ allowing up to one mismatch
 
 sub fuzzyMatch {
 	my ($query, $subject) = @_;
+	my $logger = Log::Log4perl->get_logger('debarcer');
 
 	return $query if ( $subject =~ /$query/ ); # If an exact match exists return the original query
 
@@ -98,7 +113,7 @@ sub fuzzyMatch {
 		for ( my $i = 0; $i < length($query); $i++ ) {
 			my $newQuery = $query;
 			substr($newQuery, $i, 1) = '[ACGT]?'; # match 1 bp deletion or a substitution at position $i
-			# print STDERR "$query $newQuery\n";
+			$logger->debug("$query $newQuery\n");
 			return $newQuery if ( $subject =~ /$newQuery/ ); # If the regex matches return the regex in newQuery
 		}
 		
@@ -119,6 +134,7 @@ allowing up to two mismatches
 
 sub fuzzyMatch2 {
 	my ($query, $subject) = @_;
+	my $logger = Log::Log4perl->get_logger('debarcer');
 
 	return $query if ( $subject =~ /$query/ ); # If an exact match exists return the original query
 
@@ -131,7 +147,7 @@ sub fuzzyMatch2 {
 		for ( my $i = 0; $i < length($query); $i++ ) {
 			my $newQuery = $query;
 			substr($newQuery, $i, 1) = '[ACGT]?'; # match 1 bp deletion or a substitution at position $i
-			# print STDERR "$query $newQuery\n";
+			$logger->debug("$query $newQuery\n");
 			return $newQuery if ( $subject =~ /$newQuery/ ); # If the regex matches return the regex in newQuery
 		}
 		
@@ -141,7 +157,7 @@ sub fuzzyMatch2 {
 				my $newQuery = $query;
 				substr($newQuery, $i, 1) = '.'; # match 1bp wildcard at position $i
 				substr($newQuery, $j, 1) = '.'; # match 1bp wildcard at position $j
-				# print STDERR "$query $newQuery\n";
+				$logger->debug("$query $newQuery\n");
 				return $newQuery if ( $subject =~ /$newQuery/ ); # If the regex matches return the regex in newQuery
 			}
 		}
@@ -154,15 +170,14 @@ sub fuzzyMatch2 {
 
 
 sub computeConsensus {
-
 	my $href = shift @_;
 	my @cons = '';
+	my $logger = Log::Log4perl->get_logger('debarcer');
 	
-	# use Data::Dumper;
-	# print Dumper($href);
+	$logger->debug(Dumper($href));
 
 	foreach my $i ( sort {$a <=> $b} keys %$href ) {
-		# print "$i " . $href->{$i} . "\n";
+		$logger->debug("$i " . $href->{$i} . "\n");
 		
 		# lazy but works
 		my $commonBase = (sort {$href->{$i}{$b} <=> $href->{$i}{$a}} keys %{$href->{$i}})[0];
@@ -179,15 +194,12 @@ sub computeConsensus {
 
 
 sub computeConsensusFromSeqarray {
-
 	my $aref = shift @_;
 	my $n_seqs = scalar @{$aref};
 	my @cons = '';
+	my $logger = Log::Log4perl->get_logger('debarcer');
 		
-	
-	use Data::Dumper;
-	# print Dumper($aref); 
-	# <STDIN>;  # Show data and Pause
+	$logger->debug(Dumper($aref));
 	
 	# Determine most likely length of sequence
 	my %CIGARs = ();
@@ -197,9 +209,8 @@ sub computeConsensusFromSeqarray {
 	
 	if ( (scalar keys %CIGARs > 1) & 0 ) {  # <--- Set 0/1 for printing.
 		printf("NSeqs=%d NumCIGARs=%s\n", $n_seqs, scalar keys %CIGARs);
-		# print Dumper($aref);
-		# print Dumper(\%CIGARs);
-		# <STDIN>;  # Show data and Pause
+		$logger->debug(Dumper($aref));
+		$logger->debug(Dumper(\%CIGARs));
 	}
 
 	# Build the consensus
@@ -209,9 +220,9 @@ sub computeConsensusFromSeqarray {
 	my %readData = ();
 	foreach my $set ( @{$aref} ) {
 		my ($seq, $quals, $CIGAR) = @$set;
-		
-		# print join("\t", @$set) . "\n";
-		# print Dumper($aref);
+
+		$logger->debug(join("\t", @$set) . "\n");
+		$logger->debug(Dumper($aref));
 			
 		# Correct the seq for indels reported by the CIGAR string
 		next if ( $CIGAR =~ /\dI/ ); # Skip insertions
@@ -220,6 +231,7 @@ sub computeConsensusFromSeqarray {
 			while ( $CIGAR =~ m/([0-9]+)([MIDNSHPX=])/g ) {
 				$D_index += $1;
 				if ( $2 eq "D" ) {
+					# FIXME: not sure what you want logged here
 					my $test = 0;
 					print "\n\nEditing using $CIGAR:\n" if ($test);
 					print "$seq\n" if ($test);
@@ -245,7 +257,8 @@ sub computeConsensusFromSeqarray {
 		}
 	}
 
-	# print Dumper(\%readData); # For testing
+	$logger->debug(Dumper(\%readData));
+
 	# Identify common bases.
 	my @cons = '';
 	my @consLong = '';
@@ -277,15 +290,14 @@ sub computeConsensusFromSeqarray {
 
 
 sub computeConsensus_strict {
-
 	my $href = shift @_;
 	my $ampliconID = shift @_;
 	
 	my $ampliconSeq = $ampSeq{$ampliconID};
 	my @cons = '';
+	my $logger = Log::Log4perl->get_logger('debarcer');
 	
-	# use Data::Dumper;
-	# print Dumper($href);
+	$logger->debug(Dumper($href));
 
 	foreach my $i ( sort {$a <=> $b} keys %$href ) {
 				
@@ -300,7 +312,8 @@ sub computeConsensus_strict {
 			# calculate the total depth of reads at this position
 			my $depth = 0;
 			foreach ( values %{$href->{$i}} ) { $depth += $_; }
-			
+
+			# FIXME: convert this to logging call
 			# printf ("Before Switch altBase? %s %s %s %s %s\n", $ampliconID, $i, $refBase, join("", ("[", %{$href->{$i}}, "]")), $depth);
 					
 			# scan through bases and assign altBase to a value if an
@@ -308,6 +321,7 @@ sub computeConsensus_strict {
 			foreach my $base ( @bases ) {
 				if ( $base ne $refBase ) {
 					my $altBaseFreq = ( $href->{$i}{$base} / $depth );
+					# FIXME: convert this to logging call
 					# printf ("Switch altBase? %s %s %s %s\n", $refBase, $base, $depth, $altBaseFreq);
 					$altBase = $base if ( $altBaseFreq > 0.8 );
 				}
@@ -332,15 +346,14 @@ sub computeConsensus_strict {
 
 
 sub computeConsensusLong {
-
 	my $href = shift @_;
 	my @cons = '';
+	my $logger = Log::Log4perl->get_logger('debarcer');
 	
-	# use Data::Dumper;
-	# print Dumper($href);
+	$logger->debug(Dumper($href));
 
 	foreach my $i ( sort {$a <=> $b} keys %$href ) {
-		# print "$i " . $href->{$i} . "\n";
+		$logger->debug("$i " . $href->{$i} . "\n");
 		
 		# lazy but works
 		# my $commonBase = (sort {$href->{$i}{$a} <=> $href->{$i}{$b}} keys %{$href->{$i}})[0];
@@ -366,6 +379,7 @@ sub computeConsensusLong {
 
 sub identifyOffTarget {
 	my $seq = shift @_;
+	my $logger = Log::Log4perl->get_logger('debarcer');
 
 	my ($bc_position, $barcode) = &extractBarcode($seq);
 	my $whichAmplicon = 'UNKNOWN';
@@ -398,7 +412,7 @@ sub identifyOffTarget {
 		}
 	}
 	
-	# print "\n$seq\nAMPLICON= $whichAmplicon $barcode $primerList\n";
+	$logger->debug("\n$seq\nAMPLICON= $whichAmplicon $barcode $primerList\n");
 	
 	return ($whichAmplicon, $bc_position, $barcode, $primerList);	
 }
@@ -458,6 +472,7 @@ depending on whether the alignment is on the forward or reverse strand.
 If the UID is not present at position 0, no attempt to salvage the read is made.
 
 =cut
+	my $logger = Log::Log4perl->get_logger('debarcer');
 
 	my $seq = shift @_;
 	my $revseq = &revcom($seq);
@@ -478,7 +493,7 @@ If the UID is not present at position 0, no attempt to salvage the read is made.
 		$isRev = 1;
 	}
 	
-	# print "$bc_pos $barcode $isRev $seq\n";
+	$logger->debug("$bc_pos $barcode $isRev $seq\n");
 	return ($bc_pos, $barcode, $isRev);
 	
 } # End sub extractBarcodeQuick
@@ -493,6 +508,7 @@ Deprecated.  Use extractBarcodeQuick instead.
 =cut
 
 	my $seq = shift @_;
+	my $logger = Log::Log4perl->get_logger('debarcer');
 
 	# FIXME whoa - what happened here? should the barcodeSuffix be in the config file or command-line parameters?
 
@@ -508,9 +524,11 @@ Deprecated.  Use extractBarcodeQuick instead.
 	
 	$seq =~ m/($bcSuffixMatch)/g;
 	my $bc_pos = (pos $seq) - 12 - length($1); # pos - barcodeLength - barcodeSuffixLength
-#	print STDERR "BarcodeSuffixFound: $1 $bc_pos\n";	
+	# FIXME: is this a logging call or an error report?
+	# print STDERR "BarcodeSuffixFound: $1 $bc_pos\n";
 	my $barcode = substr( $seq, $bc_pos, 12);
 	
+	# FIXME: is this a logging call or an error report?
 	# print "\nSEQ= $seq\n" . "BCS= $barcodeSuffix\n" . "BCP= $bc_pos\n" . "BC=  $barcode\n";
 	
 	return ($bc_pos, $barcode);
@@ -521,6 +539,7 @@ sub detectAmplicons {
 
 	my ($bamfile, $plexity) = @_;
 	my %allAmplicons = ();
+	my $logger = Log::Log4perl->get_logger('debarcer');
 	
 	open BAM, "samtools view -s 0.01 -X $bamfile | cut -f 3,4 |"; # Sample a fraction of the file.
 	while (<BAM>) {
@@ -539,9 +558,9 @@ sub detectAmplicons {
 	
 	my @validKeys = sort { $allAmplicons{$b} <=> $allAmplicons{$a} } keys %allAmplicons;
 	my %validAmplicons = ();
-	print STDERR "Setting valid amplicons based on plexity = $plexity:\n";
+	$logger->info("Setting valid amplicons based on plexity = $plexity:\n");
 	for (my $i = 0; $i < $plexity; $i++) {
-		print STDERR "$validKeys[$i]\n";
+		$logger->info("$validKeys[$i]\n");
 		$validAmplicons{$validKeys[$i]}++;
 	}
 		
@@ -562,6 +581,7 @@ Read in a table of position-amplicon names useful for making output more human-r
 
 	my $infile = shift @_;  # Usually ./amplicon_tables/all_amplicons.txt
 	my %h = ();
+	my $logger = Log::Log4perl->get_logger('debarcer');
 	
 	my @header = '';
 	
