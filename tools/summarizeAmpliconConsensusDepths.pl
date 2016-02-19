@@ -5,8 +5,8 @@ use strict;
 
 Summarize per amplicon consensus depths from consensus sequences gzip file
 
-	gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
-	
+  gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
+
 =cut
 
 use Getopt::Long;
@@ -29,8 +29,8 @@ while (<>) {
 
 	foreach my $d ( @depths ) {
 		$a_data{$amplicon}->{$d}++ if ( $barcode_count >= $d );
-		}
-				
+	}
+
 }
 
 print $args{"sampleID"} . " Consensus Reads at Depth:\t" . join("\t", @depths) . "\n";
@@ -43,4 +43,5 @@ foreach my $amplicon ( keys %a_data ) {
 }
 
 print "\n";
+
 exit;

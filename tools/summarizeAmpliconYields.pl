@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 use strict;
 
-=pod 
+=pod
 
 Summarize amplicon yields from information in the DeBarcEr.log file.
 
-	cat DeBarcEr.log | perl summarizeAmpliconYields.pl
+  cat DeBarcEr.log | perl summarizeAmpliconYields.pl
 
 =cut
 
@@ -44,9 +44,7 @@ while (<>) {
 		$a_data{"Aggregate"}->{$depth}{"coverage"} += $coverage;
 	
 	}
-	
-	
-		
+
 }
 
 print "Debarcer Summary Statistics for:\t" . $args{"sampleID"} . "\n\n";
@@ -74,5 +72,6 @@ foreach my $a ( sort keys %a_data ) {
 	my $ampliconName = ( exists $positionAliases{$a} ) ? $positionAliases{$a} : "-";
 	printf( "%s\t%s\t%d\n", $a, $ampliconName, $a_data{$a}->{1}{"coverage"});
 }
-	
-# print Dumper(\%a_data);
+
+exit;
+
