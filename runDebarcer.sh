@@ -1,7 +1,5 @@
 
 
-# Generate the files used by R analysis script to summarize in a table.
-#
 
 if [[ $# -ne 2 ]]; then
 	echo "
@@ -12,8 +10,6 @@ Need to specify a filename and samplename as arguments.
 	exit 1;
 fi
 
-# . /etc/profile
-# module load samtools/0.1.19;
 
 # Uncomment to just regenerate the graphics
 # . generateGraphicalReports.sh $BHOME $2; exit;  # $2 is samplename
@@ -27,9 +23,6 @@ echo "Running in: `pwd`" >> $MAINLOG
 
 mkdir -p sge # For child process log files
 
-# FASTQGZ="/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/fastqs/Sample_01.R1.fastq.gz"
-# FASTQGZ="/u/pkrzyzanowski/projects/EAC/molecular_barcoding/data/genomics.med.tufts.edu/140721-070_Jennifer_Jackson/sequence_data_illumina/Unaligned/Sample_6.R1.fastq.gz"
-# SAMPLENAME="Sample01"
 FASTQGZ=$1
 SAMPLENAME=$2
 
@@ -59,30 +52,10 @@ fi
 echo "[Debarcer `date`] Raw reads mapped by bwa: `samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | wc -l`" >> $MAINLOG
 # samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
 
-# EXPERIMENTAL SECTION, STILL IN DEVELOPMENT
+# FIXME EXPERIMENTAL SECTION, STILL IN DEVELOPMENT
 # time $BHOME/generateDownsamplingEstimates.sh $SAMPLENAME.$FASTQGZ.sorted.bam $SAMPLENAME
 #
 # End test section
-
-
-# This section is not needed anymore since the raw counts are 
-# always output in the generateConsensusFromBAM.pl tables
-#
-# echo "[Debarcer `date`] Running $SAMPLENAME Raw" >> $MAINLOG
-# if [ ! -e $SAMPLENAME.rawPositionalComposition.txt.touch ]; then
-# time perl $BHOME/classifyReadsToAmplicons.pl --bamfile=$SAMPLENAME.$FASTQGZ.sorted.bam --dump --ampTable=$AMPLICON_TABLE 2> >(tee -a $MAINLOG >&2) | 
-    # perl $BHOME/reportCommonPositionBases.pl --raw > $SAMPLENAME.rawPositionalComposition.txt 2> >(tee -a $MAINLOG >&2)
-	# touch $SAMPLENAME.rawPositionalComposition.txt.touch
-# fi
-
-# This was supposed to generate a consensus sequences file
-#    
-# echo "[Debarcer `date`] Running $SAMPLENAME Consensus Sequences" >> $MAINLOG
-# if [ ! -e $SAMPLENAME.consensusSequences.txt.touch ]; then
-# time perl $BHOME/classifyReadsToAmplicons.pl --bamfile=$SAMPLENAME.$FASTQGZ.sorted.bam --consensus --strictCons --ampTable=$AMPLICON_TABLE |  # Set strict setting always
-	# cat | gzip > $SAMPLENAME.consensusSequences.txt.gz
-	# touch $SAMPLENAME.consensusSequences.txt.touch
-# fi
 
 
 echo "[Debarcer `date`] Generating UID depth file for $SAMPLENAME" >> $MAINLOG
@@ -123,7 +96,7 @@ cat DbC*.log >> $MAINLOG  # Aggregate the log files generated above.
 rm DbC*.log
 
 
-# generate nucleotide context error tables
+# FIXME generate nucleotide context error tables
 # Still in development
 #
 # perl $BHOME/tools/trinucleotideErrors.pl --infile=$SAMPLENAME.rawPositionalComposition.txt > $SAMPLENAME.trinucErrors.raw.txt
@@ -150,8 +123,3 @@ cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl --sampleID=$SAMPLENA
 
 gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 
-# Package up results files
-tar cvfz $SAMPLENAME.DebarcerResultsPackage.$STARTTIME.tar.gz `find . -name \"*pdf\" -o -name \"*.log\" -o -name \"*Statistics*\" -o -name \"*PositionComposition*\"`
-
-
-# SVNID: $Id: generatePositionalCompositionFiles.sh 387 2016-02-09 22:08:35Z pkrzyzanowski $
