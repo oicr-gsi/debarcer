@@ -1,0 +1,166 @@
+\documentclass{article}
+\title{Debarcer: De-Barcoding and Error Correction}
+\author{Paul Krzyzanowski\\
+  Ontario Institute for Cancer Research\\
+  Toronto, Ontario, Canada\\
+  \texttt{paul.krzyzanowski@oicr.on.ca}}
+
+% To regenerate the pdf, run pdflatex on a cluster node...
+
+\overfullrule=2cm
+\usepackage[letterpaper, margin=1in]{geometry}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+
+
+
+\begin{document}
+\maketitle
+
+
+\section{Location}
+
+	You can export or checkout the whole package from the following location:
+
+\begin{verbatim}
+  $ svn export file:///u/pkrzyzanowski/svn/repo/projects \ 
+	/EAC/molecular_barcoding/trunk/debarcer .
+  $ svn co file:///u/pkrzyzanowski/svn/repo/projects \ 
+	/EAC/molecular_barcoding/trunk/debarcer .
+\end{verbatim}
+  
+
+\section{Using Debarcer}
+
+\subsection{Requirements}
+
+\begin{itemize}
+  \item Ensure you have 16G memory available
+  \item Note that a bam file for the current alignment will be generated in your work directory
+  \item Currently, you need to have access to 'qsub' through SGE or OGS
+\end{itemize}
+
+\subsection{Running the package}
+
+To generate a set of positional compositions, you can export 
+Debarcer, set the BHOME environment variable, and run it like so:
+
+\begin{verbatim}
+  $ svn export file:///u/pkrzyzanowski/svn/repo/projects/EAC/ \ 
+	molecular_barcoding/trunk/Debarcer .
+  $ export BHOME $PWD
+  $ runDebarcer.sh [FASTQFILE] [SAMPLENAME]
+\end{verbatim}
+
+Or if you're set up for using modules, you can load debarcer from anywhere and run it:
+
+\begin{verbatim}
+  $ module load debarcer/trunk
+  $ runDebarcer.sh Sample_6.R1.fastq.gz Sample6
+\end{verbatim}
+
+Using modules is handy for running via qsub:
+
+\begin{verbatim}
+  qsub -N "BCS" -b y -cwd -l h_vmem=16g "module load debarcer/trunk; \ 
+	runDebarcer.sh Sample_6.R1.fastq.gz Sample6"
+\end{verbatim}
+
+To run a test set of data, do:
+
+\begin{verbatim}
+  # ls /u/pkrzyzanowski/projects/simsenseq/debarcer/demodata # for more test files
+  cp /u/pkrzyzanowski/projects/simsenseq/debarcer/demodata/Sample_9297.R1.fastq.gz .
+  module load debarcer/trunk
+  runDebarcer.sh Sample_9297.R1.fastq.gz Sample_9297
+\end{verbatim}
+
+Sample\_9297 is a 1-plex and Sample\_9292 is a 5-plex.
+
+
+To help automate this whole process, there is a script in the 
+debarcer 'tools' directory that will create a results hierarchy based on a
+directory of fastq files and write the appropriate run scripts:
+
+\begin{verbatim}
+  mkdir -p ResultsRoot\fastqs
+  cd ResultsRoot\fastqs
+  find [location of the the fastq files] -name "*fastq.gz" -exec ln -s {} \;
+  cd ..
+  svn export file:///u/pkrzyzanowski/svn/repo/projects/EAC/ \ 
+	molecular_barcoding/trunk/debarcer/tools/populateWorkDirectory.pl
+  # Make any necessary changes to populateWorkDirectory.pl
+  perl populateWorkDirectory.pl ./fastqs
+  # Setup any debarcer.conf files in the results directories, if needed
+  ./relaunchAllDebarcers.sh
+\end{verbatim}
+
+
+
+\section{Workflow}
+
+% from http://www.texample.net/tikz/examples/simple-flow-chart/
+% Define block styles
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em]
+
+\begin{center}    
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+    \node [block] (align) {Perform bwa alignment};
+    \node [cloud, left of=align] (fastq) {.fastq};
+    \node [cloud, below of=align, node distance=3cm] (bam) {.bam};
+    \node [block, below of=bam, node distance=3cm] (consensusY) {Generate consensus Y sequences from BAM};
+    \node [block, left of=consensusY, node distance=3cm] (consensusX) {Generate consensus X sequences from BAM};
+    \node [block, right of=consensusY, node distance=3cm] (consensusZ) {Generate consensus Z sequences from BAM};
+    \node [block, below of=consensusY, node distance=3cm] (aggregate) {Aggregate Results};
+    \node [block, below of=aggregate, node distance=3cm] (graphics) {Generate R graphics};
+    % Draw edges
+    \path [line] (fastq) -- (align);
+    \path [line] (align) -- (bam);
+    \path [line] (bam) -- (consensusX);
+    \path [line] (bam) -- (consensusY);
+    \path [line] (bam) -- (consensusZ);
+    \path [line] (consensusX) -- (aggregate);
+    \path [line] (consensusY) -- (aggregate);
+    \path [line] (consensusZ) -- (aggregate);
+    \path [line] (aggregate) -- (graphics);
+    
+\end{tikzpicture}
+\end{center}
+
+\section{Output}
+
+The output contains several different types of files.
+
+Package results files with a tar command that wraps up the files found by:
+
+\begin{verbatim}
+	find . -name *.pdf -o -name "*bamPositionComposition*" -o \
+	-name "*UID*" -o -name "*SummaryStatistics.txt" -o -name "*log"
+\end{verbatim}
+
+i.e.
+
+\begin{verbatim}
+	tar cvfz results_file_name.tar.gz `[find command goes in backticks]`
+\end{verbatim}
+
+
+\section{Miscellaneous}
+
+Requirements:  Consensus calling script needs at least 16G memory.
+
+\subsection{Revisions}
+
+0.2.0:  July 27, 2015.  Svn Revision: 347.  
+
+\end{document}
+
+% SVNID: $Id: README.tex 388 2016-02-09 22:17:32Z pkrzyzanowski $
