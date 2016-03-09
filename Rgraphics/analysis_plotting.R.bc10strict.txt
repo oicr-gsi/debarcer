@@ -58,14 +58,3 @@ plot(ecdf(M.errs2$Perror.Cons10), add=T, col="blue")
 plot(ecdf(M.errs2$Perror.Cons10s), add=T, col="green")
 legend("bottomright", legend=c("Raw", "Consensus10","Consensus10s"), fill=c("black", "blue", "green"))
 graphics.off()
-
-
-
-
- 
- 
-
- 
-
-
-# SVNID: $Id: analysis_plotting.R.bc10strict.txt 283 2015-04-01 13:42:59Z pkrzyzanowski $

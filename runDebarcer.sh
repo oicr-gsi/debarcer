@@ -14,11 +14,11 @@ fi
 # Uncomment to just regenerate the graphics
 # . generateGraphicalReports.sh $BHOME $2; exit;  # $2 is samplename
 
-SVNID="$Id: generatePositionalCompositionFiles.sh 387 2016-02-09 22:08:35Z pkrzyzanowski $"
+VERSIONID="0.2.0b"
 STARTTIME=$(date +"%Y%m%d-%H%M%S")
 MAINLOG="DeBarcEr."$STARTTIME".log"
 echo "[Debarcer `date`] : Logfile timestamp: $STARTTIME" > $MAINLOG
-echo "Running Debarcer version $SVNID" >> $MAINLOG
+echo "Running Debarcer version $VERSIONID" >> $MAINLOG
 echo "Running in: `pwd`" >> $MAINLOG
 
 mkdir -p sge # For child process log files

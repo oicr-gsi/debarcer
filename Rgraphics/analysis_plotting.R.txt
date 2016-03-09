@@ -79,14 +79,3 @@ plot(ecdf(M.errs2$Perror.Cons20), add=T, col="red", pch=20)
 plot(ecdf(M.errs2$Perror.Cons30), add=T, col="purple", pch=20)
 legend("bottomright", legend=c("Raw", "Consensus3", "Consensus10","Consensus20","Consensus30"), fill=c("black", "blue", "green", "red", "purple"))
 graphics.off()
-
-
-
-
- 
- 
-
- 
-
-
-# SVNID: $Id: analysis_plotting.R.txt 317 2015-06-09 17:27:57Z pkrzyzanowski $

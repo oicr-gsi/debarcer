@@ -36,6 +36,3 @@ Rscript $BHOME/Rgraphics/bam_analysis.ErrorBarplots.txt $SAMPLENAME cons30 # Nee
 Rscript $BHOME/Rgraphics/UID_depth_plotting.R.txt $SAMPLENAME
 Rscript $BHOME/Rgraphics/UID_depth_plotting.perAmplicon.R.txt $SAMPLENAME  # Generate PDF with many plots of UID/depth distributions, per amplicon
 # Rscript $BHOME/Rgraphics/consensus_reads.perAmplicon.CDFbyCutoff.R $SAMPLENAME  # Generate curves of consensus read counts across a range of minimum depths
-
-
-# SVNID: $Id: generateGraphicalReports.sh 346 2015-07-27 14:05:36Z pkrzyzanowski $

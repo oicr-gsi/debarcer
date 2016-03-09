@@ -25,11 +25,3 @@ plot(UIDdata$PercReadsAtDepth, type="l", xlab="Barcode Family Depth", ylab="Dens
 title(paste(samplename, "Reads/UID Density"))
 
 graphics.off()
-
-
-
- 
- 
-
-
-# SVNID: $Id: UID_depth_plotting.R.txt 239 2014-10-24 20:11:04Z pkrzyzanowski $
