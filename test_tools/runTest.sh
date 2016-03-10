@@ -22,6 +22,6 @@ then
 	ln -s ../test_tools/Sample_Test.R1.fastq.gz
 	echo "Running Debarcer in "`pwd`
 	
-	runDebarcer.sh Sample_Test.R1.fastq.gz Sample_Test
+	runDebarcer.sh -r -f Sample_Test.R1.fastq.gz -n Sample_Test
 	
 fi	
