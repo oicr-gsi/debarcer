@@ -62,9 +62,9 @@ $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
 print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
 
-my $uidDepthFile = $args{"sampleID"} . ".UIDdepths.txt.gz";
+my $uidDepthFile = "./tables/" . $args{"sampleID"} . ".UIDdepths.txt.gz";
 open UIDDEPTHFILE, "| gzip -c > $uidDepthFile";
-my $ConsensusFile = $args{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
+my $ConsensusFile = "./tables/" . $args{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
 open CONSENSUSFILE, "| gzip -c > $ConsensusFile";
 
 # %Debarcer::primerSets = &Debarcer::listPrimers(\@ampliconsFile);

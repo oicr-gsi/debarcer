@@ -1,18 +1,65 @@
+#!/bin/bash
 
+# Debarcer
+#
+# This is the main run script for the Debarcer pipeline
+# 
+# Debarcer aligns, demultiplexes and analyzes barcoded
+# NGS sequencing data in the form of fastq files, and
+# will generate reports in the directory from which
+# it is run.
+#
+# For more information, see the README files in the
+# docs directory.
+#
+# Author: Paul Krzyzanowski
+# Email:  paul.krzyzanowski@oicr.on.ca
+# (c) 2014-2016
 
+FASTQGZ=''
+SAMPLENAME=''
 
-if [[ $# -ne 2 ]]; then
-	echo "
-Need to specify a filename and samplename as arguments.
-	
-	Usage: runDebarcer.sh <infile.fastq.gz> <SampleName>
-	";
-	exit 1;
+while getopts ":gruf:n:" opt; do
+	case $opt in
+		u)
+				echo "
+Need to specify a run mode, filename and samplename as arguments.
+
+	Usage: runDebarcer.sh [-u|-g|-r] -f <infile.fastq.gz> -n <SampleName> 
+";
+			exit 1;
+			;;
+		r)
+			echo "Running debarcer..."; >&2
+			;;
+		g)
+			ONLYGRAPHICS=1
+			;;
+		f)
+			FASTQGZ=$OPTARG;
+			;;
+		n)
+			SAMPLENAME=$OPTARG;
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument." >&2
+			exit 1;
+			;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			echo "Try runDebarcer.sh -u for usage";
+			exit;
+			;;
+	esac
+done
+
+# Generate graphics only
+if [[ $ONLYGRAPHICS ]]; then
+	echo "Debarcer: Generating graphics only." >&2
+	. generateGraphicalReports.sh $BHOME $SAMPLENAME; 
+	exit;
 fi
 
-
-# Uncomment to just regenerate the graphics
-# . generateGraphicalReports.sh $BHOME $2; exit;  # $2 is samplename
 
 VERSIONID="0.2.0b"
 STARTTIME=$(date +"%Y%m%d-%H%M%S")
@@ -22,9 +69,9 @@ echo "Running Debarcer version $VERSIONID" >> $MAINLOG
 echo "Running in: `pwd`" >> $MAINLOG
 
 mkdir -p sge # For child process log files
+mkdir -p tables
+mkdir -p figures
 
-FASTQGZ=$1
-SAMPLENAME=$2
 
 # Test added so that $BHOME can be set as an environment variable to allow for use of exported copies
 # in analysis directories
@@ -59,12 +106,12 @@ echo "[Debarcer `date`] Raw reads mapped by bwa: `samtools view $SAMPLENAME.$FAS
 
 
 echo "[Debarcer `date`] Generating UID depth file for $SAMPLENAME" >> $MAINLOG
-rm -f $SAMPLENAME.barcode_mask # Remove the mask file prior to identifying masked barcodes
+rm -f ./tables/$SAMPLENAME.barcode_mask # Remove the mask file prior to identifying masked barcodes
 time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --config=$CONFIG_FILE --justUIDdepth 2> >(tee -a $MAINLOG >&2)
 
 # Creation of a barcode masking script goes here.
 echo "[Debarcer `date`] Creating barcode mask file" >> $MAINLOG
-gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMaskableBarcodes.pl > $SAMPLENAME.barcode_mask
+gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMaskableBarcodes.pl > ./tables/$SAMPLENAME.barcode_mask
 #
 # Comment: subsequent runs of generateConsensusFromBAM.pl will use the mask file
 # to regenerate the UID.depths file, without the masked barcodes.
@@ -72,23 +119,23 @@ gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMaskableBarco
 
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=1" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC1$SAMPLENAME -l h_vmem=16G -e DbC1$SAMPLENAME.log -o DbC1$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=1 --config=$CONFIG_FILE > $SAMPLENAME.bamPositionComposition.cons1.txt"
+qsub -N DbC1$SAMPLENAME -l h_vmem=16G -e DbC1$SAMPLENAME.log -o DbC1$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=1 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons1.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=3" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC3$SAMPLENAME -l h_vmem=16G -e DbC3$SAMPLENAME.log -o DbC3$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=3 --config=$CONFIG_FILE > $SAMPLENAME.bamPositionComposition.cons3.txt"
+qsub -N DbC3$SAMPLENAME -l h_vmem=16G -e DbC3$SAMPLENAME.log -o DbC3$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=3 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons3.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=10" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC10$SAMPLENAME -l h_vmem=16G -e DbC10$SAMPLENAME.log -o DbC10$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=10 --config=$CONFIG_FILE > $SAMPLENAME.bamPositionComposition.cons10.txt"
+qsub -N DbC10$SAMPLENAME -l h_vmem=16G -e DbC10$SAMPLENAME.log -o DbC10$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=10 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons10.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=20" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC20$SAMPLENAME -l h_vmem=16G -e DbC20$SAMPLENAME.log -o DbC20$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=20 --config=$CONFIG_FILE > $SAMPLENAME.bamPositionComposition.cons20.txt"
+qsub -N DbC20$SAMPLENAME -l h_vmem=16G -e DbC20$SAMPLENAME.log -o DbC20$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=20 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons20.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=30" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC30$SAMPLENAME -l h_vmem=16G -e DbC30$SAMPLENAME.log -o DbC30$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=30 --config=$CONFIG_FILE > $SAMPLENAME.bamPositionComposition.cons30.txt"
+qsub -N DbC30$SAMPLENAME -l h_vmem=16G -e DbC30$SAMPLENAME.log -o DbC30$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=30 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons30.txt"
 
 qsub -N "AggregateDebarcers" -hold_jid DbC1$SAMPLENAME,DbC3$SAMPLENAME,DbC10$SAMPLENAME,DbC20$SAMPLENAME,DbC30$SAMPLENAME -sync y -cwd -b y -e ./sge -o ./sge "sleep 1"
 
@@ -108,18 +155,19 @@ rm DbC*.log
  
 
 echo "[Debarcer `date`] Running $SAMPLENAME Barcode Distribution Report" >> $MAINLOG # Approx 1 minute runtime
-if [ ! -e $SAMPLENAME.barcodeComposition.txt.touch ]; then
-time gunzip -c $SAMPLENAME.UIDdepths.txt.gz |
-	perl $BHOME/reportBarcodeComposition.pl > $SAMPLENAME.barcodeComposition.txt
-	touch $SAMPLENAME.barcodeComposition.txt.touch
+if [ ! -e ./tables/$SAMPLENAME.barcodeComposition.txt.touch ]; then
+time gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz |
+	perl $BHOME/reportBarcodeComposition.pl > ./tables/$SAMPLENAME.barcodeComposition.txt
+	touch ./tables/SAMPLENAME.barcodeComposition.txt.touch
 fi
 
 # Generate the graphics.
-. generateGraphicalReports.sh $BHOME $2;
+. generateGraphicalReports.sh $BHOME $SAMPLENAME;
 
 
-# Generate summary statistics file
+# Generate summary statistics files
+# These should stay in the root results directory
 cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl --sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
-
-gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
+gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | 
+	perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 
