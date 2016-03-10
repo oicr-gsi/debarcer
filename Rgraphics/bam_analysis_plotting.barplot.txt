@@ -94,14 +94,3 @@ for ( a in unique(x$Alias) ) {
 
 
 graphics.off()
-
-
-
-
- 
- 
-
- 
-
-
-# SVNID: $Id: bam_analysis_plotting.barplot.txt 346 2015-07-27 14:05:36Z pkrzyzanowski $

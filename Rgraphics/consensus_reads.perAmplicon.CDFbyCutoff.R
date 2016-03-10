@@ -26,7 +26,3 @@ g <- ggplot(M.cdf, aes(x=d, y=Freq, colour=Var1))
 g <- g + geom_line() + scale_y_log10() + scale_x_log10()
 g <- g + labs(x = "Family Depth Cutoff", y = "n Consensus Sequences", title = "Consensus", colour = "Amplicon")
 ggsave(plot = g, filename=PDFfilename)
-
-
-
-# SVNID: $Id: consensus_reads.perAmplicon.CDFbyCutoff.R 319 2015-06-10 14:06:04Z pkrzyzanowski $

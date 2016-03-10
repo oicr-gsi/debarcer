@@ -66,11 +66,3 @@ for ( id in unique(M$Amplicon) ) {
 # title(paste(samplename, "Reads/UID Density"))
 
 graphics.off()
-
-
-
- 
- 
-
-
-# SVNID: $Id: UID_depth_plotting.perAmplicon.R.txt 319 2015-06-10 14:06:04Z pkrzyzanowski $
