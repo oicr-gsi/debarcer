@@ -9,8 +9,7 @@ SAMPLENAME=$2
 # Plotting functions
 module load R/3.1.0
 
-Rscript $BHOME/Rgraphics/analysis_plotting.R.txt $SAMPLENAME  # For ecdfs
-# Rscript $BHOME/Rgraphics/analysis_plotting.barplot.txt $SAMPLENAME bc3 # Need to supply the suffix for a consensusPositionalComposition.???.txt file
+# Rscript $BHOME/Rgraphics/analysis_plotting.R.txt $SAMPLENAME  # For ecdfs, FIXME
 
 # Generate the error rate dotplots
 Rscript $BHOME/Rgraphics/bam_analysis_plotting.barplot.txt $SAMPLENAME cons3 # Need to supply the suffix for a bamPositionComposition.???.txt file

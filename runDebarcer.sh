@@ -16,19 +16,50 @@
 # Email:  paul.krzyzanowski@oicr.on.ca
 # (c) 2014-2016
 
+FASTQGZ=''
+SAMPLENAME=''
 
-if [[ $# -ne 2 ]]; then
-	echo "
-Need to specify a filename and samplename as arguments.
-	
-	Usage: runDebarcer.sh <infile.fastq.gz> <SampleName>
-	";
-	exit 1;
+while getopts ":gruf:n:" opt; do
+	case $opt in
+		u)
+				echo "
+Need to specify a run mode, filename and samplename as arguments.
+
+	Usage: runDebarcer.sh [-u|-g|-r] -f <infile.fastq.gz> -n <SampleName> 
+";
+			exit 1;
+			;;
+		r)
+			echo "Running debarcer..."; >&2
+			;;
+		g)
+			ONLYGRAPHICS=1
+			;;
+		f)
+			FASTQGZ=$OPTARG;
+			;;
+		n)
+			SAMPLENAME=$OPTARG;
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument." >&2
+			exit 1;
+			;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			echo "Try runDebarcer.sh -u for usage";
+			exit;
+			;;
+	esac
+done
+
+# Generate graphics only
+if [[ $ONLYGRAPHICS ]]; then
+	echo "Debarcer: Generating graphics only." >&2
+	. generateGraphicalReports.sh $BHOME $SAMPLENAME; 
+	exit;
 fi
 
-
-# Uncomment to just regenerate the graphics
-# . generateGraphicalReports.sh $BHOME $2; exit;  # $2 is samplename
 
 VERSIONID="0.2.0b"
 STARTTIME=$(date +"%Y%m%d-%H%M%S")
@@ -41,8 +72,6 @@ mkdir -p sge # For child process log files
 mkdir -p tables
 mkdir -p figures
 
-FASTQGZ=$1
-SAMPLENAME=$2
 
 # Test added so that $BHOME can be set as an environment variable to allow for use of exported copies
 # in analysis directories
@@ -133,7 +162,7 @@ time gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz |
 fi
 
 # Generate the graphics.
-. generateGraphicalReports.sh $BHOME $2;
+. generateGraphicalReports.sh $BHOME $SAMPLENAME;
 
 
 # Generate summary statistics files
