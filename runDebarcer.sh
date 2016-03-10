@@ -1,4 +1,20 @@
+#!/bin/bash
 
+# Debarcer
+#
+# This is the main run script for the Debarcer pipeline
+# 
+# Debarcer aligns, demultiplexes and analyzes barcoded
+# NGS sequencing data in the form of fastq files, and
+# will generate reports in the directory from which
+# it is run.
+#
+# For more information, see the README files in the
+# docs directory.
+#
+# Author: Paul Krzyzanowski
+# Email:  paul.krzyzanowski@oicr.on.ca
+# (c) 2014-2016
 
 
 if [[ $# -ne 2 ]]; then
