@@ -77,8 +77,8 @@ mkdir -p figures
 # in analysis directories
 # This is set by the module file from ./utils/modulefiles/debarcer/ when the module is loaded
 if [ ! "$BHOME" ]; then
-	echo "You need to set the $BHOME environment variable to the debarcer location.";
-	echo "If modules are being used, do 'module load debarcer'";
+	echo 'You need to set the $BHOME environment variable to the debarcer location.';
+	echo 'If modules are being used, do "module load debarcer"';
 	exit 1;	
 fi
 echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
