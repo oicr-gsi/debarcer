@@ -3,6 +3,7 @@
 
 samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 PDFfilename <- paste(c(samplename, "UID_Family_Depths.byAmplicon.pdf"), collapse="_")
+PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
 # setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
 # setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analysis-BOARAT")
@@ -11,7 +12,7 @@ PDFfilename <- paste(c(samplename, "UID_Family_Depths.byAmplicon.pdf"), collapse
 # UID Depth Composition plots
 
 
-UIDdata <- read.delim(file=paste(c(samplename, ".UIDdepths.txt.gz"), collapse=""), header=F, 
+UIDdata <- read.delim(file=paste(c("./tables/", samplename, ".UIDdepths.txt.gz"), collapse=""), header=F, 
 	colClasses=c("factor", "character", "numeric"))
 colnames(UIDdata) <- c("Amplicon", "Barcode", "Depth")
 
@@ -66,11 +67,3 @@ for ( id in unique(M$Amplicon) ) {
 # title(paste(samplename, "Reads/UID Density"))
 
 graphics.off()
-
-
-
- 
- 
-
-
-# SVNID: $Id: UID_depth_plotting.perAmplicon.R.txt 319 2015-06-10 14:06:04Z pkrzyzanowski $

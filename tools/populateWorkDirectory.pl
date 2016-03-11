@@ -22,6 +22,11 @@ use File::Basename;
 my $fastq_source = shift @ARGV or die "\nNeed to provide a directory with fastq.gz files to process...\n\n";
 my @fastqs = `ls $fastq_source/*_R1_001.fastq.gz`;
 
+my $module_version = "dev";
+&GetOptions(
+	"module=s" => $module_version
+);
+
 
 open RELAUNCHSCRIPT, ">relaunchAllDebarcers.sh";
 print RELAUNCHSCRIPT "#!/bin/bash\n\n";
@@ -40,7 +45,7 @@ foreach my $fastq ( @fastqs ) {
 	system("ln -s ../../$fastq results/$samplename/$basefile");
 
 	open LAUNCHSCRIPT, ">results/$samplename/launchDebarcer.sh";
-	print LAUNCHSCRIPT "qsub -N \"Dbarc_$samplename\" -l h_vmem=32G -cwd -b y \"module load debarcer/trunk; runDebarcer.sh $basefile $samplename\"";
+	print LAUNCHSCRIPT "qsub -N \"Dbarc_$samplename\" -l h_vmem=32G -cwd -b y \"module load debarcer/$module_version; runDebarcer.sh $basefile $samplename\"";
 	close LAUNCHSCRIPT;
 	
 	open CONFIGSCRIPT, ">results/$samplename/debarcer.conf";

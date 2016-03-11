@@ -39,4 +39,3 @@ For testing, export the Boarat directory to the environment
   export DEBARCER='/u/pkrzyzanowski/projects/EAC/molecular_barcoding/svn/trunk/Debarcer'
 
 
-SVNID: $Id: README.txt 387 2016-02-09 22:08:35Z pkrzyzanowski $

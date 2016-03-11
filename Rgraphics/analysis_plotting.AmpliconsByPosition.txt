@@ -105,12 +105,3 @@ for ( a in unique(x$Amplicon.r) ) {
 graphics.off()
 
 
-
-
- 
- 
-
- 
-
-
-# SVNID: $Id: analysis_plotting.AmpliconsByPosition.txt 284 2015-04-01 22:39:03Z pkrzyzanowski $

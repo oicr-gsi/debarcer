@@ -3,14 +3,14 @@
 
 samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 PDFfilename <- paste(c(samplename, "UID_Family_Depths.pdf"), collapse="_")
+PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
 # setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
 # setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analysis-BOARAT")
 
-
 # UID Depth Composition plots
 
-UIDdata <- read.delim(file=paste(c(samplename, ".barcodeComposition.txt"), collapse=""), header=T, colClasses=rep("numeric", 7))
+UIDdata <- read.delim(file=paste(c("./tables/", samplename, ".barcodeComposition.txt"), collapse=""), header=T, colClasses=rep("numeric", 7))
 
 # library(ggplot2)
 # plot(posComp.raw$Perror, posComp.consensus$Perror)
@@ -25,11 +25,3 @@ plot(UIDdata$PercReadsAtDepth, type="l", xlab="Barcode Family Depth", ylab="Dens
 title(paste(samplename, "Reads/UID Density"))
 
 graphics.off()
-
-
-
- 
- 
-
-
-# SVNID: $Id: UID_depth_plotting.R.txt 239 2014-10-24 20:11:04Z pkrzyzanowski $
