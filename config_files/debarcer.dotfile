@@ -9,7 +9,7 @@ BWAROOT="/oicr/local/analysis/src/bwa/bwa-0.7.12"
 HG19="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/bwa/0.6.2/hg19_random.fa"
 
 NPROCS=1 # Default
-# NPROCS=`grep processor /proc/cpuinfo | wc -l` # For cluster nodes [FIXME] there is a better way to do this
+# NPROCS=`nprocs` # [FIXME] For cluster nodes should be a way to select the number of slots allocated to your job
 
 export SAMTOOLSROOT
 
