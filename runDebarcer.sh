@@ -19,15 +19,28 @@
 FASTQGZ=''
 SAMPLENAME=''
 
-while getopts ":gruf:n:" opt; do
-	case $opt in
-		u)
-				echo "
+
+usage()
+{
+	echo "
 Need to specify a run mode, filename and samplename as arguments.
 
 	Usage: runDebarcer.sh [-u|-g|-r] -f <infile.fastq.gz> -n <SampleName> 
 ";
-			exit 1;
+}
+
+# Check for any options being passed
+if [[ ! $1 ]]; then
+	usage;
+	echo "Error! No options were passed!";
+	exit;
+fi
+
+while getopts ":gruf:n:" opt; do
+	case $opt in
+		u)
+			usage;
+			exit ;1;
 			;;
 		r)
 			echo "Running debarcer..."; >&2
@@ -52,6 +65,7 @@ Need to specify a run mode, filename and samplename as arguments.
 			;;
 	esac
 done
+
 
 # Generate graphics only
 if [[ $ONLYGRAPHICS ]]; then
