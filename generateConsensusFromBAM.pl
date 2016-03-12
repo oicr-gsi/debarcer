@@ -281,8 +281,10 @@ sub identifyFamilySites {
 	my $inBam = shift @_;
 	my $nSites = shift @_;
 	my %familySites = ();
-	
-	my @allSites = `samtools view -s 0.1 $inBam | cut -f 3,4`;
+
+	print STDERR $ENV{"SAMTOOLSROOT"}."\n";
+	my $SAMTOOLSBINARY = $ENV{"SAMTOOLSROOT"}."/bin/samtools";
+	my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4`;
 	foreach my $site ( @allSites ) { chomp $site; $site =~ s/\t/:/; $familySites{$site}++; }
 	my @goodSites = (sort { $familySites{$b} <=> $familySites{$a} } keys %familySites);
 	@goodSites = @goodSites[0..$nSites];  # Take the top n-1

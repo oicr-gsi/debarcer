@@ -3,9 +3,6 @@
 echo 'Sourcing ~/.debarcer'
 source ~/.debarcer
 
-SAMBIN="$SAMTOOLSROOT/bin"
-BWABIN="$BWAROOT"
-
 FASTQ=$1
 SAMPLENAME=$2
 echo "Running bwa/0.7.12 on Sample $SAMPLENAME using fastq: $FASTQ";
