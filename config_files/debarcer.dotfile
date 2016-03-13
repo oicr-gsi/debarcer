@@ -1,0 +1,15 @@
+# Filename: ~/.debarcer 
+# 
+# This file contains global, system specific settings needed
+# by the debarcer package and should be copied to your home 
+# directory or /etc/
+
+SAMTOOLSROOT="/oicr/local/analysis/sw//samtools/samtools-0.1.19"
+BWAROOT="/oicr/local/analysis/src/bwa/bwa-0.7.12"
+HG19="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/bwa/0.6.2/hg19_random.fa"
+
+NPROCS=1 # Default
+# NPROCS=`nprocs` # [FIXME] For cluster nodes should be a way to select the number of slots allocated to your job
+
+export SAMTOOLSROOT
+
