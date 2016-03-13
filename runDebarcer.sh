@@ -82,6 +82,9 @@ echo "[Debarcer `date`] : Logfile timestamp: $STARTTIME" > $MAINLOG
 echo "Running Debarcer version $VERSIONID" >> $MAINLOG
 echo "Running in: `pwd`" >> $MAINLOG
 
+echo 'Sourcing ~/.debarcer'
+source ~/.debarcer
+
 mkdir -p sge # For child process log files
 mkdir -p tables
 mkdir -p figures
@@ -110,7 +113,7 @@ if [ ! -e $SAMPLENAME.$FASTQGZ.sorted.bam.touch ]; then
 	$BHOME/tools/runBWA.sh $FASTQGZ $SAMPLENAME;
 	touch $SAMPLENAME.$FASTQGZ.sorted.bam.touch;
 fi
-echo "[Debarcer `date`] Raw reads mapped by bwa: `samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | wc -l`" >> $MAINLOG
+echo "[Debarcer `date`] Raw reads mapped by bwa: `$SAMTOOLSROOT/bin/samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | wc -l`" >> $MAINLOG
 # samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
 
 # FIXME EXPERIMENTAL SECTION, STILL IN DEVELOPMENT
