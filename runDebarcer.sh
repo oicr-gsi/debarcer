@@ -18,7 +18,8 @@
 
 FASTQGZ=''
 SAMPLENAME=''
-
+LAUNCHDIR=$PWD
+OUTPUTDIR=$LAUNCHDIR
 
 usage()
 {
@@ -36,7 +37,7 @@ if [[ ! $1 ]]; then
 	exit;
 fi
 
-while getopts ":gruf:n:" opt; do
+while getopts ":gruf:n:o:" opt; do
 	case $opt in
 		u)
 			usage;
@@ -54,6 +55,9 @@ while getopts ":gruf:n:" opt; do
 		n)
 			SAMPLENAME=$OPTARG;
 			;;
+		o)
+			OUTPUTDIR=$OPTARG;
+			;;
 		:)
 			echo "Option -$OPTARG requires an argument." >&2
 			exit 1;
@@ -66,6 +70,8 @@ while getopts ":gruf:n:" opt; do
 	esac
 done
 
+mkdir -p $OUTPUTDIR
+cd $OUTPUTDIR
 
 # Generate graphics only
 if [[ $ONLYGRAPHICS ]]; then
@@ -188,3 +194,5 @@ cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl --sampleID=$SAMPLENA
 gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | 
 	perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 
+cd $LAUNCHDIR
+exit
