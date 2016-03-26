@@ -51,8 +51,7 @@ while getopts ":gruf:n:o:" opt; do
 			;;
 		f)
 			FASTQGZ=$OPTARG;
-			FQGZ=${FASTQGZ##*/}
-			FASTQBASENAME=${FQGZ%.gz}
+			FASTQBASENAME=${FASTQGZ##*/}
 			;;
 		n)
 			SAMPLENAME=$OPTARG;
@@ -74,6 +73,8 @@ done
 
 mkdir -p $OUTPUTDIR
 cd $OUTPUTDIR
+
+SAMPLEPREFIX=$SAMPLENAME"."$FASTQBASENAME
 
 # Generate graphics only
 if [[ $ONLYGRAPHICS ]]; then
@@ -116,23 +117,23 @@ AMPLICON_TABLE="$BHOME/amplicon_tables/all_amplicons.txt";  # This is default
 
 # Some bwa mem files for future development
 #
-if [ ! -e $SAMPLENAME.$FASTQGZ.sorted.bam.touch ]; then
+if [ ! -e $SAMPLEPREFIX.sorted.bam.touch ]; then
 	echo "[Debarcer `date`] Running runBWA.sh" >> $MAINLOG;
 	$BHOME/tools/runBWA.sh $FASTQGZ $SAMPLENAME;
-	touch $SAMPLENAME.$FASTQGZ.sorted.bam.touch;
+	touch $SAMPLEPREFIX.sorted.bam.touch;
 fi
-echo "[Debarcer `date`] Raw reads mapped by bwa: `$SAMTOOLSROOT/bin/samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | wc -l`" >> $MAINLOG
-# samtools view $SAMPLENAME.$FASTQGZ.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
+echo "[Debarcer `date`] Raw reads mapped by bwa: `$SAMTOOLSROOT/bin/samtools view $SAMPLEPREFIX.sorted.bam | wc -l`" >> $MAINLOG
+# samtools view $SAMPLEPREFIX.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
 
 # FIXME EXPERIMENTAL SECTION, STILL IN DEVELOPMENT
-# time $BHOME/generateDownsamplingEstimates.sh $SAMPLENAME.$FASTQGZ.sorted.bam $SAMPLENAME
+# time $BHOME/generateDownsamplingEstimates.sh $SAMPLEPREFIX.sorted.bam $SAMPLENAME
 #
 # End test section
 
 
 echo "[Debarcer `date`] Generating UID depth file for $SAMPLENAME" >> $MAINLOG
 rm -f ./tables/$SAMPLENAME.barcode_mask # Remove the mask file prior to identifying masked barcodes
-time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --config=$CONFIG_FILE --justUIDdepth 2> >(tee -a $MAINLOG >&2)
+time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --config=$CONFIG_FILE --justUIDdepth 2> >(tee -a $MAINLOG >&2)
 
 # Creation of a barcode masking script goes here.
 echo "[Debarcer `date`] Creating barcode mask file" >> $MAINLOG
@@ -144,23 +145,23 @@ gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMask
 
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=1" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC1$SAMPLENAME -l h_vmem=16G -e DbC1$SAMPLENAME.log -o DbC1$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=1 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons1.txt"
+qsub -N DbC1$SAMPLENAME -l h_vmem=16G -e DbC1$SAMPLENAME.log -o DbC1$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=1 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons1.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=3" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC3$SAMPLENAME -l h_vmem=16G -e DbC3$SAMPLENAME.log -o DbC3$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=3 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons3.txt"
+qsub -N DbC3$SAMPLENAME -l h_vmem=16G -e DbC3$SAMPLENAME.log -o DbC3$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=3 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons3.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=10" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC10$SAMPLENAME -l h_vmem=16G -e DbC10$SAMPLENAME.log -o DbC10$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=10 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons10.txt"
+qsub -N DbC10$SAMPLENAME -l h_vmem=16G -e DbC10$SAMPLENAME.log -o DbC10$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=10 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons10.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=20" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC20$SAMPLENAME -l h_vmem=16G -e DbC20$SAMPLENAME.log -o DbC20$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=20 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons20.txt"
+qsub -N DbC20$SAMPLENAME -l h_vmem=16G -e DbC20$SAMPLENAME.log -o DbC20$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=20 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons20.txt"
 	
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=30" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
-qsub -N DbC30$SAMPLENAME -l h_vmem=16G -e DbC30$SAMPLENAME.log -o DbC30$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLENAME.$FASTQGZ.sorted.bam --sampleID=$SAMPLENAME --consDepth=30 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons30.txt"
+qsub -N DbC30$SAMPLENAME -l h_vmem=16G -e DbC30$SAMPLENAME.log -o DbC30$SAMPLENAME.log -cwd -b y "module load debarcer; time perl $BHOME/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=30 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons30.txt"
 
 qsub -N "AggregateDebarcers" -hold_jid DbC1$SAMPLENAME,DbC3$SAMPLENAME,DbC10$SAMPLENAME,DbC20$SAMPLENAME,DbC30$SAMPLENAME -sync y -cwd -b y -e ./sge -o ./sge "sleep 1"
 
