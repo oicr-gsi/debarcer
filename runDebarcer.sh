@@ -142,6 +142,7 @@ gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMask
 # Comment: subsequent runs of generateConsensusFromBAM.pl will use the mask file
 # to regenerate the UID.depths file, without the masked barcodes.
 
+## FIXME Since the UID depths file is available the composition can be analyzed here using tools/calculateBarcodeBiases.pl
 
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=1" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
