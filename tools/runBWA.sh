@@ -3,15 +3,17 @@
 echo 'Sourcing ~/.debarcer'
 source ~/.debarcer
 
-FASTQ=$1
+FASTQGZ=$1
 SAMPLENAME=$2
-echo "Running bwa/0.7.12 on Sample $SAMPLENAME using fastq: $FASTQ";
+FASTQBASENAME=${FASTQGZ##*/}
+SAMPLEPREFIX=$SAMPLENAME"."$FASTQBASENAME
 
+echo "Running bwa/0.7.12 on Sample $SAMPLENAME using fastq: $FASTQGZ";
 echo "bwa using $NPROCS processors";
 
-$BWAROOT/bwa mem -t $NPROCS $HG19 $FASTQ | 
+$BWAROOT/bwa mem -t $NPROCS $HG19 $FASTQGZ | 
 	$SAMTOOLSROOT/bin/samtools view -bS - | 
-	$SAMTOOLSROOT/bin/samtools sort - $SAMPLENAME.$FASTQ.sorted
-$SAMTOOLSROOT/bin/samtools index $SAMPLENAME.$FASTQ.sorted.bam
+	$SAMTOOLSROOT/bin/samtools sort - $SAMPLEPREFIX.sorted
+$SAMTOOLSROOT/bin/samtools index $SAMPLEPREFIX.sorted.bam
 # bwa mem $HG19 $FASTQ > $SAMPLENAME.$FASTQ.sam	
 
