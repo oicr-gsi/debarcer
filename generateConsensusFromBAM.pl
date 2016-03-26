@@ -30,7 +30,6 @@ use FindBin;
 use lib "$FindBin::Bin";
 use Debarcer;
 use Getopt::Long;
-use lib '/u/pkrzyzanowski/perl/usr/local/lib/perl/5.10.1/';
 use Data::Dumper;
 use Bio::DB::Sam;
 use JSON::XS qw(encode_json decode_json);
