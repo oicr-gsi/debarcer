@@ -51,6 +51,8 @@ while getopts ":gruf:n:o:" opt; do
 			;;
 		f)
 			FASTQGZ=$OPTARG;
+			FQGZ=${FASTQGZ##*/}
+			FASTQBASENAME=${FQGZ%.gz}
 			;;
 		n)
 			SAMPLENAME=$OPTARG;
