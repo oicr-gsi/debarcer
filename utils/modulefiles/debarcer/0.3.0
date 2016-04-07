@@ -13,7 +13,7 @@ proc ModulesHelp {} {
 }
 
 # for Tcl script use only
-set     version     0.2.0
+set     version     0.3.0
 
 module-whatis	"Debarcer tools version $version"
 
@@ -24,7 +24,7 @@ if { ! [ is-loaded samtools ] } {
 
 
 # setup a toplevel directory
-set	app_dir	/u/pkrzyzanowski/projects/simsenseq/debarcer/git/debarcer/
+set	app_dir	~/projects/simsenseq/debarcer/git/debarcer/
 prepend-path	PATH	${app_dir}
 setenv BHOME ${app_dir}
 
