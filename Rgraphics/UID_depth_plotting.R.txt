@@ -5,9 +5,6 @@ samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 PDFfilename <- paste(c(samplename, "UID_Family_Depths.pdf"), collapse="_")
 PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
-# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
-# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analysis-BOARAT")
-
 # UID Depth Composition plots
 
 UIDdata <- read.delim(file=paste(c("./tables/", samplename, ".barcodeComposition.txt"), collapse=""), header=T, colClasses=rep("numeric", 7))
