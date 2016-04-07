@@ -1,8 +1,6 @@
 
 
 
-# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
-
 
 
 # Positional Composition plots
