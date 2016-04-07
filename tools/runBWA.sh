@@ -1,18 +1,19 @@
 #!/bin/bash
 
-. /etc/profile
-module load samtools/0.1.19;
-module load bwa/0.7.12;
+echo 'Sourcing ~/.debarcer'
+source ~/.debarcer
 
-FASTQ=$1
+FASTQGZ=$1
 SAMPLENAME=$2
-echo "Running bwa/0.7.12 on Sample $SAMPLENAME using fastq: $FASTQ";
+FASTQBASENAME=${FASTQGZ##*/}
+SAMPLEPREFIX=$SAMPLENAME"."$FASTQBASENAME
 
-HG19="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/bwa/0.6.2/hg19_random.fa"
-NPROCS=`grep processor /proc/cpuinfo | wc -l`
+echo "Running bwa/0.7.12 on Sample $SAMPLENAME using fastq: $FASTQGZ";
 echo "bwa using $NPROCS processors";
 
-bwa mem -t $NPROCS $HG19 $FASTQ | samtools view -bS - | samtools sort - $SAMPLENAME.$FASTQ.sorted
-samtools index $SAMPLENAME.$FASTQ.sorted.bam
+$BWAROOT/bwa mem -t $NPROCS $HG19 $FASTQGZ | 
+	$SAMTOOLSROOT/bin/samtools view -bS - | 
+	$SAMTOOLSROOT/bin/samtools sort - $SAMPLEPREFIX.sorted
+$SAMTOOLSROOT/bin/samtools index $SAMPLEPREFIX.sorted.bam
 # bwa mem $HG19 $FASTQ > $SAMPLENAME.$FASTQ.sam	
 

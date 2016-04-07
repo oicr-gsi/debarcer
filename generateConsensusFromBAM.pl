@@ -30,7 +30,6 @@ use FindBin;
 use lib "$FindBin::Bin";
 use Debarcer;
 use Getopt::Long;
-use lib '/u/pkrzyzanowski/perl/usr/local/lib/perl/5.10.1/';
 use Data::Dumper;
 use Bio::DB::Sam;
 use JSON::XS qw(encode_json decode_json);
@@ -62,9 +61,9 @@ $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
 print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
 
-my $uidDepthFile = $args{"sampleID"} . ".UIDdepths.txt.gz";
+my $uidDepthFile = "./tables/" . $args{"sampleID"} . ".UIDdepths.txt.gz";
 open UIDDEPTHFILE, "| gzip -c > $uidDepthFile";
-my $ConsensusFile = $args{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
+my $ConsensusFile = "./tables/" . $args{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
 open CONSENSUSFILE, "| gzip -c > $ConsensusFile";
 
 # %Debarcer::primerSets = &Debarcer::listPrimers(\@ampliconsFile);
@@ -281,8 +280,10 @@ sub identifyFamilySites {
 	my $inBam = shift @_;
 	my $nSites = shift @_;
 	my %familySites = ();
-	
-	my @allSites = `samtools view -s 0.1 $inBam | cut -f 3,4`;
+
+	print STDERR $ENV{"SAMTOOLSROOT"}."\n";
+	my $SAMTOOLSBINARY = $ENV{"SAMTOOLSROOT"}."/bin/samtools";
+	my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4`;
 	foreach my $site ( @allSites ) { chomp $site; $site =~ s/\t/:/; $familySites{$site}++; }
 	my @goodSites = (sort { $familySites{$b} <=> $familySites{$a} } keys %familySites);
 	@goodSites = @goodSites[0..$nSites];  # Take the top n-1

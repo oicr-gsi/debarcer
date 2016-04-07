@@ -4,9 +4,6 @@ samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 BarcodeFamily <- as.character(commandArgs(trailingOnly = TRUE)[2])
 PDFfilename <- paste(c(samplename, BarcodeFamily, "AmpliconErrorplots.pdf"), collapse="_")
 
-# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analyses/PositionalComposition.StrictConsensus")
-# setwd("//storage.isilon.stg.oicr.on.ca/u/pkrzyzanowski/projects/EAC/molecular_barcoding/SaferSeqTests/14July02/analysis-BOARAT")
-
 
 # Positional Composition plots
 
@@ -120,11 +117,3 @@ graphics.off()
 
 
 
-
- 
- 
-
- 
-
-
-# SVNID: $Id: analysis_plotting.barplot.txt 284 2015-04-01 22:39:03Z pkrzyzanowski $

@@ -2,41 +2,57 @@
 
 Debarcer: De-Barcoding and Error Correction
 
-You can export or checkout the whole package from the following location:
 
-  svn export file:///u/pkrzyzanowski/svn/repo/projects/EAC/molecular_barcoding/trunk/debarcer .
-  svn co file:///u/pkrzyzanowski/svn/repo/projects/EAC/molecular_barcoding/trunk/debarcer .
-  
-  
 
-Running Debarcer  
+Setting up Debarcer
+-------------------
+
+1) Download a debarcer release, i.e.:
+
+  wget https://github.com/oicr-gsi/debarcer/archive/v0.2.0.tar.gz
+
+2) Unpack into a convenient directory, which will become the $BHOME
+   enviroment variable.
+
+3) Add $BHOME to your PATH. 
+
+   If you're in an environment that uses
+   modules, you can install the appropriate module file from the
+   $BHOME/utils/modulefiles directory and run
+
+     module load debarcer/[version number]
+
+   to adjust your environment prior to running the pipeline.
+
+
+Dependencies
+------------
+
+- samtools v0.1.19 or higher
+- bwa v0.7.12 or higher
+- Bio-SamTools-1.41 (supplied)
+-- Bio-SamTools required BioPerl
+- R v2.11.0 or higher
+
+The pipeline needs to be run on a maching with at least 16GB memory.
+It may run with less but this hasn't been tested extensively.
+
+Running Debarcer
 ----------------
 
-To generate a set of positional compositions, you can either export 
-debarcer to the location, or only the exec script:
+Once $BHOME is set in your path, you can view debarcer usage like so:
 
-  svn export file:///u/pkrzyzanowski/svn/repo/projects/EAC/molecular_barcoding/trunk/Debarcer/generatePositionalCompositionFiles.sh
+  runDebarcer.sh -u
+  
+To run an analysis, go to a directory with a barcoded fastq file
+and run
 
---> New (Oct 2014):
-You can execute the script directly from the Debarcer directory:
+  runDebarcer.sh -r -f <infile.fastq.gz> -n <SampleName>
 
-  /u/pkrzyzanowski/projects/EAC/molecular_barcoding/svn/trunk/Debarcer/generatePositionalCompositionFiles.sh Sample_6.R1.fastq.gz Sample6
+You can use the Sample_Test.R1.fastq.gz file in the $BHOME/test_toole
+directory to try out the pipeline.
 
-Or via qsub:
+If you'd like to regenerate only the graphics in one of the analysis
+directories, run
 
-  qsub -N "BCS" -b y -cwd -l h_vmem=16g "/u/pkrzyzanowski/projects/EAC/molecular_barcoding/svn/trunk/Debarcer/runDebarcer.sh Sample_1_ad4.R1.fastq.gz Sample01"
-
-To use alternate tables (5-plex vs 15-plex), you need to copy the script over and edit 
-the AMPLICON_TABLE variable.
-
-Requirements:  Consensus calling script needs at least 16G memory.
-
-Miscellaneous
--------------
-
-For testing, export the Boarat directory to the environment
-
-  export DEBARCER='/u/pkrzyzanowski/projects/EAC/molecular_barcoding/svn/trunk/Debarcer'
-
-
-SVNID: $Id: README.txt 387 2016-02-09 22:08:35Z pkrzyzanowski $
+  runDebarcer.sh -g -f <infile.fastq.gz> -n <SampleName>

@@ -3,6 +3,7 @@
 samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 BarcodeFamily <- as.character(commandArgs(trailingOnly = TRUE)[2])  # cons3 to fill 'Sample9292.bamPositionComposition.???.txt'
 PDFfilename <- paste(c(samplename, BarcodeFamily, "BamAmpliconErrorplots.pdf"), collapse="_")
+PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
 
 # A script to draw positional composition plots
@@ -26,7 +27,7 @@ calcConsensusError.raw <- function(v) {
 
 # Load the requested BarcodeFamily consensusPositionalComposition file
 #
-CPfile <- paste(c(samplename, ".bamPositionComposition.", BarcodeFamily, ".txt"), collapse="")
+CPfile <- paste(c("./tables/", samplename, ".bamPositionComposition.", BarcodeFamily, ".txt"), collapse="")
 posComp.consensus <- read.delim(file=CPfile, header=T, colClasses=c(rep("factor",2), "numeric", "factor", rep("numeric", 16)))
 # str(posComp.consensus)
 
@@ -94,14 +95,3 @@ for ( a in unique(x$Alias) ) {
 
 
 graphics.off()
-
-
-
-
- 
- 
-
- 
-
-
-# SVNID: $Id: bam_analysis_plotting.barplot.txt 346 2015-07-27 14:05:36Z pkrzyzanowski $
