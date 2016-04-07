@@ -9,7 +9,8 @@
 
 \overfullrule=2cm
 \usepackage[letterpaper, margin=1in]{geometry}
-
+\usepackage{listings}
+\usepackage{verbatim}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
 
@@ -21,15 +22,19 @@
 
 \section{Location}
 
-	You can export or checkout the whole package from the following location:
+	You can download the latest version of Debarcer from GitHub:
 
 \begin{verbatim}
-  $ svn export file:///u/pkrzyzanowski/svn/repo/projects \ 
-	/EAC/molecular_barcoding/trunk/debarcer .
-  $ svn co file:///u/pkrzyzanowski/svn/repo/projects \ 
-	/EAC/molecular_barcoding/trunk/debarcer .
+  https://github.com/oicr-gsi/debarcer/releases
 \end{verbatim}
-  
+
+Once the archive has been extracted to a suitable directory, you
+will need to copy the \texttt{config\_files/debarcer.dotfile} 
+to \texttt{\~\//.debarcer} as 
+this configuration file is used throughout the pipeline.
+
+
+The directory containing runDebarcer.sh must be in your PATH
 
 \section{Using Debarcer}
 
@@ -43,41 +48,28 @@
 
 \subsection{Running the package}
 
-To generate a set of positional compositions, you can export 
-Debarcer, set the BHOME environment variable, and run it like so:
+Once \texttt{runDebarcer.sh} is in your \texttt{\$PATH}, either manually or using modules, you can run it as follows:
 
 \begin{verbatim}
-  $ svn export file:///u/pkrzyzanowski/svn/repo/projects/EAC/ \ 
-	molecular_barcoding/trunk/Debarcer .
-  $ export BHOME $PWD
-  $ runDebarcer.sh [FASTQFILE] [SAMPLENAME]
-\end{verbatim}
-
-Or if you're set up for using modules, you can load debarcer from anywhere and run it:
-
-\begin{verbatim}
-  $ module load debarcer/trunk
-  $ runDebarcer.sh Sample_6.R1.fastq.gz Sample6
+  $ runDebarcer.sh -r -f [FASTQFILE] -n [SAMPLENAME] -o [OUTPUTDIR]
 \end{verbatim}
 
 Using modules is handy for running via qsub:
 
 \begin{verbatim}
-  qsub -N "BCS" -b y -cwd -l h_vmem=16g "module load debarcer/trunk; \ 
-	runDebarcer.sh Sample_6.R1.fastq.gz Sample6"
+  qsub -N "Debarcer" -b y -cwd -l h_vmem=16g "module load debarcer/dev; \ 
+	 runDebarcer.sh -r -f [FASTQFILE] -n [SAMPLENAME] -o [OUTPUTDIR]"
 \end{verbatim}
 
-To run a test set of data, do:
+There is a small test set of data included with the distribution:
 
 \begin{verbatim}
-  # ls /u/pkrzyzanowski/projects/simsenseq/debarcer/demodata # for more test files
-  cp /u/pkrzyzanowski/projects/simsenseq/debarcer/demodata/Sample_9297.R1.fastq.gz .
-  module load debarcer/trunk
-  runDebarcer.sh Sample_9297.R1.fastq.gz Sample_9297
+  runDebarcer.sh -r -f [DebarcerRoot]/demodata/Sample_Test.R1.fastq.gz -n Sample_Test -o ./testresults
 \end{verbatim}
 
-Sample\_9297 is a 1-plex and Sample\_9292 is a 5-plex.
+This should take a few minutes to run.
 
+\subsection{Automating Analyses}
 
 To help automate this whole process, there is a script in the 
 debarcer 'tools' directory that will create a results hierarchy based on a
@@ -97,7 +89,7 @@ directory of fastq files and write the appropriate run scripts:
 \end{verbatim}
 
 
-
+\begin{comment}
 \section{Workflow}
 
 % from http://www.texample.net/tikz/examples/simple-flow-chart/
@@ -134,6 +126,8 @@ directory of fastq files and write the appropriate run scripts:
     
 \end{tikzpicture}
 \end{center}
+\end{comment}
+
 
 \section{Output}
 
@@ -159,6 +153,9 @@ Requirements:  Consensus calling script needs at least 16G memory.
 
 \subsection{Revisions}
 
-0.2.0:  July 27, 2015.  Svn Revision: 347.  
+\begin{itemize}
+  \item 0.3.0:  April 7, 2016. 
+  \item 0.2.0:  July 27, 2015.  Svn Revision: 347.  
+\end{itemize}
 
 \end{document}
