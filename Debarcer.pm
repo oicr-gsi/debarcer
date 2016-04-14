@@ -564,6 +564,7 @@ Read in a table of position-amplicon names useful for making output more human-r
 	my %h = ();
 	
 	my @header = '';
+	my $catchment_size = 3; # Number of bases the AmpliconStart can differ by what is given
 	
 	open INFILE, $infile;
 	while (<INFILE> ) {
@@ -578,8 +579,15 @@ Read in a table of position-amplicon names useful for making output more human-r
 		my %line = ();
 		@line{@header} = split /\t/;
 
-		if (  $line{"AmpliconStart"} ne "" ) {
-			$h{$line{"AmpliconStart"}} = $line{"AmpliconName"};
+		if (  $line{"AmpliconStart"} ne "" ) 
+		{
+			for ( my $i = (-1 * $catchment_size); $i <= $catchment_size; $i++ ) 
+			{
+				my ($chrom, $position) = split(":", $line{"AmpliconStart"});
+				my $AmpliconStart_sdjusted = join(":", $chrom, $position + $i);
+				$h{$AmpliconStart_sdjusted} = $line{"AmpliconName"};
+			} 
+			
 		}
 
 	}
