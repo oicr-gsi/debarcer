@@ -93,10 +93,7 @@ for ( a in unique(x$Alias) ) {
 	x.oneAmp.molten <- melt(x.oneAmp, id="Position")
 #	str(x.oneAmp.molten)
 
-	# Get the amplicon startpoint to help create the plot position labels
-	chromStart <- as.numeric(unlist(strsplit(as.character((x$X.AmpliconChromStart)[x$Alias == a][1]), split = ":"))[2])
-	# print(chromStart)
-	x.oneAmp.molten$Position <- x.oneAmp.molten$Position + chromStart
+	# Create the plot position labels using the range of Position
 	tickLabels <- seq(min(x.oneAmp.molten$Position), max(x.oneAmp.molten$Position), 2)
 	
 	g <- ggplot(x.oneAmp.molten, aes(x=Position, y=value, fill=variable)) + geom_bar(position="dodge", stat = "identity")
