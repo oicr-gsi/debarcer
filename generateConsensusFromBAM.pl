@@ -189,12 +189,7 @@ foreach my $amp ( keys %familyData ) {
 # print Dumper(\%familyData);
 
 
-# output some data
 my @SNVtypes = sort keys %SNVdataMaster;
-print join ("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef", 
-	"raw" . join("\traw", @SNVtypes, "Depth"), 
-	"cons" . join("\tcons", @SNVtypes, "Depth"), 
-	"\n");
 
 # Identify a minimal depth to report positions within amplicons. 
 # This eliminates the reporting of bases indexed from secondary PCR products
@@ -202,13 +197,19 @@ my %ampliconReportingThreshold = &calculateAmpliconReportingThreshold(\%readData
 # print Dumper(\%ampliconReportingThreshold);
 
 # print Dumper(\%ampliconInfo);  # 	
+
+my %outputTable = ();
 	
 foreach my $amp ( keys %readData ) {
 	# print Dumper(\%{$readData{$amp}});
+
+	my $ampliconName = $siteAliasTable{$amp};
+
 	foreach my $position ( sort { $a <=> $b } keys %{$readData{$amp}} ) {
 
-		# output raw data
+		# collect raw data
 		my ($probableBase, $n, $rawDataString) = ('', 0, '');
+		my %rawDataHash = ();
 		my $d = 0;  #Depth
 		foreach ( @SNVtypes ) {
 			# Save the base identity if the count is higher than any previous observed count
@@ -217,13 +218,14 @@ foreach my $amp ( keys %readData ) {
 				$n = $readData{$amp}{$position}{$_};
 			}
 			$rawDataString .= "\t" . $readData{$amp}{$position}{$_};
+			$rawDataHash{$_} = $readData{$amp}{$position}{$_};
 			$d += $readData{$amp}{$position}{$_};
 		}
 
 		# Do not report this site if it's a low coverage position
 		next if ( $d < $ampliconReportingThreshold{$amp} );
 		
-		my $ampliconName = $siteAliasTable{$amp};
+		# Calculate the real genome position
 		my ($chrom, $chromStart) = split(/:/, $amp);
 		my $genomePosition = $chromStart + $position;
 
@@ -240,29 +242,52 @@ foreach my $amp ( keys %readData ) {
 			# To gen here, no target window exists, so report everything
 		}
 
-
-		printf("%s\t%s\t%s",
-			$amp,
-			$ampliconName,
-			$position);
-		print "\t$probableBase";
-		print $rawDataString;
-		print "\t$d";
-
-		# output consensus data
-		$d = 0;
-		foreach ( @SNVtypes ) {
-			print "\t" . $consReadData{$amp}{$position}{$_};
-			$d += $consReadData{$amp}{$position}{$_};
-		}
-		print "\t$d";
-
-		print "\n";
-
+		# Save accumulated data in the output table
+		$outputTable{$ampliconName}{"chrom"} = $chrom;
+		foreach my $base ( @SNVtypes ) {
+			$outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"raw"}{$base} += $rawDataHash{$base};
+			$outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$base} += $consReadData{$amp}{$position}{$_};
+			}
+				
 	}
 }
 
+# print Dumper(\%outputTable);
 
+# Print the data
+print join ("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef", 
+	"raw" . join("\traw", @SNVtypes, "Depth"), 
+	"cons" . join("\tcons", @SNVtypes, "Depth"), 
+	"\n");
+foreach my $ampliconName ( sort keys %outputTable ) {
+	my $chrom = $outputTable{$ampliconName}{"chrom"};
+	foreach my $genomePosition ( sort {$a <=> $b} keys %{$outputTable{$ampliconName}{"coordinates"}} ) {
+		my ($rawDepth, $consDepth) = ( 0, 0);
+		my ($probableRefBase, $n) = ('', 0);
+		foreach my $base ( @SNVtypes ) {
+			my $thisRawDepth = $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"raw"}{$base};
+			$rawDepth += $thisRawDepth; # Increment rawDepth
+			if ( $thisRawDepth > $n ) { # If this is the highest raw depth observed, make the base the probableBase
+				$probableRefBase = $base;
+				$n = $thisRawDepth;
+			}
+			$consDepth += $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$base}; # Increment consDepth
+		}
+		
+		printf ("%s\t%s\t%s\t%s", $chrom, $ampliconName, $genomePosition, $probableRefBase);
+		printf ("\t%s", $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"raw"}{$_}) foreach ( @SNVtypes );
+		printf ("\t%s", $rawDepth);
+		printf ("\t%s", $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$_}) foreach ( @SNVtypes );
+		printf ("\t%s", $consDepth);
+		print "\n";
+					
+	}
+
+}
+		
+	
+	
+	
 print STDERR "Raw reads read from $infile: $inputSeqCount\n";
 print STDERR "Raw reads in family sites read from $infile: $familySitesSeqCount\n";
 
