@@ -176,7 +176,7 @@ foreach my $amp ( keys %familyData ) {
 		my @cons = split(//, $familyData{$amp}->{$barcode}{"consensus"});
 		for (my $i = 0; $i < scalar(@cons); $i++) {
 			$cons[$i] =~ tr/acgt/ACGT/;
-			$consReadData{$amp}->{$i}{$cons[$i]}++;
+			$consReadData{$printableAmpID}->{$i}{$cons[$i]}++;
 		}
 	}
 	print STDERR "$printableAmpID\tdepth|count|coverage\t$consensusDepth\t$AmpliconCount\t$AmpliconCoverage\n";
@@ -187,6 +187,7 @@ foreach my $amp ( keys %familyData ) {
 # my $JSONdata = encode_json(\%familyData);
 # open(OFIL,">fileHash.dat"); print OFIL $JSONdata; close(OFIL);
 # print Dumper(\%familyData);
+# print Dumper(\%consReadData);
 
 
 my @SNVtypes = sort keys %SNVdataMaster;
@@ -246,7 +247,7 @@ foreach my $amp ( keys %readData ) {
 		$outputTable{$ampliconName}{"chrom"} = $chrom;
 		foreach my $base ( @SNVtypes ) {
 			$outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"raw"}{$base} += $rawDataHash{$base};
-			$outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$base} += $consReadData{$amp}{$position}{$_};
+			$outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$base} += $consReadData{$amp}{$position}{$base};
 			}
 				
 	}
@@ -275,10 +276,10 @@ foreach my $ampliconName ( sort keys %outputTable ) {
 		}
 		
 		printf ("%s\t%s\t%s\t%s", $chrom, $ampliconName, $genomePosition, $probableRefBase);
-		printf ("\t%s", $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"raw"}{$_}) foreach ( @SNVtypes );
-		printf ("\t%s", $rawDepth);
-		printf ("\t%s", $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$_}) foreach ( @SNVtypes );
-		printf ("\t%s", $consDepth);
+		printf ("\t%d", $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"raw"}{$_}) foreach ( @SNVtypes );
+		printf ("\t%d", $rawDepth);
+		printf ("\t%d", $outputTable{$ampliconName}{"coordinates"}{$genomePosition}{"consensus"}{$_}) foreach ( @SNVtypes );
+		printf ("\t%d", $consDepth);
 		print "\n";
 					
 	}
