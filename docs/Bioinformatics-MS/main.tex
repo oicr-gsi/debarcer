@@ -1,6 +1,7 @@
 \documentclass{bioinfo}
 \copyrightyear{2015} \pubyear{2015}
 
+\usepackage{epstopdf}
 \access{Advance Access Publication Date: Day Month Year}
 \appnotes{Manuscript Category}
 
@@ -41,7 +42,7 @@ online.}
 Text Text Text Text Text Text  Text Text Text Text Text Text Text
 Text Text  Text Text Text Text Text Text. Figure~\ref{fig:01}
 shows that the above method  Text Text Text Text  Text Text Text
-Text Text Text  Text Text.  \citep{Bag01} wants to know about
+text Text Text  Text Text.  \citep{Bag01} wants to know about
 {\ldots}{\ldots} text follows.
 \begin{equation}
 \sum \text{\it x}+ \text{\it y} =\text{\it Z}\label{eq:01}\vspace*{-10pt}
@@ -390,14 +391,14 @@ row4 & row4 & row4 & row4\\\botrule
 \fboxsep=0pt\colorbox{gray}{\begin{minipage}[t]{235pt} \vbox to 100pt{\vfill\hbox to
 235pt{\hfill\fontsize{24pt}{24pt}\selectfont FPO\hfill}\vfill}
 \end{minipage}}
-%\centerline{\includegraphics{fig01.eps}}
+\centerline{\includegraphics{fig01.eps}}
 \caption{Caption, caption.}\label{fig:01}
 \end{figure}
 
-%\begin{figure}[!tpb]%figure2
-%%\centerline{\includegraphics{fig02.eps}}
-%\caption{Caption, caption.}\label{fig:02}
-%\end{figure}
+\begin{figure}[!tpb]%figure2
+\centerline{\includegraphics{fig02.eps}}
+\caption{Caption, caption.}\label{fig:02}
+\end{figure}
 
 Text Text Text Text Text Text  Text Text Text Text Text Text Text
 Text Text  Text Text Text Text Text Text.
