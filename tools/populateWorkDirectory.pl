@@ -18,6 +18,7 @@ Email: paul.krzyzanowski@oicr.on.ca
 
 use Getopt::Long;
 use File::Basename;
+use Cwd;
 
 my $fastq_source = shift @ARGV or die "\nNeed to provide a directory with fastq.gz files to process...\n\n";
 my @fastqs = `ls $fastq_source/*_R1_001.fastq.gz`;
@@ -36,12 +37,18 @@ print RELAUNCHSCRIPT "LAUNCHDIR=`pwd`\n\n";
 foreach my $fastq ( @fastqs ) {
 
 	chomp $fastq;
+	my $thisdir = cwd();
+	my $fastq_abs_name = $thisdir . "/" . $fastq;
 
 	my $samplename = basename($fastq, "_R1_001.fastq.gz");
 	my $basefile = basename($fastq);
 	print STDERR "$samplename $basefile\n";
 
 	system("mkdir -p results/$samplename");
+	
+	open LAUNCHSCRIPT, ">results/$samplename/launchDebarcer.sh";
+	print LAUNCHSCRIPT "qsub -N \"Dbarc_$samplename\" -l h_vmem=32G -cwd -b y \"module load debarcer/$module_version; runDebarcer.sh -r -f $fastq_abs_name -n $samplename -o .\"";
+
 	system("ln -s ../../$fastq results/$samplename/$basefile");
 
 	open LAUNCHSCRIPT, ">results/$samplename/launchDebarcer.sh";
@@ -52,7 +59,7 @@ foreach my $fastq ( @fastqs ) {
 
 	print CONFIGSCRIPT <<BLOCK
 # Debarcer override file.  The master process stores these variables in the config array.
-plexity=5
+plexity=50
 BLOCK
 	;
 	close CONFIGSCRIPT;
@@ -71,4 +78,3 @@ BLOCK
 close RELAUNCHSCRIPT;
 
 exit;
-	

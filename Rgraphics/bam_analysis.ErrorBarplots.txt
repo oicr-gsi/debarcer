@@ -5,6 +5,7 @@ BarcodeFamily <- as.character(commandArgs(trailingOnly = TRUE)[2])  # cons3 to f
 PDFfilename <- paste(c(samplename, BarcodeFamily, "BamAmpliconErrorBarplots.pdf"), collapse="_")
 PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
+paste("Running bam_analysis.ErrorBarplots.txt")
 
 # A script to draw positional composition bar plots
 
@@ -42,10 +43,12 @@ posComp.consensus$indexingFactor <- ( posComp.consensus$rawPerror / posComp.cons
 posComp.consensus$PerrorLog.r <- log(posComp.consensus$rawPerror, 10)
 posComp.consensus$PerrorLog.c <- log(posComp.consensus$consPerror, 10)
 
-# Testing
+# These are useful for testing
 # str(posComp.consensus)
 # summary(posComp.consensus)
 
+# Remove rows with no Alias
+posComp.consensus <- posComp.consensus[posComp.consensus$Alias != "",]
 
 # Quick demo plots
 #
@@ -66,7 +69,9 @@ points(x$PerrorLog.r, pch=20, col="darkred", cex=0.7)
 legend("topleft", legend=c("Raw Reads", "Consensus Reads"), fill=c("darkred", "black"))
 
 # Sort within amplicons
-for ( a in unique(x$Alias) ) { x[x$Alias == a,] <- x[x$Alias == a,][order(x$PerrorLog.c[x$Alias == a]),] }
+for ( a in unique(x$Alias) ) { 
+	x[x$Alias == a,] <- x[x$Alias == a,][order(x$PerrorLog.c[x$Alias == a]),] 
+	}
 plot(x$PerrorLog.c, ylab="-log10 Error Rate", main="All error rates by Position, Amplicon", xlab="Position", 
 	ylim=c(-4.5, -2), pch=20, cex=0.7,
 	col = ifelse(x$isMinError, "grey60", "black")
@@ -93,10 +98,7 @@ for ( a in unique(x$Alias) ) {
 	x.oneAmp.molten <- melt(x.oneAmp, id="Position")
 #	str(x.oneAmp.molten)
 
-	# Get the amplicon startpoint to help create the plot position labels
-	chromStart <- as.numeric(unlist(strsplit(as.character((x$X.AmpliconChromStart)[x$Alias == a][1]), split = ":"))[2])
-	# print(chromStart)
-	x.oneAmp.molten$Position <- x.oneAmp.molten$Position + chromStart
+	# Create the plot position labels using the range of Position
 	tickLabels <- seq(min(x.oneAmp.molten$Position), max(x.oneAmp.molten$Position), 2)
 	
 	g <- ggplot(x.oneAmp.molten, aes(x=Position, y=value, fill=variable)) + geom_bar(position="dodge", stat = "identity")

@@ -5,6 +5,7 @@ BarcodeFamily <- as.character(commandArgs(trailingOnly = TRUE)[2])  # cons3 to f
 PDFfilename <- paste(c(samplename, BarcodeFamily, "BamAmpliconErrorplots.pdf"), collapse="_")
 PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
+paste("Running bam_analysis_plotting.barplot.txt")
 
 # A script to draw positional composition plots
 
@@ -80,8 +81,18 @@ for ( a in unique(x$Alias) ) {
 		ylim=c(-4.5, -2), pch=20, cex=0.7,
 		col = ifelse(x.oneAmp$isMinError, "grey60", "black")
 		)
+<<<<<<< HEAD
 	points(x.oneAmp$PerrorLog.r, pch=20, col="darkred", cex=0.7)
 	legend("topleft", legend=c("Raw Reads", "Consensus Reads"), fill=c("darkred", "black"))
+=======
+<<<<<<< HEAD
+	points(x.oneAmp$PerrorLog.r, pch=20, col="red", cex=0.7)
+	legend("topleft", legend=c("Raw Reads", "Consensus Reads", "Consensus Reads, No Error"), fill=c("red", "black", "grey60"))
+=======
+	points(x.oneAmp$PerrorLog.r, pch=20, col="darkred", cex=0.7)
+	legend("topleft", legend=c("Raw Reads", "Consensus Reads"), fill=c("darkred", "black"))
+>>>>>>> doc-updates
+>>>>>>> 578177f5e3d867159c0275214dc1c62ff536341b
 }
 
 # ecdf of correction factors
