@@ -105,7 +105,9 @@ for ( a in unique(x$Alias) ) {
 	g <- g + theme_bw() + labs(title = paste(samplename, a, BarcodeFamily))
 	g <- g + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) + scale_x_continuous(breaks=tickLabels)
 
-	ggsave(g, file=paste(c("./figures/", samplename, BarcodeFamily, a, "BamAmpliconErrorBarplots.pdf"), collapse="_"), height = 6, width = 12)
+	ggfilename <- paste(samplename, BarcodeFamily, a, "BamAmpliconErrorBarplots.pdf"), collapse="_")
+	ggfilename <- paste(c("./figures/", ggfilename), collapse="")
+	ggsave(g, file=ggfilename, height = 6, width = 12)
 
 }
 
