@@ -24,9 +24,9 @@ OUTPUTDIR=$LAUNCHDIR
 usage()
 {
 	echo "
-Need to specify a run mode, filename and samplename as arguments.
+Need to specify a run mode, filename, samplename, and output directory as arguments.
 
-	Usage: runDebarcer.sh [-u|-g|-r] -f <infile.fastq.gz> -n <SampleName> 
+	Usage: runDebarcer.sh [-u|-g|-r] [Options] -f <infile.fastq.gz> -n <SampleName> -o <output dir>
 ";
 }
 
@@ -58,6 +58,9 @@ while getopts ":gruf:n:o:" opt; do
 			;;
 		o)
 			OUTPUTDIR=$OPTARG;
+			;;
+		a)
+			AMPLICON_TABLE=$OPTARG;
 			;;
 		:)
 			echo "Option -$OPTARG requires an argument." >&2
@@ -112,8 +115,12 @@ echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 CONFIG_FILE="$BHOME/config_files/debarcer.conf"
 ### FIXME Need to dump the config file to the log here ###
 
-# Optional setting
-AMPLICON_TABLE="$BHOME/amplicon_tables/all_amplicons.txt";  # This is default
+# Set the amplicon table parameter
+if [[ ! $AMPLICON_TABLE ]]; then
+	echo 'No -a flag specified; using default amplicon table.'
+	AMPLICON_TABLE="$BHOME/amplicon_tables/all_amplicons.txt";  # Default to the included amplicon table
+fi
+
 
 # Some bwa mem files for future development
 #
