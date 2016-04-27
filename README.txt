@@ -56,3 +56,8 @@ If you'd like to regenerate only the graphics in one of the analysis
 directories, run
 
   runDebarcer.sh -g -f <infile.fastq.gz> -n <SampleName>
+  
+Acknowledgements
+----------------
+
+Levenshtein C code is a modified version of source available here: http://ideone.com/OL38zi
