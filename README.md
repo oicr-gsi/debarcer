@@ -37,8 +37,8 @@ Dependencies
 
 - samtools v0.1.19 or higher
 - bwa v0.7.12 or higher
-- Bio-SamTools-1.41 (supplied)
--- Bio-SamTools requires BioPerl
+- [Bio-SamTools-1.41](http://search.cpan.org/~lds/Bio-SamTools-1.41/)
+  - Bio-SamTools requires BioPerl
 - R v2.11.0 or higher
 
 The pipeline needs to be run on a maching with at least 16GB memory.
