@@ -24,9 +24,9 @@ OUTPUTDIR=$LAUNCHDIR
 usage()
 {
 	echo "
-Need to specify a run mode, filename and samplename as arguments.
+Need to specify a run mode, filename, samplename, and output directory as arguments.
 
-	Usage: runDebarcer.sh [-u|-g|-r] -f <infile.fastq.gz> -n <SampleName> 
+	Usage: runDebarcer.sh [-u|-g|-r] [Options] -f <infile.fastq.gz> -n <SampleName> -o <output dir>
 ";
 }
 
@@ -112,9 +112,6 @@ echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 CONFIG_FILE="$BHOME/config_files/debarcer.conf"
 ### FIXME Need to dump the config file to the log here ###
 
-# Optional setting
-AMPLICON_TABLE="$BHOME/amplicon_tables/all_amplicons.txt";  # This is default
-
 # Some bwa mem files for future development
 #
 if [ ! -e $SAMPLEPREFIX.sorted.bam.touch ]; then
@@ -194,7 +191,9 @@ fi
 
 # Generate summary statistics files
 # These should stay in the root results directory
-cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl --sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
+cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl \
+	--config=$CONFIG_FILE  \
+	--sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
 gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | 
 	perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 

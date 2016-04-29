@@ -10,10 +10,6 @@ Description
 =head2 Usage
 
    perl generateConsensusFromBAM.pl --bam=
-   
-   or
-   
-   # perl generateConsensusFromBAM.pl --bam= --ampTable=$AMPLICON_TABLE 
    	   
 =head2 Author
 
@@ -42,8 +38,8 @@ GetOptions(
 	"config=s" => \$args{"configfile"},
 	"bam=s" => \$args{"bam"},
 	"sampleID=s" => \$args{"sampleID"},
-	"consDepth=s" => \$args{"consDepth"},  # Amplicon table filename
-	"plexity=s" => \$args{"plexity"},  # Amplicon table filename
+	"consDepth=s" => \$args{"consDepth"},  
+	"plexity=s" => \$args{"plexity"},  
 	# "strictCons" => \$args{"strictCons"},  # Strict consensus
 	"downsample=s" => \$args{"downsample"},
 	"justUIDdepths" => \$args{"justUIDdepths"},
@@ -56,6 +52,7 @@ die "Need to supply a config file.\n" unless ( $args{"configfile"} );
 my %config = ParseConfig($args{"configfile"});
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
 $nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
+my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/amplicon_tables/all_amplicons.txt" ;
 
 $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
@@ -80,9 +77,9 @@ my $refgenome="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/bwa/0
 my $infile = $args{"bam"};
 
 my %familySites = &identifyFamilySites($infile, $nSites);
-my %siteAliasTable = &Debarcer::getPositionAliases("$FindBin::Bin/amplicon_tables/all_amplicons.txt");
+my %siteAliasTable = &Debarcer::getPositionAliases($ampliconTable);
 my %ampliconInfo = ();
-&Debarcer::loadAmpliconData("$FindBin::Bin/amplicon_tables/all_amplicons.txt", \%ampliconInfo);
+&Debarcer::loadAmpliconData($ampliconTable, \%ampliconInfo);
 my %invalidBarcodes = &loadBarcodeMaskFile($args{"sampleID"});
 # print Dumper(\%ampliconInfo);
 # print Dumper(\%siteAliasTable);
@@ -231,7 +228,7 @@ foreach my $amp ( keys %readData ) {
 		my $genomePosition = $chromStart + $position;
 
 		# This section will restrict reporting of amplicon positions to those within
-		# the target window specified in the all_amplicons.txt file
+		# the target window specified in the *amplicons.txt file
 		if ( $args{"justTargets"} ) {
 			# If a target window exists, skip $genomePosition unless it falls within start and end
 			if ( exists $ampliconInfo{$ampliconName}{"TargetWindow"} ) {
