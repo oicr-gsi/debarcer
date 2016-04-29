@@ -191,7 +191,9 @@ fi
 
 # Generate summary statistics files
 # These should stay in the root results directory
-cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl --sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
+cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl \
+	--config=$CONFIG_FILE  \
+	--sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
 gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | 
 	perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 
