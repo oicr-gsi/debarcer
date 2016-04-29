@@ -16,16 +16,16 @@ Setting up Debarcer
 
 1) Download a debarcer release, i.e.:
 
-  wget https://github.com/oicr-gsi/debarcer/archive/v0.2.0.tar.gz
+    wget https://github.com/oicr-gsi/debarcer/archive/v0.2.0.tar.gz
 
-2) Unpack into a convenient directory, which will become the $BHOME
+2) Unpack into a convenient directory, which will become the `$BHOME`
    enviroment variable.
 
-3) Add $BHOME to your PATH. 
+3) Add `$BHOME` to your PATH. 
 
    If you're in an environment that uses
    modules, you can install the appropriate module file from the
-   $BHOME/utils/modulefiles directory and run
+   `$BHOME/utils/modulefiles` directory and run
 
      module load debarcer/[version number]
 
@@ -49,12 +49,12 @@ Running Debarcer
 
 Once $BHOME is set in your path, you can view debarcer usage like so:
 
-  runDebarcer.sh -u
+	runDebarcer.sh -u
   
 To run an analysis, go to a directory with a barcoded fastq file
 and run
 
-  runDebarcer.sh -r -f <infile.fastq.gz> -n <SampleName>
+	runDebarcer.sh -r -f <infile.fastq.gz> -n <SampleName>
 
 You can use the Sample_Test.R1.fastq.gz file in the $BHOME/test_toole
 directory to try out the pipeline.
@@ -62,7 +62,7 @@ directory to try out the pipeline.
 If you'd like to regenerate only the graphics in one of the analysis
 directories, run
 
-  runDebarcer.sh -g -f <infile.fastq.gz> -n <SampleName>
+	runDebarcer.sh -g -f <infile.fastq.gz> -n <SampleName>
 
   
 Acknowledgements
