@@ -560,7 +560,7 @@ Read in a table of position-amplicon names useful for making output more human-r
 
 =cut
 
-	my $infile = shift @_;  # Usually ./amplicon_tables/all_amplicons.txt
+	my $infile = shift @_;  # Default is usually ./data/all_amplicons.txt
 	my %h = ();
 	
 	my @header = '';
@@ -606,7 +606,7 @@ Read in a table of information pertaining to the amplicons being analyzed
 
 =cut
 
-	my $infile = shift @_;  # Usually ./amplicon_tables/all_amplicons.txt
+	my $infile = shift @_;  # Default is usually ./data/all_amplicons.txt
 	my $href = shift @_;
 
 	my @header = '';
