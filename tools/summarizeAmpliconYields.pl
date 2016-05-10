@@ -14,19 +14,27 @@ use Data::Dumper;
 use FindBin;
 use lib "$FindBin::Bin/../";
 use Debarcer;
+use Config::General qw(ParseConfig);
 
 my %args = ();
 GetOptions(
+	"config=s" => \$args{"configfile"},
 	"sampleID=s" => \$args{"sampleID"},   # sampleID
 	"test" => \$args{"test"}   # test mode
 );
+
+# Section to load parameters from a Config::Simple format file [Not used here yet. FIXME]
+die "Need to supply a config file.\n" unless ( $args{"configfile"} );
+my %config = ();
+%config = ParseConfig($args{"configfile"});
+my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/data/all_amplicons.txt" ;
 
 my $raw_reads = '';
 my %a_data = ();  # Amplicon data structure
 
 my %ampliconInfo = ();
-&Debarcer::loadAmpliconData("$FindBin::Bin/../amplicon_tables/all_amplicons.txt", \%ampliconInfo); 
-my %positionAliases = &Debarcer::getPositionAliases("$FindBin::Bin/../amplicon_tables/all_amplicons.txt");
+&Debarcer::loadAmpliconData($ampliconTable, \%ampliconInfo); 
+my %positionAliases = &Debarcer::getPositionAliases($ampliconTable);
 
 while (<>) {
 

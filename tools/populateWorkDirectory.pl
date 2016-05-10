@@ -48,11 +48,6 @@ foreach my $fastq ( @fastqs ) {
 	
 	open LAUNCHSCRIPT, ">results/$samplename/launchDebarcer.sh";
 	print LAUNCHSCRIPT "qsub -N \"Dbarc_$samplename\" -l h_vmem=32G -cwd -b y \"module load debarcer/$module_version; runDebarcer.sh -r -f $fastq_abs_name -n $samplename -o .\"";
-
-	system("ln -s ../../$fastq results/$samplename/$basefile");
-
-	open LAUNCHSCRIPT, ">results/$samplename/launchDebarcer.sh";
-	print LAUNCHSCRIPT "qsub -N \"Dbarc_$samplename\" -l h_vmem=32G -cwd -b y \"module load debarcer/$module_version; runDebarcer.sh $basefile $samplename\"";
 	close LAUNCHSCRIPT;
 	
 	open CONFIGSCRIPT, ">results/$samplename/debarcer.conf";
