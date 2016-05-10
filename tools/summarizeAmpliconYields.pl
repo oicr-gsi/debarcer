@@ -27,7 +27,7 @@ GetOptions(
 die "Need to supply a config file.\n" unless ( $args{"configfile"} );
 my %config = ();
 %config = ParseConfig($args{"configfile"});
-my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/amplicon_tables/all_amplicons.txt" ;
+my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/data/all_amplicons.txt" ;
 
 my $raw_reads = '';
 my %a_data = ();  # Amplicon data structure

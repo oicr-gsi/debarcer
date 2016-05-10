@@ -52,7 +52,7 @@ die "Need to supply a config file.\n" unless ( $args{"configfile"} );
 my %config = ParseConfig($args{"configfile"});
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
 $nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
-my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/amplicon_tables/all_amplicons.txt" ;
+my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/data/all_amplicons.txt" ;
 
 $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
