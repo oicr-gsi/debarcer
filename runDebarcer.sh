@@ -109,7 +109,7 @@ if [ ! "$BHOME" ]; then
 fi
 echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 
-CONFIG_FILE="$BHOME/config_files/debarcer.conf"
+CONFIG_FILE="$BHOME/config/debarcer.conf"
 ### FIXME Need to dump the config file to the log here ###
 
 # Some bwa mem files for future development
