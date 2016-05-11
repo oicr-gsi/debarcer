@@ -4,7 +4,6 @@ samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 BarcodeFamily <- as.character(commandArgs(trailingOnly = TRUE)[2])
 PDFfilename <- paste(c(samplename, BarcodeFamily, "AmpliconErrorplots.pdf"), collapse="_")
 
-
 # Positional Composition plots
 
 calcReferenceFraction <- function(v) { 

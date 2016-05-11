@@ -5,8 +5,6 @@ samplename <- as.character(commandArgs(trailingOnly = TRUE)[1])
 PDFfilename <- paste(c(samplename, "UID_Family_Depths.pdf"), collapse="_")
 PDFfilename <- paste(c("./figures/", PDFfilename), collapse="")
 
-# UID Depth Composition plots
-
 UIDdata <- read.delim(file=paste(c("./tables/", samplename, ".barcodeComposition.txt"), collapse=""), header=T, colClasses=rep("numeric", 7))
 
 # library(ggplot2)

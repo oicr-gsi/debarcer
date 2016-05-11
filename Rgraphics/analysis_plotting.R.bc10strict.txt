@@ -1,8 +1,5 @@
 
 
-
-
-
 # Positional Composition plots
 
 calcReferenceFraction <- function(v) { 

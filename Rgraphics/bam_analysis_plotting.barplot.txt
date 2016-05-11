@@ -80,7 +80,7 @@ for ( a in unique(x$Alias) ) {
 		main=paste(c("All error rates by Position, ", a), sep=""),
 		ylim=c(-4.5, -2), pch=20, cex=0.7,
 		col = ifelse(x.oneAmp$isMinError, "grey60", "black")
-		)
+	)
 	points(x.oneAmp$PerrorLog.r, pch=20, col="red", cex=0.7)
 	legend("topleft", legend=c("Raw Reads", "Consensus Reads", "Consensus Reads, No Error"), fill=c("red", "black", "grey60"))
 }

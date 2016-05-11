@@ -122,11 +122,6 @@ fi
 echo "[Debarcer `date`] Raw reads mapped by bwa: `$SAMTOOLSROOT/bin/samtools view $SAMPLEPREFIX.sorted.bam | wc -l`" >> $MAINLOG
 # samtools view $SAMPLEPREFIX.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
 
-# FIXME EXPERIMENTAL SECTION, STILL IN DEVELOPMENT
-# time $BHOME/generateDownsamplingEstimates.sh $SAMPLEPREFIX.sorted.bam $SAMPLENAME
-#
-# End test section
-
 
 echo "[Debarcer `date`] Generating UID depth file for $SAMPLENAME" >> $MAINLOG
 rm -f ./tables/$SAMPLENAME.barcode_mask # Remove the mask file prior to identifying masked barcodes
@@ -138,6 +133,12 @@ gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMask
 #
 # Comment: subsequent runs of generateConsensusFromBAM.pl will use the mask file
 # to regenerate the UID.depths file, without the masked barcodes.
+
+
+# Generate downsampling estimator plots
+time $BHOME/src/quickDownsamplingEstimates.sh $SAMPLENAME
+rm Rplots.pdf # Remove empty plot just made by ggplot
+
 
 ## FIXME Since the UID depths file is available the composition can be analyzed here using tools/calculateBarcodeBiases.pl
 
