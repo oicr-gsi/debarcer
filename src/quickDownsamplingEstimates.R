@@ -1,23 +1,35 @@
 
 
 
-UIDfilename <- "Sample_9297.UIDdepths.txt.gz"
-outputdir <- "./downsampling/"
+UIDdepthFile <- as.character(commandArgs(trailingOnly = TRUE)[1])
+outputdir <- "./figures/"
+
+paste("Running bam_analysis.ErrorBarplots.txt")
+
 library(ggplot2)
 
-UIDs <- read.delim(file = UIDfilename, header = F)
+# Load data and check contents
+UIDs <- read.delim(file = UIDdepthFile, header = F)
 colnames(UIDs) <- c("Amplicon", "Barcode", "Count")
+# str(UIDs)
 
+# Determine how many amplicons of each coordinate are present
 allAmplicons <- as.character(unique(UIDs$Amplicon))
+ampliconCounts <- sort(table(UIDs$Amplicon), decreasing = TRUE)
 
-a <- "chr17:7577046"
-
+a <- names(ampliconCounts)[1]  # Select most common amplicon
 
 UIDs.a <- UIDs[UIDs$Amplicon == a,]
 
 results <- data.frame(depth = 0, barcodes = 0)
 
-for ( d in c(100, 1000, seq(2000, 100000, 2000)) ) {
+# Define downsampling cutoffs
+actualDepth <- sum(UIDs$Count)
+cutoffs <- round(seq(0, 1, 0.1) * actualDepth)
+print("Using depth cutoffs:")
+cutoffs
+
+for ( d in cutoffs ) {
 	sample_depth <- d
 
 	estimateBarcodes <- function() {
@@ -34,10 +46,10 @@ for ( d in c(100, 1000, seq(2000, 100000, 2000)) ) {
 	
 }
 
-str(results)
+# str(results)
 
+# Plot output
 p <- ggplot(results, aes(depth, barcodes))
-p <- p + stat_smooth() + geom_point()
-p
-ggsave(path = outputdir, file = "test.pdf")
+p <- p + stat_smooth() + geom_point(size = 1)
+ggsave(plot = p, path = outputdir, file = "Downsampling_plot.pdf")
 
