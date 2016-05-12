@@ -131,7 +131,7 @@ time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sa
 
 # Creation of a barcode masking script goes here.
 echo "[Debarcer `date`] Creating barcode mask file" >> $MAINLOG
-gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/identifyMaskableBarcodes.pl > ./tables/$SAMPLENAME.barcode_mask
+gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | perl $DBSRC/identifyMaskableBarcodes.pl > ./tables/$SAMPLENAME.barcode_mask
 #
 # Comment: subsequent runs of generateConsensusFromBAM.pl will use the mask file
 # to regenerate the UID.depths file, without the masked barcodes.
