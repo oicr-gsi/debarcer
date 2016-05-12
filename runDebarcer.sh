@@ -118,7 +118,7 @@ CONFIG_FILE="$DBROOT/config/debarcer.conf"
 #
 if [ ! -e $SAMPLEPREFIX.sorted.bam.touch ]; then
 	echo "[Debarcer `date`] Running runBWA.sh" >> $MAINLOG;
-	$BHOME/tools/runBWA.sh $FASTQGZ $SAMPLENAME;
+	$DBSRC/runBWA.sh $FASTQGZ $SAMPLENAME;
 	touch $SAMPLEPREFIX.sorted.bam.touch;
 fi
 echo "[Debarcer `date`] Raw reads mapped by bwa: `$SAMTOOLSROOT/bin/samtools view $SAMPLEPREFIX.sorted.bam | wc -l`" >> $MAINLOG
