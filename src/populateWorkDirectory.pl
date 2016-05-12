@@ -3,15 +3,15 @@ use strict;
 
 =pod
 
-This script generates the '' and 'relaunchAllDebarcers.sh' scripts used to 
+This script generates the 'launchDebarcer.sh' and 'relaunchAllDebarcers.sh' scripts used to 
 kick off a Debarcer run
 
 Usage:
 
-  perl $BHOME/tools/populateWorkDirectory.pl <directory with the fastqs to analyze>
+  perl $BHOME/src/populateWorkDirectory.pl <directory with the fastqs to analyze>
 
 
-(c) Paul Krzyzanowski 2015
+(c) Paul Krzyzanowski 2015-2016
 Email: paul.krzyzanowski@oicr.on.ca
 
 =cut
