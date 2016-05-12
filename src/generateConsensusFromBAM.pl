@@ -15,7 +15,7 @@ Description
 
 Paul M Krzyzanowski
 pmkrzyzanowski@gmail.com
-(c) 2014-2015
+(c) 2014-2016
 
 =cut
 
@@ -30,6 +30,8 @@ use Data::Dumper;
 use Bio::DB::Sam;
 use JSON::XS qw(encode_json decode_json);
 use Config::General qw(ParseConfig);
+
+my $DBROOT = "$FindBin::Bin/../"; # Because script is in $DBROOT/src/
 
 print STDERR "--- Starting generateConsensusFromBAM.pl ---\n";
 my %args = ();
@@ -52,7 +54,7 @@ die "Need to supply a config file.\n" unless ( $args{"configfile"} );
 my %config = ParseConfig($args{"configfile"});
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
 $nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
-my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/data/all_amplicons.txt" ;
+my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$DBROOT/data/all_amplicons.txt" ;
 
 $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call

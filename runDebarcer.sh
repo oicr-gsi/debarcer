@@ -81,7 +81,7 @@ SAMPLEPREFIX=$SAMPLENAME"."$FASTQBASENAME
 # Generate graphics only
 if [[ $ONLYGRAPHICS ]]; then
 	echo "Debarcer: Generating graphics only." >&2
-	. generateGraphicalReports.sh $BHOME $SAMPLENAME; 
+	. generateGraphicalReports.sh $DBROOT $SAMPLENAME; 
 	exit;
 fi
 
@@ -111,7 +111,7 @@ if [ ! "$BHOME" ]; then
 fi
 echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 
-CONFIG_FILE="$BHOME/config/debarcer.conf"
+CONFIG_FILE="$DBROOT/config/debarcer.conf"
 ### FIXME Need to dump the config file to the log here ###
 
 # Some bwa mem files for future development
@@ -189,12 +189,12 @@ time gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz |
 fi
 
 # Generate the graphics.
-. generateGraphicalReports.sh $BHOME $SAMPLENAME;
+. generateGraphicalReports.sh $DBROOT $SAMPLENAME;
 
 
 # Generate summary statistics files
 # These should stay in the root results directory
-cat $MAINLOG | perl $BHOME/tools/summarizeAmpliconYields.pl \
+cat $MAINLOG | perl $DBSRC/summarizeAmpliconYields.pl \
 	--config=$CONFIG_FILE  \
 	--sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
 gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | 
