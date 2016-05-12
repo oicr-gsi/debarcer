@@ -2,7 +2,7 @@
 # File groups
 #----------------------------------------
 
-BINARIES = tools/levenshtien_stream
+BINARIES = bin/levenshtien_stream
 DOCS = docs/manual.pdf
 
 #----------------------------------------
@@ -18,7 +18,7 @@ LATEX = pdflatex
 
 all : $(BINARIES) $(DOCS)
 
-tools/levenshtien_stream : tools/levenshtien_stream.c
+bin/levenshtien_stream : src/levenshtien_stream.c
 	$(COMPILE) -o $@ $^
 
 docs/manual.pdf : docs/manual.tex

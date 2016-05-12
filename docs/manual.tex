@@ -84,7 +84,7 @@ This file only contains reads which were from UID families of depth 20-30, inclu
 \subsection{Automating Analyses}
 
 To help automate this whole process, the \\texttt{populateWorkDirectory.pl} script in the 
-debarcer 'tools' directory can create a results hierarchy based on a
+debarcer 'src' directory can create a results hierarchy based on a
 directory of fastq files and write the appropriate run scripts:
 
 \begin{verbatim}
@@ -92,7 +92,7 @@ directory of fastq files and write the appropriate run scripts:
   cd ResultsRoot\fastqs
   find [location of the the fastq files] -name "*fastq.gz" -exec ln -s {} \;
   cd ..
-  perl $DEBARCERHOME\tools\populateWorkDirectory.pl ./fastqs
+  perl $DEBARCERHOME\src\populateWorkDirectory.pl ./fastqs
 \end{verbatim}
 
 
