@@ -12,7 +12,7 @@ Summarize amplicon yields from information in the DeBarcEr.log file.
 use Getopt::Long;
 use Data::Dumper;
 use FindBin;
-use lib "$FindBin::Bin/../";
+use lib "$FindBin::Bin/";
 use Debarcer;
 use Config::General qw(ParseConfig);
 
@@ -27,7 +27,7 @@ GetOptions(
 die "Need to supply a config file.\n" unless ( $args{"configfile"} );
 my %config = ();
 %config = ParseConfig($args{"configfile"});
-my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/data/all_amplicons.txt" ;
+my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$FindBin::Bin/../data/all_amplicons.txt" ;
 
 my $raw_reads = '';
 my %a_data = ();  # Amplicon data structure

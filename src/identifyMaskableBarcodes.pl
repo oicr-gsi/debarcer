@@ -7,7 +7,7 @@ Identify barcodes that are probably mutated UIDs
 
 =cut
 
-my $levenshtien_binary = "$ENV{'BHOME'}/tools/levenshtien_stream";
+my $levenshtien_binary = "$ENV{'BHOME'}/bin/levenshtien_stream";
 
 # Test the Levenshtein function
 #print distance("foo","four");
