@@ -173,12 +173,12 @@ rm DbC*.log
 # FIXME generate nucleotide context error tables
 # Still in development
 #
-# perl $BHOME/tools/trinucleotideErrors.pl --infile=$SAMPLENAME.rawPositionalComposition.txt > $SAMPLENAME.trinucErrors.raw.txt
-# perl $BHOME/tools/trinucleotideErrors.pl --infile=$SAMPLENAME.consensusPositionalComposition.bc10.txt > $SAMPLENAME.trinucErrors.cons10.txt
-# perl $BHOME/tools/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.rawPositionalComposition.txt > $SAMPLENAME.trinucErrors.raw.perSite.txt
-# perl $BHOME/tools/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.consensusPositionalComposition.bc10.txt > $SAMPLENAME.trinucErrors.cons10.perSite.txt
-# perl $BHOME/tools/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.rawPositionalComposition.txt --pentanucleotides > $SAMPLENAME.pentanucErrors.raw.perSite.txt
-# perl $BHOME/tools/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.consensusPositionalComposition.bc10.txt --pentanucleotides > $SAMPLENAME.pentanucErrors.cons10.perSite.txt
+# perl $DBSRC/trinucleotideErrors.pl --infile=$SAMPLENAME.rawPositionalComposition.txt > $SAMPLENAME.trinucErrors.raw.txt
+# perl $DBSRC/trinucleotideErrors.pl --infile=$SAMPLENAME.consensusPositionalComposition.bc10.txt > $SAMPLENAME.trinucErrors.cons10.txt
+# perl $DBSRC/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.rawPositionalComposition.txt > $SAMPLENAME.trinucErrors.raw.perSite.txt
+# perl $DBSRC/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.consensusPositionalComposition.bc10.txt > $SAMPLENAME.trinucErrors.cons10.perSite.txt
+# perl $DBSRC/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.rawPositionalComposition.txt --pentanucleotides > $SAMPLENAME.pentanucErrors.raw.perSite.txt
+# perl $DBSRC/trinucleotideErrors-perPosition.pl --infile=$SAMPLENAME.consensusPositionalComposition.bc10.txt --pentanucleotides > $SAMPLENAME.pentanucErrors.cons10.perSite.txt
  
 
 echo "[Debarcer `date`] Running $SAMPLENAME Barcode Distribution Report" >> $MAINLOG # Approx 1 minute runtime
