@@ -122,7 +122,6 @@ if [ ! -e $SAMPLEPREFIX.sorted.bam.touch ]; then
 	touch $SAMPLEPREFIX.sorted.bam.touch;
 fi
 echo "[Debarcer `date`] Raw reads mapped by bwa: `$SAMTOOLSROOT/bin/samtools view $SAMPLEPREFIX.sorted.bam | wc -l`" >> $MAINLOG
-# samtools view $SAMPLEPREFIX.sorted.bam | cut -f 3,4 | perl $BHOME/tools/uniqCount.pl | tail -n 20 >> $MAINLOG # List top 20 amplicons, for testing
 
 
 echo "[Debarcer `date`] Generating UID depth file for $SAMPLENAME" >> $MAINLOG
