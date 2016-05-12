@@ -183,7 +183,7 @@ rm DbC*.log
 echo "[Debarcer `date`] Running $SAMPLENAME Barcode Distribution Report" >> $MAINLOG # Approx 1 minute runtime
 if [ ! -e ./tables/$SAMPLENAME.barcodeComposition.txt.touch ]; then
 time gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz |
-	perl $BHOME/reportBarcodeComposition.pl > ./tables/$SAMPLENAME.barcodeComposition.txt
+	perl $DBSRC/reportBarcodeComposition.pl > ./tables/$SAMPLENAME.barcodeComposition.txt
 	touch ./tables/SAMPLENAME.barcodeComposition.txt.touch
 fi
 
