@@ -142,7 +142,7 @@ time $BHOME/src/quickDownsamplingEstimates.sh $SAMPLENAME
 rm Rplots.pdf # Remove empty plot just made by ggplot
 
 
-## FIXME Since the UID depths file is available the composition can be analyzed here using tools/calculateBarcodeBiases.pl
+## FIXME Since the UID depths file is available the composition can be analyzed here using src/_calculateBarcodeBiases.pl
 
 echo "[Debarcer `date`] BAM Consensus for $SAMPLENAME depth	=1" >> $MAINLOG
 # Arguments: --sampleID; --consDepth; --plexity ... others.
