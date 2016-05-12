@@ -197,7 +197,7 @@ cat $MAINLOG | perl $DBSRC/summarizeAmpliconYields.pl \
 	--config=$CONFIG_FILE  \
 	--sampleID=$SAMPLENAME > $SAMPLENAME.SummaryStatistics.txt
 gunzip -c ./tables/$SAMPLENAME.UIDdepths.txt.gz | 
-	perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
+	perl $DBSRC/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 
 cd $LAUNCHDIR
 exit

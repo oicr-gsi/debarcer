@@ -5,7 +5,7 @@ use strict;
 
 Summarize per amplicon consensus depths from consensus sequences gzip file
 
-  gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $BHOME/tools/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
+  gunzip -c $SAMPLENAME.UIDdepths.txt.gz | perl $DBSRC/summarizeAmpliconConsensusDepths.pl --sampleID=$SAMPLENAME --depths=1,3,10,20,30,100 > $SAMPLENAME.consensusStatistics.txt
 
 =cut
 
