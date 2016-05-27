@@ -103,6 +103,9 @@ for ( a in unique(x$Alias) ) {
 	
 	g <- ggplot(x.oneAmp.molten, aes(x=Position, y=value, fill=variable)) + geom_bar(position="dodge", stat = "identity")
 	g <- g + theme_bw() + labs(title = paste(samplename, a, BarcodeFamily))
+	g <- g + ylab("Mutation Fraction")
+	g <- g + xlab("Chromosomal Position")
+	g <- g + scale_fill_brewer(palette = "Paired")
 	g <- g + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) + scale_x_continuous(breaks=tickLabels)
 
 	a <- gsub("\\/", "-", a) # Eliminate / in amplicon names that create invalid paths
