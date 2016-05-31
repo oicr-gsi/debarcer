@@ -91,6 +91,7 @@ STARTTIME=$(date +"%Y%m%d-%H%M%S")
 MAINLOG="DeBarcEr."$STARTTIME".log"
 echo "[Debarcer `date`] : Logfile timestamp: $STARTTIME" > $MAINLOG
 echo "Running Debarcer version $VERSIONID" >> $MAINLOG
+echo "---" >> $MAINLOG
 echo "git info:" >> $MAINLOG
 cat $DBROOT/.git/HEAD >> $MAINLOG
 cat $DBROOT/.git/`cut -d" " -f 2 $DBROOT/.git/HEAD` >> $MAINLOG
