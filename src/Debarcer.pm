@@ -10,6 +10,20 @@ our %primerSets = ();
 use lib "$ENV{'BHOME'}/utils/Text-Levenshtein-0.12/lib/";
 use Text::Levenshtein qw(distance);
 
+# use Data::Dumper; # for logging calls
+# use Log::Log4perl; # see http://search.cpan.org/~mschilli/Log-Log4perl-1.46/lib/Log/Log4perl.pm
+#
+# FIXME: is this where the logging config file should go?
+# Log::Log4perl::init_and_watch("$ENV{'BHOME'}/config/log4perl.conf");
+#
+# $BHOME/config/log4perl.conf looks something like this:
+#--------------------
+# log4perl.logger.debarcer            = DEBUG, FileAppender
+# log4perl.appender.FileAppender      = Log::Log4perl::Appender::File
+# log4perl.appender.FileAppender.filename = debarcer.log
+# log4perl.appender.FileAppender.layout   = Log::Log4perl::Layout::SimpleLayout
+#--------------------
+
 sub identifyAmpliconBam {
 	my $seq = shift @_;
 	my $CIGAR = shift @_;
@@ -44,6 +58,8 @@ sub identifyAmplicon {
 	my $whichAmplicon = 'UNKNOWN';
 	my $ampliconSeq = '';
 	
+	# my $logger = Log::Log4perl->get_logger('debarcer');  # FIXME
+		
 	foreach my $ampID ( keys %primerSets ) {
 		my ($fwd, $rev) = @{$primerSets{$ampID}};
 		
@@ -72,7 +88,10 @@ sub identifyAmplicon {
 			
 	}
 	
+	# Logger Example # FIXME
 	# print "\n$seq\nAMPLICON= $whichAmplicon $barcode $ampliconSeq\n";
+	# Should be
+	# $logger->debug("\n$seq\nAMPLICON= $whichAmplicon $barcode $ampliconSeq\n");
 	
 	return ($whichAmplicon, $bc_position, $barcode, $ampliconSeq);	
 }
