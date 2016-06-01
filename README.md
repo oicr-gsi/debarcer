@@ -16,7 +16,7 @@ Setting up Debarcer
 
 1) Download a debarcer release, i.e.:
 
-    wget https://github.com/oicr-gsi/debarcer/archive/v0.2.0.tar.gz
+    wget https://github.com/oicr-gsi/debarcer/archive/v0.3.1.tar.gz
 
 2) Unpack into a convenient directory, which will become the `$BHOME`
    enviroment variable.

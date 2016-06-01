@@ -86,7 +86,7 @@ if [[ $ONLYGRAPHICS ]]; then
 fi
 
 
-VERSIONID="0.2.0b"
+VERSIONID="0.3.1"
 STARTTIME=$(date +"%Y%m%d-%H%M%S")
 MAINLOG="DeBarcEr."$STARTTIME".log"
 echo "[Debarcer `date`] : Logfile timestamp: $STARTTIME" > $MAINLOG
