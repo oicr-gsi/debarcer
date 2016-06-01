@@ -29,10 +29,10 @@
 \end{verbatim}
 
 Once the archive has been extracted to a suitable directory, you
-will need to copy the \texttt{config\_files/debarcer.dotfile} 
+will need to copy the \\
+\texttt{config\_files/debarcer.dotfile} 
 to \texttt{\~\//.debarcer} as 
-this configuration file is used throughout the pipeline.
-
+this configuration file is used throughout the pipeline. \\
 
 The directory containing runDebarcer.sh must be in your PATH
 
@@ -64,15 +64,27 @@ Using modules is handy for running via qsub:
 There is a small test set of data included with the distribution:
 
 \begin{verbatim}
-  runDebarcer.sh -r -f [DebarcerRoot]/demodata/Sample_Test.R1.fastq.gz -n Sample_Test -o ./testresults
+  runDebarcer.sh -r -f [DebarcerRoot]/demodata/Sample_Test.R1.fastq.gz \
+	-n Sample_Test -o ./testresults
 \end{verbatim}
 
-This should take a few minutes to run.
+This test data was extracted from a sample that only contained the TP146 amplicon
+\big(Specifically, \texttt{Sample 9297} from an internal dataset, to be posted somewhere in the future\big).
+This file only contains reads which were from UID families of depth 20-30, inclusive.
+
+\subsubsection{Timings}
+
+\begin{itemize}
+	\item The included test file should run in under 5 minutes.
+	\item 2 million mapped reads: Under 15 minutes.
+	\item 20 million mapped reads: ~200 minutes (~3h)
+\end{itemize}
+
 
 \subsection{Automating Analyses}
 
 To help automate this whole process, the \\texttt{populateWorkDirectory.pl} script in the 
-debarcer 'tools' directory can create a results hierarchy based on a
+debarcer 'src' directory can create a results hierarchy based on a
 directory of fastq files and write the appropriate run scripts:
 
 \begin{verbatim}
@@ -80,7 +92,7 @@ directory of fastq files and write the appropriate run scripts:
   cd ResultsRoot\fastqs
   find [location of the the fastq files] -name "*fastq.gz" -exec ln -s {} \;
   cd ..
-  perl $DEBARCERHOME\tools\populateWorkDirectory.pl ./fastqs
+  perl $DEBARCERHOME\src\populateWorkDirectory.pl ./fastqs
 \end{verbatim}
 
 
@@ -141,6 +153,9 @@ i.e.
 	tar cvfz results_file_name.tar.gz `[find command goes in backticks]`
 \end{verbatim}
 
+This can also be done using the \texttt{packageResults.sh} file
+in the Debarcer \texttt{tools} subdirectory. Simply execute that
+script from the root of your results hierarchy.
 
 \section{Miscellaneous}
 
