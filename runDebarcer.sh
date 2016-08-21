@@ -86,11 +86,13 @@ if [[ $ONLYGRAPHICS ]]; then
 fi
 
 
-VERSIONID="0.3.1"
+VERSIONID="0.4.0"
 STARTTIME=$(date +"%Y%m%d-%H%M%S")
 MAINLOG="DeBarcEr."$STARTTIME".log"
+PERLVERSION=`perl -e 'print $^V';`
 echo "[Debarcer `date`] : Logfile timestamp: $STARTTIME" > $MAINLOG
 echo "Running Debarcer version $VERSIONID" >> $MAINLOG
+echo "Running perl version $PERLVERSION" >> $MAINLOG
 echo "---" >> $MAINLOG
 echo "git info:" >> $MAINLOG
 cat $DBROOT/.git/HEAD >> $MAINLOG
@@ -118,7 +120,9 @@ fi
 echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 
 CONFIG_FILE="$DBROOT/config/debarcer.conf"
-### FIXME Need to dump the config file to the log here ###
+echo "Using debarcer config file:" >> $MAINLOG
+cat $CONFIG_FILE >> $MAINLOG;
+echo "End of debarcer config file." >> $MAINLOG
 
 # Some bwa mem files for future development
 #
