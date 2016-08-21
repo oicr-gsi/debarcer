@@ -8,7 +8,7 @@ SAMPLENAME=$2
 GRAPHICSSRC=$DBROOT"/src/graphics"
 
 # Plotting functions
-module load R/3.1.0
+module load R/3.3.0
 
 # Rscript $GRAPHICSSRC/analysis_plotting.R.txt $SAMPLENAME  # For ecdfs, FIXME
 

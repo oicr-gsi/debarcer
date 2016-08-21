@@ -44,6 +44,15 @@ Dependencies
 The pipeline needs to be run on a maching with at least 16GB memory.
 It may run with less but this hasn't been tested extensively.
 
+Debarcer is currently run at OICR using the following configuration:
+- perl 5.24.0
+- BioPerl 1.6.923
+- R 3.3.0
+- Bio-SamTools-1.43
+- bwa 0.7.12
+- OGS queue scheduling system
+
+
 Running Debarcer
 ----------------
 
