@@ -120,7 +120,14 @@ if [ ! "$BHOME" ]; then
 fi
 echo "[Debarcer `date`] Running workflow from $BHOME" >> $MAINLOG
 
-CONFIG_FILE="$DBROOT/config/debarcer.conf"
+# Setup the config file
+if [ -e debarcer.conf ]; 
+then
+	CONFIG_FILE=debarcer.conf
+	echo "Found debarcer.conf in the run directory"
+else 
+	CONFIG_FILE="$DBROOT/config/debarcer.conf"
+fi
 echo "Using debarcer config file:" >> $MAINLOG
 cat $CONFIG_FILE >> $MAINLOG;
 echo "End of debarcer config file." >> $MAINLOG
