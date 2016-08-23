@@ -203,8 +203,12 @@ my %outputTable = ();
 foreach my $amp ( keys %readData ) {
 	# print Dumper(\%{$readData{$amp}});
 
+	#Assign an amplicon name, if none exists, generate one
 	my $ampliconName = $siteAliasTable{$amp};
-
+	unless ($ampliconName) {
+		$ampliconName = &Debarcer::generateAmpliconName($amp);
+	}
+	
 	foreach my $position ( sort { $a <=> $b } keys %{$readData{$amp}} ) {
 
 		# collect raw data

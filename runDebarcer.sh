@@ -185,11 +185,11 @@ if [ $USE_SGE = true ]; then
 else
 
 	# Do the commands serially on the local node
-	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=1 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons1.txt
-	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=3 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons3.txt
-	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=10 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons10.txt
-	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=20 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons20.txt
-	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=30 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons30.txt
+	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=1 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons1.txt 2>&1
+	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=3 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons3.txt 2>&1
+	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=10 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons10.txt 2>&1
+	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=20 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons20.txt 2>&1
+	time perl $DBSRC/generateConsensusFromBAM.pl --bam=$SAMPLEPREFIX.sorted.bam --sampleID=$SAMPLENAME --consDepth=30 --config=$CONFIG_FILE > ./tables/$SAMPLENAME.bamPositionComposition.cons30.txt 2>&1
 
 fi
 

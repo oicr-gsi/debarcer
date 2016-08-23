@@ -77,7 +77,7 @@ print "\n";
 
 print "All amplicons identified:\n";
 foreach my $a ( sort keys %a_data ) {
-	my $ampliconName = ( exists $positionAliases{$a} ) ? $positionAliases{$a} : "-";
+	my $ampliconName = ( exists $positionAliases{$a} ) ? $positionAliases{$a} : &Debarcer::generateAmpliconName($a);
 	printf( "%s\t%s\t%d\n", $a, $ampliconName, $a_data{$a}->{1}{"coverage"});
 }
 
