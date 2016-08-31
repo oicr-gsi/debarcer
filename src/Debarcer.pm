@@ -615,6 +615,49 @@ Read in a table of position-amplicon names useful for making output more human-r
 	return %h;
 }
 
+sub generateAmpliconName {
+
+=pod
+
+=head2 generateAmpliconName
+
+Take a given genomic position and return a made up amplicon name.  This will try 
+to create a descriptive name for amplicon start positions that are not recorded
+in the amplicon table.
+
+=cut
+	
+	my $position = shift @_;
+	my $ampliconName = 'UNKNOWN';
+
+	# Load and hashify the gene table
+	# Should eventually be done only once per run!
+	open GENETABLE, "gunzip -c $ENV{'BHOME'}/data/hg19_genes_table.txt.gz |";
+	my %genesHash = ();
+	while ( <GENETABLE> ) {
+		next if (/^Chromosome/);
+		chomp;
+		my ($chrom, $start, $end, $symbol) = split("\t");
+		$chrom = "chr$chrom";
+		$genesHash{$chrom}->{$symbol}{"start"} = $start;
+		$genesHash{$chrom}->{$symbol}{"end"} = $end;
+	}
+	close GENETABLE;
+	
+	# A dumb loop to assign a gene symbol to the current position
+	my ($chr, $loc) = split(":", $position);
+	foreach my $gene ( keys %{$genesHash{$chr}} ) {
+		if ( $genesHash{$chr}->{$gene}{"start"} <= $loc & $genesHash{$chr}->{$gene}{"end"} >= $loc ) {
+			$ampliconName = $gene . "_" . $loc;
+			last;
+		}
+	}
+		
+	return $ampliconName;
+	
+}
+
+
 sub loadAmpliconData {
 
 =pod
