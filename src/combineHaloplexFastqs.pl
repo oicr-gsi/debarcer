@@ -62,4 +62,26 @@ close INFILE;
 close OUTFILE;
 system("gzip $outputfile");
 print STDERR "Added HaloplexHS barcodes to R1 file\n";
+
+# Add the barcodes to the Read 2 file
+# This section is substantially the same as for R1 with minor differences
+open INFILE, "gunzip -c ".$args{"R2file"}." |";
+$outputfile = $args{"outputdir"}."/". basename($args{"R2file"});
+$outputfile =~ s/_R\d_/_R2_/;  # Ensure the file indicated R2
+$outputfile =~ s/\.gz$//; # output uncompressed fastq
+open OUTFILE, ">$outputfile";
+while (<INFILE>) {
+	if (/^@/) {  # If we've hit a read entry the next line is the HaloplexHS barcode
+		my @readHeader = split(/\s/, $_);
+		$readHeader[0] .= ":HaloplexHS-".$haloplexBarcodes{$readHeader[0]};
+		$readHeader[1] =~ s/^\d/2/; # Ensure this tag indicates read 2
+		print OUTFILE join(" ", @readHeader) . "\n";
+	} else {
+		print OUTFILE;
+	}
+}
+close INFILE;
+close OUTFILE;
+system("gzip $outputfile");
+print STDERR "Added HaloplexHS barcodes to R2 file\n";
  
