@@ -6,6 +6,10 @@ use strict;
 Combine HaloplexHS barcode fastqs with read fastqs
 
   perl combineHaloplexFastqs.pl --R1file [] --R2file [] --barcodefastq [] --outputdir []
+  
+  --R1file is the fastq.gz that contains your actual Read 1s
+  --R2file is the fastq.gz that contains your actual Read 2s
+  --barcodefastq is the fastq.gz containing 'reads' that are the HaloplexHS UMI
 
 =cut
 
