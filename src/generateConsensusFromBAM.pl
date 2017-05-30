@@ -106,8 +106,18 @@ while (my $alignment = $iterator->next_seq) {
 	next unless ( exists $familySites{$AmpliconID} );
 	$familySitesSeqCount++;
 	
-	my $read_dna = $alignment->query->dna();
-	my ($bc_position, $barcode) = &Debarcer::extractBarcodeQuick($read_dna);
+	# Extract a UMI for the appropriate library type
+	my $barcode = '';
+	my $bc_position = 0;
+	my $read_name = $alignment->query->name();
+	
+	if ($read_name =~ /HaloplexHS/) { # We have a HaloplexHS read
+		$read_name =~ m/HaloplexHS-([ACTG]{10})/;
+		$barcode = $1;
+	} else { # We have a SiMSenSeq read
+		my $read_dna = $alignment->query->dna();
+		($bc_position, $barcode) = &Debarcer::extractBarcodeQuick($read_dna);
+	}
 	
 	next unless ( $bc_position == 0 );
 

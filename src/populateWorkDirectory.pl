@@ -23,6 +23,11 @@ use Cwd;
 my $fastq_source = shift @ARGV or die "\nNeed to provide a directory with fastq.gz files to process...\n\n";
 my @fastqs = `ls $fastq_source/*_R1_001.fastq.gz`;
 
+# Set plexity if given
+my $plexity = shift @ARGV;
+$plexity = ( $plexity ) ? $plexity : 50;
+print STDERR "Using plexity $plexity\n";
+
 my $module_version = "dev";
 &GetOptions(
 	"module=s" => $module_version
@@ -52,11 +57,9 @@ foreach my $fastq ( @fastqs ) {
 	
 	open CONFIGSCRIPT, ">results/$samplename/debarcer.conf";
 
-	print CONFIGSCRIPT <<BLOCK
-# Debarcer override file.  The master process stores these variables in the config array.
-plexity=50
-BLOCK
-	;
+	print CONFIGSCRIPT "# Debarcer override file.  The master process stores these variables in the config array.\n";
+	print CONFIGSCRIPT "plexity=$plexity\n";
+
 	close CONFIGSCRIPT;
 	
 	print RELAUNCHSCRIPT <<BLOCK
