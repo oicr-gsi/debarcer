@@ -399,18 +399,22 @@ sub identifyFamilySites {
 	print STDERR $ENV{"SAMTOOLSROOT"}."\n";
 	my $SAMTOOLSBINARY = $ENV{"SAMTOOLSROOT"}."/bin/samtools";
 	my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4`;
-	foreach my $site ( @allSites ) { chomp $site; $site =~ s/\t/:/; $familySites{$site}++; }
+	foreach my $site ( @allSites ) { 
+		chomp $site; 
+		$site =~ s/\t/:/; $familySites{$site}++ unless($site=~/\*/); 
+	}
 	my @goodSites = (sort { $familySites{$b} <=> $familySites{$a} } keys %familySites);
 	@goodSites = @goodSites[0..$nSites];  # Take the top n-1
 	print STDERR "Compiling info for Family Sites:\n";
-	for ( my $site = 0; $site < scalar( @goodSites ); $site++ ) {
-		print STDERR "$goodSites[$site]\t" . $familySites{$goodSites[$site]} . "\n";
-		splice( @goodSites, $site, 1) if ( $site =~ /\*/ );  #Remove the current site if it's unmapped.
-		}
+	
+	#for ( my $site = 0; $site < scalar( @goodSites ); $site++ ) {
+	#	print STDERR "$goodSites[$site]\t" . $familySites{$goodSites[$site]} . "\n";
+	#	splice( @goodSites, $site, 1) if ( $site =~ /\*/ );  #Remove the current site if it's unmapped.
+	#	}
 	print STDERR "Note:  If present, the '* 0' (i.e. unmapped) site has been dropped\n";
 	
 	my %goodHash = ();
-	@goodHash{@goodSites} = 1;
+	@goodHash{@goodSites} = @familySites{@goodSites};
 	return %goodHash;
 	
 }
