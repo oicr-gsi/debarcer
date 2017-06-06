@@ -124,6 +124,9 @@ if(-e $args{"sitesfile"}){
 	print STDERR $count . " family sites loaded and saved\n";	
 }	
 
+exit unless ($args{UIDdepths} || $args{basecalls});
+
+
 print STDERR "loading site aliases from $ampliconTable\n";
 my %siteAliasTable = &Debarcer::getPositionAliases($ampliconTable);
 
