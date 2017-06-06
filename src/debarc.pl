@@ -165,7 +165,7 @@ if ($args{"basecalls"}){
 print STDERR "begin parsing bam file $infile\n";
 my $sam = Bio::DB::Sam->new(-bam => $infile, -fasta => $config{refgenome} );
 
-my %sitecount=0;
+my $sitecount=0;
 for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
 	$sitecount++;
 	my($chrom,$start)=split /:/,$AmpliconID;
@@ -315,7 +315,7 @@ sub generate_consensus_data{
 	
 	my ($AmpliconCount, $AmpliconCoverage) = (0, 0);
 	### get amplicon coverage at this depth
-	for my $uid ( sort {$uids{$b}{count}<=>$uids{family}{$a}{count}} keys %uids) {
+	for my $uid ( sort {$uids{$b}{count}<=>$uids{$a}{count}} keys %uids) {
 		my $uidcount=$uids{$uid}{count};
 		
 		if ( $uidcount >= $depth ) {
