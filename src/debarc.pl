@@ -165,7 +165,9 @@ if ($args{"basecalls"}){
 print STDERR "begin parsing bam file $infile\n";
 my $sam = Bio::DB::Sam->new(-bam => $infile, -fasta => $config{refgenome} );
 
-for my $AmpliconID(keys %sites){
+my %sitecount=0;
+for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
+	$sitecount++;
 	my($chrom,$start)=split /:/,$AmpliconID;
 	print "extracting reads at $AmpliconID\n";
 
@@ -224,10 +226,7 @@ for my $AmpliconID(keys %sites){
 		printf $POSITIONFILE ("\t%d", $consDepth);
 		print $POSITIONFILE "\n";
 	}
-	
-	
-	exit;
-	
+	last if $sitecount>2;
 }
 
 ##print STDERR "Raw reads read from $infile: $inputSeqCount\n";   ## no longer parsing the whole file
