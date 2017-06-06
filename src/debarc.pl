@@ -124,7 +124,7 @@ if(-e $args{"sitesfile"}){
 my $count=scalar keys %sites;
 print STDERR $count ." family sites loaded\n";
 
-
+## if these flags aren't set, then proceed no further
 exit unless ($args{UIDdepths} || $args{basecalls});
 
 
@@ -140,8 +140,7 @@ print STDERR "identifying invalid barcodes\n";
 my %invalidBarcodes = &loadBarcodeMaskFile($args{"sampleID"});
 #print Dumper(\%invalidBarcodes);<STDIN>;
 
-print STDERR "parsing bam file $infile\n";
-my $sam = Bio::DB::Sam->new(-bam => $infile, -fasta => $config{refgenome} );
+
 
 ### this does not appear to be used?
 #my $bam = $sam->bam();
@@ -163,25 +162,35 @@ if ($args{"basecalls"}){
 	print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef","raw" . join("\traw", @SNVtypes, "Depth"),"cons" . join("\tcons", @SNVtypes, "Depth"),"\n");
 }
 
+print STDERR "begin parsing bam file $infile\n";
+my $sam = Bio::DB::Sam->new(-bam => $infile, -fasta => $config{refgenome} );
 
 for my $AmpliconID(keys %sites){
 	my($chrom,$start)=split /:/,$AmpliconID;
-	print "extracting $AmpliconID\n";
+	print "extracting reads at $AmpliconID\n";
 
 	### sitedata will store the results of parsing the bam file for reads at the specific site
 	### it will include uid family stats, consensus information and base calls by positions
 	my %sitedata=get_site_data($chrom,$start,$sam,$AmpliconID);
 	my $ampliconReportingThreshold = &calculateAmpliconReportingThreshold_rev(%{$sitedata{readpos}});
 	my $uidcount=scalar keys %{$sitedata{uids}};
-	print "$uidcount UIDs\n";
+	print "$uidcount UIDs found at this site\n";
 	
 	( my $printableAmpID = $AmpliconID ) =~ s/\t/:/;
-	# Just print the UID depth file if the --justUIDdepths flag is set.
+	
+	
+	
+	
+	# print to the UID depth file if the UIDdepths flag is set.
 	print_uid_depths($UIDDEPTHFILE,$printableAmpID,$sitedata{uids}) if($args{UIDdepths});
-
+	
 
 	next unless ($args{basecalls});  ### proceed no further if basecalls are not asked for
-	my %consReadData=generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$consensusDepth);
+	
+	### pass the sitedata as a reference.  it will be modified by this function to store consensus sequences
+	my %consdata=generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$consensusDepth);
+	
+
 	
 	#my $ampliconName = $siteAliasTable{$AmpliconID};
 	#unless ($ampliconName) {
@@ -191,7 +200,7 @@ for my $AmpliconID(keys %sites){
 	my $ampliconName = $siteAliasTable{$AmpliconID} || &Debarcer::generateAmpliconName($AmpliconID);
 
 	
-	my %calls=get_position_calls($AmpliconID,\%sitedata,\%consReadData,$ampliconReportingThreshold);
+	my %calls=get_position_calls($AmpliconID,\%sitedata,\%consdata,$ampliconReportingThreshold);
 	for my $pos ( sort {$a <=> $b} keys %calls){
 		
 		my ($rawDepth, $consDepth) = ( 0, 0);
@@ -237,7 +246,7 @@ exit;
 sub get_position_calls{
 	my ($id,$data,$consdata,$threshold)=@_;
 	my @SNVtypes=qw/A C G T D I N/; 
-	print STDERR "calculating position calls\n";
+	print STDERR "calculating position table for $id\n";
 		
 	my %table;
 		
@@ -291,13 +300,15 @@ sub get_position_calls{
 
 
 sub generate_consensus_data{
-	my($id,$FH,$familyDataRef,$depth)=@_;
+	my($id,$FH,$hashref,$depth)=@_;
 	my %data;
+	
+	my %uids=%{$$hashref{uids}};
 	
 	my ($AmpliconCount, $AmpliconCoverage) = (0, 0);
 	### get amplicon coverage at this depth
-	for my $uid ( sort {$$familyDataRef{family}{uids}{$b}{count}<=>$$familyDataRef{family}{uids}{$a}{count}} keys %{$$familyDataRef{family}{uids}}) {
-		my $uidcount=$$familyDataRef{family}{uids}{$uid}{count};
+	for my $uid ( sort {$uids{$b}{count}<=>$uids{family}{$a}{count}} keys %uids) {
+		my $uidcount=$uids{$uid}{count};
 		
 		if ( $uidcount >= $depth ) {
 			$AmpliconCount++;
@@ -305,9 +316,12 @@ sub generate_consensus_data{
 		}
 
 		### store the consensus back into the data reference
-		my @raw_reads=@{$$familyDataRef{family}{uids}{$uid}{raw}};
-		my $consensus=&generateConsensus(@raw_reads,$depth);
-		$$familyDataRef{family}{uids}{$uid}{"consensus"} = $consensus;
+		my @raw_reads=@{$uids{$uid}{raw}};
+		my $consensus=&generateConsensus(@raw_reads,$depth) || "N/A";
+		
+		### store the consensus sequence back into the uids sturcture reference here
+		$$hashref{uids}{$uid}{consensus}=$consensus;   
+		
 		# $familyData{$amp}->{$barcode}{"consensus"} = &generatePhyloConsensus(@{$familyData{$amp}->{$barcode}{"raw"}}, $consensusDepth);  # Still in progress.
 		# Write the UID depth information to a file
 		printf $FH ("%s\t%s\t%s\t%s\n", $id, $uid, $uidcount, $consensus );
