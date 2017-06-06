@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 debarcer
 ========
 
@@ -94,3 +95,6 @@ Nucleic Acids Research, 2016. [link](http://nar.oxfordjournals.org/content/early
 Changes
 -------
 Feb 10, 2016: Exported svn rev389 and imported it into the 'debarcer' repo on github.
+=======
+# bioinformatics-support
+>>>>>>> 6c200dbcf961f6fc784e941853f06502a33705f5
