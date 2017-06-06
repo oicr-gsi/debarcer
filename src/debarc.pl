@@ -106,10 +106,9 @@ if(-e $args{"sitesfile"}){
 	while(<$FSITES>){
 		chomp;
 		my($site,$size)=split /\t/;
-		$sites{$_}=$size;
+		$sites{$site}=$size;
 	}
-	my $count=scalar keys %sites;
-	print STDERR $count ." family sites loaded\n";
+
 }else{
 	print STDERR "sites file not found. Identifying Family sites : $nSites\n";
 	#(open my $FSITES,">",$args{"sampleID"}.".familysites") || die "unable to open family sites";
@@ -120,9 +119,11 @@ if(-e $args{"sitesfile"}){
 		print $FSITES "$site\t$sites{$site}\n";
 	}
 	close $FSITES;
-	my $count=scalar keys %sites;
-	print STDERR $count . " family sites loaded and saved\n";	
 }	
+
+my $count=scalar keys %sites;
+print STDERR $count ." family sites loaded\n";
+
 
 exit unless ($args{UIDdepths} || $args{basecalls});
 
@@ -406,11 +407,6 @@ sub identifyFamilySites {
 	my @goodSites = (sort { $familySites{$b} <=> $familySites{$a} } keys %familySites);
 	@goodSites = @goodSites[0..$nSites];  # Take the top n-1
 	print STDERR "Compiling info for Family Sites:\n";
-	
-	#for ( my $site = 0; $site < scalar( @goodSites ); $site++ ) {
-	#	print STDERR "$goodSites[$site]\t" . $familySites{$goodSites[$site]} . "\n";
-	#	splice( @goodSites, $site, 1) if ( $site =~ /\*/ );  #Remove the current site if it's unmapped.
-	#	}
 	print STDERR "Note:  If present, the '* 0' (i.e. unmapped) site has been dropped\n";
 	
 	my %goodHash = ();
