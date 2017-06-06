@@ -188,9 +188,8 @@ for my $AmpliconID(keys %sites){
 	next unless ($args{basecalls});  ### proceed no further if basecalls are not asked for
 	
 	### pass the sitedata as a reference.  it will be modified by this function to store consensus sequences
-	my %consdata=generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$consensusDepth);
 	
-
+	generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$consensusDepth);
 	
 	#my $ampliconName = $siteAliasTable{$AmpliconID};
 	#unless ($ampliconName) {
@@ -200,26 +199,28 @@ for my $AmpliconID(keys %sites){
 	my $ampliconName = $siteAliasTable{$AmpliconID} || &Debarcer::generateAmpliconName($AmpliconID);
 
 	
-	my %calls=get_position_calls($AmpliconID,\%sitedata,\%consdata,$ampliconReportingThreshold);
-	for my $pos ( sort {$a <=> $b} keys %calls){
+	my %calltable=get_position_calls($AmpliconID,\%sitedata,$ampliconReportingThreshold);
+		
+	
+	for my $pos ( sort {$a <=> $b} keys %calltable){
 		
 		my ($rawDepth, $consDepth) = ( 0, 0);
 		my ($probableRefBase, $n) = ('', 0);
 		for my $base ( @SNVtypes ) {
-			my $snvRawDepth = $calls{$pos}{"raw"}{$base};
+			my $snvRawDepth = $calltable{$pos}{"raw"}{$base};
 			$rawDepth += $snvRawDepth; # Increment rawDepth
 			if ( $snvRawDepth > $n ) { # If this is the highest raw depth observed, make the base the probableBase
 				$probableRefBase = $base;
 				$n = $snvRawDepth;
 			}
 			
-			$consDepth += $calls{$pos}{"consensus"}{$base}; # Increment consDepth
+			$consDepth += $calltable{$pos}{"consensus"}{$base}; # Increment consDepth
 		}
 		
 		printf $POSITIONFILE ("%s\t%s\t%s\t%s", $chrom, $ampliconName, $pos, $probableRefBase);
-		printf $POSITIONFILE ("\t%d", $calls{$pos}{"raw"}{$_}) foreach ( @SNVtypes );
+		printf $POSITIONFILE ("\t%d", $calltable{$pos}{"raw"}{$_}) foreach ( @SNVtypes );
 		printf $POSITIONFILE ("\t%d", $rawDepth);
-		printf $POSITIONFILE ("\t%d", $calls{$pos}{"consensus"}{$_}) foreach ( @SNVtypes );
+		printf $POSITIONFILE ("\t%d", $calltable{$pos}{"consensus"}{$_}) foreach ( @SNVtypes );
 		printf $POSITIONFILE ("\t%d", $consDepth);
 		print $POSITIONFILE "\n";
 	}
@@ -244,14 +245,22 @@ exit;
 
 #################################################################################################
 sub get_position_calls{
-	my ($id,$data,$consdata,$threshold)=@_;
+	my ($id,$data,$threshold)=@_;
+	
+	
+	
+	### $data is a reference to the site data
 	my @SNVtypes=qw/A C G T D I N/; 
 	print STDERR "calculating position table for $id\n";
 		
 	my %table;
 		
-	foreach my $position ( sort { $a <=> $b } keys %{$$data{readpos}} ) {
+	foreach my $position ( sort { $a <=> $b } keys %{$$data{readpos}}) {
 		my ($probableBase, $n, $rawDataString) = ('', 0, '');
+		
+		
+		### I think this can be omitted, it is not saved at all.  ie, probable base information.  and it is recalculated in the main function
+		### check on this to ensure you've not missed any logic
 		my %rawDataHash = ();
 		my $depth = 0;  #Depth
 		for my $snv ( @SNVtypes ) {
@@ -292,7 +301,7 @@ sub get_position_calls{
 	
 		foreach my $base ( @SNVtypes ) {
 			$table{$genomePosition}{"raw"}{$base} += $rawDataHash{$base};
-			$table{$genomePosition}{"consensus"}{$base} += $$consdata{$position}{$base};
+			$table{$genomePosition}{"consensus"}{$base} += $$data{conspos}{$position}{$base};
 		}
 	}
 	return %table;
@@ -301,7 +310,7 @@ sub get_position_calls{
 
 sub generate_consensus_data{
 	my($id,$FH,$hashref,$depth)=@_;
-	my %data;
+	
 	
 	my %uids=%{$$hashref{uids}};
 	
@@ -329,11 +338,11 @@ sub generate_consensus_data{
 		for (my $i = 0; $i < scalar(@bases); $i++) {
 			my $base=$bases[$i];
 			$base =~ tr/acgt/ACGT/;
-			$data{$i}{$base}++;
+			
+			$$hashref{conspos}{$i}{$base}++;
 		}
 	}
 	print STDERR "$id\tdepth|count|coverage\t$depth\t$AmpliconCount\t$AmpliconCoverage\n";
-	return %data;
 }
 
 sub print_uid_depths{
