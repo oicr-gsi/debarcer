@@ -50,9 +50,16 @@ GetOptions(
 	"sites=s"		=> \$opts{"sitesfile"},
 	"UIDdepths"		=> \$opts{"UIDdepths"},
 	"basecalls" 	=> \$opts{"basecalls"},
-	"out=s"				=> \$opts{output_folder},
+	"out=s"			=> \$opts{output_folder},
 	"help" 			=> \$opts{help},
 );
+
+### configuration options are overwritten by command line options
+my %config = ParseConfig($opts{"configfile"});
+map{$opts{$_} = $opts{$_} || $config{$_}} keys %config;
+print Dumper(%opts);
+
+
 
 validate_options(\%opts);
 
@@ -61,7 +68,8 @@ print STDERR "--- Starting debarc.pl ---\n";
 
 # Section to load parameters from a Config::Simple format file
 
-my %config = ParseConfig($opts{"configfile"});
+
+
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
 $nSites = $opts{"plexity"} if ( $opts{"plexity"} );  # Local override if --plexity flag is set
 
@@ -690,10 +698,10 @@ sub validate_options{
 	usage("Help requested.") if($opts{help});
 	
 	if(! $$opts{configfile} || ! -e $$opts{configfile}){
-		usage("Configuration file not supplied or not found.");
+		usage("Configuration file not provided or not found.");
 	}
 	if(! $$opts{bam} || ! -e $$opts{bam}){
-		usage("Bam file not supplied or not found.");
+		usage("Bam file not provided or not found.");
 	}
 	
 	if(! $$opts{sampleID}){
@@ -701,9 +709,12 @@ sub validate_options{
 	}
 
 	if(! $$opts{output_folder} || ! -d $$opts{output_folder}){
-		usage("Output folder not supplied or not found.");
+		usage("Output folder not provided or not found.");
 	}
 	
+	if(! $opts{refgenome} || -d $opts{refgenome}){
+		usage("Reference Genome not provided in the configuration file, or file not found");
+	}
 	$$opts{consDepth}=3 unless($$opts{consDepth});
 }
 
