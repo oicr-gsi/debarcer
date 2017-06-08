@@ -33,31 +33,34 @@ use Config::General qw(ParseConfig);
 
 my $DBROOT = "$FindBin::Bin/../"; # Because script is in $DBROOT/src/
 
-print STDERR "--- Starting generateConsensusFromBAM.pl ---\n";
+
 my %args = ();
 
 GetOptions(
-	"config=s" => \$args{"configfile"},
-	"bam=s" => \$args{"bam"},
-	"sampleID=s" => \$args{"sampleID"},
-	"consDepth=s" => \$args{"consDepth"},  
-	"plexity=s" => \$args{"plexity"},  
-	# "strictCons" => \$args{"strictCons"},  # Strict consensus
-	"downsample=s" => \$args{"downsample"},
-	"justUIDdepths" => \$args{"justUIDdepths"},
-	"justTargets" => \$args{"justTargets"},
-	"test" => \$args{"test"},  # test mode
-	"sitesfile=s" => \$args{"sitesfile"},
-	"UIDdepths" => \$args{"UIDdepths"},
-	"basecalls" => \$args{"basecalls"},
-	"output=s" => \$args{output_folder},
+	"config=s" 		=> \$args{"configfile"},
+	"bam=s" 		=> \$args{"bam"},
+	"sampleID=s" 	=> \$args{"sampleID"},
+	"consDepth=s" 	=> \$args{"consDepth"},  
+	"plexity=s" 	=> \$args{"plexity"},  
+	# "strictCons" 	=> \$args{"strictCons"},  # Strict consensus
+	"downsample=s" 	=> \$args{"downsample"},
+	"justUIDdepths"	=> \$args{"justUIDdepths"},
+	"justTargets" 	=> \$args{"justTargets"},
+	"test"			=> \$args{"test"},  # test mode
+	"sites=s"		=> \$args{"sitesfile"},
+	"UIDdepths"		=> \$args{"UIDdepths"},
+	"basecalls" 	=> \$args{"basecalls"},
+	"output=s"		=> \$args{output_folder},
+	"help" 			=> \$args{help},
 );
 
+validate_options(%args);
 
 
+print STDERR "--- Starting generateConsensusFromBAM.pl ---\n";
 
 # Section to load parameters from a Config::Simple format file
-die "Need to supply a config file.\n" unless ( $args{"configfile"} );
+
 my %config = ParseConfig($args{"configfile"});
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
 $nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
@@ -226,7 +229,7 @@ for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
 		printf $POSITIONFILE ("\t%d", $consDepth);
 		print $POSITIONFILE "\n";
 	}
-	last if $sitecount>2;
+	#last if $sitecount>2;
 }
 
 ##print STDERR "Raw reads read from $infile: $inputSeqCount\n";   ## no longer parsing the whole file
@@ -681,4 +684,43 @@ below which positions aren't reported in the cons<depth>.txt files
 	
 	return %depthCuts;
 }
+
+sub validate_options{
+	my (%opts)=@_;
+	usage("Help requested.") if($opts{help});
+	
+	if(! $opts{configfile} || ! -e $opts{configfile}){
+		usage("Configuration file not supplied or not found.");
+	}
+	if(! $opts{bam} || ! -e $opts{bam}){
+		usage("Bam file not supplied or not found.");
+	}
+	
+	if(! $opts{sampleID}){
+		usage("sample ID not provided.");
+	}
+
+	if(! $opts{output} || ! -d $opts{output}){
+		usage("Output folder not supplied or not found.");
+	}
+}
+
+sub usage{
+	print "\ndebarc.pl [options]\n";
+	print "Options are as follows:\n";
+	print "\t--config String/filename. \n";
+	print "\t--bam String/filename.  Aligned sequence data with uid information embedded in the header lines.\n";
+	print "\t--sampleID String. Name used to prefix output files.\n";
+	print "\t--consDepth Integer. The mininum family size required to calculates consensus information.\n";
+	print "\t--plexity Integer.\n";
+	print "\t--sites String/File.  A file to write sites (if file doesn't exist), or read sites that will be assessed.\n";
+	print "\t--UIDdepths.  Emit the UIDdepths to a file.\n";
+	print "\t--basecalls.  Calculate consensus and base counts at each position.\n";
+	print "\t--output.  String/directory. Where to save analysis. Subfolders : tables, : will be created in this folder\n";
+	print "\t--help displays this usage message.\n";
+
+	die "\n@_\n\n";
+}
+
+
 
