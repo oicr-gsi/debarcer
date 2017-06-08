@@ -57,7 +57,7 @@ GetOptions(
 validate_options(%args);
 
 
-print STDERR "--- Starting generateConsensusFromBAM.pl ---\n";
+print STDERR "--- Starting debarc.pl ---\n";
 
 # Section to load parameters from a Config::Simple format file
 
@@ -65,13 +65,9 @@ my %config = ParseConfig($args{"configfile"});
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
 $nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
 
-die "Need to supply an output folder" unless ($args{output_folder});
+### set up subfolders in the output folder
 my $table_folder=$args{output_folder} ."/tables";
 mkdir($table_folder) unless(-d $table_folder);
-
-die "Need to supply a file to store or load the sites" unless($args{sitesfile});
-
-$config{refgenome}="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/bwa/0.6.2/hg19_random.fa";
 
 ### sets the amplicon table for loading a list of expected amplicons for the library
 ### sets it to a default value if not provided in the configuration
@@ -712,7 +708,7 @@ sub usage{
 	print "\t--bam String/filename.  Aligned sequence data with uid information embedded in the header lines.\n";
 	print "\t--sampleID String. Name used to prefix output files.\n";
 	print "\t--consDepth Integer. The mininum family size required to calculates consensus information.\n";
-	print "\t--plexity Integer.\n";
+	print "\t--plexity Integer. The number of sites to assess.  Will emit to sites file if it does not exist, or process this many sites\n";
 	print "\t--sites String/File.  A file to write sites (if file doesn't exist), or read sites that will be assessed.\n";
 	print "\t--UIDdepths.  Emit the UIDdepths to a file.\n";
 	print "\t--basecalls.  Calculate consensus and base counts at each position.\n";
