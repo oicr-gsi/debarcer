@@ -34,39 +34,39 @@ use Config::General qw(ParseConfig);
 my $DBROOT = "$FindBin::Bin/../"; # Because script is in $DBROOT/src/
 
 
-my %args = ();
+my %opts = ();
 
 GetOptions(
-	"config=s" 		=> \$args{"configfile"},
-	"bam=s" 		=> \$args{"bam"},
-	"sampleID=s" 	=> \$args{"sampleID"},
-	"consDepth=s" 	=> \$args{"consDepth"},  
-	"plexity=s" 	=> \$args{"plexity"},  
-	# "strictCons" 	=> \$args{"strictCons"},  # Strict consensus
-	"downsample=s" 	=> \$args{"downsample"},
-	"justUIDdepths"	=> \$args{"justUIDdepths"},
-	"justTargets" 	=> \$args{"justTargets"},
-	"test"			=> \$args{"test"},  # test mode
-	"sites=s"		=> \$args{"sitesfile"},
-	"UIDdepths"		=> \$args{"UIDdepths"},
-	"basecalls" 	=> \$args{"basecalls"},
-	"out=s"				=> \$args{output_folder},
-	"help" 			=> \$args{help},
+	"config=s" 		=> \$opts{"configfile"},
+	"bam=s" 		=> \$opts{"bam"},
+	"sampleID=s" 	=> \$opts{"sampleID"},
+	"consDepth=s" 	=> \$opts{"consDepth"},  
+	"plexity=s" 	=> \$opts{"plexity"},  
+	# "strictCons" 	=> \$opts{"strictCons"},  # Strict consensus
+	"downsample=s" 	=> \$opts{"downsample"},
+	"justUIDdepths"	=> \$opts{"justUIDdepths"},
+	"justTargets" 	=> \$opts{"justTargets"},
+	"test"			=> \$opts{"test"},  # test mode
+	"sites=s"		=> \$opts{"sitesfile"},
+	"UIDdepths"		=> \$opts{"UIDdepths"},
+	"basecalls" 	=> \$opts{"basecalls"},
+	"out=s"				=> \$opts{output_folder},
+	"help" 			=> \$opts{help},
 );
 
-validate_options(%args);
+validate_options(\%opts);
 
 
 print STDERR "--- Starting debarc.pl ---\n";
 
 # Section to load parameters from a Config::Simple format file
 
-my %config = ParseConfig($args{"configfile"});
+my %config = ParseConfig($opts{"configfile"});
 my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
-$nSites = $args{"plexity"} if ( $args{"plexity"} );  # Local override if --plexity flag is set
+$nSites = $opts{"plexity"} if ( $opts{"plexity"} );  # Local override if --plexity flag is set
 
 ### set up subfolders in the output folder
-my $table_folder=$args{output_folder} ."/tables";
+my $table_folder=$opts{output_folder} ."/tables";
 mkdir($table_folder) unless(-d $table_folder);
 
 ### sets the amplicon table for loading a list of expected amplicons for the library
@@ -74,9 +74,12 @@ mkdir($table_folder) unless(-d $table_folder);
 ###  BETTER to not use this variable, but instead change the config parameter, or set this as an argument. this is a useless variable
 my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$DBROOT/data/all_amplicons.txt" ;
 
-$args{"justTargets"} = 1;
-my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
+$opts{"justTargets"} = 1;
+my $consensusDepth = $opts{"consDepth"};
+
 print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
+
+exit;
 
 my @SNVtypes=qw/A C G T D I N/;  ### IS THIS ALL TYPES?
 
@@ -84,21 +87,23 @@ my @SNVtypes=qw/A C G T D I N/;  ### IS THIS ALL TYPES?
 my $inputSeqCount = 0;
 my $familySitesSeqCount = 0;
 
-my $infile = $args{"bam"};
+my $infile = $opts{"bam"};
 
 ### the list of sites should be provided in a file.
 ### if the file does not exist, then it needs to be created
-my %sites=load_sites($args{"sitesfile"},$nSites);
+my %sites=load_sites($opts{"sitesfile"},$nSites);
 
 my $count=scalar keys %sites;
 print STDERR $count ." family sites loaded\n";
 
 ## if these flags aren't set, then proceed no further
-exit unless ($args{UIDdepths} || $args{basecalls});
+exit unless ($opts{UIDdepths} || $opts{basecalls});
 
 
 print STDERR "loading site aliases from $ampliconTable\n";
 my %siteAliasTable = &Debarcer::getPositionAliases($ampliconTable);
+
+print Dumper(%siteAliasTable);
 
 print STDERR "loading amplicon info from $ampliconTable\n";
 my %ampliconInfo = ();
@@ -106,7 +111,7 @@ my %ampliconInfo = ();
 
 #### I DON"T UNDERSTAND THIS"
 print STDERR "identifying invalid barcodes\n";
-my %invalidBarcodes = &loadBarcodeMaskFile($args{"sampleID"});
+my %invalidBarcodes = &loadBarcodeMaskFile($opts{"sampleID"});
 #print Dumper(\%invalidBarcodes);<STDIN>;
 
 
@@ -117,16 +122,16 @@ my %invalidBarcodes = &loadBarcodeMaskFile($args{"sampleID"});
 
 ### open files as needed
 my ($UIDDEPTHFILE,$CONSENSUSFILE,$POSITIONFILE);
-if ($args{"UIDdepths"}){
-	my $uidDepthFile = $table_folder. "/" . $args{"sampleID"} . ".UIDdepths.txt.gz";
+if ($opts{"UIDdepths"}){
+	my $uidDepthFile = $table_folder. "/" . $opts{"sampleID"} . ".UIDdepths.txt.gz";
 	open $UIDDEPTHFILE, "| gzip -c > $uidDepthFile";
 	print STDERR "opening $uidDepthFile\n";
 }
 
-if ($args{"basecalls"}){
-	my $ConsensusFile = $table_folder. "/" . $args{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
+if ($opts{"basecalls"}){
+	my $ConsensusFile = $table_folder. "/" . $opts{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
 	open $CONSENSUSFILE, "| gzip -c > $ConsensusFile";
-	my $positionFile = $table_folder. "/" . $args{"sampleID"} . ".position.cons$consensusDepth.txt";
+	my $positionFile = $table_folder. "/" . $opts{"sampleID"} . ".position.cons$consensusDepth.txt";
 	open $POSITIONFILE, ">",$positionFile;
 	print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef","raw" . join("\traw", @SNVtypes, "Depth"),"cons" . join("\tcons", @SNVtypes, "Depth"),"\n");
 }
@@ -153,10 +158,10 @@ for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
 	
 	
 	# print to the UID depth file if the UIDdepths flag is set.
-	print_uid_depths($UIDDEPTHFILE,$printableAmpID,$sitedata{uids}) if($args{UIDdepths});
+	print_uid_depths($UIDDEPTHFILE,$printableAmpID,$sitedata{uids}) if($opts{UIDdepths});
 	
 
-	next unless ($args{basecalls});  ### proceed no further if basecalls are not asked for
+	next unless ($opts{basecalls});  ### proceed no further if basecalls are not asked for
 	
 	### pass the sitedata as a reference.  it will be modified by this function to store consensus sequences
 	
@@ -205,9 +210,9 @@ print STDERR "Raw reads in family sites read from $infile: $familySitesSeqCount\
 
 print STDERR "--- generateConsensusFromBAM.pl Complete ---\n";
 
-close $UIDDEPTHFILE if ($args{"UIDdepths"});
-close $CONSENSUSFILE if ($args{"basecalls"});
-close $POSITIONFILE  if ($args{"basecalls"});
+close $UIDDEPTHFILE if ($opts{"UIDdepths"});
+close $CONSENSUSFILE if ($opts{"basecalls"});
+close $POSITIONFILE  if ($opts{"basecalls"});
 
 exit;
 
@@ -217,8 +222,8 @@ sub load_sites{
 	my ($file,$nSites)=@_;
 	my %sites;
 	### if the file exists, then read in the sites
-	if(-e $args{"sitesfile"}){
-		(open my $FSITES,"<",$args{"sitesfile"}) || die "unable to open sites file";
+	if(-e $opts{"sitesfile"}){
+		(open my $FSITES,"<",$opts{"sitesfile"}) || die "unable to open sites file";
 		while(<$FSITES>){
 			chomp;
 			my($site,$size)=split /\t/;
@@ -227,11 +232,11 @@ sub load_sites{
 		close $FSITES;
 	}else{
 		print STDERR "sites file not found. Identifying Family sites : $nSites\n";
-		#(open my $FSITES,">",$args{"sampleID"}.".familysites") || die "unable to open family sites";
+		#(open my $FSITES,">",$opts{"sampleID"}.".familysites") || die "unable to open family sites";
 		%sites = &identifyFamilySites($infile, $nSites);
 
 		#### write the sties to a file
-		(open my $FSITES,">",$args{sitesfile}) || die "unable to open sites file";
+		(open my $FSITES,">",$opts{sitesfile}) || die "unable to open sites file";
 		## sort by size
 		for my $site(sort { $sites{$b} <=> $sites{$a} } keys %sites){
 			print $FSITES "$site\t$sites{$site}\n";
@@ -283,7 +288,7 @@ sub get_position_calls{
 
 			# This section will restrict reporting of amplicon positions to those within
 			# the target window specified in the *amplicons.txt file
-#			if ( $args{"justTargets"} ) {
+#			if ( $opts{"justTargets"} ) {
 #				# If a target window exists, skip $genomePosition unless it falls within start and end
 #				if ( exists $ampliconInfo{$ampliconName}{"TargetWindow"} ) {
 #					unless ( $genomePosition >= $ampliconInfo{$ampliconName}{"TargetWindow"}{"start"} & $genomePosition <= 	$ampliconInfo{$ampliconName}{"TargetWindow"}{"end"} ) {
@@ -379,14 +384,14 @@ sub get_site_data{
 		# Skip the barcode if it's in the mask hash loaded from the maskfile
 		if ( exists $invalidBarcodes{$AmpliconID}->{$barcode} ) {
 			# print "Skipping invalidBarcodes{$AmpliconID}->{$barcode}\n"; 
-			next unless ( $args{"justUIDdepths"} ); # Do not skip an invalid barcode if we're only generating the UID depth file.
+			next unless ( $opts{"justUIDdepths"} ); # Do not skip an invalid barcode if we're only generating the UID depth file.
 		}
 	
 		# Count this instance of the barcode family
 		$data{uids}{$barcode}{count}++;
 	    
 		### if not askig for basecalls, tehn no point going any futher
-		next unless($args{basecalls});
+		next unless($opts{basecalls});
 	
 		# Determine the base call or insertion/deletion status wrt to the start of the alignment, i.e.
 		# chromosomal position given in $chromStart.  Therefore $basecalls[0] is for $chromStart + 0
@@ -681,23 +686,25 @@ below which positions aren't reported in the cons<depth>.txt files
 }
 
 sub validate_options{
-	my (%opts)=@_;
+	my ($opts)=@_;
 	usage("Help requested.") if($opts{help});
 	
-	if(! $opts{configfile} || ! -e $opts{configfile}){
+	if(! $$opts{configfile} || ! -e $$opts{configfile}){
 		usage("Configuration file not supplied or not found.");
 	}
-	if(! $opts{bam} || ! -e $opts{bam}){
+	if(! $$opts{bam} || ! -e $$opts{bam}){
 		usage("Bam file not supplied or not found.");
 	}
 	
-	if(! $opts{sampleID}){
+	if(! $$opts{sampleID}){
 		usage("sample ID not provided.");
 	}
 
-	if(! $opts{output_folder} || ! -d $opts{output_folder}){
+	if(! $$opts{output_folder} || ! -d $$opts{output_folder}){
 		usage("Output folder not supplied or not found.");
 	}
+	
+	$$opts{consDepth}=3 unless($$opts{consDepth});
 }
 
 sub usage{
@@ -706,7 +713,7 @@ sub usage{
 	print "\t--config String/filename. \n";
 	print "\t--bam String/filename.  Aligned sequence data with uid information embedded in the header lines.\n";
 	print "\t--sampleID String. Name used to prefix output files.\n";
-	print "\t--consDepth Integer. The mininum family size required to calculates consensus information.\n";
+	print "\t--consDepth Integer. The mininum family size required to calculates consensus information. Default depth is 3\n";
 	print "\t--plexity Integer. The number of sites to assess.  Will emit to sites file if it does not exist, or process this many sites\n";
 	print "\t--sites String/File.  A file to write sites (if file doesn't exist), or read sites that will be assessed.\n";
 	print "\t--UIDdepths.  Emit the UIDdepths to a file.\n";
