@@ -60,7 +60,6 @@ map{$opts{$_} = $opts{$_} || $config{$_}} keys %config;
 validate_options(\%opts);
 
 
-
 print STDERR "--- Starting debarc.pl ---\n";
 
 # Section to load parameters from a Config::Simple format file
@@ -74,24 +73,21 @@ mkdir($table_folder) unless(-d $table_folder);
 ###  BETTER to not use this variable, but instead change the config parameter, or set this as an argument. this is a useless variable
 my $ampliconTable = ( $config{"ampliconTable"} ) ? $config{"ampliconTable"} : "$DBROOT/data/all_amplicons.txt" ;
 
-$opts{"justTargets"} = 1;
+$opts{"justTargets"} = 1;   ### this is not currently functional, code is commented out.  need to revies
 my $consensusDepth = $opts{"consDepth"};
-
 print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
 
-exit;
-
+#### CONSTANTS
 my @SNVtypes=qw/A C G T D I N/;  ### IS THIS ALL TYPES?
 
 
 my $inputSeqCount = 0;
 my $familySitesSeqCount = 0;
 
-my $infile = $opts{"bam"};
 
 ### the list of sites should be provided in a file.
 ### if the file does not exist, then it needs to be created
-my %sites=load_sites($opts{"sitesfile"},$nSites);
+my %sites=load_sites($opts{"sitesfile"},$nSites,$opts{"bam"});
 
 my $count=scalar keys %sites;
 print STDERR $count ." family sites loaded\n";
@@ -136,8 +132,8 @@ if ($opts{"basecalls"}){
 	print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef","raw" . join("\traw", @SNVtypes, "Depth"),"cons" . join("\tcons", @SNVtypes, "Depth"),"\n");
 }
 
-print STDERR "begin parsing bam file $infile\n";
-my $sam = Bio::DB::Sam->new(-bam => $infile, -fasta => $config{refgenome} );
+print STDERR "begin parsing bam file $opts{bam}\n";
+my $sam = Bio::DB::Sam->new(-bam => $opts{bam}, -fasta => $config{refgenome} );
 
 my $sitecount=0;
 for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
@@ -203,8 +199,7 @@ for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
 	#last if $sitecount>2;
 }
 
-##print STDERR "Raw reads read from $infile: $inputSeqCount\n";   ## no longer parsing the whole file
-print STDERR "Raw reads in family sites read from $infile: $familySitesSeqCount\n";
+print STDERR "Raw reads in family sites read from $opts{bam}: $familySitesSeqCount\n";
 
 
 
@@ -219,11 +214,11 @@ exit;
 #################################################################################################
 
 sub load_sites{
-	my ($file,$nSites)=@_;
+	my ($file,$nSites,$bamfile)=@_;
 	my %sites;
 	### if the file exists, then read in the sites
-	if(-e $opts{"sitesfile"}){
-		(open my $FSITES,"<",$opts{"sitesfile"}) || die "unable to open sites file";
+	if(-e $file){
+		(open my $FSITES,"<",$file) || die "unable to open sites file";
 		while(<$FSITES>){
 			chomp;
 			my($site,$size)=split /\t/;
@@ -233,10 +228,10 @@ sub load_sites{
 	}else{
 		print STDERR "sites file not found. Identifying Family sites : $nSites\n";
 		#(open my $FSITES,">",$opts{"sampleID"}.".familysites") || die "unable to open family sites";
-		%sites = &identifyFamilySites($infile, $nSites);
+		%sites = &identifyFamilySites($bamfile, $nSites);
 
 		#### write the sties to a file
-		(open my $FSITES,">",$opts{sitesfile}) || die "unable to open sites file";
+		(open my $FSITES,">",$file) || die "unable to open sites file";
 		## sort by size
 		for my $site(sort { $sites{$b} <=> $sites{$a} } keys %sites){
 			print $FSITES "$site\t$sites{$site}\n";
