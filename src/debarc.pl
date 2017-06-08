@@ -57,22 +57,14 @@ GetOptions(
 ### configuration options are overwritten by command line options
 my %config = ParseConfig($opts{"configfile"});
 map{$opts{$_} = $opts{$_} || $config{$_}} keys %config;
-print Dumper(%opts);
-
-
-
 validate_options(\%opts);
+
 
 
 print STDERR "--- Starting debarc.pl ---\n";
 
 # Section to load parameters from a Config::Simple format file
-
-
-
-my $nSites = ( $config{"plexity"} ) ? $config{"plexity"} : 1;  # Proxy for plexity
-$nSites = $opts{"plexity"} if ( $opts{"plexity"} );  # Local override if --plexity flag is set
-
+my $nSites = $opts{"plexity"};
 ### set up subfolders in the output folder
 my $table_folder=$opts{output_folder} ."/tables";
 mkdir($table_folder) unless(-d $table_folder);
@@ -716,6 +708,7 @@ sub validate_options{
 		usage("Reference Genome not provided in the configuration file, or file not found");
 	}
 	$$opts{consDepth}=3 unless($$opts{consDepth});
+	$$opts{plexity}=1 unless($$opts{plexity});
 }
 
 sub usage{
@@ -725,7 +718,7 @@ sub usage{
 	print "\t--bam String/filename.  Aligned sequence data with uid information embedded in the header lines.\n";
 	print "\t--sampleID String. Name used to prefix output files.\n";
 	print "\t--consDepth Integer. The mininum family size required to calculates consensus information. Default depth is 3\n";
-	print "\t--plexity Integer. The number of sites to assess.  Will emit to sites file if it does not exist, or process this many sites\n";
+	print "\t--plexity Integer. The number of sites to assess.  Will emit to sites file if it does not exist, or process this many sites. Default is 1.\n";
 	print "\t--sites String/File.  A file to write sites (if file doesn't exist), or read sites that will be assessed.\n";
 	print "\t--UIDdepths.  Emit the UIDdepths to a file.\n";
 	print "\t--basecalls.  Calculate consensus and base counts at each position.\n";
