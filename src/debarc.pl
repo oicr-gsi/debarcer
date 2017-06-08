@@ -90,7 +90,6 @@ my $infile = $args{"bam"};
 ### if the file does not exist, then it needs to be created
 my %sites=load_sites($args{"sitesfile"},$nSites);
 
-
 my $count=scalar keys %sites;
 print STDERR $count ." family sites loaded\n";
 
@@ -225,6 +224,7 @@ sub load_sites{
 			my($site,$size)=split /\t/;
 			$sites{$site}=$size;
 		}
+		close $FSITES;
 	}else{
 		print STDERR "sites file not found. Identifying Family sites : $nSites\n";
 		#(open my $FSITES,">",$args{"sampleID"}.".familysites") || die "unable to open family sites";
@@ -237,7 +237,8 @@ sub load_sites{
 			print $FSITES "$site\t$sites{$site}\n";
 		}
 		close $FSITES;
-	}	
+	}
+	return %sites;
 }
 
 sub get_position_calls{
