@@ -50,7 +50,7 @@ GetOptions(
 	"sites=s"		=> \$args{"sitesfile"},
 	"UIDdepths"		=> \$args{"UIDdepths"},
 	"basecalls" 	=> \$args{"basecalls"},
-	"output=s"		=> \$args{output_folder},
+	"out=s"				=> \$args{output_folder},
 	"help" 			=> \$args{help},
 );
 
@@ -78,47 +78,18 @@ $args{"justTargets"} = 1;
 my $consensusDepth = ( $args{"consDepth"} ) ? $args{"consDepth"} : 3;  # Minimum depth of a family to create a consensus call
 print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
 
-
-
-# %Debarcer::primerSets = &Debarcer::listPrimers(\@ampliconsFile);
-# %Debarcer::ampSeq = &Debarcer::ampliconSequences(\@ampliconsFile);
-# %Debarcer::ampLen = &Debarcer::ampliconLengths(\@ampliconsFile);
-
-my %readData = ();
-## NOT NEEDED my %SNVdataMaster = map { $_ => undef } qw/A C T G D I N/;  # This is a running total of all SNV types
-#my %familyData = ();
 my @SNVtypes=qw/A C G T D I N/;  ### IS THIS ALL TYPES?
-
 
 
 my $inputSeqCount = 0;
 my $familySitesSeqCount = 0;
-## NOT NEEDEDmy $refgenome="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/bwa/0.6.2/hg19_random.fa";
 
 my $infile = $args{"bam"};
 
 ### the list of sites should be provided in a file.
 ### if the file does not exist, then it needs to be created
-my %sites;
-if(-e $args{"sitesfile"}){
-	(open my $FSITES,"<",$args{"sitesfile"}) || die "unable to open sites file";
-	while(<$FSITES>){
-		chomp;
-		my($site,$size)=split /\t/;
-		$sites{$site}=$size;
-	}
+my %sites=load_sites($args{"sitesfile"},$nSites);
 
-}else{
-	print STDERR "sites file not found. Identifying Family sites : $nSites\n";
-	#(open my $FSITES,">",$args{"sampleID"}.".familysites") || die "unable to open family sites";
-	%sites = &identifyFamilySites($infile, $nSites);
-	(open my $FSITES,">",$args{sitesfile}) || die "unable to open sites file";
-	## sort by size
-	for my $site(sort { $sites{$b} <=> $sites{$a} } keys %sites){
-		print $FSITES "$site\t$sites{$site}\n";
-	}
-	close $FSITES;
-}	
 
 my $count=scalar keys %sites;
 print STDERR $count ." family sites loaded\n";
@@ -242,6 +213,33 @@ close $POSITIONFILE  if ($args{"basecalls"});
 exit;
 
 #################################################################################################
+
+sub load_sites{
+	my ($file,$nSites)=@_;
+	my %sites;
+	### if the file exists, then read in the sites
+	if(-e $args{"sitesfile"}){
+		(open my $FSITES,"<",$args{"sitesfile"}) || die "unable to open sites file";
+		while(<$FSITES>){
+			chomp;
+			my($site,$size)=split /\t/;
+			$sites{$site}=$size;
+		}
+	}else{
+		print STDERR "sites file not found. Identifying Family sites : $nSites\n";
+		#(open my $FSITES,">",$args{"sampleID"}.".familysites") || die "unable to open family sites";
+		%sites = &identifyFamilySites($infile, $nSites);
+
+		#### write the sties to a file
+		(open my $FSITES,">",$args{sitesfile}) || die "unable to open sites file";
+		## sort by size
+		for my $site(sort { $sites{$b} <=> $sites{$a} } keys %sites){
+			print $FSITES "$site\t$sites{$site}\n";
+		}
+		close $FSITES;
+	}	
+}
+
 sub get_position_calls{
 	my ($id,$data,$threshold)=@_;
 	
@@ -696,7 +694,7 @@ sub validate_options{
 		usage("sample ID not provided.");
 	}
 
-	if(! $opts{output} || ! -d $opts{output}){
+	if(! $opts{output_folder} || ! -d $opts{output_folder}){
 		usage("Output folder not supplied or not found.");
 	}
 }
@@ -712,7 +710,7 @@ sub usage{
 	print "\t--sites String/File.  A file to write sites (if file doesn't exist), or read sites that will be assessed.\n";
 	print "\t--UIDdepths.  Emit the UIDdepths to a file.\n";
 	print "\t--basecalls.  Calculate consensus and base counts at each position.\n";
-	print "\t--output.  String/directory. Where to save analysis. Subfolders : tables, : will be created in this folder\n";
+	print "\t--out.  String/directory. Where to save analysis. Subfolders : tables, : will be created in this folder\n";
 	print "\t--help displays this usage message.\n";
 
 	die "\n@_\n\n";
