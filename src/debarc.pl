@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+##!/usr/bin/perl
 use strict;
 
 =pod
@@ -41,13 +41,15 @@ GetOptions(
 	"bam=s" 		=> \$opts{"bam"},
 	"sampleID=s" 	=> \$opts{"sampleID"},
 	"consDepth=s" 	=> \$opts{"consDepth"},  
-	"plexity=s" 	=> \$opts{"plexity"},  
+	"plexity=s" 	=> \$opts{"plexity"},
+	"offset=i"		=> \$opts{"offset"},  
 	# "strictCons" 	=> \$opts{"strictCons"},  # Strict consensus
 	"downsample=s" 	=> \$opts{"downsample"},
 	"justUIDdepths"	=> \$opts{"justUIDdepths"},
 	"justTargets" 	=> \$opts{"justTargets"},
 	"test"			=> \$opts{"test"},  # test mode
 	"sites=s"		=> \$opts{"sitesfile"},
+	"site=s"		=> \$opts{"site"},   ## a signle site to process
 	"UIDdepths"		=> \$opts{"UIDdepths"},
 	"basecalls" 	=> \$opts{"basecalls"},
 	"out=s"			=> \$opts{output_folder},
@@ -80,27 +82,38 @@ print STDERR "Using Consensus Depth = $consensusDepth and plexity = $nSites\n";
 #### CONSTANTS
 my @SNVtypes=qw/A C G T D I N/;  ### IS THIS ALL TYPES?
 
-
+### globals
 my $inputSeqCount = 0;
 my $familySitesSeqCount = 0;
 
 
-### the list of sites should be provided in a file.
-### if the file does not exist, then it needs to be created
-my %sites=load_sites($opts{"sitesfile"},$nSites,$opts{"bam"});
-
+my $prefix="ALL";
+my %sites;
+if($opts{site}){
+	$sites{$opts{site}}=1;
+	($prefix=$opts{site})=~s/:/_/;
+	
+}else{
+	### the list of sites should be provided in a file.
+	### if the file does not exist, then it needs to be created
+	%sites=load_sites($opts{"sitesfile"},$nSites,$opts{"bam"});
+	
+}
 my $count=scalar keys %sites;
 print STDERR $count ." family sites loaded\n";
+
+
+
 
 ## if these flags aren't set, then proceed no further
 exit unless ($opts{UIDdepths} || $opts{basecalls});
 
-
+### alisases for annotation, this will identify the position of each of the amplicon positions in the genome and the related gene
 print STDERR "loading site aliases from $ampliconTable\n";
 my %siteAliasTable = &Debarcer::getPositionAliases($ampliconTable);
 
-print Dumper(%siteAliasTable);
-
+#### This is a hash of genes and "target windows.  not sure what this is used for???/
+### Appears to be used for the justTarget mode, which is currently disabled.  review later
 print STDERR "loading amplicon info from $ampliconTable\n";
 my %ampliconInfo = ();
 &Debarcer::loadAmpliconData($ampliconTable, \%ampliconInfo);
@@ -119,32 +132,48 @@ my %invalidBarcodes = &loadBarcodeMaskFile($opts{"sampleID"});
 ### open files as needed
 my ($UIDDEPTHFILE,$CONSENSUSFILE,$POSITIONFILE);
 if ($opts{"UIDdepths"}){
-	my $uidDepthFile = $table_folder. "/" . $opts{"sampleID"} . ".UIDdepths.txt.gz";
+	my $uidDepthFile = $table_folder. "/" . $prefix . "." . $opts{"sampleID"} . ".UIDdepths.txt.gz";
 	open $UIDDEPTHFILE, "| gzip -c > $uidDepthFile";
 	print STDERR "opening $uidDepthFile\n";
 }
 
 if ($opts{"basecalls"}){
-	my $ConsensusFile = $table_folder. "/" . $opts{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
+	my $ConsensusFile = $table_folder. "/" . $prefix . "." . $opts{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
 	open $CONSENSUSFILE, "| gzip -c > $ConsensusFile";
-	my $positionFile = $table_folder. "/" . $opts{"sampleID"} . ".position.cons$consensusDepth.txt";
+	#my $positionFile = $table_folder. "/" . $opts{"sampleID"} . ".position.cons$consensusDepth.txt";
+	#open $POSITIONFILE, ">",$positionFile;
+	#print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef","raw" . join("\traw", @SNVtypes, "Depth"),"cons" . join("\tcons", @SNVtypes, "Depth"),"\n");
+
+
+	### !!!!!!!!   need to translate to chromosome position
+	
+
+
+	my $positionFile = $table_folder. "/" . $prefix . "." . $opts{"sampleID"} . ".positions.txt";
 	open $POSITIONFILE, ">",$positionFile;
-	print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef","raw" . join("\traw", @SNVtypes, "Depth"),"cons" . join("\tcons", @SNVtypes, "Depth"),"\n");
+	print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "Ref","collapse",join("\t", @SNVtypes), "Depth")."\n";
+	
+
 }
 
 print STDERR "begin parsing bam file $opts{bam}\n";
 my $sam = Bio::DB::Sam->new(-bam => $opts{bam}, -fasta => $config{refgenome} );
 
 my $sitecount=0;
-for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
+my @AmpliconIDs=sort {$sites{$b}<=>$sites{$a}} keys %sites;
+@AmpliconIDs=@AmpliconIDs[0..($opts{plexity}-1)];
+
+for my $AmpliconID(@AmpliconIDs){
 	$sitecount++;
 	my($chrom,$start)=split /:/,$AmpliconID;
 	print "extracting reads at $AmpliconID\n";
 
 	### sitedata will store the results of parsing the bam file for reads at the specific site
 	### it will include uid family stats, consensus information and base calls by positions
-	my %sitedata=get_site_data($chrom,$start,$sam,$AmpliconID);
-	my $ampliconReportingThreshold = &calculateAmpliconReportingThreshold_rev(%{$sitedata{readpos}});
+	my %sitedata=get_site_data($chrom,$start,$sam,$AmpliconID,$opts{offset});
+	#collapse_uids($sitedata{uids});
+	
+	my $ampliconReportingThreshold = &calculateAmpliconReportingThreshold_rev(%{$sitedata{basecounts}});
 	my $uidcount=scalar keys %{$sitedata{uids}};
 	print "$uidcount UIDs found at this site\n";
 	
@@ -170,6 +199,49 @@ for my $AmpliconID(sort {$sites{$b}<=>$sites{$a}} keys %sites){
 	### BETTER WRITTEN AS
 	my $ampliconName = $siteAliasTable{$AmpliconID} || &Debarcer::generateAmpliconName($AmpliconID);
 
+	my $probableRefBase="N";  ## this shoudl be the reference base
+	for my $pos( sort{$a<=>$b} keys %{$sitedata{basecalls}}){
+		#print "$pos\n";
+#		print Dumper($sitedata{basecalls}{$pos}{raw});<STDIN>;
+
+		my $refpos=$start+$pos;
+		my $refbase=$sam->seq($chrom,$refpos,$refpos);
+		
+		
+
+		my @counts=map{ $sitedata{basecalls}{$pos}{raw}{$_} || 0 } @SNVtypes;
+		my $rawdepth=$sitedata{basecalls}{$pos}{raw}{depth};
+		
+		
+		my $refcount=$sitedata{basecalls}{$pos}{raw}{$refbase} || 0;
+		my $reffreq=$rawdepth ? $refcount/$rawdepth : 0;
+
+		printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,$pos,"raw");
+		print $POSITIONFILE join("\t", @counts) . "\t$rawdepth\t$reffreq\n";
+
+		
+		my @uidlevels=(1,3,5,10,20,30);
+		for my $uidlevel(@uidlevels){
+				my @counts=map{ $sitedata{basecalls}{$pos}{consensus}{$uidlevel}{$_} || 0 } @SNVtypes;
+				my $consdepth=$sitedata{basecalls}{$pos}{consensus}{$uidlevel}{depth};
+				
+				my $refcount=$sitedata{basecalls}{$pos}{consensus}{$uidlevel}{$refbase} || 0;
+				my $refprop=$consdepth ? $refcount/$consdepth : 0;
+
+				printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,$pos,"cons_$uidlevel");
+				print $POSITIONFILE join("\t", @counts) . "\t$consdepth\t$reffreq\n"
+
+		}
+
+	}
+	
+	
+	next;
+	
+	#######
+	
+	
+	
 	
 	my %calltable=get_position_calls($AmpliconID,\%sitedata,$ampliconReportingThreshold);
 		
@@ -213,6 +285,84 @@ exit;
 
 #################################################################################################
 
+
+### this function will identify similar uids for a given amplicon,and either merge or mask
+sub collapse_uids{
+	
+	my ($uids)=@_;
+	return;
+	
+	my $levenshtien_binary = "$ENV{'BHOME'}/bin/levenshtien_stream";
+	#print Dumper($uids);<STDIN>;
+	
+	my $uidcount=scalar keys %$uids;
+	print "compare $uidcount uids\n";
+	
+	#(open my $TMP,">","uid.temp") || die "unable to open temp file";
+	#print $TMP join("\n",sort keys %$uids);
+	#close $TMP;
+	
+	#my @results=`cat uid.temp | $levenshtien_binary`;
+	#my $count=scalar @results;
+	#print "$count with editdist1";
+	#<STDIN>;
+	#exit;
+	
+	
+	### capture in prefix and suffix hashes
+	my %hash;
+	for my $uid(sort {$$uids{$b}{count}<=>$$uids{$a}{count}} keys %$uids){
+		
+		
+		
+		my %testuids=map{$_=>1} grep{ ($$uids{$_}{count}/$$uids{$uid}{count}) < 0.2 }keys %$uids;
+		my $testcount=scalar keys %testuids;
+		print "$uid $$uids{$uid}{count} vs $testcount\n";
+		
+		
+		
+		my $uid_prefix=substr($uid, 0, 6);
+		my $uid_suffix=substr($uid,length($uid)-6,6);
+		push(@{$hash{prefix}{$uid_prefix}},$uid);
+		push(@{$hash{suffix}{$uid_suffix}},$uid);
+	}
+	for my $xfix(qw/prefix suffix/){
+		for my $subseq(keys %{$hash{$xfix}}){
+			
+			my @UIDs = @{$hash{$xfix}{$subseq}};
+			my $nUIDs = scalar @UIDs;
+			next if ( $nUIDs == 1 );
+			
+			print "assessng $nUIDs with $xfix $subseq\n";
+			
+			my $UIDstring = join("\n", @UIDs);
+			my @closeUIDs = `echo "$UIDstring" | $levenshtien_binary`;
+			next unless ( scalar(@closeUIDs) );
+			chomp @closeUIDs;
+			#print "$subseq\n";
+			#print Dumper(@UIDs);<STDIN>;
+			#print Dumper(@closeUIDs);<STDIN>;
+		
+			for (@closeUIDs)  {
+				next unless (/^Edit/);
+				my ( $descriptor, $uid1, $uid2 ) = split("\t", $_);
+				my $d1 = $$uids{$uid1}{count};
+				my $d2 = $$uids{$uid2}{count};
+				my ($uid,$identity,$uid_depth,$identity_depth,$ratio)=$d1>$d2 ? ($uid2,$uid1,$d2,$d2/$d1) : ($uid1,$uid2,$d1,$d1/$d2);
+				if ( ($ratio < 0.2) && ($uid_depth > 5) ) { # This is the masking heuristic
+					$$uids{$uid}{collapse}{mask}=1;
+					$$uids{$uid}{collapse}{identity}=$identity;
+					$$uids{$uid}{collapse}{ratio}=$ratio;
+					$$uids{$uid}{collapse}{identity_depth}=$identity_depth;
+				}
+			}
+		}
+	}
+}
+
+
+
+
 sub load_sites{
 	my ($file,$nSites,$bamfile)=@_;
 	my %sites;
@@ -241,19 +391,32 @@ sub load_sites{
 	return %sites;
 }
 
+
+## function to make a call table at specific depth thresholds
 sub get_position_calls{
-	my ($id,$data,$threshold)=@_;
 	
 	
+	my ($id,$data,$thresholds)=@_;
+	### thresholds is a comma separated string listing thresholds
+	my @thresholds=split /,/,$thresholds;
+	my $threshold=shift @thresholds;
+	
+	print STDERR "assessing positions calls as threshold $threshold\n";
 	
 	### $data is a reference to the site data
 	my @SNVtypes=qw/A C G T D I N/; 
 	print STDERR "calculating position table for $id\n";
 		
 	my %table;
-		
-	foreach my $position ( sort { $a <=> $b } keys %{$$data{readpos}}) {
+	
+
+	foreach my $position ( sort { $a <=> $b } keys %{$$data{basecalls}}) {
 		my ($probableBase, $n, $rawDataString) = ('', 0, '');
+		
+		print "position=$position\n";
+		#print Dumper($$data{basecalls}{$position});<STDIN>;
+		
+		### for this position, assess the raw data
 		
 		
 		### I think this can be omitted, it is not saved at all.  ie, probable base information.  and it is recalculated in the main function
@@ -262,7 +425,7 @@ sub get_position_calls{
 		my $depth = 0;  #Depth
 		for my $snv ( @SNVtypes ) {
 			# Save the base identity if the count is higher than any previous observed count
-			my $snvdepth=$$data{readpos}{$position}{$snv} || 0;
+			my $snvdepth=$$data{basecounts}{$position}{$snv} || 0;
 			### probable base is the snv with the hightest depth
 			if ( $snvdepth > $n ) {
 				$probableBase = $snv;
@@ -302,12 +465,23 @@ sub get_position_calls{
 		}
 	}
 	return %table;
+	#print "ready to dump table";<STDIN>;
+	#print Dumper(%table);<STDIN>;
+	
+	
 }
 
 
+
+
+
+
+## collapse all the reads for a given uuid to a consensus sequence
 sub generate_consensus_data{
 	my($id,$FH,$hashref,$depth)=@_;
 	
+	my @levels=(1,3,5,10,20,30);
+	print STDERR "generating consensus data for $id\n";
 	
 	my %uids=%{$$hashref{uids}};
 	
@@ -316,6 +490,12 @@ sub generate_consensus_data{
 	for my $uid ( sort {$uids{$b}{count}<=>$uids{$a}{count}} keys %uids) {
 		my $uidcount=$uids{$uid}{count};
 		
+		my @uidlevels=grep{$uidcount>=$_} @levels;
+		#print "$uid $uidcount " . join(",",@uidlevels);<STDIN>;
+		
+		
+		
+		
 		if ( $uidcount >= $depth ) {
 			$AmpliconCount++;
 			$AmpliconCoverage += $uidcount;
@@ -323,6 +503,13 @@ sub generate_consensus_data{
 
 		### store the consensus back into the data reference
 		my @raw_reads=@{$uids{$uid}{raw}};
+		my $raw_read_count=scalar @raw_reads;
+		#print "$id $uid $raw_read_count";<STDIN>;
+		
+		## limit consensus to 100 raw_reads?  why use all of them, sometimes > 1000.  ?????
+		#@raw_reads=@raw_reads[0..99] if($raw_read_count>100);
+		
+		### get the consenus sequecne, with a minium depth. if not the miniumum depth then no consensus is regturned
 		my $consensus=&generateConsensus(@raw_reads,$depth) || "N/A";
 		
 		### store the consensus sequence back into the uids sturcture reference here
@@ -331,12 +518,20 @@ sub generate_consensus_data{
 		# $familyData{$amp}->{$barcode}{"consensus"} = &generatePhyloConsensus(@{$familyData{$amp}->{$barcode}{"raw"}}, $consensusDepth);  # Still in progress.
 		# Write the UID depth information to a file
 		printf $FH ("%s\t%s\t%s\t%s\n", $id, $uid, $uidcount, $consensus );
+		
+		
+		
+		
+		#### now organize the bases at this position into a hash structure
 		my @bases = split(//, $consensus);
 		for (my $i = 0; $i < scalar(@bases); $i++) {
 			my $base=$bases[$i];
 			$base =~ tr/acgt/ACGT/;
 			
-			$$hashref{conspos}{$i}{$base}++;
+			for my $uidlevel(@uidlevels){
+				$$hashref{basecalls}{$i}{consensus}{$uidlevel}{$base}++;
+				$$hashref{basecalls}{$i}{consensus}{$uidlevel}{depth}++;
+			}	
 		}
 	}
 	print STDERR "$id\tdepth|count|coverage\t$depth\t$AmpliconCount\t$AmpliconCoverage\n";
@@ -351,19 +546,48 @@ sub print_uid_depths{
 
 
 sub get_site_data{
-	my($chrom,$start,$sam,$AmpliconID)=@_;
+	
+	### extracts read at a specific start point and stores data about these reads inot thhe has
+	
+	my($chrom,$start,$sam,$AmpliconID,$offset)=@_;
+	
 	my %data;
 	## GET ALL ALIGNMENTS THAT OVERLAP THIS that cover this positions
 	my $segment = $sam->segment($chrom,$start,$start);
 	#my @alignments = $segment->features;
 	## LIMIT TO ALIGNMENTS AT THIS EXACT START POSITION	
     my @alignments = $segment->features(-filter => sub { my $alignment = shift;return $alignment->start==$start;});
+	my $count_exact=scalar @alignments;
+	my $count_offset=0;
+	if($offset){
+		my @offset_alignments=$segment->features(-filter=>sub{ 
+			my $alignment=shift;
+			my $lower=$start-$offset;
+			my $upper=$start+$offset;
+			return $alignment if( ($alignment->start>=$lower) && ($alignment->start<=$upper) && ($alignment->start!=$start) );
+		});
+		$count_offset=scalar @offset_alignments;
+		push(@alignments,@offset_alignments);
+	}
 
+	### DEBUG, REMOVE for production
+#	my $max=10000;
+#	my $count=scalar @alignments;
+#	$max=$count<$max ? $count : $max;
+#	@alignments=@alignments[0...$max];	
+	
+	
+	my $count_all=scalar @alignments;
+	print STDERR "$count_all alignments for this site, $count_exact + $count_offset within $offset bases\n";
+	
 	### PROCESS EACH AlIGNMENT
+	#my %align_lengths;
 	for my $alignment(@alignments){
 			
 		#print "$inputSeqCount $chrom $chromStart";<STDIN>;
 		$data{SitesSeqCount}++;
+		
+
 		
 		my $barcode = '';
 		my $bc_position = 0;
@@ -387,11 +611,18 @@ sub get_site_data{
 	    
 		### if not askig for basecalls, tehn no point going any futher
 		next unless($opts{basecalls});
+		
+		my $ref_dna   = $alignment->dna; 
+		my $query_dna = $alignment->query->dna; # query sequence bases
+		#print "$query_dna\n";
+		#print "$ref_dna\n";<STDIN>; 
+		#$align_lengths{length($ref_dna)}++;
 	
 		# Determine the base call or insertion/deletion status wrt to the start of the alignment, i.e.
 		# chromosomal position given in $chromStart.  Therefore $basecalls[0] is for $chromStart + 0
 		my @basecalls = &calculateBasecalls($alignment);
-
+		my $basecalllength=scalar @basecalls;
+		
 		
 		# Save the raw base calls for future consensus calling
 		# Write the base by base calls to a file....
@@ -402,9 +633,17 @@ sub get_site_data{
 		for ( my $i = 0; $i < scalar(@basecalls); $i++ ) {
 			my $basecall=$basecalls[$i];
 			$basecall =~ tr/acgt/ACGT/;
-			$data{readpos}{$i}{$basecall}++;
+			$data{basecalls}{$i}{raw}{$basecall}++;
+			$data{basecalls}{$i}{raw}{depth}++;
 		}
+		
+
+		
+		
 	}
+	
+	#print Dumper(%align_lengths);<STDIN>;
+	
 	return %data;
 		
 }
@@ -419,6 +658,12 @@ sub identifyFamilySites {
 
 	print STDERR $ENV{"SAMTOOLSROOT"}."\n";
 	my $SAMTOOLSBINARY = $ENV{"SAMTOOLSROOT"}."/bin/samtools";
+	
+	
+	#### better approach since already using bash tools
+	#my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4 | sort | uniq -c | sort -nr`;
+	### this should be faster.  counts already done and sorted
+	
 	my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4`;
 	foreach my $site ( @allSites ) { 
 		chomp $site; 
@@ -435,6 +680,8 @@ sub identifyFamilySites {
 	
 }
 
+
+
 sub calculateBasecalls {
 
 =pod
@@ -450,6 +697,8 @@ Bio::DB::Bam::Alignment object
 	my @basecalls = '';
 	my $debug = 0;
 	
+	
+	
 	my $chromStart = $alignment->start;
 	
 	# For testing
@@ -460,16 +709,17 @@ Bio::DB::Bam::Alignment object
 	}
 	
 	my ($ref,$matches,$query) = $alignment->padded_alignment;
-	# print "Ref:  $ref\n      $matches\nRead: $query\n\n";
-	
+	#print "Ref:  $ref\n      $matches\nRead: $query\n\n";
+	#<STDIN>;
 	# Since query is longer than ref due to adapters, etc.,
 	# trim the sequences
 	$ref =~ /^(-+).+?(-+)$/;
 	
 	($ref, $query) = ( substr($ref, length($1), length($ref) - (length($1 . $2)) ), substr($query, length($1), length($query) - (length($1 . $2)) ) );
 	($matches) = ( substr($matches, length($1), length($matches) - (length($1 . $2)) ) );
-	print "Mismatch:\n" if ( $debug & ($ref ne $query) );
-	print "Ref:  $ref\n      $matches\nRead: $query\n" if ( $debug );
+	#print "Mismatch:\n" if ( $debug & ($ref ne $query) );
+	#print "Ref:  $ref\n      $matches\nRead: $query\n"; # if ( $debug );
+	#<STDIN>;
 	
 	# <STDIN>;  # Pause for keypress
 	
@@ -477,8 +727,8 @@ Bio::DB::Bam::Alignment object
 	my $genomicOffset = 0;
 	my $inInsertion = 0;
 	
-	my @Ar = split(//, $ref);
-	my @Aq = split(//, $query);
+	my @Ar = split(//, $ref);    #print Dumper(@Ar);<STDIN>;
+	my @Aq = split(//, $query);  #print Dumper(@Aq);<STDIN>;
 		
 	for (my $i = 0; $i < scalar(@Ar); $i++) {
 		if ( $Ar[$i] eq $Aq[$i] ) {
@@ -504,8 +754,8 @@ Bio::DB::Bam::Alignment object
 			
 	}
 	
-	print join("", "CIGAR:", @basecalls, "*\n\n") if ( $debug );
-	
+	#print join("", "CIGAR:", @basecalls, "*\n\n");  #if ( $debug );
+	#<STDIN>;
 	return @basecalls;
 			
 }
@@ -631,16 +881,21 @@ below which positions aren't reported in the cons<depth>.txt files
 
 =cut
 
+
+	### appears to be finding the maximum depth across ALL positions, and setting depthcut to 10% of that value
 	my %href = @_;  # This is %readData
 	# readData format is
 	# $readData{$position}{$basecall};
 	my $depthCut;
 	
 	# find the maximum depth for each amplicon ( usually the first site )
-	foreach my $position ( keys %href ) {
+	foreach my $position ( sort {$a<=>$b} keys %href ) {
+		#print Dumper($href{$position});<STDIN>;
 		my $depthHere = 0;
 		$depthHere += $href{$position}{$_} foreach ( keys %{$href{$position}} );
-			$depthCut = $depthHere if ( $depthHere > $depthCut );
+		$depthCut = $depthHere if ( $depthHere > $depthCut );
+		#print STDERR "$position $depthHere $depthCut";<STDIN>;
+
 	}
 	
 	# Adjust depth cuts downward to a percentage of max
@@ -704,6 +959,7 @@ sub validate_options{
 	}
 	$$opts{consDepth}=3 unless($$opts{consDepth});
 	$$opts{plexity}=1 unless($$opts{plexity});
+	$$opts{offset}=0 unless($$opts{offset});
 }
 
 sub usage{
@@ -715,6 +971,7 @@ sub usage{
 	print "\t--consDepth Integer. The mininum family size required to calculates consensus information. Default depth is 3\n";
 	print "\t--plexity Integer. The number of sites to assess.  Will emit to sites file if it does not exist, or process this many sites. Default is 1.\n";
 	print "\t--sites String/File.  A file to write sites (if file doesn't exist), or read sites that will be assessed.\n";
+	print "\t--site String.  A single site to assess. Cannot be used in combination with -sites\n";
 	print "\t--UIDdepths.  Emit the UIDdepths to a file.\n";
 	print "\t--basecalls.  Calculate consensus and base counts at each position.\n";
 	print "\t--out.  String/directory. Where to save analysis. Subfolders : tables, : will be created in this folder\n";
