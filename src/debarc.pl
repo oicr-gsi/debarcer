@@ -53,6 +53,7 @@ GetOptions(
 	"UIDdepths"		=> \$opts{"UIDdepths"},
 	"basecalls" 	=> \$opts{"basecalls"},
 	"out=s"			=> \$opts{output_folder},
+	"familysizes=s" => \$opts{familysizes},
 	"help" 			=> \$opts{help},
 );
 
@@ -140,18 +141,10 @@ if ($opts{"UIDdepths"}){
 if ($opts{"basecalls"}){
 	my $ConsensusFile = $table_folder. "/" . $prefix . "." . $opts{"sampleID"} . ".consensusSequences.cons$consensusDepth.txt.gz";
 	open $CONSENSUSFILE, "| gzip -c > $ConsensusFile";
-	#my $positionFile = $table_folder. "/" . $opts{"sampleID"} . ".position.cons$consensusDepth.txt";
-	#open $POSITIONFILE, ">",$positionFile;
-	#print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "ProbableRef","raw" . join("\traw", @SNVtypes, "Depth"),"cons" . join("\tcons", @SNVtypes, "Depth"),"\n");
-
-
-	### !!!!!!!!   need to translate to chromosome position
 	
-
-
 	my $positionFile = $table_folder. "/" . $prefix . "." . $opts{"sampleID"} . ".positions.txt";
 	open $POSITIONFILE, ">",$positionFile;
-	print $POSITIONFILE join("\t", "#AmpliconChromStart", "Alias", "Position", "Ref","collapse",join("\t", @SNVtypes), "Depth")."\n";
+	print $POSITIONFILE join("\t", "#Chrom", "Alias", "Position", "Ref","AmpPosition","FSize",join("\t", @SNVtypes), "Depth","RefProp")."\n";
 	
 
 }
@@ -190,8 +183,9 @@ for my $AmpliconID(@AmpliconIDs){
 	
 	### pass the sitedata as a reference.  it will be modified by this function to store consensus sequences
 	
-	generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$consensusDepth);
+	generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$opts{familysizes});
 	
+	#print Dumper(%sitedata);exit;
 	#my $ampliconName = $siteAliasTable{$AmpliconID};
 	#unless ($ampliconName) {
 	#	$ampliconName = &Debarcer::generateAmpliconName($AmpliconID);
@@ -220,13 +214,14 @@ for my $AmpliconID(@AmpliconIDs){
 		print $POSITIONFILE join("\t", @counts) . "\t$rawdepth\t$reffreq\n";
 
 		
-		my @uidlevels=(1,3,5,10,20,30);
+		my @uidlevels=split /,/,$opts{familysizes};
+		
 		for my $uidlevel(@uidlevels){
 				my @counts=map{ $sitedata{basecalls}{$pos}{consensus}{$uidlevel}{$_} || 0 } @SNVtypes;
 				my $consdepth=$sitedata{basecalls}{$pos}{consensus}{$uidlevel}{depth};
 				
 				my $refcount=$sitedata{basecalls}{$pos}{consensus}{$uidlevel}{$refbase} || 0;
-				my $refprop=$consdepth ? $refcount/$consdepth : 0;
+				my $reffreq=$consdepth ? $refcount/$consdepth : 0;				
 
 				printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,$pos,"cons_$uidlevel");
 				print $POSITIONFILE join("\t", @counts) . "\t$consdepth\t$reffreq\n"
@@ -478,9 +473,9 @@ sub get_position_calls{
 
 ## collapse all the reads for a given uuid to a consensus sequence
 sub generate_consensus_data{
-	my($id,$FH,$hashref,$depth)=@_;
+	my($id,$FH,$hashref,$familysizes)=@_;
 	
-	my @levels=(1,3,5,10,20,30);
+	my @levels=split /,/,$familysizes;
 	print STDERR "generating consensus data for $id\n";
 	
 	my %uids=%{$$hashref{uids}};
@@ -493,13 +488,9 @@ sub generate_consensus_data{
 		my @uidlevels=grep{$uidcount>=$_} @levels;
 		#print "$uid $uidcount " . join(",",@uidlevels);<STDIN>;
 		
+		$AmpliconCount++;
+		$AmpliconCoverage += $uidcount;
 		
-		
-		
-		if ( $uidcount >= $depth ) {
-			$AmpliconCount++;
-			$AmpliconCoverage += $uidcount;
-		}
 
 		### store the consensus back into the data reference
 		my @raw_reads=@{$uids{$uid}{raw}};
@@ -510,7 +501,12 @@ sub generate_consensus_data{
 		#@raw_reads=@raw_reads[0..99] if($raw_read_count>100);
 		
 		### get the consenus sequecne, with a minium depth. if not the miniumum depth then no consensus is regturned
-		my $consensus=&generateConsensus(@raw_reads,$depth) || "N/A";
+		my $consensus=&generateConsensus(@raw_reads,1) || "N/A";   ### second argument used to be miniumum depth, now set to 1, do all depths
+		
+		
+		#print Dumper(@raw_reads);<STDIN>;
+		#print "consensus $consensus";<STDIN>;
+		
 		
 		### store the consensus sequence back into the uids sturcture reference here
 		$$hashref{uids}{$uid}{consensus}=$consensus;   
@@ -534,7 +530,7 @@ sub generate_consensus_data{
 			}	
 		}
 	}
-	print STDERR "$id\tdepth|count|coverage\t$depth\t$AmpliconCount\t$AmpliconCoverage\n";
+	print STDERR "$id\tcount|coverage\t$AmpliconCount\t$AmpliconCoverage\n";
 }
 
 sub print_uid_depths{
@@ -571,10 +567,10 @@ sub get_site_data{
 	}
 
 	### DEBUG, REMOVE for production
-#	my $max=10000;
-#	my $count=scalar @alignments;
-#	$max=$count<$max ? $count : $max;
-#	@alignments=@alignments[0...$max];	
+	#my $max=10000;
+	#my $count=scalar @alignments;
+	#$max=$count<$max ? $count : $max;
+	#@alignments=@alignments[0...$max];	
 	
 	
 	my $count_all=scalar @alignments;
