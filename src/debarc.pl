@@ -144,7 +144,7 @@ if ($opts{"basecalls"}){
 	
 	my $positionFile = $table_folder. "/" . $prefix . "." . $opts{"sampleID"} . ".positions.txt";
 	open $POSITIONFILE, ">",$positionFile;
-	print $POSITIONFILE join("\t", "#Chrom", "Alias", "Position", "Ref","AmpPosition","FSize",join("\t", @SNVtypes), "Depth","RefProp")."\n";
+	print $POSITIONFILE join("\t", "#Chrom", "Alias", "Position", "Ref","FSize",join("\t", @SNVtypes), "Depth","RefProp")."\n";
 	
 
 }
@@ -170,7 +170,7 @@ for my $AmpliconID(@AmpliconIDs){
 	my %sitedata=get_site_data_pe($chrom,$start,$stop,$sam,$AmpliconID,$opts{offset});
 
 	
-	
+	####print Dumper(sort {$a<=>$b} keys %{$sitedata{basecalls}});<STDIN>;
 	
 	
 	#collapse_uids($sitedata{uids});
@@ -192,8 +192,13 @@ for my $AmpliconID(@AmpliconIDs){
 	
 	### pass the sitedata as a reference.  it will be modified by this function to store consensus sequences
 	
-	generate_consensus_data($AmpliconID,$CONSENSUSFILE,\%sitedata,$opts{familysizes});
 	
+	
+	
+	
+	
+	generate_consensus_data_rev($AmpliconID,$CONSENSUSFILE,\%sitedata,$opts{familysizes});
+	#print Dumper(sort {$a<=>$b} keys %{$sitedata{basecalls}});<STDIN>;
 	
 	#print Dumper(%sitedata);exit;
 	#my $ampliconName = $siteAliasTable{$AmpliconID};
@@ -203,27 +208,29 @@ for my $AmpliconID(@AmpliconIDs){
 	### BETTER WRITTEN AS
 	my $ampliconName = $siteAliasTable{$AmpliconID} || &Debarcer::generateAmpliconName($AmpliconID);
 
-	my $probableRefBase="N";  ## this shoudl be the reference base
-	for my $pos( sort{$a<=>$b} keys %{$sitedata{basecalls}}){
-		
-		
+	for my $refpos( sort{$a<=>$b} keys %{$sitedata{basecalls}}){
 
-
-		my $refpos=$start+$pos;
 		my $refbase=$sam->seq($chrom,$refpos,$refpos);
 		
+		print "$AmpliconID $refpos referencebase $refbase\n";
+		#print Dumper($sitedata{basecalls}{$refpos});<STDIN>;
+		
+		
 		
 
-		my @counts=map{ $sitedata{basecalls}{$pos}{raw}{$_} || 0 } @SNVtypes;
-		my $rawdepth=$sitedata{basecalls}{$pos}{raw}{depth};
+		my @counts=map{ $sitedata{basecalls}{$refpos}{raw}{$_} || 0 } @SNVtypes;
+		my $rawdepth=$sitedata{basecalls}{$refpos}{raw}{depth};
 		
 		
-		my $refcount=$sitedata{basecalls}{$pos}{raw}{$refbase} || 0;
+		my $refcount=$sitedata{basecalls}{$refpos}{raw}{$refbase} || 0;
 		my $reffreq=$rawdepth ? $refcount/$rawdepth : 0;
 
-		printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,$pos,"raw");
+		printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"raw");
 		print $POSITIONFILE join("\t", @counts) . "\t$rawdepth\t$reffreq\n";
-
+		
+		#printf ("%s\t%s\t%d\t%s\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"raw");
+		#print join("\t", @counts) . "\t$rawdepth\t$reffreq\n";
+		#<STDIN>;
 		#print "$pos\n";
 		#print Dumper($sitedata{basecalls}{$pos});<STDIN>;
 
@@ -234,13 +241,13 @@ for my $AmpliconID(@AmpliconIDs){
 		for my $uidlevel(@uidlevels){
 			
 			
-				my @counts=map{ $sitedata{basecalls}{$pos}{consensus}{$uidlevel}{$_} || 0 } @SNVtypes;
-				my $consdepth=$sitedata{basecalls}{$pos}{consensus}{$uidlevel}{depth};
+				my @counts=map{ $sitedata{basecalls}{$refpos}{consensus}{$uidlevel}{$_} || 0 } @SNVtypes;
+				my $consdepth=$sitedata{basecalls}{$refpos}{consensus}{$uidlevel}{depth};
 				
-				my $refcount=$sitedata{basecalls}{$pos}{consensus}{$uidlevel}{$refbase} || 0;
+				my $refcount=$sitedata{basecalls}{$refpos}{consensus}{$uidlevel}{$refbase} || 0;
 				my $reffreq=$consdepth ? $refcount/$consdepth : 0;				
 
-				printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,$pos,"cons_$uidlevel");
+				printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"cons_$uidlevel");
 				print $POSITIONFILE join("\t", @counts) . "\t$consdepth\t$reffreq\n"
 
 		}
@@ -249,39 +256,9 @@ for my $AmpliconID(@AmpliconIDs){
 	
 	
 	
-	next;
-	
-	#######
 	
 	
 	
-	
-	my %calltable=get_position_calls($AmpliconID,\%sitedata,$ampliconReportingThreshold);
-		
-	
-	for my $pos ( sort {$a <=> $b} keys %calltable){
-		
-		my ($rawDepth, $consDepth) = ( 0, 0);
-		my ($probableRefBase, $n) = ('', 0);
-		for my $base ( @SNVtypes ) {
-			my $snvRawDepth = $calltable{$pos}{"raw"}{$base};
-			$rawDepth += $snvRawDepth; # Increment rawDepth
-			if ( $snvRawDepth > $n ) { # If this is the highest raw depth observed, make the base the probableBase
-				$probableRefBase = $base;
-				$n = $snvRawDepth;
-			}
-			
-			$consDepth += $calltable{$pos}{"consensus"}{$base}; # Increment consDepth
-		}
-		
-		printf $POSITIONFILE ("%s\t%s\t%s\t%s", $chrom, $ampliconName, $pos, $probableRefBase);
-		printf $POSITIONFILE ("\t%d", $calltable{$pos}{"raw"}{$_}) foreach ( @SNVtypes );
-		printf $POSITIONFILE ("\t%d", $rawDepth);
-		printf $POSITIONFILE ("\t%d", $calltable{$pos}{"consensus"}{$_}) foreach ( @SNVtypes );
-		printf $POSITIONFILE ("\t%d", $consDepth);
-		print $POSITIONFILE "\n";
-	}
-	#last if $sitecount>2;
 }
 
 print STDERR "Raw reads in family sites read from $opts{bam}: $familySitesSeqCount\n";
@@ -604,6 +581,17 @@ sub get_site_data_pe{
 	#my %align_lengths;
 	for my $alignment(@alignments){
 		
+	
+		my $read_dna = $alignment->query->dna();
+		my $start=$alignment->start;
+		my $end=$alignment->end;
+		
+		## first alignment in pair on strand 1, 2nd in pair on strand -1
+		my $strand=$alignment->strand;
+		
+		
+		
+		
 		
 		#my $start=$alignment->start;
 		#my $end=$alignment->end;
@@ -615,27 +603,17 @@ sub get_site_data_pe{
 		#print "$inputSeqCount $chrom $chromStart";<STDIN>;
 		$data{SitesSeqCount}++;
 		
-
+        my $uid=get_uid($alignment);
+		next unless($uid);
 		
-		my $barcode = '';
-		my $bc_position = 0;
-		my $read_name = $alignment->query->name();
-		if ($read_name =~ /HaloplexHS/) { # We have a HaloplexHS read
-			$read_name =~ m/HaloplexHS-([ACTG]{10})/;
-			$barcode = $1;
-		} else { # We have a SiMSenSeq read
-			my $read_dna = $alignment->query->dna();
-			($bc_position, $barcode) = &Debarcer::extractBarcodeQuick($read_dna);
-		}
-		next unless ( $bc_position == 0 );
 		# Skip the barcode if it's in the mask hash loaded from the maskfile
-		if ( exists $invalidBarcodes{$AmpliconID}->{$barcode} ) {
+		if ( exists $invalidBarcodes{$AmpliconID}->{$uid} ) {
 			# print "Skipping invalidBarcodes{$AmpliconID}->{$barcode}\n"; 
 			next unless ( $opts{"justUIDdepths"} ); # Do not skip an invalid barcode if we're only generating the UID depth file.
 		}
 	
 		# Count this instance of the barcode family
-		$data{uids}{$barcode}{count}++;
+		$data{uids}{$uid}{count}++ if($strand==1);   ## count uid only once for the fagment
 	    
 		### if not askig for basecalls, tehn no point going any futher
 		next unless($opts{basecalls});
@@ -652,17 +630,25 @@ sub get_site_data_pe{
 		my $basecalllength=scalar @basecalls;
 		
 		
+		
 		# Save the raw base calls for future consensus calling
 		# Write the base by base calls to a file....
-		push(@{$data{uids}{$barcode}{raw}}, join("", @basecalls));
+		### organize consensus by strands
+		### -1 strand data will not be right justifie, +strand will be right justified. 
+		### need to account for this somehow
+		push(@{$data{uids}{$uid}{raw}{$strand}}, join("", @basecalls));
 		
 
 		# Store the individual basecalls in the readData hash
+		### these will now be stored bh chromosome position, not position in the read
+		
+		
 		for ( my $i = 0; $i < scalar(@basecalls); $i++ ) {
+			my $pos=$start + $i;
 			my $basecall=$basecalls[$i];
 			$basecall =~ tr/acgt/ACGT/;
-			$data{basecalls}{$i}{raw}{$basecall}++;
-			$data{basecalls}{$i}{raw}{depth}++;
+			$data{basecalls}{$pos}{raw}{$basecall}++;
+			$data{basecalls}{$pos}{raw}{depth}++;
 		}
 		
 
@@ -676,6 +662,25 @@ sub get_site_data_pe{
 		
 }
 
+sub get_uid{
+	my ($alignment)=@_;
+	
+	my $uid = '';
+	my $uid_position = 0;
+	my $read_name = $alignment->query->name();
+	if ($read_name =~ /HaloplexHS/) { # We have a HaloplexHS read
+		$read_name =~ m/HaloplexHS-([ACTG]{10})/;
+		$uid = $1;
+	} else { # We have a SiMSenSeq read
+		my $read_dna = $alignment->query->dna();
+		($uid_position, $uid) = &Debarcer::extractBarcodeQuick($read_dna);
+		$uid=0 unless($uid_position==0);
+	}
+	
+	
+	
+	return $uid;
+}
 
 ### this function will identify similar uids for a given amplicon,and either merge or mask
 sub collapse_uids{
@@ -757,86 +762,59 @@ sub collapse_uids{
 
 
 
-## function to make a call table at specific depth thresholds
-sub get_position_calls{
-	
-	
-	my ($id,$data,$thresholds)=@_;
-	### thresholds is a comma separated string listing thresholds
-	my @thresholds=split /,/,$thresholds;
-	my $threshold=shift @thresholds;
-	
-	print STDERR "assessing positions calls as threshold $threshold\n";
-	
-	### $data is a reference to the site data
-	my @SNVtypes=qw/A C G T D I N/; 
-	print STDERR "calculating position table for $id\n";
-		
-	my %table;
-	
 
-	foreach my $position ( sort { $a <=> $b } keys %{$$data{basecalls}}) {
-		my ($probableBase, $n, $rawDataString) = ('', 0, '');
+
+sub generate_consensus_data_rev{
+	my($id,$FH,$hashref,$familysizes)=@_;
+	my @levels=split /,/,$familysizes;
+	my %uids=%{$$hashref{uids}};
+	
+	#print Dumper(%uids);
+
+	my($chrom,$start,$end)=split /[:-]/,$id;
+ 	my ($AmpliconCount, $AmpliconCoverage) = (0, 0);
+	for my $uid ( sort {$uids{$b}{count}<=>$uids{$a}{count}} keys %uids) {
+		my $uidcount=$uids{$uid}{count};
+
 		
-		print "position=$position\n";
-		#print Dumper($$data{basecalls}{$position});<STDIN>;
+		my @uidlevels=grep{$uidcount>=$_} @levels;  # base on the uid count, the minimum family sizes where this will be stored
+
+		$AmpliconCount++;
+		$AmpliconCoverage += $uidcount;		
 		
-		### for this position, assess the raw data
 		
+		for my $strand(1,-1){
+			my @raw_reads=@{$uids{$uid}{raw}{$strand}};
+			my $consensus=&generateConsensus_rev(@raw_reads,1,$strand) || "N/A";   ### second argument used to be miniumum depth, now set to 1, do all depths
+			$$hashref{uids}{$uid}{consensus}{$strand}=$consensus; 
+			printf $FH ("%s\t%s\t%s\t%s\t%s\n", $id, $uid, $uidcount, $strand,$consensus );
+
+			#### now organize the bases at this position into a hash structure
+			my @bases = split(//, $consensus);
+			for (my $i = 0; $i < scalar(@bases); $i++) {
+				my $seq_length=scalar @bases;
+				my $base=$bases[$i];
+				$base =~ tr/acgt/ACGT/;
 		
-		### I think this can be omitted, it is not saved at all.  ie, probable base information.  and it is recalculated in the main function
-		### check on this to ensure you've not missed any logic
-		my %rawDataHash = ();
-		my $depth = 0;  #Depth
-		for my $snv ( @SNVtypes ) {
-			# Save the base identity if the count is higher than any previous observed count
-			my $snvdepth=$$data{basecounts}{$position}{$snv} || 0;
-			### probable base is the snv with the hightest depth
-			if ( $snvdepth > $n ) {
-				$probableBase = $snv;
-				$n = $snvdepth;
-			}
+				my $pos = $strand==1 ? $start+$i : $end-$seq_length+$i+1;  ### position in the genome
 				
-			$rawDataString .= "\t" . $snvdepth;
-			$rawDataHash{$snv} = $snvdepth;
-			$depth += $snvdepth;
-		}
-
-		# Do not report this site if it's a low coverage position
-		next if ( $depth < $threshold );
+				### check on the raw base
 		
-		# Calculate the real genome position
-		my ($chrom, $chromStart) = split(/:/, $id);
-		my $genomePosition = $chromStart + $position;
-
-			# This section will restrict reporting of amplicon positions to those within
-			# the target window specified in the *amplicons.txt file
-#			if ( $opts{"justTargets"} ) {
-#				# If a target window exists, skip $genomePosition unless it falls within start and end
-#				if ( exists $ampliconInfo{$ampliconName}{"TargetWindow"} ) {
-#					unless ( $genomePosition >= $ampliconInfo{$ampliconName}{"TargetWindow"}{"start"} & $genomePosition <= 	$ampliconInfo{$ampliconName}{"TargetWindow"}{"end"} ) {
-#						# print STDERR "Skipping $ampliconName $amp Position $position $genomePosition\n";
-#						next;
-#					}
-#				}
-#				# To gen here, no target window exists, so report everything
-#			}
-		
-			# Save accumulated data in the output table
-	
-		foreach my $base ( @SNVtypes ) {
-			$table{$genomePosition}{"raw"}{$base} += $rawDataHash{$base};
-			$table{$genomePosition}{"consensus"}{$base} += $$data{conspos}{$position}{$base};
+				for my $uidlevel(@uidlevels){
+					$$hashref{basecalls}{$pos}{consensus}{$uidlevel}{$base}++;
+					$$hashref{basecalls}{$pos}{consensus}{$uidlevel}{depth}++;
+				}	
+			}
+			
+			
+			
+			
+			
 		}
 	}
-	return %table;
-	#print "ready to dump table";<STDIN>;
-	#print Dumper(%table);<STDIN>;
 	
-	
+	print STDERR "$id\tcount|coverage\t$AmpliconCount\t$AmpliconCoverage\n";	
 }
-
-
 
 
 
@@ -917,7 +895,125 @@ sub print_uid_depths{
 
 
 
+sub generateConsensus {
 
+=pod
+
+Function to return a consensus sequence given an array of CIGAR-like alignment strings.
+
+=cut
+	
+	my $minDepth = pop @_;
+	my @rawSeqs = @_;
+	return if ( scalar(@rawSeqs) < $minDepth );  # Return a blank consensus if one can't be called given minDepth
+
+	my $cons;
+	my %rawBases = ();
+
+	# index by position in the AoA
+	foreach my $seq ( @rawSeqs ) {
+		my @s = split(//, $seq);
+		for ( my $i = 0; $i < scalar(@s); $i++) {
+			$rawBases{$i}{$s[$i]}++;
+		}
+	}
+
+	# print Dumper(\%rawBases);
+	
+	foreach my $i ( sort {$a <=> $b} keys %rawBases ) {
+		my @basesHere = sort { $rawBases{$i}{$b} <=> $rawBases{$i}{$a} } keys %{$rawBases{$i}};  # sort bases by descending count
+		my $commonBase = $basesHere[0];
+		
+		# if commonBase is in [acgtDI] it must be highly abundant.  There should be a test here.
+		if ( $commonBase =~ /[acgtDI]/ ) {
+			# print "## Checking this non-reference base: $commonBase :" . Dumper(\%{$rawBases{$i}});
+			my $nCommonBase = $rawBases{$i}{$commonBase};
+			my $depthHere = 0;
+			$depthHere += $rawBases{$i}{$_} foreach ( @basesHere );
+			if ( $depthHere <= 20 ) {
+				unless ( $nCommonBase == $depthHere ) {
+					# print "Changing $commonBase to $basesHere[1] because of non-unanimous evidence: " . Dumper(\%{$rawBases{$i}});
+					$commonBase = $basesHere[1];
+				}
+			} else {
+				my $alleleRatio = ($nCommonBase / $depthHere) ;
+				unless ( $alleleRatio >= 0.90 ) {
+					# print "Changing $commonBase to $basesHere[1] because of $alleleRatio: " . Dumper(\%{$rawBases{$i}});
+					$commonBase = $basesHere[1];
+				}
+			}
+		}
+		
+		$cons .= $commonBase;
+	}
+
+	return $cons;
+}
+
+sub generateConsensus_rev {
+
+=pod
+
+Function to return a consensus sequence given an array of CIGAR-like alignment strings.
+
+=cut
+	my $strand = pop(@_);
+	my $minDepth = pop @_;
+	my @rawSeqs = @_;
+	return if ( scalar(@rawSeqs) < $minDepth );  # Return a blank consensus if one can't be called given minDepth
+
+	my $cons;
+	my %rawBases = ();
+
+	# index by position in the AoA
+	foreach my $seq ( @rawSeqs ) {
+		
+		
+		### reverse the SEQUENCE since anchor is on the other end
+		$seq=reverse($seq) if($strand==-1);
+		
+		
+		my @s = split(//, $seq);
+		for ( my $i = 0; $i < scalar(@s); $i++) {
+			$rawBases{$i}{$s[$i]}++;
+		}
+	}
+
+	# print Dumper(\%rawBases);
+	
+	foreach my $i ( sort {$a <=> $b} keys %rawBases ) {
+		my @basesHere = sort { $rawBases{$i}{$b} <=> $rawBases{$i}{$a} } keys %{$rawBases{$i}};  # sort bases by descending count
+		my $commonBase = $basesHere[0];
+		
+		# if commonBase is in [acgtDI] it must be highly abundant.  There should be a test here.
+		if ( $commonBase =~ /[acgtDI]/ ) {
+			# print "## Checking this non-reference base: $commonBase :" . Dumper(\%{$rawBases{$i}});
+			my $nCommonBase = $rawBases{$i}{$commonBase};
+			my $depthHere = 0;
+			$depthHere += $rawBases{$i}{$_} foreach ( @basesHere );
+			if ( $depthHere <= 20 ) {
+				unless ( $nCommonBase == $depthHere ) {
+					# print "Changing $commonBase to $basesHere[1] because of non-unanimous evidence: " . Dumper(\%{$rawBases{$i}});
+					$commonBase = $basesHere[1];
+				}
+			} else {
+				my $alleleRatio = ($nCommonBase / $depthHere) ;
+				unless ( $alleleRatio >= 0.90 ) {
+					# print "Changing $commonBase to $basesHere[1] because of $alleleRatio: " . Dumper(\%{$rawBases{$i}});
+					$commonBase = $basesHere[1];
+				}
+			}
+		}
+		
+		$cons .= $commonBase;
+	}
+	
+	
+	### reverse the consensus to return in the correct direction
+	$cons=reverse($cons) if($strand==-1);
+
+	return $cons;
+}
 
 
 
@@ -1003,60 +1099,7 @@ Bio::DB::Bam::Alignment object
 			
 }
 
-sub generateConsensus {
 
-=pod
-
-Function to return a consensus sequence given an array of CIGAR-like alignment strings.
-
-=cut
-	
-	my $minDepth = pop @_;
-	my @rawSeqs = @_;
-	return if ( scalar(@rawSeqs) < $minDepth );  # Return a blank consensus if one can't be called given minDepth
-
-	my $cons;
-	my %rawBases = ();
-
-	# index by position in the AoA
-	foreach my $seq ( @rawSeqs ) {
-		my @s = split(//, $seq);
-		for ( my $i = 0; $i < scalar(@s); $i++) {
-			$rawBases{$i}{$s[$i]}++;
-		}
-	}
-
-	# print Dumper(\%rawBases);
-	
-	foreach my $i ( sort {$a <=> $b} keys %rawBases ) {
-		my @basesHere = sort { $rawBases{$i}{$b} <=> $rawBases{$i}{$a} } keys %{$rawBases{$i}};  # sort bases by descending count
-		my $commonBase = $basesHere[0];
-		
-		# if commonBase is in [acgtDI] it must be highly abundant.  There should be a test here.
-		if ( $commonBase =~ /[acgtDI]/ ) {
-			# print "## Checking this non-reference base: $commonBase :" . Dumper(\%{$rawBases{$i}});
-			my $nCommonBase = $rawBases{$i}{$commonBase};
-			my $depthHere = 0;
-			$depthHere += $rawBases{$i}{$_} foreach ( @basesHere );
-			if ( $depthHere <= 20 ) {
-				unless ( $nCommonBase == $depthHere ) {
-					# print "Changing $commonBase to $basesHere[1] because of non-unanimous evidence: " . Dumper(\%{$rawBases{$i}});
-					$commonBase = $basesHere[1];
-				}
-			} else {
-				my $alleleRatio = ($nCommonBase / $depthHere) ;
-				unless ( $alleleRatio >= 0.90 ) {
-					# print "Changing $commonBase to $basesHere[1] because of $alleleRatio: " . Dumper(\%{$rawBases{$i}});
-					$commonBase = $basesHere[1];
-				}
-			}
-		}
-		
-		$cons .= $commonBase;
-	}
-
-	return $cons;
-}
 
 sub generatePhyloConsensus {
 
@@ -1223,5 +1266,90 @@ sub usage{
 	die "\n@_\n\n";
 }
 
+
+
+
+
+## function to make a call table at specific depth thresholds
+
+### NOT USED
+
+sub get_position_calls{
+	
+	
+	my ($id,$data,$thresholds)=@_;
+	### thresholds is a comma separated string listing thresholds
+	my @thresholds=split /,/,$thresholds;
+	my $threshold=shift @thresholds;
+	
+	print STDERR "assessing positions calls as threshold $threshold\n";
+	
+	### $data is a reference to the site data
+	my @SNVtypes=qw/A C G T D I N/; 
+	print STDERR "calculating position table for $id\n";
+		
+	my %table;
+	
+
+	foreach my $position ( sort { $a <=> $b } keys %{$$data{basecalls}}) {
+		my ($probableBase, $n, $rawDataString) = ('', 0, '');
+		
+		print "position=$position\n";
+		#print Dumper($$data{basecalls}{$position});<STDIN>;
+		
+		### for this position, assess the raw data
+		
+		
+		### I think this can be omitted, it is not saved at all.  ie, probable base information.  and it is recalculated in the main function
+		### check on this to ensure you've not missed any logic
+		my %rawDataHash = ();
+		my $depth = 0;  #Depth
+		for my $snv ( @SNVtypes ) {
+			# Save the base identity if the count is higher than any previous observed count
+			my $snvdepth=$$data{basecounts}{$position}{$snv} || 0;
+			### probable base is the snv with the hightest depth
+			if ( $snvdepth > $n ) {
+				$probableBase = $snv;
+				$n = $snvdepth;
+			}
+				
+			$rawDataString .= "\t" . $snvdepth;
+			$rawDataHash{$snv} = $snvdepth;
+			$depth += $snvdepth;
+		}
+
+		# Do not report this site if it's a low coverage position
+		next if ( $depth < $threshold );
+		
+		# Calculate the real genome position
+		my ($chrom, $chromStart) = split(/:/, $id);
+		my $genomePosition = $chromStart + $position;
+
+			# This section will restrict reporting of amplicon positions to those within
+			# the target window specified in the *amplicons.txt file
+#			if ( $opts{"justTargets"} ) {
+#				# If a target window exists, skip $genomePosition unless it falls within start and end
+#				if ( exists $ampliconInfo{$ampliconName}{"TargetWindow"} ) {
+#					unless ( $genomePosition >= $ampliconInfo{$ampliconName}{"TargetWindow"}{"start"} & $genomePosition <= 	$ampliconInfo{$ampliconName}{"TargetWindow"}{"end"} ) {
+#						# print STDERR "Skipping $ampliconName $amp Position $position $genomePosition\n";
+#						next;
+#					}
+#				}
+#				# To gen here, no target window exists, so report everything
+#			}
+		
+			# Save accumulated data in the output table
+	
+		foreach my $base ( @SNVtypes ) {
+			$table{$genomePosition}{"raw"}{$base} += $rawDataHash{$base};
+			$table{$genomePosition}{"consensus"}{$base} += $$data{conspos}{$position}{$base};
+		}
+	}
+	return %table;
+	#print "ready to dump table";<STDIN>;
+	#print Dumper(%table);<STDIN>;
+	
+	
+}
 
 
