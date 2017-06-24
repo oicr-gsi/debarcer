@@ -152,9 +152,12 @@ if ($opts{"basecalls"}){
 print STDERR "begin parsing bam file $opts{bam}\n";
 my $sam = Bio::DB::Sam->new(-bam => $opts{bam}, -fasta => $config{refgenome} );
 
+
+
 my $sitecount=0;
 my @AmpliconIDs=sort {$sites{$b}<=>$sites{$a}} keys %sites;
-@AmpliconIDs=@AmpliconIDs[0..($nSites-1)] if($nSites>scalar @AmpliconIDs);
+@AmpliconIDs=@AmpliconIDs[0..($nSites-1)] if(scalar @AmpliconIDs > $nSites);
+
 
 for my $AmpliconID(@AmpliconIDs){
 	$sitecount++;
@@ -202,11 +205,14 @@ for my $AmpliconID(@AmpliconIDs){
 
 	my $probableRefBase="N";  ## this shoudl be the reference base
 	for my $pos( sort{$a<=>$b} keys %{$sitedata{basecalls}}){
+		
+		
+
 
 		my $refpos=$start+$pos;
 		my $refbase=$sam->seq($chrom,$refpos,$refpos);
 		
-		
+		print "assessing $chrom $refpos\n";
 
 		my @counts=map{ $sitedata{basecalls}{$pos}{raw}{$_} || 0 } @SNVtypes;
 		my $rawdepth=$sitedata{basecalls}{$pos}{raw}{depth};
@@ -240,6 +246,9 @@ for my $AmpliconID(@AmpliconIDs){
 		}
 
 	}
+	
+	
+	print "DONE";<STDIN>;
 	
 	
 	next;
