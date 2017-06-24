@@ -212,7 +212,7 @@ for my $AmpliconID(@AmpliconIDs){
 		my $refpos=$start+$pos;
 		my $refbase=$sam->seq($chrom,$refpos,$refpos);
 		
-		print "assessing $chrom $refpos\n";
+		
 
 		my @counts=map{ $sitedata{basecalls}{$pos}{raw}{$_} || 0 } @SNVtypes;
 		my $rawdepth=$sitedata{basecalls}{$pos}{raw}{depth};
@@ -247,8 +247,6 @@ for my $AmpliconID(@AmpliconIDs){
 
 	}
 	
-	
-	print "DONE";<STDIN>;
 	
 	
 	next;
@@ -521,7 +519,6 @@ sub get_site_data_pe{
 	#print STDERR "getting segments for $AmpliconID $chrom $start $end";<STDIN>;
 	my $segment = $sam->segment($chrom,$start,$end);
 	
-	
 	#my @alignments = $sam->features(-type=>'read_pair',-seq_id=>$chrom,-start=>$start,-end=>$end);
 	
 	#for my $alignment(@alignments){
@@ -540,10 +537,45 @@ sub get_site_data_pe{
 	
 	#my @alignments = $segment->features;
 	## LIMIT TO ALIGNMENTS AT THIS EXACT START POSITION, and the paired end at the correct mate position	
-    my @alignments = $segment->features(-filter => sub { my $alignment = shift;return ($alignment->start==$start) && ($alignment->mate_end==$end) });
+	my @alignments;
+    my @alignments1 = $segment->features(-filter => sub { my $alignment = shift;return ($alignment->start==$start) && ($alignment->mate_end==$end) });
 	#my @alignments = $segment->features(-filter => sub { my $alignment = shift;return $alignment->start==$start });
-	
+	push(@alignments,@alignments1);
+    my @alignments2 = $segment->features(-filter => sub { my $alignment = shift;return ($alignment->end==$end) && ($alignment->mate_start==$start) });
+	push(@alignments,@alignments2);
 
+	### this is some debugging code to assess paired ned alignments
+	## START
+	
+	#print "1  " . scalar @alignments1 ."\n";
+	#print "2  " . scalar @alignments2 ."\n";
+
+	
+	#for my $a1(@alignments1){
+	#	my $a1name = $a1->query->name();
+	#	if($a1name eq "HISEQ-MFG:201:HJGVWBCXY:1:1101:6590:2270:HaloplexHS-AATGTCTTTG"){
+	#		my $read_dna = $a1->query->dna();
+	#		my $start=$a1->start;
+	#		my $end=$a1->end;
+	#		print "$start $end read = $read_dna\n";
+	#	}
+	#}
+	#for my $a2(@alignments2){
+	#	my $a2name = $a2->query->name();
+	#	if($a2name eq "HISEQ-MFG:201:HJGVWBCXY:1:1101:6590:2270:HaloplexHS-AATGTCTTTG"){
+	#		my $read_dna = $a2->query->dna();
+	#		my $start=$a2->start;
+	#		my $end=$a2->end;			
+	#		print "$start $end read = $read_dna\n";
+	#	}
+	#}
+
+	#print "wait";<STDIN>;
+
+    ### END
+	
+	
+	
 	
 	my $count_exact=scalar @alignments;
 	my $count_offset=0;
