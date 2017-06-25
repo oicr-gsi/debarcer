@@ -212,7 +212,7 @@ for my $AmpliconID(@AmpliconIDs){
 
 		my $refbase=$sam->seq($chrom,$refpos,$refpos);
 		
-		print "$AmpliconID $refpos referencebase $refbase\n";
+		#print "$AmpliconID $refpos referencebase $refbase\n";
 		#print Dumper($sitedata{basecalls}{$refpos});<STDIN>;
 		
 		
@@ -225,7 +225,7 @@ for my $AmpliconID(@AmpliconIDs){
 		my $refcount=$sitedata{basecalls}{$refpos}{raw}{$refbase} || 0;
 		my $reffreq=$rawdepth ? $refcount/$rawdepth : 0;
 
-		printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"raw");
+		printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"raw");
 		print $POSITIONFILE join("\t", @counts) . "\t$rawdepth\t$reffreq\n";
 		
 		#printf ("%s\t%s\t%d\t%s\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"raw");
@@ -247,7 +247,7 @@ for my $AmpliconID(@AmpliconIDs){
 				my $refcount=$sitedata{basecalls}{$refpos}{consensus}{$uidlevel}{$refbase} || 0;
 				my $reffreq=$consdepth ? $refcount/$consdepth : 0;				
 
-				printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%d\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"cons_$uidlevel");
+				printf $POSITIONFILE ("%s\t%s\t%d\t%s\t%s\t", $chrom, $ampliconName, $refpos, $refbase,"cons_$uidlevel");
 				print $POSITIONFILE join("\t", @counts) . "\t$consdepth\t$reffreq\n"
 
 		}
@@ -356,13 +356,18 @@ sub identifyFamilySites_PE {
 	
 	#my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4,7,9`;   ### chrom
 	
-	## DON"T SAMPLE< AND ONLY GET READ1 f2=proper pair, F16=NOT on the reverse strandr
-	(open my $BAM,"$SAMTOOLSBINARY view -f 2 -F 16 $inBam | cut -f 2,3,4,7,9 |") || die "could not open bam stream";
+	## DON"T SAMPLE< AND ONLY GET READ1 f2=proper pair, F16=NOT on the reverse strand, F2048 exclude supplementary alignments, often map in different orientatios
+	(open my $BAM,"$SAMTOOLSBINARY view -f 2 -F 16 -F 2048 $inBam | cut -f 2,3,4,7,9 |") || die "could not open bam stream";
 	while(my $site=<$BAM>){
 		chomp $site; 
 		my($flag,$rname,$pos,$rnext,$tlen)=split /\t/,$site;
 		next unless($rnext eq "=");
 		my $pos2=$pos+$tlen-1;
+		
+		if($tlen<0){
+			print "TLEN < 0 : $site";<STDIN>;
+		}
+		
 		my $siteid="${rname}:${pos}-${pos2}";
 		$site =~ s/\t/:/; $familySites{$siteid}++;
 	}
@@ -1047,7 +1052,12 @@ Bio::DB::Bam::Alignment object
 		print "$CIGAR\n";
 	}
 	
+	
+	
+	
 	my ($ref,$matches,$query) = $alignment->padded_alignment;
+	
+	#print "$ref\n$matches\n$query\n";<STDIN>;
 	#print "Ref:  $ref\n      $matches\nRead: $query\n\n";
 	#<STDIN>;
 	# Since query is longer than ref due to adapters, etc.,
@@ -1066,8 +1076,18 @@ Bio::DB::Bam::Alignment object
 	my $genomicOffset = 0;
 	my $inInsertion = 0;
 	
-	my @Ar = split(//, $ref);    #print Dumper(@Ar);<STDIN>;
-	my @Aq = split(//, $query);  #print Dumper(@Aq);<STDIN>;
+	#if($query=~/-/){
+	#	##deletion
+	#	print "DELETION\n$ref\n$matches\n$query\n";<STDIN>;
+	#}
+	#if($ref=~/-/){
+	#	##deletion
+	#	print "INSERTION\n$ref\n$matches\n$query\n";<STDIN>;
+	#}
+	
+	
+	my @Ar = split(//, $ref);   
+	my @Aq = split(//, $query); 
 		
 	for (my $i = 0; $i < scalar(@Ar); $i++) {
 		if ( $Ar[$i] eq $Aq[$i] ) {
