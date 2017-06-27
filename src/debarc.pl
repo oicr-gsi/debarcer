@@ -296,12 +296,23 @@ sub load_sites{
 		print STDERR "sites file not found. Identifying Family sites : $nSites\n";
 		#(open my $FSITES,">",$opts{"sampleID"}.".familysites") || die "unable to open family sites";
 		%sites = &identifyFamilySites_PE($bamfile, $nSites);
+		
+		
 
 		#### write the sties to a file
 		(open my $FSITES,">",$file) || die "unable to open sites file";
 		## sort by size
 		for my $site(sort { $sites{$b} <=> $sites{$a} } keys %sites){
-			print $FSITES "$site\t$sites{$site}\n";
+			next unless($site);
+			
+			my $count=$sites{$site}{count};
+			my %uids=%{$sites{$site}{uids}};
+			my @uids=sort  {$uids{$b}<=>$uids{$a}}  keys %uids;
+			my $uidcount=scalar @uids;
+			my $uidstring=join("|",
+				map{ "$_:$uids{$_}" }@uids
+			);
+			print $FSITES "$site\t$sites{$site}{count}\t$uidcount\t$uidstring\n";
 		}
 		close $FSITES;
 	}
@@ -357,10 +368,13 @@ sub identifyFamilySites_PE {
 	#my @allSites = `$SAMTOOLSBINARY view -s 0.1 $inBam | cut -f 3,4,7,9`;   ### chrom
 	
 	## DON"T SAMPLE< AND ONLY GET READ1 f2=proper pair, F16=NOT on the reverse strand, F2048 exclude supplementary alignments, often map in different orientatios
-	(open my $BAM,"$SAMTOOLSBINARY view -f 2 -F 16 -F 2048 $inBam | cut -f 2,3,4,7,9 |") || die "could not open bam stream";
+	(open my $BAM,"$SAMTOOLSBINARY view -f 2 -F 16 -F 2048 $inBam | cut -f 1,2,3,4,7,9 |") || die "could not open bam stream";
+	my $align_count;
 	while(my $site=<$BAM>){
+		$align_count++;
+		last if($align_count)>1000;
 		chomp $site; 
-		my($flag,$rname,$pos,$rnext,$tlen)=split /\t/,$site;
+		my($name,$flag,$rname,$pos,$rnext,$tlen)=split /\t/,$site;
 		next unless($rnext eq "=");
 		my $pos2=$pos+$tlen-1;
 		
@@ -368,8 +382,14 @@ sub identifyFamilySites_PE {
 			print "TLEN < 0 : $site";<STDIN>;
 		}
 		
+		
+		my ($uid)=$name=~/HaloplexHS-([ACGTacgt].*)/;
+		
 		my $siteid="${rname}:${pos}-${pos2}";
-		$site =~ s/\t/:/; $familySites{$siteid}++;
+		$site =~ s/\t/:/; 
+		$familySites{$siteid}{count}++;
+		$familySites{$siteid}{uids}{$uid}++;
+		
 	}
 	close $BAM;
 	my @goodSites = (sort { $familySites{$b} <=> $familySites{$a} } keys %familySites);
