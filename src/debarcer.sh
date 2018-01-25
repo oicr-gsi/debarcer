@@ -6,6 +6,11 @@ do
 key="$1"
 
 case $key in
+    -c|--config)
+    CONFIG="$2"
+    shift # past argument
+    shift # past value
+    ;;
     -r|--region)
     REGION="$2"
     shift # past argument
@@ -33,7 +38,6 @@ CHR=${REGION%:*}
 POS_A=${REGION#*:}
 POS_A=${POS_A%-*}
 POS_B=${REGION#*-}
-REF_FILE="" # load from config
 
 # need to find better way to load python
 cd /u/tbodak/python3.6.4-env/bin
@@ -41,11 +45,11 @@ source activate
 cd -
 
 # UMI Count
-python UMI_count.py $OUTPUT $BAM_FILE $CHR $POS_A $POS_B
+# python UMI_count.py "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B"
 
 # consensus
-python generate_consensus.py $BAM_FILE $REF_FILE $OUTPUT/Output_$CHR:$POS_A-$POS_B.txt
+python generate_consensus.py "$BAM_FILE" "$OUTPUT/output_$CHR-$POS_A-$POS_B.txt" "$CONFIG"
 
 # TODO stats/plots/etc from consensus...
-echo $OUTPUT/Output_$CHR:$POS_A-$POS_B.txt.cons
+python stats.py
 

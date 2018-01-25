@@ -3,10 +3,11 @@ import sys
 import operator
 import pysam 
 
-output = sys.argv[2]
-contig = sys.argv[3]
-start  = int(sys.argv[4])
-end    = int(sys.argv[5])
+output   = sys.argv[1]
+bam_file = sys.argv[2]
+contig   = sys.argv[3]
+start    = int(sys.argv[4])
+end      = int(sys.argv[5])
 
 
 ## Returns tally of UMIs in given region (includes mates)
@@ -14,7 +15,7 @@ def UMI_count(start, end):
 
     umis = {}
     
-    bam_reader = pysam.AlignmentFile(sys.argv[1], "rb") 
+    bam_reader = pysam.AlignmentFile(bam_file, "rb") 
     
     for read in bam_reader.fetch(contig, start, end):
 
