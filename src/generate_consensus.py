@@ -5,7 +5,8 @@ import operator
 from collections import OrderedDict
 
 bam_file    = sys.argv[1]
-region_file = sys.argv[2]
+ref_file    = sys.argv[2]
+region_file = sys.argv[3]
 
 name = region_file.split("output_")[1]
 name = name.strip(".txt")
@@ -18,20 +19,25 @@ region_end   = int(region_end)
 ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
 region_sequence = {}
 
-
 ## Lists of UMI+Pos pairs with count >= cutoff
-families = set()
-cutoff   = 15
+families = {}
+cutoff   = 3
 
 with open(region_file, "r") as reader:
     lines = reader.readlines()
     
 for line in lines[1:]:
 
-    umi, pos, count, rest = line.split("\t")
+    umi, pos, count, *rest = line.split("\t")
 
     if(int(count) >= cutoff):
-        families.add(umi + pos)
+        families[umi + pos] = 0
+
+
+def get_reference():
+
+    with pysam.FastaFile(ref_file) as reader:
+        return(reader.fetch(contig, region_start, region_end).upper())
 
 
 def add_base(pos, family, base):
@@ -62,101 +68,90 @@ def add_base(pos, family, base):
 # Build the region_sequence table
 with pysam.AlignmentFile(bam_file, "rb") as reader:
 
+    read_threshold = 50 ## max number of reads to consider in a family before finding consensus
+
     for read in reader.fetch(contig, region_start, region_end):
         
         umi   = read.query_name.split("HaloplexHS-")[1][:10]
         start = read.reference_start
-        end   = start + read.infer_read_length() if read.infer_read_length() else start
+        end   = start + len(str(read).split("\t")[9])
         pos   = "{}-{}".format(str(start), str(end))
         cigar = read.cigartuples if read.cigartuples else False
 
-        sequence = read.query_sequence
+        sequence = read.query_alignment_sequence
 
         family_key = umi + pos
         
-        if family_key in families and cigar:
+        if cigar and family_key in families and families[family_key] <= read_threshold:
 
-            ## TODO: Need to incorporate CIGAR logic
-            ## Notes:
-            ## Sequence should usually be 150 long, DOES NOT REMOVE soft clips from start and end
+            families[family_key] += 1
+
+            ## Add read bases to region_sequence
+
+            reg_pos = start ## position within the region
+            seq_pos = 0     ## position within the sequence
             
-            curr_pos = start ## we "start" at start
-            seq_pos  = 0     ## position within the sequence
-
-            #stored = "" ## TEST
-
+            overwrite_next_match = False
+            overwrite_length     = 0
+            
             for tuple in cigar:
 
                 op     = tuple[0]
                 op_len = tuple[1]
 
-                if op in [0, 3]: ## Match or CREF_SKIP ("N")
+                if overwrite_next_match:
+                    op_len -= overwrite_length
 
-                    for base_pos in range(curr_pos, curr_pos + op_len):
+                overwrite_next_match = False
+                
+                if op == 0: ## Match
+
+                    for base_pos in range(reg_pos, reg_pos + op_len):
 
                         base  = sequence[seq_pos]
-                        
                         add_base(base_pos, family_key, base)
-                        #stored += base ## TEST
-
+                        
                         seq_pos += 1
 
-                    curr_pos += op_len
+                    reg_pos += op_len
 
                 elif op == 1: ## Insertion
-
-                    base = sequence[seq_pos : seq_pos + op_len]
                     
-                    add_base(base_pos, family_key, base)
-                    #stored += base ## TEST
+                    ## Do something with this, for the future
+                    base = sequence[seq_pos : seq_pos + op_len + 1]
+                    add_base(reg_pos, family_key, "I")
+                    reg_pos += 1 # Insertion only counts as one "base"
+                    seq_pos  += op_len + 1
 
-                    curr_pos += 1 # Insertion only counts as one "base"
-                    seq_pos  += op_len
+                    overwrite_next_match = True ## Since we have insert, next match is shortened
+                    overwrite_length     = op_len
 
                 elif op == 2: ## Deletion
 
-                    base = "-"
+                    for base_pos in range(reg_pos, reg_pos + op_len):
+                        add_base(base_pos, family_key, "-")
 
-                    for base_pos in range(curr_pos, curr_pos + op_len):
+                    reg_pos += op_len
 
-                        #print("Deletion\n") ## TEST
+                elif op == 3: ## CREF_SKIP ("N")
 
-                        add_base(base_pos, family_key, base)
-                        #stored += base ## TEST
+                    for base_pos in range(reg_pos, reg_pos + op_len):
+                        add_base(base_pos, family_key, "N")
+                    
+                    reg_pos += op_len 
 
-                    curr_pos += op_len
-
-                elif op == 4: ## Soft clip
-                    curr_pos += op_len
-                    seq_pos  += op_len
+                elif op == 4: ## Soft clip do nothing
+                    reg_pos = reg_pos
 
                 elif op == 5: ## Hard clip
                     ## do nothing I guess?
-                    curr_pos = curr_pos
+                    reg_pos = curr_pos
 
                 else:
-                    curr_pos += op_len
-                    seq_pos  += op_len
-
-            #memory = ""
-            #for base_pos in range(start, end):
-            #    for letter in region_sequence[base_pos][family_key]:
-            #        memory += letter
-            #        memory += str(region_sequence[base_pos][family_key][letter])
-            #    memory += "~"
-
-            #print("Seq: {}\nStored: {}\nMemory: {}\n".format(sequence, stored, memory))
-
-            ## END TODO
- 
-# Generate consensus sequence and statistics
-## /TODO/
-
-#TEST
-print(region_sequence[36164450])
+                    raise ValueError("Unknown operation in CIGAR tuple.")
 
 
-read_cutoff = 5 ## min. number of consensus reads required in a family 
+ref_seq = get_reference()
 
 writer = open(region_file + ".cons", "w")
 
@@ -168,17 +163,32 @@ for base_pos in range(region_start, region_end):
 
         for family in region_sequence[base_pos]:
         
-            base = max(region_sequence[base_pos][family].items(), key = operator.itemgetter(1))[0]
+            cons_base    = max(region_sequence[base_pos][family].items(), key = operator.itemgetter(1))[0]
+            cons_denom   = sum(region_sequence[base_pos][family].values())
+            cons_percent = (region_sequence[base_pos][family][cons_base]/cons_denom) * 100
+    
+            percent_threshold = 70.0 ## How "confident" a family must be in the consensus
+            count_threshold   = 3    ## How large the consensus must be
+
+            if cons_percent >= percent_threshold and region_sequence[base_pos][family][cons_base] >= count_threshold:
             
-            if region_sequence[base_pos][family][base] >= read_cutoff:
-            
-                if base in consensuses:
-                    consensuses[base] += 1
+                if cons_base in consensuses:
+                    consensuses[cons_base] += 1
 
                 else:
-                    consensuses[base] = 1
+                    consensuses[cons_base] = 1
 
-        writer.write("{}: ".format(base_pos + 1))
+            else:
+
+                if "U" in consensuses: ## "U" (unclear) - placeholder for programmatically ambiguous bases, revisit
+                    consensuses["U"] += 1
+
+                else:
+                    consensuses["U"] = 1
+        
+        ref_base = ref_seq[base_pos-region_start]
+
+        writer.write("{} (ref. {}): ".format(base_pos + 1, ref_base))
         
         for base, count in sorted(consensuses.items(), key = operator.itemgetter(1), reverse=True):
             writer.write("{}={} ".format(base, str(count)))
