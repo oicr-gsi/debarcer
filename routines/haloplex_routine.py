@@ -26,6 +26,7 @@ def add_base(seq, pos, family, base):
         else:
             seq[pos] = {}
 
+
 def routine(families, contig, region_start, region_end, bam_file, config_file):
     
     consensus_seq = {}
