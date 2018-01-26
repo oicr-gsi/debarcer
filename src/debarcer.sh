@@ -45,11 +45,11 @@ source activate
 cd -
 
 # UMI Count
-# python UMI_count.py "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B"
+python UMI_count.py "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B"
 
 # consensus
 python generate_consensus.py "$BAM_FILE" "$OUTPUT/output_$CHR-$POS_A-$POS_B.txt" "$CONFIG"
 
 # TODO stats/plots/etc from consensus...
-python stats.py
+python stats.py "$OUTPUT/cons_$CHR-$POS_A-$POS_B.txt" "$OUTPUT" "$CONFIG"
 
