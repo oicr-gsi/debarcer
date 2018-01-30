@@ -51,5 +51,5 @@ python UMI_count.py "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B"
 python generate_consensus.py "$BAM_FILE" "$OUTPUT/output_$CHR-$POS_A-$POS_B.txt" "$CONFIG"
 
 # TODO stats/plots/etc from consensus...
-python stats.py "$OUTPUT/cons_$CHR-$POS_A-$POS_B.txt" "$OUTPUT" "$CONFIG"
+python generate_report.py "$OUTPUT/cons_$CHR-$POS_A-$POS_B.txt" "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B" "$CONFIG"
 
