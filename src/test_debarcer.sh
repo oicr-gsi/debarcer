@@ -1,0 +1,1 @@
+./debarcer.sh -r chr21:36164333-36164536 -c ../config/haloplex_config.ini -b /.mounts/labs/gsiprojects/gsi/Debarcer2/data/haloplex-hs/testdata/aligned/RDM_0002_Pb_P_PE_350_TS.merged.sorted.bam -d /.mounts/labs/gsiprojects/gsi/Debarcer2/data/haloplex-hs/design/00100-1421280602_Amplicons.bed -o ../data -p /u/tbodak/scripts/load_python.sh

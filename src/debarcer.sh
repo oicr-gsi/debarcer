@@ -21,8 +21,18 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -d|--bed_file)
+    BED_FILE="$2"
+    shift # past argument
+    shift # past value
+    ;;
     -o|--output)
     OUTPUT="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -p|--python)
+    PYTHON="$2"
     shift # past argument
     shift # past value
     ;;
@@ -39,17 +49,18 @@ POS_A=${REGION#*:}
 POS_A=${POS_A%-*}
 POS_B=${REGION#*-}
 
-# need to find better way to load python
-cd /u/tbodak/python3.6.4-env/bin
-source activate
-cd -
+# Load Python from specified script (revisit, TODO)
+bash $PYTHON
 
-# UMI Count
-python UMI_count.py "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B"
+# 1. Get bed regions
+python get_bed_regions.py "$BED_FILE" "$OUTPUT" "$REGION"
 
-# consensus
-python generate_consensus.py "$BAM_FILE" "$OUTPUT/output_$CHR-$POS_A-$POS_B.txt" "$CONFIG"
+# 2. Perform UMI tally
+python UMI_count.py "$OUTPUT" "$BAM_FILE" "$OUTPUT/$CHR:$POS_A-$POS_B.regions" "$REGION"
 
-# TODO stats/plots/etc from consensus...
-python generate_report.py "$OUTPUT/cons_$CHR-$POS_A-$POS_B.txt" "$OUTPUT" "$BAM_FILE" "$CHR" "$POS_A" "$POS_B" "$CONFIG"
+# 3. Generate consensus
+python generate_consensus.py "$BAM_FILE" "$OUTPUT/$CHR:$POS_A-$POS_B.tally" "$CONFIG" "$REGION"
+
+# 4. TODO stats/plots/etc from consensus...
+python generate_report.py "$OUTPUT/$CHR:$POS_A-$POS_B.cons" "$OUTPUT" "$BAM_FILE" "$REGION" "$CONFIG"
 

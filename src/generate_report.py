@@ -2,21 +2,23 @@
 import sys
 import configparser
 
-from report import variants
 from report import coverage
+from report import variants
 
 region_file  = sys.argv[1]
 output_path  = sys.argv[2]
 bam_file     = sys.argv[3]
-contig       = sys.argv[4]
-region_start = sys.argv[5]
-region_end   = sys.argv[6]
-config_file  = sys.argv[7]
+region       = sys.argv[4]
+config_file  = sys.argv[5]
 
 config = configparser.ConfigParser()
 config.read(config_file)
 
 contents = []
+
+contig       = region.split(":")[0]
+region_start = region.split(":")[1].split("-")[0]
+region_end   = region.split(":")[1].split("-")[1]
 
 ## Variants
 if config['REPORT']['run_variants'] == 'TRUE':
@@ -33,7 +35,7 @@ if config['REPORT']['run_coverage'] == 'TRUE':
 
 
 ## Write output
-with open(output_path + "/report.txt", "w") as writer:
+with open("{}/{}:{}-{}.report".format(output_path, contig, region_start, region_end), "w") as writer:
 
     for content in contents:
         for line in content:
