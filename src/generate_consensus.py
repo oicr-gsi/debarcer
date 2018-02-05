@@ -8,16 +8,14 @@ import operator
 bam_file    = sys.argv[1]
 region_file = sys.argv[2]
 config_file = sys.argv[3]
+region      = sys.argv[4]
 
 config = configparser.ConfigParser()
 config.read(config_file)
 
-name = region_file.split("output_")[1]
-name = name.strip(".txt")
-
-contig, region_start, region_end = name.split("-")
-region_start = int(region_start)
-region_end   = int(region_end)
+contig       = region.split(":")[0]
+region_start = int(region.split(":")[1].split("-")[0])
+region_end   = int(region.split(":")[1].split("-")[1])
 
 routine_file = config['PATHS']['routine_file']
 spec         = importlib.util.spec_from_file_location("routine", routine_file)
@@ -51,10 +49,16 @@ for line in lines[1:]:
 ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
 consensus_seq = routine.routine(families, contig, region_start, region_end, bam_file, config_file)
 
-
 ## Build output
-output_file = config['PATHS']['output_folder'] + "/cons_{}-{}-{}.txt".format(contig, region_start, region_end)
+output_file = config['PATHS']['output_folder'] + "/{}:{}-{}.cons".format(contig, region_start, region_end)
 writer = open(output_file, "w")
+
+##TEST
+with open(output_file + ".testdict", "w") as testwrite:
+    for family in consensus_seq[36164450]:
+        testwrite.write("{}\n".format(family))
+        for base in consensus_seq[36164450][family]:
+            testwrite.write("{} = {}, ".format(base, consensus_seq[36164450][family][base]))
 
 for base_pos in range(region_start, region_end):
 

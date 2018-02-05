@@ -3,15 +3,17 @@ import sys
 import operator
 import pysam 
 
-output   = sys.argv[1]
-bam_file = sys.argv[2]
-contig   = sys.argv[3]
-start    = int(sys.argv[4])
-end      = int(sys.argv[5])
+output_path = sys.argv[1]
+bam_file    = sys.argv[2]
+bed_regions = sys.argv[3]
+region      = sys.argv[4]
 
+contig       = region.split(":")[0]
+region_start = region.split(":")[1].split("-")[0]
+region_end   = region.split(":")[1].split("-")[1]
 
 ## Returns tally of UMIs in given region (includes mates)
-def UMI_count(start, end):
+def UMI_count(contig, start, end):
 
     umis = {}
     
@@ -37,9 +39,9 @@ def UMI_count(start, end):
     return(umis)
 
 
-result = UMI_count(start, end)
+result = UMI_count(contig, int(region_start), int(region_end))
 
-with open(output + "/output_{}-{}-{}.txt".format(contig, start, end), "w") as out:
+with open("{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end), "w") as out:
     out.write("UMI       \tPosn                \tCount\n")
 
     for umi, count in sorted(result.items(), key=operator.itemgetter(1), reverse=True):
