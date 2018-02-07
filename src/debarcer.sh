@@ -52,15 +52,12 @@ POS_B=${REGION#*-}
 # Load Python from specified script (revisit, TODO)
 bash $PYTHON
 
-# 1. Get bed regions
-python get_bed_regions.py "$BED_FILE" "$OUTPUT" "$REGION"
+# 1. Perform UMI tally
+python UMI_count.py --bam_file $BAM_FILE --bed_file $BED_FILE --region $REGION --output_path $OUTPUT --config $CONFIG
 
-# 2. Perform UMI tally
-python UMI_count.py "$OUTPUT" "$BAM_FILE" "$OUTPUT/$CHR:$POS_A-$POS_B.regions" "$REGION"
+# 2. Generate consensus
+python generate_consensus.py --bam_file $BAM_FILE --tally $OUTPUT/$CHR:$POS_A-$POS_B.tally  --output_path $OUTPUT --region $REGION --config $CONFIG
 
-# 3. Generate consensus
-python generate_consensus.py "$BAM_FILE" "$OUTPUT/$CHR:$POS_A-$POS_B.tally" "$CONFIG" "$REGION"
-
-# 4. TODO stats/plots/etc from consensus...
-python generate_report.py "$OUTPUT/$CHR:$POS_A-$POS_B.cons" "$OUTPUT" "$BAM_FILE" "$REGION" "$CONFIG"
+# 3. TODO stats/plots/etc from consensus...
+python generate_report.py --tally $OUTPUT/$CHR:$POS_A-$POS_B.cons --output_path $OUTPUT --bam_file $BAM_FILE --region $REGION --config $CONFIG
 
