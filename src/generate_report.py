@@ -1,28 +1,63 @@
 
 import sys
+import argparse
 import configparser
 
 from report import coverage
 from report import variants
 
-region_file  = sys.argv[1]
-output_path  = sys.argv[2]
-bam_file     = sys.argv[3]
-region       = sys.argv[4]
-config_file  = sys.argv[5]
 
-config = configparser.ConfigParser()
-config.read(config_file)
+## Argument parsing and error handling
+def handle_arg(var, alt, config, error):
+    
+    if var is None:
+ 
+        if config is not None:
+            var = alt
+        
+        if var is None:
+            raise ValueError(error)
+            sys.exit(1)
+        
+    return var
 
-contents = []
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-t',  '--tally',       help='Path to your tally file (output of UMI_count.py).')
+parser.add_argument('-o',  '--output_path', help='Path to write output files to.')
+parser.add_argument('-b',  '--bam_file',    help='Path to your BAM file.')
+parser.add_argument('-r',  '--region',      help='Region to tally (string of the form chrX:posA-posB).')
+parser.add_argument('-c',  '--config',      help='Path to your config file.')
+
+args = parser.parse_args()
+config_file = args.config
+
+if config_file:
+    config = configparser.ConfigParser()
+    config.read(config_file)
+else:
+    config = None
+    
+region = args.region
+if any(x not in region for x in ["chr", ":", "-"]):
+    raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+    sys.exit(1)
 
 contig       = region.split(":")[0]
 region_start = region.split(":")[1].split("-")[0]
 region_end   = region.split(":")[1].split("-")[1]
 
+output_path = handle_arg(args.output_path, config['PATHS']['output_path'], config, 'No output path provided in args or config.')
+tally_file  = handle_arg(args.tally, output_path + '/' + region + '.tally', config, 'No tally file provided.')
+bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'], config, 'No BAM file provided in args or config.')
+
+
+## -- Output --
+contents = []
+
 ## Variants
 if config['REPORT']['run_variants'] == 'TRUE':
-    contents.append(variants.get_variants(region_file, config_file))
+    contents.append(variants.get_variants(tally_file, config_file))
     contents.append(["\n"])
 
 ## Coverage
