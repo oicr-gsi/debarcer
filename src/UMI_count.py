@@ -51,7 +51,7 @@ bed_file    = handle_arg(args.bed_file, config['PATHS']['bed_file'] if config el
 output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, config, 'No output path provided in args or config.')
     
 
-## Parses a BED file into an easily iterated CSV of positions
+## Parses BED file into a CSV of positions
 def get_bed_regions(bed_file, output_path):
 
     regions = []
@@ -72,7 +72,7 @@ def get_bed_regions(bed_file, output_path):
         return output.name
             
 
-## Updates a table of UMIs to include whether a given UMI matches a BED region
+## Updates umi_table to include isBedRegion column
 def update_bed(umi_table, amps):
     
     for u_id in umi_table:
@@ -110,19 +110,20 @@ def UMI_count(contig, start, end):
     
         for read in bam_reader.fetch(contig, start, end):
 
-            umi  = str(read).split("HaloplexHS-")[1][:10]
+            umi  = str(read).split(':')[-1][:10]
             posA = read.reference_start
-            rlen = len(str(read).split("\t")[9])
-
-            posB = posA + rlen ## Rethink this! (and wrap the whole Haloplex bit in a module please) TODO
+            posB = read.reference_end
             posn = str(posA) + '-' + str(posB)
             
             u_id = umi + posn
             
-            if u_id in umi_table:
-                umi_table[u_id]['count'] += 1
-            else:
-                umi_table[u_id] = {'umi': umi, 'posn': posn, 'count': 1, 'isBedRegion': False}
+            if posA and posB: ## Make sure no null values sneak in
+                
+                if u_id in umi_table:
+                    umi_table[u_id]['count'] += 1
+                else:
+                    umi_table[u_id] = {'umi': umi, 'posn': posn, 'count': 1, 'isBedRegion': False}
+    
     
     ## Build output table
     update_bed(umi_table, amps)

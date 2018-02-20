@@ -59,5 +59,5 @@ python UMI_count.py --bam_file $BAM_FILE --bed_file $BED_FILE --region $REGION -
 python generate_consensus.py --bam_file $BAM_FILE --tally $OUTPUT/$CHR:$POS_A-$POS_B.tally  --output_path $OUTPUT --region $REGION --config $CONFIG
 
 # 3. TODO stats/plots/etc from consensus...
-python generate_report.py --tally $OUTPUT/$CHR:$POS_A-$POS_B.cons --output_path $OUTPUT --bam_file $BAM_FILE --region $REGION --config $CONFIG
+# python generate_report.py --tally $OUTPUT/$CHR:$POS_A-$POS_B.fsize1.cons --output_path $OUTPUT --bam_file $BAM_FILE --region $REGION --config $CONFIG
 
