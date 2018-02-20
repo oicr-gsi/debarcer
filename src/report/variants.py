@@ -2,12 +2,12 @@
 import sys
 import configparser
 
-def get_variants(region_file, config_file):
+def get_variants(tally_file, config_file):
     
     config = configparser.ConfigParser()
     config.read(config_file)
 
-    with open(region_file, "r") as reader:
+    with open(tally_file, "r") as reader:
         lines = reader.readlines()
 
     variants = []
@@ -15,23 +15,22 @@ def get_variants(region_file, config_file):
     
     for line in lines:
     
-        values   = line.split(" ")
-        base_pos = values[0].strip(":")
+        values   = line.split("\t")
+        base_pos = values[1]
 
-        if values[1] != "Missing\n":
+        if values[3] != "Missing\n":
 
-            ref_base = values[2].strip("):")
+            ref_base = values[2]
     
-            bases = {}
-            total = 0
+            bases    = {}
+            base_tbl = ['A', 'C', 'G', 'T', 'I', 'D', 'N']
+            total    = 0
     
-            for base_count in values[3:-1]:
-
-                base, count = base_count.split("=")
-                bases[base] = int(count)
-                total += int(count)
+            for base_count, idx in enumerate(values[3:10]):
+                bases[idx] = int(count)
+                total     += int(base_count)
     
-            percent_ref =  (bases[ref_base] / total) * 100
+            percent_ref =  (bases[ref_base] / total) * 100 if ref_base in bases else 0
             percent_ref_threshold = float(config['REPORT']['percent_ref_threshold'])
                                           
             if percent_ref < percent_ref_threshold:
