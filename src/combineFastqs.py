@@ -199,14 +199,11 @@ def reheader_fastqs(prepname, prepfile, output_path):
             raise ValueError("Invalid configuration of reads/actual reads.")
 
     r1.close()
-    if r2:
-        r2.close()
-    if r3:
-        r3.close()
+    r2.close() if r2
+    r3.close() if r3
     
     r1_writer.close()
-    if r2_writer:
-        r2_writer.close()
+    r2_writer.close() if r2_writer
             
-    
-reheader_fastqs(prepname, prepfile, output_path)
+if __name__=='__main__':
+    reheader_fastqs(prepname, prepfile, output_path)

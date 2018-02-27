@@ -16,6 +16,21 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -r1|--read1)
+    READ1="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -r2|--read2)
+    READ2="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -R|-ref|--reference)
+    REF="$2"
+    shift # past argument
+    shift # past value
+    ;;
     -b|--bam_file)
     BAM_FILE="$2"
     shift # past argument
@@ -49,7 +64,19 @@ POS_A=${REGION#*:}
 POS_A=${POS_A%-*}
 POS_B=${REGION#*-}
 
-# Load Python from specified script (revisit, TODO)
+# Align, sort, index FASTQs if BAM file does not exist
+if ! [ -f "$BAM_FILE" ]
+then
+    module load bwa/0.7.12
+    module load samtools
+    
+    bwa mem -M -t 8 $REF $READ1 $READ2 | samtools view -bS -> "$BAM_FILE.unsorted"
+    
+    samtools sort "$BAM_FILE.unsorted" "${BAM_FILE/.bam/}"
+    samtools index "$BAM_FILE"
+fi
+
+# Load Python from specified script (revisit.. TODO)
 bash $PYTHON
 
 # 1. Perform UMI tally

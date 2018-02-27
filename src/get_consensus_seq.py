@@ -7,7 +7,7 @@ def add_base(seq, pos, family, base):
     added = False
 
     while not added:
-                            
+
         if pos in seq:
 
             if family in seq[pos]:
@@ -58,8 +58,14 @@ def get_consensus_seq(families, contig, region_start, region_end, bam_file, conf
                         base = read_data.query_sequence[read.query_position]
                         add_base(consensus_seq, pos, family_key, base)
                         
-                    if not read.indel == 0: ## *next* position(s) are an indel
-                        for i in range(pos + 1, pos + abs(read.indel) + 1):
-                            add_base(consensus_seq, i, family_key, 'I' if read.indel > 0 else 'D')                                                
+                    ## Next position is an insert
+                    if read.indel > 0: 
+                        add_base(consensus_seq, pos + 1, family_key, 'I')
+                        ## TODO code goes here for identifying the sequence of these inserts
+                    
+                    ## Next position is a deletion
+                    elif read.indel < 0: 
+                        add_base(consensus_seq, pos + 1, family_key, 'D')
+                        
 
     return consensus_seq
