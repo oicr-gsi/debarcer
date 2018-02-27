@@ -6,4 +6,7 @@
 data/
 
 # ignore tests
-*test*
+*.test
+
+# ignore editor artifacts
+*.swp
