@@ -3,9 +3,8 @@ import sys
 import pysam
 import configparser
 import argparse
-import importlib.util
 import operator
-
+from get_consensus_seq import get_consensus_seq
 
 ## Argument parsing and error handling
 def handle_arg(var, alt, config, error):
@@ -51,10 +50,6 @@ bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'], config, 'No
 output_path = handle_arg(args.output_path, config['PATHS']['output_path'], config, 'No output path provided in args or config.')
 tally_file  = handle_arg(args.tally, output_path + '/' + region + '.tally', config, 'No tally file provided.')
 
-routine_file = config['PATHS']['routine_file']
-spec         = importlib.util.spec_from_file_location("routine", routine_file)
-routine      = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(routine)
 
 with pysam.FastaFile(config['PATHS']['reference_file']) as reader:
     ref_seq = reader.fetch(contig, region_start, region_end).upper()
@@ -85,65 +80,83 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = routine.routine(families, contig, region_start, region_end, bam_file, config_file)
+    consensus_seq = get_consensus_seq(families, contig, region_start, region_end, bam_file, config_file)
 
     ## Build output
     output_file = output_path + "/{}:{}-{}.fsize{}.cons".format(contig, region_start, region_end, f_size)
-    writer = open(output_file, "w")
 
-    for base_pos in range(region_start, region_end):
+    with open(output_file, "w") as cons_writer:
+        for base_pos in range(region_start, region_end):
 
-        ref_base = ref_seq[base_pos-region_start]
+            ref_base = ref_seq[base_pos-region_start]
 
-        if base_pos in consensus_seq:
+            if base_pos in consensus_seq:
 
-            consensuses = {}
-            min_fam     = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) ## start with the largest
+                consensuses = {}
+                min_fam     = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) ## start with the largest
             
-            for family in consensus_seq[base_pos]:
+                for family in consensus_seq[base_pos]:
         
-                cons_base    = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
-                cons_denom   = sum(consensus_seq[base_pos][family].values())
-                cons_percent = (consensus_seq[base_pos][family][cons_base]/cons_denom) * 100
+                    cons_base    = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
+                    cons_denom   = sum(consensus_seq[base_pos][family].values())
+                    cons_percent = (consensus_seq[base_pos][family][cons_base]/cons_denom) * 100
     
-                percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
-                count_threshold   = int(config['SETTINGS']['count_consensus_threshold']) if config else 3
+                    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
+                    count_threshold   = int(config['SETTINGS']['count_consensus_threshold']) if config else 3
     
-                if cons_percent >= percent_threshold and consensus_seq[base_pos][family][cons_base] >= count_threshold:
+                    if cons_percent >= percent_threshold and consensus_seq[base_pos][family][cons_base] >= count_threshold:
                 
-                    if cons_base in consensuses:
-                        consensuses[cons_base] += 1
+                        if cons_base in consensuses:
+                            consensuses[cons_base] += 1
 
-                    else:
-                        consensuses[cons_base] = 1
+                        else:
+                            consensuses[cons_base] = 1
                     
-                    if sum(consensus_seq[base_pos][family].values()) < min_fam:
-                        min_fam = sum(consensus_seq[base_pos][family].values())
+                        if sum(consensus_seq[base_pos][family].values()) < min_fam:
+                            min_fam = sum(consensus_seq[base_pos][family].values())
                     
-            cons_depth = sum(consensuses.values())
-            n_fam      = len(consensus_seq[base_pos])
-            ref_freq   = (consensuses[ref_base] / sum(consensuses.values())) * 100 if ref_base in consensuses else 0
+                cons_depth = sum(consensuses.values())
+                n_fam      = len(consensus_seq[base_pos])
+                ref_freq   = (consensuses[ref_base] / sum(consensuses.values())) * 100 if ref_base in consensuses else 0
             
-            get_cons = lambda base: consensuses[base] if base in consensuses else 0
+                get_cons = lambda base: consensuses[base] if base in consensuses else 0
 
-            writer.write("{}\t{}\t{}\t".format(contig, base_pos, ref_base))
-            writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(get_cons('A'), get_cons('C'), get_cons('G'), get_cons('T'), get_cons('I'), get_cons('D'), get_cons('N')))
-            writer.write("{}\t{}\t{}\t{}".format(cons_depth, n_fam, min_fam, ref_freq))
-            writer.write("\n")
+                cons_writer.write("{}\t{}\t{}\t".format(contig, base_pos, ref_base))
+                cons_writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(get_cons('A'), get_cons('C'), get_cons('G'), get_cons('T'), get_cons('I'), get_cons('D'), get_cons('N')))
+                cons_writer.write("{}\t{}\t{}\t{}".format(cons_depth, n_fam, min_fam, ref_freq))
+                cons_writer.write("\n")
 
-        else:
-            if config['REPORT']['keep_missing_pos'] == 'TRUE':
-                writer.write("{}\t{}\t{}\tMissing\n".format(contig, base_pos, ref_base))
+            else:
+                if config['REPORT']['keep_missing_pos'] == 'TRUE':
+                    cons_writer.write("{}\t{}\t{}\tMissing\n".format(contig, base_pos, ref_base))
 
-    writer.close()
 
 
 generate_consensus(0, 0, ref_seq, contig, region_start, region_end, bam_file, config_file)
 
 for f_size in f_sizes:
-    
-    if f_size in families:
+    try:
         generate_consensus(families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config_file)
         
-    else:
-        raise ValueError("f_size " + str(f_size) + " not present.")
+    except:
+        print("f_size " + str(f_size) + " not present!", file=sys.stderr)
+        pass
+
+    
+lines = []
+for f_size in f_sizes:
+    try:
+        lines.extend(open("{}/{}:{}-{}.fsize{}.cons".format(output_path, contig, region_start, region_end, f_size), "r").readlines())
+    except FileNotFoundError:
+        pass
+        
+with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_end), "w") as writer:
+    
+    for base_pos in range(region_start, region_end):
+        
+        for line in lines:
+            if str(base_pos) in line and "Missing" not in line:
+                writer.write(line)
+            
+    
+    

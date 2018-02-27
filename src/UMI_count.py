@@ -110,7 +110,7 @@ def UMI_count(contig, start, end):
     
         for read in bam_reader.fetch(contig, start, end):
 
-            umi  = str(read).split(':')[-1][:10]
+            umi  = read.query_name.split(':')[-1]
             posA = read.reference_start
             posB = read.reference_end
             posn = str(posA) + '-' + str(posB)
@@ -149,14 +149,14 @@ def UMI_count(contig, start, end):
 umi_table, posn_table = UMI_count(contig, int(region_start), int(region_end))
 
 with open("{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end), "w") as out:
-    out.write("UMI       \tPosn                \tCount\tisBedRegion?\n")
+    #out.write("UMI       \tPosn           \tCount\tisBedRegion?\n")
 
     for u_id in sorted(umi_table, key=lambda x: (umi_table[x]['count']), reverse=True):
         out.write("{}\t{}\t{}\t{}\t\n".format(umi_table[u_id]['umi'], umi_table[u_id]['posn'], 
                                               umi_table[u_id]['count'], umi_table[u_id]['isBedRegion']))
 
 with open("{}/{}:{}-{}.posns".format(output_path, contig, region_start, region_end), "w") as out:
-    out.write("Posn | UMI Count | Read Count | UMIs (CSV) | Counts per UMI (CSV)\n")
+    #out.write("Posn | UMI Count | Read Count | UMIs (CSV) | Counts per UMI (CSV)\n")
 
     for posn in posn_table:
         out.write("{}\t{}\t{}\t{}\t{}\t\n".format(posn, posn_table[posn]['tcount'], posn_table[posn]['treads'], 
