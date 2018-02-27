@@ -4,3 +4,6 @@
 
 # ignore output files
 data/
+
+# ignore tests
+*test*
