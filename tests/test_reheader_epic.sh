@@ -1,2 +1,0 @@
-
-python combineFastqs.py -r1 '/.mounts/labs/gsiprojects/gsi/Debarcer2/data/epic-ds/SWID_3017186_EPIC_0001_Pb_R_PE_300_TS_1_151118_D00343_0105_BC85AAANXX_ATCACG_L001_R1_001.fastq.gz' -r2 '/.mounts/labs/gsiprojects/gsi/Debarcer2/data/epic-ds/SWID_3017186_EPIC_0001_Pb_R_PE_300_TS_1_151118_D00343_0105_BC85AAANXX_ATCACG_L001_R2_001.fastq.gz' -p 'epic-ds' -pf '/.mounts/labs/gsiprojects/gsi/Debarcer2/debarcer2/config/library_prep_types.ini' -o '/.mounts/labs/gsiprojects/gsi/Debarcer2/investigations/reheader_testing/epic_test' 

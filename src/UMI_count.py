@@ -7,8 +7,8 @@ import configparser
 import pysam 
 
 
-## Argument parsing and error handling
 def handle_arg(var, alt, config, error):
+    """Argument parsing and error handling"""
     
     if var is None:
  

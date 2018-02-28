@@ -7,8 +7,8 @@ from report import coverage
 from report import variants
 
 
-## Argument parsing and error handling
 def handle_arg(var, alt, config, error):
+    """Argument parsing and error handling"""
     
     if var is None:
  
