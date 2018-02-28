@@ -1,2 +1,0 @@
-./debarcer.sh -r chr1:5710000-5800000 -c ../config/sample_config.ini -b /.mounts/labs/gsiprojects/gsi/Debarcer2/data/sureselect/Aligned/DKT1_0007_Ly_R_PE_353_EX_2_180109_D00331_0293_BCC5BJANXX_ATTGAGGA_L002.bam -ref /oicr/data/genomes/homo_sapiens_mc/UCSC/hg19/Genomic/bwa/0.7.12/hg19.fa -d /.mounts/labs/gsiprojects/gsi/Debarcer2/data/haloplex-hs/design/00100-1421280602_Amplicons.bed -o ../data/sureselect -p /u/tbodak/scripts/load_python.sh
-

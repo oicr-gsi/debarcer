@@ -5,8 +5,8 @@ import argparse
 import configparser
 from itertools import zip_longest
 
-## Argument parsing and error handling
 def handle_arg(var, error):
+    """Argument parsing and error handling"""
     
     if var is None:
  

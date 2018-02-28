@@ -4,10 +4,10 @@ import pysam
 import configparser
 import argparse
 import operator
-from get_consensus_seq import get_consensus_seq
+from get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
 
-## Argument parsing and error handling
 def handle_arg(var, alt, config, error):
+    """Argument parsing and error handling"""
     
     if var is None:
  
@@ -77,13 +77,14 @@ for line in lines[1:]:
         
 
 def generate_consensus(families, f_size, ref_seq, contig, region_start, region_end, bam_file, config_file):
+    """Generates a consensus output file (.cons) for the given family size and region."""
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
     consensus_seq = get_consensus_seq(families, contig, region_start, region_end, bam_file, config_file)
 
     ## Build output
-    output_file = output_path + "/{}:{}-{}.fsize{}.cons".format(contig, region_start, region_end, f_size)
+    output_file = "{}/{}:{}-{}.fsize{}.cons".format(output_path, contig, region_start, region_end, f_size)
 
     with open(output_file, "w") as cons_writer:
         for base_pos in range(region_start, region_end):
@@ -117,22 +118,50 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                     
                 cons_depth = sum(consensuses.values())
                 n_fam      = len(consensus_seq[base_pos])
-                ref_freq   = (consensuses[ref_base] / sum(consensuses.values())) * 100 if ref_base in consensuses else 0
+                ref_freq   = (consensuses[ref_base] / cons_depth) * 100 if ref_base in consensuses else 0
             
                 get_cons = lambda base: consensuses[base] if base in consensuses else 0
 
                 cons_writer.write("{}\t{}\t{}\t".format(contig, base_pos, ref_base))
                 cons_writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(get_cons('A'), get_cons('C'), get_cons('G'), get_cons('T'), get_cons('I'), get_cons('D'), get_cons('N')))
-                cons_writer.write("{}\t{}\t{}\t{}".format(cons_depth, n_fam, min_fam, ref_freq))
-                cons_writer.write("\n")
+                cons_writer.write("{}\t{}\t{}\t{}\n".format(cons_depth, n_fam, min_fam, ref_freq))
 
             else:
                 if config['REPORT']['keep_missing_pos'] == 'TRUE':
                     cons_writer.write("{}\t{}\t{}\tMissing\n".format(contig, base_pos, ref_base))
 
 
+def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file):
+    """Generates an uncollapsed consensus output file (.fsize0.cons) for the given family size and region."""
+    
+    ## Keys: each base position in the region
+    ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
+    uncollapsed_seq = get_uncollapsed_seq(contig, region_start, region_end, bam_file, config_file)
+    
+    ## Build output
+    output_file = "{}/{}:{}-{}.fsize0.cons".format(output_path, contig, region_start, region_end)
+    
+    with open(output_file, "w") as seq_writer:
+        for base_pos in range(region_start, region_end):
+            
+            ref_base = ref_seq[base_pos-region_start]
+            
+            if base_pos in uncollapsed_seq:
+                
+                get_cons = lambda base: uncollapsed_seq[base_pos][base] if base in uncollapsed_seq[base_pos] else 0
+                depth    = sum(uncollapsed_seq[base_pos].values())
+                ref_freq = (uncollapsed_seq[base_pos][ref_base] / depth) * 100 if ref_base in uncollapsed_seq[base_pos] else 0
 
-generate_consensus(0, 0, ref_seq, contig, region_start, region_end, bam_file, config_file)
+                seq_writer.write("{}\t{}\t{}\t".format(contig, base_pos, ref_base))
+                seq_writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(get_cons('A'), get_cons('C'), get_cons('G'), get_cons('T'), get_cons('I'), get_cons('D'), get_cons('N')))
+                seq_writer.write("{}\t{}\t{}\t{}\n".format(depth, "N/A", 0, ref_freq))
+    
+            else:
+                if config['REPORT']['keep_missing_pos'] == 'TRUE':
+                    seq_writer.write("{}\t{}\t{}\tMissing\n".format(contig, base_pos, ref_base))
+    
+
+generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file)
 
 for f_size in f_sizes:
     try:
@@ -141,12 +170,13 @@ for f_size in f_sizes:
     except:
         print("f_size " + str(f_size) + " not present!", file=sys.stderr)
         pass
-
     
-lines = []
+cons_files = []
+cons_files.append( [open("{}/{}:{}-{}.fsize0.cons".format(output_path, contig, region_start, region_end), "r").readlines(), 0] )
+
 for f_size in f_sizes:
     try:
-        lines.extend(open("{}/{}:{}-{}.fsize{}.cons".format(output_path, contig, region_start, region_end, f_size), "r").readlines())
+        cons_files.append( [open("{}/{}:{}-{}.fsize{}.cons".format(output_path, contig, region_start, region_end, f_size), "r").readlines(), 0] )
     except FileNotFoundError:
         pass
         
@@ -154,9 +184,22 @@ with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_en
     
     for base_pos in range(region_start, region_end):
         
-        for line in lines:
-            if str(base_pos) in line and "Missing" not in line:
-                writer.write(line)
+        for idx, cons_file in enumerate(cons_files):
+            
+            counter = cons_file[1]
+            if counter < len(cons_file[0]):
+                
+                line = cons_file[0][counter]
+            
+                if str(base_pos) in line:
+                
+                    if "Missing" not in line or config['REPORT']['keep_missing_pos'] == 'TRUE':
+                        writer.write(line)
+                    
+                    cons_files[idx][1] += 1 ## increment counter
+                
+            
+            
             
     
     

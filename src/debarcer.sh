@@ -64,7 +64,9 @@ POS_A=${REGION#*:}
 POS_A=${POS_A%-*}
 POS_B=${REGION#*-}
 
-# Align, sort, index FASTQs if BAM file does not exist
+# 1. TODO Reheader (add option for this)
+
+# 2. Align, sort, index FASTQs if BAM file does not exist
 if ! [ -f "$BAM_FILE" ]
 then
     module load bwa/0.7.12
@@ -79,12 +81,12 @@ fi
 # Load Python from specified script (revisit.. TODO)
 bash $PYTHON
 
-# 1. Perform UMI tally
+# 3. Perform UMI tally
 python UMI_count.py --bam_file $BAM_FILE --bed_file $BED_FILE --region $REGION --output_path $OUTPUT --config $CONFIG
 
-# 2. Generate consensus
+# 4. Generate consensus
 python generate_consensus.py --bam_file $BAM_FILE --tally $OUTPUT/$CHR:$POS_A-$POS_B.tally  --output_path $OUTPUT --region $REGION --config $CONFIG
 
-# 3. TODO stats/plots/etc from consensus...
+# 5. TODO stats/plots/etc from consensus...
 # python generate_report.py --tally $OUTPUT/$CHR:$POS_A-$POS_B.fsize1.cons --output_path $OUTPUT --bam_file $BAM_FILE --region $REGION --config $CONFIG
 

@@ -1,2 +1,0 @@
-
-python combineFastqs.py -r1 '/.mounts/labs/gsiprojects/gsi/Debarcer2/data/simsenseq-pe/SWID_10465923_PITP_0007_Ly_C_PE_430_AS_NoGroup_170901_M00753_0039_000000000-BDH2V_NoIndex_L001_R1_001.fastq.gz' -r2 '/.mounts/labs/gsiprojects/gsi/Debarcer2/data/simsenseq-pe/SWID_10465923_PITP_0007_Ly_C_PE_430_AS_NoGroup_170901_M00753_0039_000000000-BDH2V_NoIndex_L001_R2_001.fastq.gz' -p 'simsenseq-pe' -pf '/.mounts/labs/gsiprojects/gsi/Debarcer2/debarcer2/config/library_prep_types.ini' -o '/.mounts/labs/gsiprojects/gsi/Debarcer2/investigations/reheader_testing/simsenseq-pe_test'
