@@ -74,16 +74,13 @@ def get_consensus_seq(families, contig, region_start, region_end, bam_file, conf
                     if not read.is_del:
                         base = read_data.query_sequence[read.query_position]
                         add_base("consensus", consensus_seq, pos, family_key, base)
+                    else:
+                        add_base("consensus", consensus_seq, pos, None, "D")
                         
                     ## Next position is an insert
                     if read.indel > 0: 
                         add_base("consensus", consensus_seq, pos + 1, family_key, 'I')
                         ## TODO code goes here for identifying the sequence of these inserts
-                    
-                    ## Next position(s) are deletions
-                    elif read.indel < 0:
-                        for i in range(pos + 1, abs(read.indel)):
-                            add_base("consensus", consensus_seq, i, family_key, 'D')
                         
     return consensus_seq
 
@@ -111,15 +108,13 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, config_file)
                 if not read.is_del:
                     base = read.alignment.query_sequence[read.query_position]
                     add_base("uncollapsed", uncollapsed_seq, pos, None, base)
+                else:
+                    add_base("uncollapsed", uncollapsed_seq, pos, None, "D")
                     
                 ## Next position is an insert
                 if read.indel > 0:
                     add_base("uncollapsed", uncollapsed_seq, pos + 1, None, 'I')
                     ## TODO code goes here for identifying the sequence of these inserts
                     
-                ## Next position(s) are deletions
-                elif read.indel < 0:
-                    for i in range(pos + 1, abs(read.indel)):
-                        add_base("uncollapsed", uncollapsed_seq, i, None, 'D')
                         
     return uncollapsed_seq

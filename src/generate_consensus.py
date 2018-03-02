@@ -94,7 +94,8 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
             if base_pos in consensus_seq:
 
                 consensuses = {}
-                min_fam     = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) ## start with the largest
+                cons_depth  = 0
+                #min_fam     = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) ## start with the largest
             
                 for family in consensus_seq[base_pos]:
         
@@ -106,25 +107,28 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                     count_threshold   = int(config['SETTINGS']['count_consensus_threshold']) if config else 3
     
                     if cons_percent >= percent_threshold and consensus_seq[base_pos][family][cons_base] >= count_threshold:
-                
+                        
+                        ## Add the consensus base reads to consensus depth
+                        cons_depth += consensus_seq[base_pos][family][cons_base] 
+                        
                         if cons_base in consensuses:
                             consensuses[cons_base] += 1
 
                         else:
                             consensuses[cons_base] = 1
+                        
+                        ## min_fam logic, may not be worth reporting
+                        #if sum(consensus_seq[base_pos][family].values()) < min_fam:
+                        #    min_fam = sum(consensus_seq[base_pos][family].values())
                     
-                        if sum(consensus_seq[base_pos][family].values()) < min_fam:
-                            min_fam = sum(consensus_seq[base_pos][family].values())
-                    
-                cons_depth = sum(consensuses.values())
                 n_fam      = len(consensus_seq[base_pos])
-                ref_freq   = (consensuses[ref_base] / cons_depth) * 100 if ref_base in consensuses else 0
+                ref_freq   = (consensuses[ref_base] / n_fam) * 100 if ref_base in consensuses else 0
             
                 get_cons = lambda base: consensuses[base] if base in consensuses else 0
 
                 cons_writer.write("{}\t{}\t{}\t".format(contig, base_pos, ref_base))
                 cons_writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(get_cons('A'), get_cons('C'), get_cons('G'), get_cons('T'), get_cons('I'), get_cons('D'), get_cons('N')))
-                cons_writer.write("{}\t{}\t{}\t{}\n".format(cons_depth, n_fam, min_fam, ref_freq))
+                cons_writer.write("{}\t{}\t{}\t{}\n".format(cons_depth, n_fam, f_size, ref_freq))
 
             else:
                 if config['REPORT']['keep_missing_pos'] == 'TRUE':
@@ -162,6 +166,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
     
 
 generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file)
+
 
 for f_size in f_sizes:
     try:

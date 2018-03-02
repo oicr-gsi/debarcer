@@ -34,22 +34,21 @@ prepfile    = handle_arg(args.prepfile,    'No prep file provided (library_prep_
 r2_file     = args.read2
 r3_file     = args.read3
 
-## Gets parameters from specified prep name and config file
 def parse_prep(prepname, prepfile):
+    """Gets parameters from specified prep name and config file"""
     
     preps = configparser.ConfigParser()
     preps.read(prepfile)
     
     return preps[prepname.upper()]
     
-## (Iter) slices fastq into reads
 def getread(fastq_file):
+    """(Iter) slices fastq into 4-line reads"""
     args = [iter(fastq_file)] * 4
     return zip_longest(*args, fillvalue = None)
 
-## Gets the UMI from a read
 def extract_umis(reads, umi_locs, umi_lens):
-    
+    """Gets the UMI from a read"""
     umis = []
     
     for umi_loc, umi_len in zip(umi_locs, umi_lens):
@@ -58,10 +57,8 @@ def extract_umis(reads, umi_locs, umi_lens):
         
     return umis
 
-    
-## Returns true if spacer is present
 def verify_spacer(reads, umis, spacer_seq):
-
+    """Returns true if spacer is present"""
     for read in reads:
         for umi in umis:
             if umi in read:
@@ -71,9 +68,11 @@ def verify_spacer(reads, umis, spacer_seq):
     return True
 
 
-## Reheaders fastq files according to prep
-## - removes reads without a valid spacer
 def reheader_fastqs(prepname, prepfile, output_path):
+    """
+    Reheaders fastq files according to specified library prep
+    - removes reads without a valid spacer (if applicable)
+    """
     
     prep = parse_prep(prepname, prepfile)
     
@@ -205,5 +204,6 @@ def reheader_fastqs(prepname, prepfile, output_path):
     r1_writer.close()
     r2_writer.close() if r2_writer
             
+
 if __name__=='__main__':
     reheader_fastqs(prepname, prepfile, output_path)
