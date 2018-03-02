@@ -78,8 +78,10 @@ then
     samtools index "$BAM_FILE"
 fi
 
-# Load Python from specified script (revisit.. TODO)
-bash $PYTHON
+# Load Python TODO
+# module load python-gsi/3.6.4
+# module load pysam
+bash $PYTHON 
 
 # 3. Perform UMI tally
 python UMI_count.py --bam_file $BAM_FILE --bed_file $BED_FILE --region $REGION --output_path $OUTPUT --config $CONFIG
@@ -88,5 +90,5 @@ python UMI_count.py --bam_file $BAM_FILE --bed_file $BED_FILE --region $REGION -
 python generate_consensus.py --bam_file $BAM_FILE --tally $OUTPUT/$CHR:$POS_A-$POS_B.tally  --output_path $OUTPUT --region $REGION --config $CONFIG
 
 # 5. TODO stats/plots/etc from consensus...
-# python generate_report.py --tally $OUTPUT/$CHR:$POS_A-$POS_B.fsize1.cons --output_path $OUTPUT --bam_file $BAM_FILE --region $REGION --config $CONFIG
+# python3.6 generate_report.py --tally $OUTPUT/$CHR:$POS_A-$POS_B.fsize1.cons --output_path $OUTPUT --bam_file $BAM_FILE --region $REGION --config $CONFIG
 
