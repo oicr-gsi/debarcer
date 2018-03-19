@@ -2,18 +2,18 @@
 import pysam
 import configparser
 
-def add_base(mode, seq, pos, family, base):
+def add_base(mode, seq, pos, family, allele):
     """(Helper) Adds a base to a seq dictionary."""
 
     added = False
     
     while not added and mode == "uncollapsed":
         if pos in seq:
-            if base in seq[pos]:
-                seq[pos][base] += 1
+            if allele in seq[pos]:
+                seq[pos][allele] += 1
             
             else:
-                seq[pos][base] = 1
+                seq[pos][allele] = 1
                 
             added = True
         
@@ -23,11 +23,11 @@ def add_base(mode, seq, pos, family, base):
     while not added and mode == "consensus":
         if pos in seq:
             if family in seq[pos]:
-                if base in seq[pos][family]:
-                    seq[pos][family][base] += 1
+                if allele in seq[pos][family]:
+                    seq[pos][family][allele] += 1
 
                 else:
-                    seq[pos][family][base] = 1
+                    seq[pos][family][allele] = 1
 
                 added = True
 
@@ -38,13 +38,12 @@ def add_base(mode, seq, pos, family, base):
             seq[pos] = {}
             
 
-def get_consensus_seq(families, contig, region_start, region_end, bam_file, config_file):
+def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_file, config_file):
     """
     Returns a nested dictionary representing counts of each base in each family at each base pos'n.
      - Keys: each base position in the region
-     - Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
+     - Values: tables of A,C,G,T (etc) counts from each UMI+Pos family
     """
-    
     consensus_seq = {}
     
     config = configparser.ConfigParser()
@@ -58,34 +57,50 @@ def get_consensus_seq(families, contig, region_start, region_end, bam_file, conf
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=1000000):
             
             pos = pileupcolumn.reference_pos
-            
-            for read in pileupcolumn.pileups:
+            if pos >= region_start and pos < region_end:
+
+                for read in pileupcolumn.pileups:
                 
-                read_data = read.alignment
-                read_name = read_data.query_name
-                start     = read_data.reference_start
-                end       = read_data.reference_end
+                    read_data = read.alignment
+                    read_name = read_data.query_name
+                    start     = read_data.reference_start
+                    end       = read_data.reference_end
                 
-                umi        = read_name.split(":")[-1]
-                family_key = umi + str(start) + '-' + str(end)
+                    umi        = read_name.split(":")[-1]
+                    family_key = umi + str(start) + '-' + str(end)
         
-                if family_key in families:
+                    if family_key in families:
+                        ref_pos = pos - region_start
                     
-                    if not read.is_del:
-                        base = read_data.query_sequence[read.query_position]
-                        add_base("consensus", consensus_seq, pos, family_key, base)
-                    else:
-                        add_base("consensus", consensus_seq, pos, None, "D")
+                        if not read.is_del and not read.indel:
+                            ref_base = ref_seq[ref_pos]
+                            alt_base = read_data.query_sequence[read.query_position]
+                            add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
                         
-                    ## Next position is an insert
-                    if read.indel > 0: 
-                        add_base("consensus", consensus_seq, pos + 1, family_key, 'I')
-                        ## TODO code goes here for identifying the sequence of these inserts
+                        ## Next position is an insert
+                        elif read.indel > 0:
+                            ref_base = ref_seq[ref_pos]
+                            alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                            add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
+
+                        ## Next position is a deletion
+                        elif read.indel < 0:
+                            ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
+                            alt_base = read_data.query_sequence[read.query_position]
+                            #ref_pos  = pos
+                            add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
+                        
+                    ##TEST
+                    #if pos == 16959731:
+                    #    print("Name: {}, Family key: {}, Base: {}, Indel: {}".format(read_name, family_key, alt_base, read.indel))
+                    
+                    #if pos < 16959731 and pos + read.indel >= 16959731:
+                    #    print("Secondary - Name: {}, Family key: {}, Ref: {}, Base: {}, Indel: {}".format(read_name, family_key, ref_base, alt_base, read.indel))
                         
     return consensus_seq
 
 
-def get_uncollapsed_seq(contig, region_start, region_end, bam_file, config_file):
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config_file):
     """
     Returns a nested dictionary representing counts of each base at each base pos'n.
      - Keys: each base position in the region
@@ -102,19 +117,28 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, config_file)
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=1000000):
             
             pos = pileupcolumn.reference_pos
+            if pos >= region_start and pos < region_end:
             
-            for read in pileupcolumn.pileups:
+                for read in pileupcolumn.pileups:
                 
-                if not read.is_del:
-                    base = read.alignment.query_sequence[read.query_position]
-                    add_base("uncollapsed", uncollapsed_seq, pos, None, base)
-                else:
-                    add_base("uncollapsed", uncollapsed_seq, pos, None, "D")
-                    
-                ## Next position is an insert
-                if read.indel > 0:
-                    add_base("uncollapsed", uncollapsed_seq, pos + 1, None, 'I')
-                    ## TODO code goes here for identifying the sequence of these inserts
-                    
+                    if not read.is_del:
+                        ref_base = ref_seq[pos - region_start]
+                        alt_base = read.alignment.query_sequence[read.query_position]
+                        #ref_pos  = pos 
+                        add_base("uncollapsed", uncollapsed_seq, pos, None, (ref_base, alt_base))
+                        
+                    ## Next position is an insert
+                    if read.indel > 0:
+                        ref_base = ref_seq[pos - region_start]
+                        alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                        #ref_pos  = pos + 1
+                        add_base("uncollapsed", uncollapsed_seq, pos, None, (ref_base, alt_base))
+                        
+                    ## Next position is a deletion
+                    elif read.indel < 0:
+                        ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
+                        alt_base = read.alignment.query_sequence[read.query_position]
+                        #ref_pos  = pos
+                        add_base("uncollapsed", uncollapsed_seq, pos, None, (ref_base, alt_base))
                         
     return uncollapsed_seq

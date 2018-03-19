@@ -5,34 +5,23 @@ import argparse
 import configparser
 from itertools import zip_longest
 
-def handle_arg(var, error):
-    """Argument parsing and error handling"""
-    
-    if var is None:
- 
-        raise ValueError(error)
-        sys.exit(1)
-        
-    return var
-
-
 parser = argparse.ArgumentParser()
-parser.add_argument('-r1', '--read1',       help='Path to first FASTQ file.')
+parser.add_argument('-r1', '--read1',       help='Path to first FASTQ file.', required=True)
 parser.add_argument('-r2', '--read2',       help='Path to second FASTQ file, if necessary.')
 parser.add_argument('-r3', '--read3',       help='Path to third FASTQ file, if necessary.')
-parser.add_argument('-p',  '--prepname',    help='Name of library prep to  use (defined in library_prep_types.ini).')
-parser.add_argument('-pf', '--prepfile',    help='Path to your library_prep_types.ini file.')
-parser.add_argument('-o',  '--output_path', help='Path to write new files to.')
+parser.add_argument('-p',  '--prepname',    help='Name of library prep to  use (defined in library_prep_types.ini).', required=True)
+parser.add_argument('-pf', '--prepfile',    help='Path to your library_prep_types.ini file.', required=True)
+parser.add_argument('-o',  '--output_path', help='Path to write new files to.', required=True)
 
 args = parser.parse_args()
 
-r1_file     = handle_arg(args.read1,       'No reads provided.')    
-output_path = handle_arg(args.output_path, 'No output path provided.')
-prepname    = handle_arg(args.prepname,    'No prep name provided (defined in library_prep_types.ini).')
-prepfile    = handle_arg(args.prepfile,    'No prep file provided (library_prep_types.ini by default).')
-
+r1_file     = args.read1   
 r2_file     = args.read2
 r3_file     = args.read3
+output_path = args.output_path
+prepname    = args.prepname
+prepfile    = args.prepfile
+
 
 def parse_prep(prepname, prepfile):
     """Gets parameters from specified prep name and config file"""
