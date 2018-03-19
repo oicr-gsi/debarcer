@@ -25,24 +25,29 @@ class ConsDataRow:
         return self.cons_info
     
     @functools.lru_cache(maxsize=2, typed=False)
-    def impute_allele_freqs(self):
+    def impute_allele_freqs(self, threshold):
         """Returns allele frequencies."""
-    
+        
+        is_ref  = lambda allele: allele[0] is allele[1]
+        
         freqs = {}
         for allele in self.cons_info:
-            freqs[allele] = (self.cons_info[allele] / sum(self.cons_info.values())) * 100
+            freq = (self.cons_info[allele] / sum(self.cons_info.values())) * 100
+            
+            if not is_ref(allele) and freq > threshold:
+                freqs[allele] = freq
         
         return freqs
     
     def get_alleles(self, threshold):
         """Returns alt alleles with their associated refs."""
         
-        freqs   = self.impute_allele_freqs()
+        freqs   = self.impute_allele_freqs(threshold)
         alleles = []
         is_ref  = lambda allele: allele[0] is allele[1]
         
         for allele in self.cons_info:
-            if freqs[allele] > threshold and not is_ref(allele):
+            if not is_ref(allele):
                 alleles.append(allele)
         
         return alleles
@@ -182,7 +187,7 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
         writer.write("##FILTER=<ID=a10,Number=0,Type=Flag,Description=\"Alt allele depth below 10\">\n")
         writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n")
         writer.write("##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n")
-        writer.write("##FORMAT=<ID=RF,Number=R,Type=Float,Description=\"Alt Allele Reference Frequency\">\n")
+        writer.write("##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n")
 
         writer.write("#CHROM\tPOS\t\tID\tREF\tALT\t\tQUAL\tFILTER\tINFO\t\t\tFORMAT\t\tSAMPLE\n") ## TODO multiple samples?
         
@@ -206,11 +211,12 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                         depths     = row.impute_allele_depths()
                         ref_depth  = depths[ref_allele] if ref_allele in depths else 0
                         alt_depths = ','.join( [str(depths[allele]) for allele in alleles] )
+                        alt_freqs  = ','.join( ["{:.2f}".format(row.impute_allele_freqs()[allele]) for allele in row.impute_allele_freqs()] )
                     
                         filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
                         info = "RDP={};CDP={};MF={}".format(stats['rawdp'], stats['consdp'], stats['min_fam'])
                         fmt  = "AD:AL:RF" # Allele depth, alt allele depth, reference frequency
-                        smp  = "{}:{}:{}".format(ref_depth, alt_depths, 100 - stats['ref_freq']) # alt_depths may be comma-separated 
+                        smp  = "{}:{}:{}".format(ref_depth, alt_depths, alt_freqs)
                         
                         writer.write("{}\t{}\t{}\t{}\t{}\t\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, None, ref_string, alt_string, None, filt, info, fmt, smp))
         

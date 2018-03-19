@@ -90,13 +90,6 @@ def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_f
                             #ref_pos  = pos
                             add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
                         
-                    ##TEST
-                    #if pos == 16959731:
-                    #    print("Name: {}, Family key: {}, Base: {}, Indel: {}".format(read_name, family_key, alt_base, read.indel))
-                    
-                    #if pos < 16959731 and pos + read.indel >= 16959731:
-                    #    print("Secondary - Name: {}, Family key: {}, Ref: {}, Base: {}, Indel: {}".format(read_name, family_key, ref_base, alt_base, read.indel))
-                        
     return consensus_seq
 
 
