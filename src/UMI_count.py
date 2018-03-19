@@ -5,51 +5,7 @@ import operator
 import argparse
 import configparser
 import pysam 
-
-
-def handle_arg(var, alt, config, error):
-    """Argument parsing and error handling"""
-    
-    if var is None:
- 
-        var = alt
-        
-        if var is None:
-            raise ValueError(error)
-            sys.exit(1)
-        
-    return var
-            
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-bam', '--bam_file',    help='Path to your BAM file.')
-parser.add_argument('-bed', '--bed_file',    help='Path to your BED file.')
-parser.add_argument('-r',   '--region',      help='Region to tally (string of the form chrX:posA-posB).')
-parser.add_argument('-o',   '--output_path', help='Path to write output files to.')
-parser.add_argument('-c',   '--config',      help='Path to your config file.')
-
-args = parser.parse_args()
-config_file = args.config
-
-if config_file:
-    config = configparser.ConfigParser()
-    config.read(config_file)
-else:
-    config = None
-    
-region = args.region
-if any(x not in region for x in ["chr", ":", "-"]):
-    raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-    sys.exit(1)
- 
-contig       = region.split(":")[0]
-region_start = region.split(":")[1].split("-")[0]
-region_end   = region.split(":")[1].split("-")[1]
-
-bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, config, 'No BAM file provided in args or config.')
-bed_file    = handle_arg(args.bed_file, config['PATHS']['bed_file'] if config else None, config, 'No BED file provided in args or config.')
-output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, config, 'No output path provided in args or config.')
-    
+from handle_args import handle_arg
 
 ## Parses BED file into a CSV of positions
 def get_bed_regions(bed_file, output_path):
@@ -145,20 +101,51 @@ def UMI_count(contig, start, end):
     return umi_table, posn_table
 
 
-## Write output (if script is called standalone)
-umi_table, posn_table = UMI_count(contig, int(region_start), int(region_end))
+if __name__=='__main__':
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-bam', '--bam_file',    help='Path to your BAM file.')
+    parser.add_argument('-bed', '--bed_file',    help='Path to your BED file.')
+    parser.add_argument('-r',   '--region',      help='Region to tally (string of the form chrX:posA-posB).')
+    parser.add_argument('-o',   '--output_path', help='Path to write output files to.')
+    parser.add_argument('-c',   '--config',      help='Path to your config file.')
 
-with open("{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end), "w") as out:
-    #out.write("UMI       \tPosn           \tCount\tisBedRegion?\n")
+    args = parser.parse_args()
+    config_file = args.config
 
-    for u_id in sorted(umi_table, key=lambda x: (umi_table[x]['count']), reverse=True):
-        out.write("{}\t{}\t{}\t{}\t\n".format(umi_table[u_id]['umi'], umi_table[u_id]['posn'], 
+    if config_file:
+        config = configparser.ConfigParser()
+        config.read(config_file)
+    else:
+        config = None
+    
+    region = args.region
+    if any(x not in region for x in ["chr", ":", "-"]):
+        raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+        sys.exit(1)
+ 
+    contig       = region.split(":")[0]
+    region_start = region.split(":")[1].split("-")[0]
+    region_end   = region.split(":")[1].split("-")[1]
+
+    bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 'No BAM file provided in args or config.')
+    bed_file    = handle_arg(args.bed_file, config['PATHS']['bed_file'] if config else None, 'No BED file provided in args or config.')
+    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 'No output path provided in args or config.')
+    
+    ## Write output
+    umi_table, posn_table = UMI_count(contig, int(region_start), int(region_end))
+
+    with open("{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end), "w") as out:
+        #out.write("UMI       \tPosn           \tCount\tisBedRegion?\n")
+
+        for u_id in sorted(umi_table, key=lambda x: (umi_table[x]['count']), reverse=True):
+            out.write("{}\t{}\t{}\t{}\t\n".format(umi_table[u_id]['umi'], umi_table[u_id]['posn'], 
                                               umi_table[u_id]['count'], umi_table[u_id]['isBedRegion']))
 
-with open("{}/{}:{}-{}.posns".format(output_path, contig, region_start, region_end), "w") as out:
-    #out.write("Posn | UMI Count | Read Count | UMIs (CSV) | Counts per UMI (CSV)\n")
+    with open("{}/{}:{}-{}.posns".format(output_path, contig, region_start, region_end), "w") as out:
+        #out.write("Posn | UMI Count | Read Count | UMIs (CSV) | Counts per UMI (CSV)\n")
 
-    for posn in posn_table:
-        out.write("{}\t{}\t{}\t{}\t{}\t\n".format(posn, posn_table[posn]['tcount'], posn_table[posn]['treads'], 
-                                                  ",".join(posn_table[posn]['umi_csv']), ",".join(posn_table[posn]['count_csv'])))
+        for posn in posn_table:
+            out.write("{}\t{}\t{}\t{}\t{}\t\n".format(posn, posn_table[posn]['tcount'], posn_table[posn]['treads'], 
+                                                    ",".join(posn_table[posn]['umi_csv']), ",".join(posn_table[posn]['count_csv'])))
 
