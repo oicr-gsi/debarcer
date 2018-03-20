@@ -49,7 +49,7 @@ def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_f
     config = configparser.ConfigParser()
     config.read(config_file)
     
-    ## Need to reconsider this
+    ## Need to reconsider this for pileup, significant performance improvements possible
     ## read_threshold = int(config['SETTINGS']['max_family_size']) if config else 50
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
@@ -75,20 +75,19 @@ def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_f
                         if not read.is_del and not read.indel:
                             ref_base = ref_seq[ref_pos]
                             alt_base = read_data.query_sequence[read.query_position]
-                            add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
                         
-                        ## Next position is an insert
+                        ## Next position is an insert (current base is ref)
                         elif read.indel > 0:
                             ref_base = ref_seq[ref_pos]
                             alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
-                            add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
 
-                        ## Next position is a deletion
+                        ## Next position is a deletion (current base + next bases are ref)
                         elif read.indel < 0:
                             ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
                             alt_base = read_data.query_sequence[read.query_position]
                             #ref_pos  = pos
-                            add_base("consensus", consensus_seq, pos, family_key, (ref_base, alt_base))
+                            
+                        add_base(mode="consensus", seq=consensus_seq, pos=pos, family=family_key, allele=(ref_base, alt_base))
                         
     return consensus_seq
 
@@ -114,24 +113,20 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
             
                 for read in pileupcolumn.pileups:
                 
-                    if not read.is_del:
+                    if not read.is_del and not read.indel:
                         ref_base = ref_seq[pos - region_start]
                         alt_base = read.alignment.query_sequence[read.query_position]
-                        #ref_pos  = pos 
-                        add_base("uncollapsed", uncollapsed_seq, pos, None, (ref_base, alt_base))
                         
-                    ## Next position is an insert
-                    if read.indel > 0:
+                    ## Next position is an insert (current base is ref)
+                    elif read.indel > 0:
                         ref_base = ref_seq[pos - region_start]
                         alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
-                        #ref_pos  = pos + 1
-                        add_base("uncollapsed", uncollapsed_seq, pos, None, (ref_base, alt_base))
                         
-                    ## Next position is a deletion
+                    ## Next position is a deletion (current base + next bases are ref)
                     elif read.indel < 0:
                         ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                         alt_base = read.alignment.query_sequence[read.query_position]
-                        #ref_pos  = pos
-                        add_base("uncollapsed", uncollapsed_seq, pos, None, (ref_base, alt_base))
-                        
+
+                    add_base(mode="uncollapsed", seq=uncollapsed_seq, pos=pos, family=None, allele=(ref_base, alt_base))
+
     return uncollapsed_seq

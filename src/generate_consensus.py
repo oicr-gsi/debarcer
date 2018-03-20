@@ -105,7 +105,7 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
             mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
             ref_freq   = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
             
-            ref_info  = {"contig": contig, "base_pos": base_pos}
+            ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = consensuses
             stats     = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
@@ -133,11 +133,10 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
             depth    = sum(uncollapsed_seq[base_pos].values())
             ref_freq = (uncollapsed_seq[base_pos][ref_base] / depth) * 100 if ref_base in uncollapsed_seq[base_pos] else 0
             get_cons = lambda base: uncollapsed_seq[base_pos][base] if base in uncollapsed_seq[base_pos] else 0    
-              
+            
             ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
-            cons_info = {"A": get_cons('A'), "C": get_cons('C'), "G": get_cons('G'), "T": get_cons('T'),
-                         "I": get_cons('I'), "D": get_cons('D'), "N": get_cons('N')}
-            stats     = {"rawdp": depth, "consdp": None, "min_fam": 0, "ref_freq": ref_freq}
+            cons_info = uncollapsed_seq[base_pos]
+            stats     = {"rawdp": depth, "consdp": None, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
             
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
@@ -159,8 +158,29 @@ def tabular_output(cons_data, contig, region_start, region_end, output_path, con
                     cons  = cons_data[f_size][base_pos].get_cons_info()
                     stats = cons_data[f_size][base_pos].get_stats()
                     
+                    counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
+                    for allele in cons:
+                        ##TEST
+                        if f_size < 2:
+                            print(allele)
+                        
+                        # ref > 1 => deletion
+                        if len(allele[0]) > 1:
+                            counts['D'] += cons[allele]
+                            
+                        # allele > 1 => insertion
+                        elif len(allele[1]) > 1:
+                            counts['I'] += cons[allele]
+                            
+                        else:
+                            counts[allele[1]] += cons[allele]
+                            
+                    ##TEST
+                    if f_size < 2:
+                        print(counts)
+                    
                     writer.write("{}\t{}\t{}\t".format(ref['contig'], ref['base_pos'], ref['ref_base']))
-                    writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(cons['A'], cons['C'], cons['G'], cons['T'], cons['I'], cons['D'], cons['N']))
+                    writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(counts['A'], counts['C'], counts['G'], counts['T'], counts['I'], counts['D'], counts['N']))
                     writer.write("{}\t{}\t{}\t{}\n".format(stats['rawdp'], stats['consdp'], stats['min_fam'], stats['ref_freq']))
                     
 
@@ -210,7 +230,7 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                         freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in alt_freqs] )
                     
                         filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
-                        info = "RDP={};CDP={};MIF={},MNF={:.1f}".format(stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
+                        info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
                         fmt  = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
                         smp  = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
                         
@@ -280,7 +300,7 @@ if __name__=="__main__":
         cons_data[f_size] = generate_consensus(families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config_file)
     
     ## Output
-    #tabular_output(cons_data, contig, region_start, region_end, output_path, config)
+    tabular_output(cons_data, contig, region_start, region_end, output_path, config)
     
     for f_size in families:
         vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, output_path, config)
