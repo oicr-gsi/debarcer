@@ -20,13 +20,12 @@ class ConsDataRow:
         self.stats     = stats
 
     def impute_allele_depths(self):
-        """Returns allele depths."""
-        
+        """Returns allele depths (dict of str tuples -> ints)."""
         return self.cons_info
     
     @functools.lru_cache(maxsize=2, typed=False)
     def impute_allele_freqs(self, threshold):
-        """Returns allele frequencies."""
+        """Returns allele frequencies (dict of str tuples -> floats)."""
         
         is_ref  = lambda allele: allele[0] is allele[1]
         
@@ -40,14 +39,13 @@ class ConsDataRow:
         return freqs
     
     def get_alleles(self, threshold):
-        """Returns alt alleles with their associated refs."""
+        """Returns alt alleles with their associated refs (list of str tuples)."""
         
         freqs   = self.impute_allele_freqs(threshold)
         alleles = []
-        is_ref  = lambda allele: allele[0] is allele[1]
         
         for allele in self.cons_info:
-            if not is_ref(allele):
+            if allele in freqs:
                 alleles.append(allele)
         
         return alleles
@@ -104,23 +102,19 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                         min_fam = sum(consensus_seq[base_pos][family].values())
             
             cons_depth = len(consensus_seq[base_pos])
+            mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
             ref_freq   = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
             
             ref_info  = {"contig": contig, "base_pos": base_pos}
             cons_info = consensuses
-            stats     = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "ref_freq": ref_freq}
+            stats     = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
-            
-            ##TEST
-            #if base_pos==16959731:
-            #    print(consensuses)
-            #    print(consensus_seq[base_pos])
                     
     return cons_data
 
-
+## TODO documentation needs updating
 def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file):
     """Generates an uncollapsed consensus output file (.fsize0.cons) for the given family size and region."""
     
@@ -183,7 +177,8 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
         ## INFO/FILTER/FORMAT metadata
         writer.write("##INFO=<ID=RDP,Number=1,Type=Integer,Description=\"Raw Depth\">\n")
         writer.write("##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n")
-        writer.write("##INFO=<ID=MF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n")
+        writer.write("##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n")
+        writer.write("##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n")
         writer.write("##FILTER=<ID=a10,Number=0,Type=Flag,Description=\"Alt allele depth below 10\">\n")
         writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n")
         writer.write("##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n")
@@ -204,19 +199,20 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                     
                     if stats['ref_freq'] <= ref_threshold:
                         
-                        alleles    = row.get_alleles(all_threshold)
-                        ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
-                        ref_string = ','.join( [allele[0] for allele in alleles] )
-                        alt_string = ','.join( [allele[1] for allele in alleles] )
-                        depths     = row.impute_allele_depths()
-                        ref_depth  = depths[ref_allele] if ref_allele in depths else 0
-                        alt_depths = ','.join( [str(depths[allele]) for allele in alleles] )
-                        alt_freqs  = ','.join( ["{:.2f}".format(row.impute_allele_freqs()[allele]) for allele in row.impute_allele_freqs()] )
+                        alleles     = row.get_alleles(all_threshold)
+                        ref_allele  = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
+                        ref_string  = ','.join( [allele[0] for allele in alleles] )
+                        alt_string  = ','.join( [allele[1] for allele in alleles] )
+                        depths      = row.impute_allele_depths()
+                        ref_depth   = depths[ref_allele] if ref_allele in depths else 0
+                        alt_depths  = ','.join( [str(depths[allele]) for allele in alleles] )
+                        alt_freqs   = row.impute_allele_freqs(all_threshold)
+                        freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in alt_freqs] )
                     
                         filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
-                        info = "RDP={};CDP={};MF={}".format(stats['rawdp'], stats['consdp'], stats['min_fam'])
-                        fmt  = "AD:AL:RF" # Allele depth, alt allele depth, reference frequency
-                        smp  = "{}:{}:{}".format(ref_depth, alt_depths, alt_freqs)
+                        info = "RDP={};CDP={};MIF={},MNF={:.1f}".format(stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
+                        fmt  = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
+                        smp  = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
                         
                         writer.write("{}\t{}\t{}\t{}\t{}\t\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, None, ref_string, alt_string, None, filt, info, fmt, smp))
         
