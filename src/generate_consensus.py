@@ -114,9 +114,8 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                     
     return cons_data
 
-## TODO documentation needs updating
 def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file):
-    """Generates an uncollapsed consensus output file (.fsize0.cons) for the given family size and region."""
+    """Generates uncollapsed consensus data for the given family size and region."""
     
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
@@ -144,7 +143,6 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
     return cons_data
     
 
-## TODO update for new base calling datastruct (f_size as arg, loop in __main__)
 def tabular_output(cons_data, contig, region_start, region_end, output_path, config):
     """Writes a .txt consensus file with tabular columns."""
     
@@ -160,10 +158,6 @@ def tabular_output(cons_data, contig, region_start, region_end, output_path, con
                     
                     counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
                     for allele in cons:
-                        ##TEST
-                        if f_size < 2:
-                            print(allele)
-                        
                         # ref > 1 => deletion
                         if len(allele[0]) > 1:
                             counts['D'] += cons[allele]
@@ -174,10 +168,6 @@ def tabular_output(cons_data, contig, region_start, region_end, output_path, con
                             
                         else:
                             counts[allele[1]] += cons[allele]
-                            
-                    ##TEST
-                    if f_size < 2:
-                        print(counts)
                     
                     writer.write("{}\t{}\t{}\t".format(ref['contig'], ref['base_pos'], ref['ref_base']))
                     writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(counts['A'], counts['C'], counts['G'], counts['T'], counts['I'], counts['D'], counts['N']))
