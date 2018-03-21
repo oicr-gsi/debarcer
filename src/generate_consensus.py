@@ -60,7 +60,7 @@ class ConsDataRow:
         return self.stats
 
 
-def generate_consensus(families, f_size, ref_seq, contig, region_start, region_end, bam_file, config_file):
+def generate_consensus(families, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
     """Generates consensus data for the given family size and region."""
 
     ## Keys: each base position in the region
@@ -114,7 +114,8 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                     
     return cons_data
 
-def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file):
+
+def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config):
     """Generates uncollapsed consensus data for the given family size and region."""
     
     ## Keys: each base position in the region
@@ -227,38 +228,9 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                         writer.write("{}\t{}\t{}\t{}\t{}\t\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, None, ref_string, alt_string, None, filt, info, fmt, smp))
         
 
-if __name__=="__main__":
-    
-    ## Argument + config handling
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--bam_file',    help='Path to your BAM file.')
-    parser.add_argument('-r', '--region',      help='Region to analyze (string of the form chrX:posA-posB).')
-    parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-    parser.add_argument('-c', '--config',      help='Path to your config file.')
-    parser.add_argument('-t', '--tally',       help='Path to your tally (output of UMI_count.py).')
+def generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config):
+    """(Main) generates tabular and VCF consensus output files."""
 
-    args = parser.parse_args()
-    config_file = args.config
-
-    if config_file:
-        config = configparser.ConfigParser()
-        config.read(config_file)
-    else:
-        config = None
-    
-    region = args.region
-    if any(x not in region for x in ["chr", ":", "-"]):
-        raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-        sys.exit(1)
-
-    contig       = region.split(":")[0]
-    region_start = int(region.split(":")[1].split("-")[0])
-    region_end   = int(region.split(":")[1].split("-")[1])
-
-    bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 'No BAM file provided in args or config.')
-    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 'No output path provided in args or config.')
-    tally_file  = handle_arg(args.tally, output_path + '/' + region + '.tally' if config else None, 'No tally file provided.')
-    
     ## Get reference sequence
     with pysam.FastaFile(config['PATHS']['reference_file']) as reader:
         ref_seq = reader.fetch(contig, region_start, region_end).upper()
@@ -294,6 +266,44 @@ if __name__=="__main__":
     
     for f_size in families:
         vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, output_path, config)
+
+
+if __name__=="__main__":
+    
+    ## Argument + config parsing and error handling
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--bam_file',    help='Path to your BAM file.')
+    parser.add_argument('-r', '--region',      help='Region to analyze (string of the form chrX:posA-posB).')
+    parser.add_argument('-o', '--output_path', help='Path to write output files to.')
+    parser.add_argument('-c', '--config',      help='Path to your config file.')
+    parser.add_argument('-t', '--tally',       help='Path to your tally (output of UMI_count.py).')
+
+    args = parser.parse_args()
+    config_file = args.config
+
+    if config_file:
+        config = configparser.ConfigParser()
+        config.read(config_file)
+    else:
+        config = None
+    
+    region = args.region
+    if any(x not in region for x in ["chr", ":", "-"]):
+        raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+        sys.exit(1)
+
+    contig       = region.split(":")[0]
+    region_start = int(region.split(":")[1].split("-")[0])
+    region_end   = int(region.split(":")[1].split("-")[1])
+
+    bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 'No BAM file provided in args or config.')
+    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 'No output path provided in args or config.')
+    tally_file  = handle_arg(args.tally, output_path + '/' + region + '.tally' if config else None, 'No tally file provided.')
+
+    ## Output
+    generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config)
+    
+    
         
     
         
