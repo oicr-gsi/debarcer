@@ -1,9 +1,9 @@
 
 import argparse
 import configparser
-from handle_args import handle_arg
-from UMI_count import generate_tally_output
-from generate_consensus import generate_consensus_output
+from src/handle_args import handle_arg
+from src/UMI_count import generate_tally_output
+from src/generate_consensus import generate_consensus_output
 
 if __name__ == '__main__':
 
@@ -43,6 +43,18 @@ if __name__ == '__main__':
 			bed_file=bed_file,
 			bam_file=bam_file,
 			output_path=output_path)
+
+	tally_file_path="{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end)
+
+	generate_consensus_output(
+		contig=contig,
+		region_start=region_start,
+		region_end=region_end,
+		bam_file=bam_file,
+		tally_file=tally_file,
+		output_path=output_path,
+		config=config)
+
 
 
 
