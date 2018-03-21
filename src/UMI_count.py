@@ -51,7 +51,7 @@ def update_bed(umi_table, amps):
 
 
 ## Returns tally of UMIs in given region (includes mates)
-def UMI_count(contig, start, end):
+def UMI_count(contig, start, end, bed_file, bam_file, output_path):
 
     umi_table = {}
     amps      = []
@@ -100,9 +100,29 @@ def UMI_count(contig, start, end):
             
     return umi_table, posn_table
 
+def generate_tally)output(contig, region_start, region_end, bed_file, bam_file, output_path):
+    """(Main) generates tally output file."""
+
+    ## Write output
+    umi_table, posn_table = UMI_count(contig, region_start, region_end, bed_file, bam_file, output_path)
+
+    with open("{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end), "w") as out:
+        #out.write("UMI       \tPosn           \tCount\tisBedRegion?\n")
+
+        for u_id in sorted(umi_table, key=lambda x: (umi_table[x]['count']), reverse=True):
+            out.write("{}\t{}\t{}\t{}\t\n".format(umi_table[u_id]['umi'], umi_table[u_id]['posn'], 
+                                              umi_table[u_id]['count'], umi_table[u_id]['isBedRegion']))
+
+    with open("{}/{}:{}-{}.posns".format(output_path, contig, region_start, region_end), "w") as out:
+        #out.write("Posn | UMI Count | Read Count | UMIs (CSV) | Counts per UMI (CSV)\n")
+
+        for posn in posn_table:
+            out.write("{}\t{}\t{}\t{}\t{}\t\n".format(posn, posn_table[posn]['tcount'], posn_table[posn]['treads'], 
+                                                    ",".join(posn_table[posn]['umi_csv']), ",".join(posn_table[posn]['count_csv'])))
 
 if __name__=='__main__':
     
+    ## Argument + config parsing and error handling
     parser = argparse.ArgumentParser()
     parser.add_argument('-bam', '--bam_file',    help='Path to your BAM file.')
     parser.add_argument('-bed', '--bed_file',    help='Path to your BED file.')
@@ -123,29 +143,17 @@ if __name__=='__main__':
     if any(x not in region for x in ["chr", ":", "-"]):
         raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
         sys.exit(1)
- 
+
     contig       = region.split(":")[0]
-    region_start = region.split(":")[1].split("-")[0]
-    region_end   = region.split(":")[1].split("-")[1]
+    region_start = int(region.split(":")[1].split("-")[0])
+    region_end   = int(region.split(":")[1].split("-")[1])
 
     bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 'No BAM file provided in args or config.')
     bed_file    = handle_arg(args.bed_file, config['PATHS']['bed_file'] if config else None, 'No BED file provided in args or config.')
     output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 'No output path provided in args or config.')
-    
-    ## Write output
-    umi_table, posn_table = UMI_count(contig, int(region_start), int(region_end))
 
-    with open("{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end), "w") as out:
-        #out.write("UMI       \tPosn           \tCount\tisBedRegion?\n")
+    ## Generate tally
+    generate_tally_output(contig, region_start, region_end, bed_file, bam_file, output_path)
+ 
 
-        for u_id in sorted(umi_table, key=lambda x: (umi_table[x]['count']), reverse=True):
-            out.write("{}\t{}\t{}\t{}\t\n".format(umi_table[u_id]['umi'], umi_table[u_id]['posn'], 
-                                              umi_table[u_id]['count'], umi_table[u_id]['isBedRegion']))
-
-    with open("{}/{}:{}-{}.posns".format(output_path, contig, region_start, region_end), "w") as out:
-        #out.write("Posn | UMI Count | Read Count | UMIs (CSV) | Counts per UMI (CSV)\n")
-
-        for posn in posn_table:
-            out.write("{}\t{}\t{}\t{}\t{}\t\n".format(posn, posn_table[posn]['tcount'], posn_table[posn]['treads'], 
-                                                    ",".join(posn_table[posn]['umi_csv']), ",".join(posn_table[posn]['count_csv'])))
 
