@@ -1,4 +1,18 @@
 
+"""
+debarcer.py - main wrapper for Debarcer
+=======================================
+
+Purpose
+-------
+Debarcer (De-Barcoding and Error Correction) is a package
+for working with next-gen sequencing data that contains
+molecular barcodes.
+
+Author: Theodore Bodak
+Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
+"""
+
 import argparse
 import configparser
 from src.handle_args import handle_arg
@@ -24,7 +38,7 @@ if __name__ == '__main__':
         config = None
 
     region = args.region
-    if any(x not in region for x in ["chr", ":", "-"]):
+    if any(item not in region for item in ["chr", ":", "-"]):
         raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
         sys.exit(1)
 
@@ -56,6 +70,9 @@ if __name__ == '__main__':
 		tally_file=tally_file,
 		output_path=output_path,
 		config=config)
+
+	## TODO plots and additional output/stats
+	## ...
 
 
 
