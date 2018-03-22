@@ -33,10 +33,10 @@ if __name__ == '__main__':
 	## Argument + config parsing and error handling
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-t',  '--tally',       help='Run a UMI tally (UMI_count.py).', action='store_true')
-	parser.add_argument('-b',  '--bam_file',    help='Path to your BAM file.')
-	parser.add_argument('-be', '--bed_file',    help='Path to your BED file.')
-	parser.add_argument('-r',  '--region',      help='Region to analyze (string of the form chrX:posA-posB).')
-	parser.add_argument('-o',  '--output_path', help='Path to write output files to.')
+	parser.add_argument('-b',  '--bam_file',    help='Path to your BAM file.', required=True)
+	parser.add_argument('-be', '--bed_file',    help='Path to your BED file.', required=True)
+	parser.add_argument('-r',  '--region',      help='Region to analyze (string of the form chrX:posA-posB).', required=True)
+	parser.add_argument('-o',  '--output_path', help='Path to write output files to.', required=True)
 	parser.add_argument('-c',  '--config',      help='Path to your config file.')
 
 	args = parser.parse_args()
@@ -87,13 +87,3 @@ if __name__ == '__main__':
 
 	## TODO plots and additional output/stats
 	## ...
-
-
-
-
-
-	
-
-
-
-
