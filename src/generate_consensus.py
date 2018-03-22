@@ -27,7 +27,7 @@ class ConsDataRow:
     def impute_allele_freqs(self, threshold):
         """Returns allele frequencies (dict of str tuples -> floats)."""
         
-        is_ref  = lambda allele: allele[0] is allele[1]
+        is_ref = lambda allele: allele[0] is allele[1]
         
         freqs = {}
         for allele in self.cons_info:
@@ -313,14 +313,3 @@ if __name__=="__main__":
 
     ## Output
     generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config)
-    
-    
-        
-    
-        
-    
-            
-            
-            
-    
-    
