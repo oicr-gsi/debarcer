@@ -4,8 +4,14 @@
 
 # ignore output files
 data/
+*.tally
+*.vcf
+*.regions
+*.posns
+*.cons
 
 # ignore tests
+test/
 *.test
 
 # ignore editor artifacts
