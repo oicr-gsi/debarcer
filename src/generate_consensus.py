@@ -5,8 +5,8 @@ import configparser
 import argparse
 import operator
 import functools
-from get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
-from handle_args import handle_arg
+from src.get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
+from src.handle_args import handle_arg
 
 class ConsDataRow:
     """Holds consensus data for one base position."""
@@ -65,7 +65,7 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_file, config_file)
+    consensus_seq = get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_file, config)
 
     percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
     count_threshold   = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
@@ -80,7 +80,8 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
             consensuses = {}
             raw_depth   = 0
-            min_fam     = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) ## start with the largest family
+            min_fam     = max([sum(consensus_seq[base_pos][fam].values()) 
+                            for fam in consensus_seq[base_pos]]) 
             
             for family in consensus_seq[base_pos]:
                         
@@ -102,7 +103,8 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                         min_fam = sum(consensus_seq[base_pos][family].values())
             
             cons_depth = len(consensus_seq[base_pos])
-            mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
+            mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) 
+                            for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
             ref_freq   = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
             
             ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
@@ -120,7 +122,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
     
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config_file)
+    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config)
     
     cons_data = {}
     
@@ -170,9 +172,12 @@ def tabular_output(cons_data, contig, region_start, region_end, output_path, con
                         else:
                             counts[allele[1]] += cons[allele]
                     
-                    writer.write("{}\t{}\t{}\t".format(ref['contig'], ref['base_pos'], ref['ref_base']))
-                    writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(counts['A'], counts['C'], counts['G'], counts['T'], counts['I'], counts['D'], counts['N']))
-                    writer.write("{}\t{}\t{}\t{}\n".format(stats['rawdp'], stats['consdp'], stats['min_fam'], stats['ref_freq']))
+                    writer.write("{}\t{}\t{}\t".format(
+                        ref['contig'], ref['base_pos'], ref['ref_base']))
+                    writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(
+                        counts['A'], counts['C'], counts['G'], counts['T'], counts['I'], counts['D'], counts['N']))
+                    writer.write("{}\t{}\t{}\t{}\n".format(
+                        stats['rawdp'], stats['consdp'], stats['min_fam'], stats['ref_freq']))
                     
 
 def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, output_path, config):
@@ -221,11 +226,13 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                         freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in alt_freqs] )
                     
                         filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
-                        info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
+                        info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
+                            stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
                         fmt  = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
                         smp  = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
                         
-                        writer.write("{}\t{}\t{}\t{}\t{}\t\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, None, ref_string, alt_string, None, filt, info, fmt, smp))
+                        writer.write("{}\t{}\t{}\t{}\t{}\t\t{}\t{}\t{}\t{}\t{}\n".format(
+                            contig, base_pos, None, ref_string, alt_string, None, filt, info, fmt, smp))
         
 
 def generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config):
@@ -256,10 +263,11 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, tally_
 
     ## Get consensus data for each f_size + uncollapsed data
     cons_data    = {}
-    cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config_file)
+    cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
 
     for f_size in families:
-        cons_data[f_size] = generate_consensus(families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config_file)
+        cons_data[f_size] = generate_consensus(
+            families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config)
     
     ## Output
     tabular_output(cons_data, contig, region_start, region_end, output_path, config)
@@ -296,9 +304,12 @@ if __name__=="__main__":
     region_start = int(region.split(":")[1].split("-")[0])
     region_end   = int(region.split(":")[1].split("-")[1])
 
-    bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 'No BAM file provided in args or config.')
-    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 'No output path provided in args or config.')
-    tally_file  = handle_arg(args.tally, output_path + '/' + region + '.tally' if config else None, 'No tally file provided.')
+    bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
+                    'No BAM file provided in args or config.')
+    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
+                    'No output path provided in args or config.')
+    tally_file  = handle_arg(args.tally, output_path + '/' + region + '.tally' if config else None, 
+                    'No tally file provided.')
 
     ## Output
     generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config)

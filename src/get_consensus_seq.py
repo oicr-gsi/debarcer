@@ -85,7 +85,6 @@ def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_f
                         elif read.indel < 0:
                             ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
                             alt_base = read_data.query_sequence[read.query_position]
-                            #ref_pos  = pos
                             
                         add_base(mode="consensus", seq=consensus_seq, pos=pos, family=family_key, allele=(ref_base, alt_base))
                         
