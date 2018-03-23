@@ -3,9 +3,13 @@ Debarcer: A package for De-Barcoding and Error Correction of sequencing data con
 
 Typical Workflow
 -----
+<<<<<<< HEAD
 ```shell
 ## Preprocess some fastq files
 python debarcer.py P -o /path/to/output_dir -r1 /path/to/read1.fastq -r2 /path/to/read2.fastq -prepname "prepname" -prepfile /path/to/library_prep_types.ini
+=======
+`python debarcer.py -r chrN:posA-posB -c /path/to/config.ini -b /path/to/bam_file.bam -be /path/to/bed_file.bed -o /path/to/output_dir`
+>>>>>>> c322fe5e55db5361d931798c94ed61b396d6f1ae
 
 ## Align, sort, index 
 ## ...
