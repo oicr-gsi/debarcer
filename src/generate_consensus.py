@@ -195,7 +195,7 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
         writer.write("##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n")
         writer.write("##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n")
         writer.write("##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n")
-        writer.write("##FILTER=<ID=a10,Number=0,Type=Flag,Description=\"Alt allele depth below 10\">\n")
+        writer.write("##FILTER=<ID=a10,Description=\"Alt allele depth below 10\">\n")
         writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n")
         writer.write("##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n")
         writer.write("##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n")
@@ -203,7 +203,8 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
         ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
         all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
         
-        entries = []
+        writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n")
+
         for base_pos in range(region_start, region_end):
                 if base_pos in cons_data[f_size]:
                     
@@ -230,25 +231,8 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                         fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
                         smp_string = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
                         
-                        entries.append([contig, str(base_pos), "N/A", ref_string, alt_string, 
-                            "N/A", filt, info, fmt_string, smp_string])
-
-        headers = ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'SAMPLE']
-
-        # Get the maximum length for each column
-        max_column_lens = [ max( [len(entry[column]) for entry in entries] ) for column in range(0, 10) ]
-        max_header_lens = list(map(len, headers))
-        max_lens = list(map(max, max_column_lens, max_header_lens))
-
-        # Template string 
-        template = '{:<' + str(max_lens[0]) + '}'
-        for max_len in max_lens[1:]:
-            template += ' {:<' + str(max_len) + '}'
-
-        writer.write(template.format(*headers) + '\n')
-
-        for entry in entries:
-            writer.write(template.format(*entry) + '\n')
+                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                            contig, base_pos, ".", ref_string, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
 def generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config):
