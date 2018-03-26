@@ -7,7 +7,7 @@ from itertools import zip_longest
 
 
 def parse_prep(prepname, prepfile):
-    """Gets parameters from specified prep name and config file"""
+    """Gets parameters from specified prep name and config file."""
 
     preps = configparser.ConfigParser()
     preps.read(prepfile)
@@ -16,13 +16,13 @@ def parse_prep(prepname, prepfile):
 
 
 def getread(fastq_file):
-    """(Iter) slices fastq into 4-line reads"""
+    """(Iter) slices fastq into 4-line reads."""
     args = [iter(fastq_file)] * 4
     return zip_longest(*args, fillvalue=None)
 
 
 def extract_umis(reads, umi_locs, umi_lens):
-    """Gets the UMI from a read"""
+    """Gets the UMI from a read."""
     umis = []
 
     for umi_loc, umi_len in zip(umi_locs, umi_lens):
@@ -33,7 +33,7 @@ def extract_umis(reads, umi_locs, umi_lens):
 
 
 def verify_spacer(reads, umis, spacer_seq):
-    """Returns true if spacer is present"""
+    """Returns true if spacer is present."""
     for read in reads:
         for umi in umis:
             if umi in read:
@@ -45,7 +45,7 @@ def verify_spacer(reads, umis, spacer_seq):
 
 def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     """
-    (Main) Reheaders fastq files according to specified library prep
+    (Main) Reheaders fastq files according to specified library prep.
     - removes reads without a valid spacer (if applicable)
     """
 

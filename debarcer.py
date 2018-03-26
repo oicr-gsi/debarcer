@@ -41,13 +41,13 @@ def debarcer(args):
 	    raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
 	    sys.exit(1)
 
-	contig       = region.split(":")[0]
+	contig = region.split(":")[0]
 	region_start = int(region.split(":")[1].split("-")[0])
-	region_end   = int(region.split(":")[1].split("-")[1])
+	region_end = int(region.split(":")[1].split("-")[1])
 
-	bam_file    = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
+	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
 					'No BAM file provided in args or config.')
-	bed_file    = handle_arg(args.bed_file, config['PATHS']['bed_file'] if config else None, 
+	bed_file = handle_arg(args.bed_file, config['PATHS']['bed_file'] if config else None, 
 					'No BED file provided in args or config.')
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
@@ -79,13 +79,24 @@ def debarcer(args):
 def preprocess(args):
 	"""Preprocess mode for processing fastq files."""
 
+	if args.config:
+		config = configparser.ConfigParser()
+		config.read(args.config)
+	else:
+		config = None
+
+	prepfile = handle_arg(args.prepfile, config['PATHS']['prep_file'] if config else None,
+					'No prepfile provided in args or config.')
+	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
+					'No output path provided in args or config.')
+
 	reheader_fastqs(
 		r1_file=args.r1_file, 
 		r2_file=args.r2_file, 
 		r3_file=args.r3_file, 
-		output_path=args.output_path, 
+		output_path=output_path, 
 		prepname=args.prepname, 
-		prepfile=args.prepfile)
+		prepfile=prepfile)
 
 
 if __name__ == '__main__':
@@ -112,7 +123,8 @@ if __name__ == '__main__':
 	p_parser.add_argument('-r2', '--read2', help='Path to second FASTQ file, if applicable.')
 	p_parser.add_argument('-r3', '--read3', help='Path to third FASTQ file, if applicable.')
 	p_parser.add_argument('-p', '--prepname', help='Name of library prep to  use (defined in library_prep_types.ini).', required=True)
-	p_parser.add_argument('-pf', '--prepfile', help='Path to your library_prep_types.ini file.', required=True)
+	p_parser.add_argument('-pf', '--prepfile', help='Path to your library_prep_types.ini file.')
+	p_parser.add_argument('-c', '--config', help='Path to your config file.')
 	p_parser.set_defaults(func=preprocess)
 
 	args = parser.parse_args()
