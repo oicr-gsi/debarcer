@@ -31,7 +31,7 @@ A sample config file is provided in ``/debarcer/config/sample_config.ini``, and 
 * SPACER_SEQ (optional):
 	Base sequence of the spacer ([A,C,G,T]+).
 
-LIBRARY_NAME would then be the --prepname argument passed to debarcer.py.
+``LIBRARY_NAME`` would then be the ``--prepname`` argument passed to debarcer.py.
 
 Typical Workflow
 ----------------
