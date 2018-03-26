@@ -44,7 +44,7 @@ def update_bed(umi_table, amps):
             if posA >= bed_posA and posB <= bed_posB:
                 umi_table[u_id]['isBedRegion'] = True
 
-            # Assumes coordinate-sorted BED file, revisit this?
+            # Assumes coordinate-sorted BED file
             if bed_posB >= posA:
                 break
 
@@ -73,7 +73,8 @@ def UMI_count(contig, region_start, region_end, bed_file, bam_file, output_path)
 
             u_id = umi + posn
 
-            if posA and posB:  # Make sure no null values sneak in
+            # Ensure no null values sneak in
+            if posA and posB:
 
                 if u_id in umi_table:
                     umi_table[u_id]['count'] += 1
