@@ -1,9 +1,11 @@
 
+
 import argparse
 import configparser
 from src.handle_args import handle_arg
-from src.UMI_count import generate_tally_output
+from src.umi_error_correct import get_umi_families
 from src.generate_consensus import generate_consensus_output
+from src.preprocess_fastqs import reheader_fastqs
 
 """
 debarcer.py - main wrapper for Debarcer
@@ -18,14 +20,6 @@ molecular barcodes.
 Author: Theodore Bodak
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
-
-import argparse
-import configparser
-from src.handle_args import handle_arg
-from src.UMI_count import generate_tally_output
-from src.generate_consensus import generate_consensus_output
-from src.preprocess_fastqs import reheader_fastqs
-
 
 def debarcer(args):
 	"""Main Debarcer analysis mode."""
@@ -52,24 +46,20 @@ def debarcer(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
 
-	## Generate tally file if one does not exist
-	if args.tally:
-		generate_tally_output(
-			contig=contig,
-			region_start=region_start,
-			region_end=region_end,
-			bed_file=bed_file,
-			bam_file=bam_file,
-			output_path=output_path)
-
-	tally_file="{}/{}:{}-{}.tally".format(output_path, contig, region_start, region_end)
+	## Generate an error-corrected list of UMI families
+	umi_families = get_umi_families(
+		contig=contig,
+		region_start=region_start,
+		region_end=region_end,
+		bam_file=bam_file,
+		config=config)
 
 	generate_consensus_output(
 		contig=contig,
 		region_start=region_start,
 		region_end=region_end,
 		bam_file=bam_file,
-		tally_file=tally_file,
+		families=umi_families,
 		output_path=output_path,
 		config=config)
 
@@ -108,7 +98,7 @@ if __name__ == '__main__':
 
 	## Main Debarcer command - requires BAM file 
 	d_parser = subparsers.add_parser('D', help="Main Debarcer analysis mode.")
-	d_parser.add_argument('-t', '--tally', help='Run a UMI tally (UMI_count.py).', action='store_true')
+	#d_parser.add_argument('-t', '--tally', help='Run a UMI tally (UMI_count.py).', action='store_true')
 	d_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
 	d_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
 	d_parser.add_argument('-be', '--bed_file', help='Path to your BED file.')

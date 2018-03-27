@@ -79,14 +79,13 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
         if base_pos in consensus_seq:
 
             consensuses = {}
-            raw_depth   = 0
-            min_fam     = max([sum(consensus_seq[base_pos][fam].values()) 
-                            for fam in consensus_seq[base_pos]]) 
+            raw_depth = 0
+            min_fam = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) 
             
             for family in consensus_seq[base_pos]:
                         
-                cons_allele  = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
-                cons_denom   = sum(consensus_seq[base_pos][family].values())
+                cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
+                cons_denom = sum(consensus_seq[base_pos][family].values())
                 cons_percent = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
                 
                 raw_depth += cons_denom
@@ -103,13 +102,13 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                         min_fam = sum(consensus_seq[base_pos][family].values())
             
             cons_depth = sum(consensuses.values())
-            mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) 
+            mean_fam = sum( [sum(consensus_seq[base_pos][fam].values()) 
                             for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
-            ref_freq   = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
+            ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
             
-            ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
+            ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = consensuses
-            stats     = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
+            stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
@@ -235,44 +234,32 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                             contig, base_pos, ".", ref_string, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config):
+def generate_consensus_output(contig, region_start, region_end, bam_file, families, output_path, config):
     """(Main) generates tabular and VCF consensus output files."""
 
     ## Get reference sequence
     with pysam.FastaFile(config['PATHS']['reference_file']) as reader:
         ref_seq = reader.fetch(contig, region_start, region_end).upper()
         
-    ## Lists of UMI+Pos pairs with count >= f_size
-    families = {}
+    ## Lists of umi families with count >= f_size
+    size_families = {}
     f_sizes  = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5, 10]
 
-    with open(tally_file, "r") as reader:
-        lines = reader.readlines()
-    
-    for line in lines[1:]:
-        umi, pos, count, *rest = line.split("\t")
-    
-        for f_size in f_sizes:
-        
-            if(int(count) >= f_size):
-            
-                if f_size not in families:
-                    families[f_size] = {}
-                
-                families[f_size][umi + pos] = 0
+    for f_size in f_sizes:
+        size_families[f_size] = [family for family, count in families.items() if count >= f_size]
 
     ## Get consensus data for each f_size + uncollapsed data
     cons_data    = {}
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
 
-    for f_size in families:
+    for f_size in size_families:
         cons_data[f_size] = generate_consensus(
-            families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config)
+            size_families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config)
     
     ## Output
     tabular_output(cons_data, contig, region_start, region_end, output_path, config)
     
-    for f_size in families:
+    for f_size in size_families:
         vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, output_path, config)
 
 
@@ -287,9 +274,8 @@ if __name__=="__main__":
     parser.add_argument('-t', '--tally',       help='Path to your tally (output of UMI_count.py).')
 
     args = parser.parse_args()
-    config_file = args.config
 
-    if config_file:
+    if args.config:
         config = configparser.ConfigParser()
         config.read(config_file)
     else:
