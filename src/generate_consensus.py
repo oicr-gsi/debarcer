@@ -27,7 +27,7 @@ class ConsDataRow:
     def impute_allele_freqs(self, threshold):
         """Returns allele frequencies (dict of str tuples -> floats)."""
         
-        is_ref  = lambda allele: allele[0] is allele[1]
+        is_ref = lambda allele: allele[0] is allele[1]
         
         freqs = {}
         for allele in self.cons_info:
@@ -102,7 +102,7 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
                     if sum(consensus_seq[base_pos][family].values()) < min_fam:
                         min_fam = sum(consensus_seq[base_pos][family].values())
             
-            cons_depth = len(consensus_seq[base_pos])
+            cons_depth = sum(consensuses.values())
             mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) 
                             for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
             ref_freq   = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
@@ -135,7 +135,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
             depth    = sum(uncollapsed_seq[base_pos].values())
             ref_freq = (uncollapsed_seq[base_pos][ref_base] / depth) * 100 if ref_base in uncollapsed_seq[base_pos] else 0
             get_cons = lambda base: uncollapsed_seq[base_pos][base] if base in uncollapsed_seq[base_pos] else 0    
-            
+
             ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = uncollapsed_seq[base_pos]
             stats     = {"rawdp": depth, "consdp": None, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
@@ -195,45 +195,45 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
         writer.write("##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n")
         writer.write("##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n")
         writer.write("##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n")
-        writer.write("##FILTER=<ID=a10,Number=0,Type=Flag,Description=\"Alt allele depth below 10\">\n")
+        writer.write("##FILTER=<ID=a10,Description=\"Alt allele depth below 10\">\n")
         writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n")
         writer.write("##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n")
         writer.write("##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n")
-
-        writer.write("#CHROM\tPOS\t\tID\tREF\tALT\t\tQUAL\tFILTER\tINFO\t\t\tFORMAT\t\tSAMPLE\n") ## TODO multiple samples?
         
         ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
         all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
         
+        writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n")
+
         for base_pos in range(region_start, region_end):
                 if base_pos in cons_data[f_size]:
                     
-                    row   = cons_data[f_size][base_pos]
-                    ref   = row.get_ref_info()
-                    cons  = row.get_cons_info()
+                    row = cons_data[f_size][base_pos]
+                    ref = row.get_ref_info()
+                    cons = row.get_cons_info()
                     stats = row.get_stats()
-                    
+
                     if stats['ref_freq'] <= ref_threshold:
-                        
-                        alleles     = row.get_alleles(all_threshold)
-                        ref_allele  = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
-                        ref_string  = ','.join( [allele[0] for allele in alleles] )
-                        alt_string  = ','.join( [allele[1] for allele in alleles] )
-                        depths      = row.impute_allele_depths()
-                        ref_depth   = depths[ref_allele] if ref_allele in depths else 0
-                        alt_depths  = ','.join( [str(depths[allele]) for allele in alleles] )
-                        alt_freqs   = row.impute_allele_freqs(all_threshold)
+
+                        alleles = row.get_alleles(all_threshold)
+                        ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
+                        ref_string = ','.join( [allele[0] for allele in alleles] )
+                        alt_string = ','.join( [allele[1] for allele in alleles] )
+                        depths = row.impute_allele_depths()
+                        ref_depth = depths[ref_allele] if ref_allele in depths else 0
+                        alt_depths = ','.join( [str(depths[allele]) for allele in alleles] )
+                        alt_freqs = row.impute_allele_freqs(all_threshold)
                         freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in alt_freqs] )
                     
                         filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
                         info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
                             stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
-                        fmt  = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
-                        smp  = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
+                        fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
+                        smp_string = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
                         
-                        writer.write("{}\t{}\t{}\t{}\t{}\t\t{}\t{}\t{}\t{}\t{}\n".format(
-                            contig, base_pos, None, ref_string, alt_string, None, filt, info, fmt, smp))
-        
+                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                            contig, base_pos, ".", ref_string, alt_string, "0", filt, info, fmt_string, smp_string))
+
 
 def generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config):
     """(Main) generates tabular and VCF consensus output files."""
@@ -313,14 +313,3 @@ if __name__=="__main__":
 
     ## Output
     generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config)
-    
-    
-        
-    
-        
-    
-            
-            
-            
-    
-    
