@@ -39,7 +39,7 @@ def add_base(mode, seq, pos, family, allele):
             seq[pos] = {}
 
 
-def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_file, config):
+def get_consensus_seq(families, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
     """
     Returns a nested dictionary representing counts of each base in each family at each base pos'n.
      - Keys: each base position in the region
@@ -66,11 +66,13 @@ def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_f
                     start_pos = read_data.reference_start
                     umi = read_name.split(":")[-1]
 
-                    for family in families:
+                    if umi in families:
 
-                        if umi in family[0] and abs(family[1] - start_pos) <= pos_threshold:
+                        ## Find the most proximate UMI family
+                        key_pos = min(families[umi].keys(), key=lambda x: abs(pos - x))                        
+                        family = families[umi][key_pos]
 
-                            family_key = family[0][0] + str(family[1]) ## unique family identifier
+                        if family.count >= f_size:
 
                             ref_pos = pos - region_start
 
@@ -90,9 +92,7 @@ def get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_f
                                 alt_base = read_data.query_sequence[read.query_position]
 
                             add_base(mode="consensus", seq=consensus_seq, pos=pos,
-                                     family=family_key, allele=(ref_base, alt_base))
-
-                            break
+                                        family=family.key, allele=(ref_base, alt_base))
 
     return consensus_seq
 

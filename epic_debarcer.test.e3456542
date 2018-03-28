@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "debarcer.py", line 121, in <module>
+    args.func(args)
+  File "debarcer.py", line 64, in debarcer
+    config=config)
+  File "/.mounts/labs/gsiprojects/gsi/Debarcer2/github/debarcer/src/generate_consensus.py", line 265, in generate_consensus_output
+    trim_families(f_size, families), f_size, ref_seq, contig, region_start, region_end, bam_file, config)
+  File "/.mounts/labs/gsiprojects/gsi/Debarcer2/github/debarcer/src/generate_consensus.py", line 239, in trim_families
+    trimmed = families.copy()
+AttributeError: 'NoneType' object has no attribute 'copy'

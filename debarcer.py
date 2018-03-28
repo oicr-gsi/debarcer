@@ -97,8 +97,7 @@ if __name__ == '__main__':
 	subparsers = parser.add_subparsers()
 
 	## Main Debarcer command - requires BAM file 
-	d_parser = subparsers.add_parser('D', help="Main Debarcer analysis mode.")
-	#d_parser.add_argument('-t', '--tally', help='Run a UMI tally (UMI_count.py).', action='store_true')
+	d_parser = subparsers.add_parser('V', help="Main Debarcer analysis mode.")
 	d_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
 	d_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
 	d_parser.add_argument('-be', '--bed_file', help='Path to your BED file.')

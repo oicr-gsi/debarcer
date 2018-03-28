@@ -6,6 +6,19 @@ import configparser
 import pysam
 import src.umi_network_collapse as network
 
+class UMIGroup:
+    """Contains ID and count info for multiple UMI references within a group."""
+    def __init__(self, count, key):
+        self.count = count
+        self.key = key
+
+    def count(self):
+        return self.count
+
+    def key(self):
+        return self.key
+
+
 def umi_count(contig, region_start, region_end, bam_file):
     """Returns tally of UMIs in given region."""
 
@@ -23,6 +36,30 @@ def umi_count(contig, region_start, region_end, bam_file):
                 umi_counts[umi] = 1
 
     return umi_counts
+
+
+def hash_families(families):
+    """Builds a dict of family IDs that can be easily referenced."""
+
+    family_hash = {}
+    for family in families:
+
+        umis = family[0]
+        pos = family[1]
+        count = families[family]
+
+        key = umis[0] + str(pos)
+
+        group_count = UMIGroup(count, key)
+
+        for umi in umis:
+            if umi in family_hash:
+                family_hash[umi][pos] = group_count
+            else:
+                family_hash[umi] = {}
+                family_hash[umi][pos] = group_count
+
+    return family_hash
 
 
 def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold):
@@ -54,14 +91,16 @@ def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_t
 
                 ## Add UMI group + most common position to families
                 most_frequent_pos = max(umi_positions[umi_group][read_type].items(), key=operator.itemgetter(1))[0]
-                families[(umi_group, most_frequent_pos)] = 1
+                
+                families[(umi_group, most_frequent_pos)] = umi_positions[umi_group][read_type][most_frequent_pos]
+                del umi_positions[umi_group][read_type][most_frequent_pos]
 
                 for pos in umi_positions[umi_group][read_type].copy():
                     if abs(most_frequent_pos - pos) <= pos_threshold:
-                        families[(umi_group, most_frequent_pos)] += 1
+                        families[(umi_group, most_frequent_pos)] += umi_positions[umi_group][read_type][pos]
                         del umi_positions[umi_group][read_type][pos]
 
-    return families
+    return hash_families(families)
 
 
 def get_umi_families(contig, region_start, region_end, bam_file, config):

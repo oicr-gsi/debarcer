@@ -65,7 +65,7 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_file, config)
+    consensus_seq = get_consensus_seq(families, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
 
     percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
     count_threshold   = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
@@ -80,7 +80,7 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
             consensuses = {}
             raw_depth = 0
-            min_fam = max([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) 
+            min_fam = min([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) 
             
             for family in consensus_seq[base_pos]:
                         
@@ -97,9 +97,6 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
                     else:
                         consensuses[cons_allele] = 1
-                        
-                    if sum(consensus_seq[base_pos][family].values()) < min_fam:
-                        min_fam = sum(consensus_seq[base_pos][family].values())
             
             cons_depth = sum(consensuses.values())
             mean_fam = sum( [sum(consensus_seq[base_pos][fam].values()) 
@@ -242,24 +239,20 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, famili
         ref_seq = reader.fetch(contig, region_start, region_end).upper()
         
     ## Lists of umi families with count >= f_size
-    size_families = {}
-    f_sizes  = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5, 10]
-
-    for f_size in f_sizes:
-        size_families[f_size] = [family for family, count in families.items() if count >= f_size]
+    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
 
     ## Get consensus data for each f_size + uncollapsed data
-    cons_data    = {}
+    cons_data = {}
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
 
-    for f_size in size_families:
+    for f_size in f_sizes:
         cons_data[f_size] = generate_consensus(
-            size_families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config)
+            families, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
     
     ## Output
     tabular_output(cons_data, contig, region_start, region_end, output_path, config)
     
-    for f_size in size_families:
+    for f_size in cons_data:
         vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, output_path, config)
 
 
