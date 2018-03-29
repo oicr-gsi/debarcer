@@ -127,7 +127,7 @@ if __name__ == '__main__':
 	subparsers = parser.add_subparsers()
 
 	## Preprocess command - requires unprocessed fastq files
-	p_parser = subparsers.add_parser('process', help="Preprocess mode for processing fastq files.")
+	p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files.")
 	p_parser.add_argument('-o', '--output_path', help='Path to write updated fastq files to.', required=True)
 	p_parser.add_argument('-r1', '--read1', help='Path to first FASTQ file.', required=True)
 	p_parser.add_argument('-r2', '--read2', help='Path to second FASTQ file, if applicable.')

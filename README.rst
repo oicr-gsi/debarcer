@@ -39,16 +39,20 @@ Typical Workflow
 .. code:: bash
 
 	## Preprocess some fastq files
-	python debarcer.py P -o /path/to/output_dir -r1 /path/to/read1.fastq -r2 /path/to/read2.fastq
+	python debarcer.py preprocess -o /path/to/output_dir -r1 /path/to/read1.fastq -r2 /path/to/read2.fastq
 	-prepname "prepname" -prepfile /path/to/library_prep_types.ini
 
 	## Align, sort, index
 	## ...
 	## produces: bam_file.bam, bam_file.bam.bai
 
-	## Run Debarcer
-	python debarcer.py D -t -r chrN:posA-posB -c /path/to/config.ini  -be /path/to/bed_file.bed
-	-b /path/to/bam_file.bam -o /path/to/output_dir
+	## Error-correct and group UMIs into families
+	python debarcer.py group -r chrN:posA-posB -c /path/to/config.ini -b /path/to/bam_file.bam
+	-o /path/to/output_dir
+
+	## Call variants based on UMI families
+	python debarcer.py call -r chrN:posA-posB -c /path/to/config.ini -b /path/to/bam_file.bam 
+	-o /path/to/output_dir -u /path/to/umi_file.umis
 
 Dependencies
 ------------
