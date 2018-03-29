@@ -69,21 +69,21 @@ def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_t
 
             if umi in umi_table:
 
-                families = umi_table[umi].families
+                umi_group = umi_table[umi]
+                families = umi_group.families
 
                 if not families:
-                    umi_table[umi].addNew(pos)
+                    umi_group.addNew(pos)
 
                 elif pos in families:
-                    umi_table[umi].add(pos)
+                    umi_group.add(pos)
 
                 else:
                     closest = umi_table[umi].getClosest(pos, pos_threshold)
-
                     if closest:
-                        umi_table[umi].add(closest)
+                        umi_group.add(closest)
                     else:
-                        umi_table[umi].addNew(pos)
+                        umi_group.addNew(pos)
 
     return umi_table
 
