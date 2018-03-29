@@ -60,12 +60,12 @@ class ConsDataRow:
         return self.stats
 
 
-def generate_consensus(families, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
+def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
     """Generates consensus data for the given family size and region."""
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = get_consensus_seq(families, ref_seq, contig, region_start, region_end, bam_file, config)
+    consensus_seq = get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
 
     percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
     count_threshold   = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
@@ -79,14 +79,13 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
         if base_pos in consensus_seq:
 
             consensuses = {}
-            raw_depth   = 0
-            min_fam     = max([sum(consensus_seq[base_pos][fam].values()) 
-                            for fam in consensus_seq[base_pos]]) 
+            raw_depth = 0
+            min_fam = min([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) 
             
             for family in consensus_seq[base_pos]:
                         
-                cons_allele  = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
-                cons_denom   = sum(consensus_seq[base_pos][family].values())
+                cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
+                cons_denom = sum(consensus_seq[base_pos][family].values())
                 cons_percent = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
                 
                 raw_depth += cons_denom
@@ -98,18 +97,15 @@ def generate_consensus(families, f_size, ref_seq, contig, region_start, region_e
 
                     else:
                         consensuses[cons_allele] = 1
-                        
-                    if sum(consensus_seq[base_pos][family].values()) < min_fam:
-                        min_fam = sum(consensus_seq[base_pos][family].values())
             
             cons_depth = sum(consensuses.values())
-            mean_fam   = sum( [sum(consensus_seq[base_pos][fam].values()) 
+            mean_fam = sum( [sum(consensus_seq[base_pos][fam].values()) 
                             for fam in consensus_seq[base_pos]] ) / len(consensus_seq[base_pos])
-            ref_freq   = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
+            ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
             
-            ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
+            ref_info = {"contig": contig, "base_pos": base_pos + 1, "ref_base": ref_base}
             cons_info = consensuses
-            stats     = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
+            stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
@@ -134,7 +130,6 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
                 
             depth    = sum(uncollapsed_seq[base_pos].values())
             ref_freq = (uncollapsed_seq[base_pos][ref_base] / depth) * 100 if ref_base in uncollapsed_seq[base_pos] else 0
-            get_cons = lambda base: uncollapsed_seq[base_pos][base] if base in uncollapsed_seq[base_pos] else 0    
 
             ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = uncollapsed_seq[base_pos]
@@ -214,65 +209,59 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                     stats = row.get_stats()
 
                     if stats['ref_freq'] <= ref_threshold:
-
+                        
                         alleles = row.get_alleles(all_threshold)
+                        ref_bases = set([allele[0] for allele in alleles])
                         ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
-                        ref_string = ','.join( [allele[0] for allele in alleles] )
-                        alt_string = ','.join( [allele[1] for allele in alleles] )
                         depths = row.impute_allele_depths()
                         ref_depth = depths[ref_allele] if ref_allele in depths else 0
-                        alt_depths = ','.join( [str(depths[allele]) for allele in alleles] )
                         alt_freqs = row.impute_allele_freqs(all_threshold)
-                        freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in alt_freqs] )
-                    
-                        filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
+
                         info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
                             stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
                         fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
-                        smp_string = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
-                        
-                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                            contig, base_pos, ".", ref_string, alt_string, "0", filt, info, fmt_string, smp_string))
+
+                        for ref_base in ref_bases:
+                            snips = []
+                            for allele in alleles:
+                                if allele[0] == ref_base:
+                                    snips.append(allele)
+
+                            alt_string = ','.join( [allele[1] for allele in snips] )
+                            depth_string = ','.join( [str(depths[allele]) for allele in snips] )
+                            freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in snips] )
+                            smp_string = "{}:{}:{}".format(ref_depth, depth_string, freq_string)
+                            filt = "PASS" if any( [depths[alt] > 10 for alt in snips] ) else "a10"
+
+                            writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                                contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config):
+
+
+
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, config):
     """(Main) generates tabular and VCF consensus output files."""
 
     ## Get reference sequence
     with pysam.FastaFile(config['PATHS']['reference_file']) as reader:
         ref_seq = reader.fetch(contig, region_start, region_end).upper()
         
-    ## Lists of UMI+Pos pairs with count >= f_size
-    families = {}
-    f_sizes  = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5, 10]
-
-    with open(tally_file, "r") as reader:
-        lines = reader.readlines()
-    
-    for line in lines[1:]:
-        umi, pos, count, *rest = line.split("\t")
-    
-        for f_size in f_sizes:
-        
-            if(int(count) >= f_size):
-            
-                if f_size not in families:
-                    families[f_size] = {}
-                
-                families[f_size][umi + pos] = 0
+    ## Lists of umi families with count >= f_size
+    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
 
     ## Get consensus data for each f_size + uncollapsed data
-    cons_data    = {}
+    cons_data = {}
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
 
-    for f_size in families:
+    for f_size in f_sizes:
         cons_data[f_size] = generate_consensus(
-            families[f_size], f_size, ref_seq, contig, region_start, region_end, bam_file, config)
+            umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
     
     ## Output
     tabular_output(cons_data, contig, region_start, region_end, output_path, config)
     
-    for f_size in families:
+    for f_size in cons_data:
         vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, output_path, config)
 
 
@@ -287,9 +276,8 @@ if __name__=="__main__":
     parser.add_argument('-t', '--tally',       help='Path to your tally (output of UMI_count.py).')
 
     args = parser.parse_args()
-    config_file = args.config
 
-    if config_file:
+    if args.config:
         config = configparser.ConfigParser()
         config.read(config_file)
     else:

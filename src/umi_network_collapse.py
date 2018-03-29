@@ -2,12 +2,11 @@
 import os as path
 import sys
 import operator
-import argparse
 import configparser
 import itertools
 import collections
-from handle_args import handle_arg
-from _edit_distance import edit_distance
+
+from src.edit_distance import edit_distance
 
 """
 Adapted from https://github.com/CGATOxford/UMI-tools/blob/master/umi_tools/network.py
@@ -155,6 +154,29 @@ class UMIClusterer:
         return components
 
 
+    def _group_directional(self, clusters, adj_list, counts):
+        """Return groups for directional method."""
+
+        observed = set()
+        groups = []
+        for cluster in clusters:
+            if len(cluster) == 1:
+                groups.append(list(cluster))
+                observed.update(cluster)
+            else:
+                cluster = sorted(cluster, key=lambda x: counts[x],
+                                 reverse=True)
+                # need to remove any node which has already been observed
+                temp_cluster = []
+                for node in cluster:
+                    if node not in observed:
+                        temp_cluster.append(node)
+                        observed.add(node)
+                groups.append(temp_cluster)
+
+        return groups
+
+
     def __init__(self, cluster_method="directional"):
         """Select the required class methods for the cluster_method."""
         
@@ -168,9 +190,11 @@ class UMIClusterer:
             self.get_groups = self._group_directional
         
 
-    def __call__(self, umis, counts, threshold):
+    def __call__(self, umis, counts, config):
         """Counts is a dictionary that maps UMIs to their counts."""
         
+        threshold = int(config['SETTINGS']['umi_edit_distance_threshold']) if config else 1
+
         umis = list(umis)
         
         self.positions += 1
@@ -183,18 +207,14 @@ class UMIClusterer:
             
         len_umis = [len(x) for x in umis]
         
+        assert len_umis, "No UMIs present(!)"
+
         assert max(len_umis) == min(len_umis), (
             "Not all UMIs are the same length(!): {} - {}"
             .format(min(len_umis), max(len_umis)))
         
         adj_list = self.get_adj_list(umis, counts, threshold)
         clusters = self.get_connected_components(umis, adj_list, counts)
-        final_umis = [list(x) for x in self.get_groups(clusters, adj_list, counts)]
-        
-        return final_umis
-        
-if __name__=='__main__':
-    
-    parser = argparse.ArgumentParser()
-    #parser.add_argument('-bam', '--bam_file',    help='Path to your BAM file.')
+        final_umis = [tuple(x) for x in self.get_groups(clusters, adj_list, counts)]
 
+        return final_umis
