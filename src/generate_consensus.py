@@ -130,7 +130,6 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
                 
             depth    = sum(uncollapsed_seq[base_pos].values())
             ref_freq = (uncollapsed_seq[base_pos][ref_base] / depth) * 100 if ref_base in uncollapsed_seq[base_pos] else 0
-            get_cons = lambda base: uncollapsed_seq[base_pos][base] if base in uncollapsed_seq[base_pos] else 0    
 
             ref_info  = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = uncollapsed_seq[base_pos]
@@ -210,25 +209,35 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                     stats = row.get_stats()
 
                     if stats['ref_freq'] <= ref_threshold:
-
+                        
                         alleles = row.get_alleles(all_threshold)
+                        ref_bases = set([allele[0] for allele in alleles])
                         ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
-                        ref_string = ','.join( [allele[0] for allele in alleles] )
-                        alt_string = ','.join( [allele[1] for allele in alleles] )
                         depths = row.impute_allele_depths()
                         ref_depth = depths[ref_allele] if ref_allele in depths else 0
-                        alt_depths = ','.join( [str(depths[allele]) for allele in alleles] )
                         alt_freqs = row.impute_allele_freqs(all_threshold)
-                        freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in alt_freqs] )
-                    
-                        filt = "PASS" if any( [depths[alt] > 10 for alt in alleles] ) else "a10"
+
                         info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
                             stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
                         fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
-                        smp_string = "{}:{}:{}".format(ref_depth, alt_depths, freq_string)
-                        
-                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                            contig, base_pos, ".", ref_string, alt_string, "0", filt, info, fmt_string, smp_string))
+
+                        for ref_base in ref_bases:
+                            snips = []
+                            for allele in alleles:
+                                if allele[0] == ref_base:
+                                    snips.append(allele)
+
+                            alt_string = ','.join( [allele[1] for allele in snips] )
+                            depth_string = ','.join( [str(depths[allele]) for allele in snips] )
+                            freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in snips] )
+                            smp_string = "{}:{}:{}".format(ref_depth, depth_string, freq_string)
+                            filt = "PASS" if any( [depths[alt] > 10 for alt in snips] ) else "a10"
+
+                            writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                                contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
+
+
+
 
 
 def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, config):
