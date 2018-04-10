@@ -47,6 +47,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     """
     (Main) Reheaders fastq files according to specified library prep.
     - removes reads without a valid spacer (if applicable)
+    - gzip module is very slow, consider subprocess (at the cost of compatibility)
     """
 
     prep = parse_prep(prepname, prepfile)

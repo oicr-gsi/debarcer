@@ -5,6 +5,7 @@ import configparser
 import argparse
 import operator
 import functools
+from src.umi_error_correct import UMIGroup
 from src.get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
 from src.handle_args import handle_arg
 
@@ -237,11 +238,47 @@ def vcf_output(cons_data, f_size, ref_seq, contig, region_start, region_end, out
                                 contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
+def temp_umi_table(contig, region_start, region_end, bam_file, config):
+    """Makes a UMI table with no error correction (only when one is not provided)."""
 
+    umi_table = {}
+    pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
+
+    with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
+
+        for read in bam_reader.fetch(contig, region_start, region_end):
+
+            umi = read.query_name.split(':')[-1]
+            pos = read.reference_start
+
+            if umi in umi_table:
+
+                umi_group = umi_table[umi]
+                families = umi_group.families
+
+                if pos in families:
+                    umi_group.add(pos)
+
+                else:
+                    closest = umi_table[umi].getClosest(pos, pos_threshold)
+                    if closest:
+                        umi_group.add(closest)
+                    else:
+                        umi_group.addNew(pos)
+
+            else:
+                umi_table[umi] = UMIGroup(key=umi)
+                umi_table[umi].addNew(pos)
+
+    return umi_table
 
 
 def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, config):
     """(Main) generates tabular and VCF consensus output files."""
+
+    ## Make a stand-in umi_table if one is not provided
+    if not umi_table:
+        umi_table = temp_umi_table(contig, region_start, region_end, bam_file, config)
 
     ## Get reference sequence
     with pysam.FastaFile(config['PATHS']['reference_file']) as reader:

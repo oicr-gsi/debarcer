@@ -1,8 +1,8 @@
 
-
 import argparse
 import configparser
 import pickle
+import sys
 from src.handle_args import handle_arg
 from src.umi_error_correct import get_umi_families
 from src.generate_consensus import generate_consensus_output
@@ -23,7 +23,10 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
 def preprocess_reads(args):
-	"""Preprocess mode for processing fastq files."""
+	"""
+	Preprocesses fastq files by removing UMIs from reads and appending
+	them to the read names.
+	"""
 
 	if args.config:
 		config = configparser.ConfigParser()
@@ -32,14 +35,14 @@ def preprocess_reads(args):
 		config = None
 
 	prepfile = handle_arg(args.prepfile, config['PATHS']['prep_file'] if config else None,
-					'No prepfile provided in args or config.')
+					'ERR: No prepfile provided in args or config.')
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
-					'No output path provided in args or config.')
+					'ERR: No output path provided in args or config.')
 
 	reheader_fastqs(
-		r1_file=args.r1_file, 
-		r2_file=args.r2_file, 
-		r3_file=args.r3_file, 
+		r1_file=args.read1, 
+		r2_file=args.read2, 
+		r3_file=args.read3, 
 		output_path=output_path, 
 		prepname=args.prepname, 
 		prepfile=prepfile)
@@ -56,7 +59,7 @@ def group_umis(args):
 
 	region = args.region
 	if any(item not in region for item in ["chr", ":", "-"]):
-	    raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+	    raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
 	    sys.exit(1)
 
 	contig = region.split(":")[0]
@@ -64,9 +67,9 @@ def group_umis(args):
 	region_end = int(region.split(":")[1].split("-")[1])
 
 	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
-					'No BAM file provided in args or config.')
+					'ERR: No BAM file provided in args or config.')
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-					'No output path provided in args or config.')
+					'ERR: No output path provided in args or config.')
 
 	## Generate an error-corrected list of UMI families
 	umi_families = get_umi_families(
@@ -80,31 +83,44 @@ def group_umis(args):
 
 
 def call_variants(args):
-	"""Variant calling mode."""
+	"""Calls variants from given BAM and umi family files."""
 
 	if args.config:
-   		config = configparser.ConfigParser()
-   		config.read(args.config)
+		config = configparser.ConfigParser()
+		config.read(args.config)
 	else:
-  		config = None
+		config = None
 
 	region = args.region
 	if any(item not in region for item in ["chr", ":", "-"]):
-	    raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-	    sys.exit(1)
+		raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
+		sys.exit(1)
 
 	contig = region.split(":")[0]
 	region_start = int(region.split(":")[1].split("-")[0])
 	region_end = int(region.split(":")[1].split("-")[1])
 
 	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
-					'No BAM file provided in args or config.')
+					'ERR: No BAM file provided in args or config.')
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-					'No output path provided in args or config.')
-	umi_file = handle_arg(args.umi_file, config['PATHS']['umi_file'] if config else None,
-					'No .umis file provided in args or config.')
+					'ERR: No output path provided in args or config.')
 
-	umi_table = pickle.load(open(umi_file, "rb"))
+	if config:
+		umi_file = config['PATHS']['umi_file'] if 'umi_file' in config['PATHS'] else None
+
+	if umi_file in args:
+		umi_file = args.umi_file 
+
+	print(umi_file)
+
+	if umi_file:
+		try:
+			umi_table = pickle.load(open(umi_file, "rb"))
+		except IOError:
+			print("ERR: Unable to load .umis file.", file=sys.stderr)
+			sys.exit(1)
+	else:
+		umi_table = None
 
 	generate_consensus_output(
 		contig=contig,
@@ -115,9 +131,6 @@ def call_variants(args):
 		output_path=output_path,
 		config=config)
 
-	## TODO plots and additional output/stats
-	## ...
-
 
 if __name__ == '__main__':
 
@@ -126,7 +139,7 @@ if __name__ == '__main__':
 	 											 " of sequencing data containing molecular barcodes.")
 	subparsers = parser.add_subparsers()
 
-	## Preprocess command - requires unprocessed fastq files
+	## Preprocess command - requires unprocessed fastq file(s)
 	p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files.")
 	p_parser.add_argument('-o', '--output_path', help='Path to write updated fastq files to.', required=True)
 	p_parser.add_argument('-r1', '--read1', help='Path to first FASTQ file.', required=True)
