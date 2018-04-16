@@ -3,14 +3,15 @@ import argparse
 import configparser
 import pickle
 import sys
+import os
 from src.handle_args import handle_arg
 from src.umi_error_correct import get_umi_families
 from src.generate_consensus import generate_consensus_output
 from src.preprocess_fastqs import reheader_fastqs
 
 """
-debarcer.py - main wrapper for Debarcer
-=======================================
+debarcer.py - main interface for Debarcer
+=========================================
 
 Purpose
 -------
@@ -79,11 +80,14 @@ def group_umis(args):
 		bam_file=bam_file,
 		config=config)
 
-	pickle.dump(umi_families, open("{}/{}.umis".format(output_path, region), "wb"))
+	umi_file = "{}/{}.umis".format(output_path, region)
+
+	pickle.dump(umi_families, open(umi_file, "wb"))
+	print(umi_file)
 
 
-def call_variants(args):
-	"""Calls variants from given BAM and umi family files."""
+def collapse(args):
+	"""Base collapses from given BAM and umi family file."""
 
 	if args.config:
 		config = configparser.ConfigParser()
@@ -111,8 +115,6 @@ def call_variants(args):
 	if umi_file in args:
 		umi_file = args.umi_file 
 
-	print(umi_file)
-
 	if umi_file:
 		try:
 			umi_table = pickle.load(open(umi_file, "rb"))
@@ -130,6 +132,10 @@ def call_variants(args):
 		umi_table=umi_table,
 		output_path=output_path,
 		config=config)
+
+
+def call_variants(args):
+	##TODO
 
 
 if __name__ == '__main__':
@@ -158,14 +164,26 @@ if __name__ == '__main__':
 	g_parser.add_argument('-c', '--config', help='Path to your config file.')
 	g_parser.set_defaults(func=group_umis)
 
-	## Variant call command - requires BAM file, UMI family file
-	c_parser = subparsers.add_parser('call', help="Variant calling from given UMI families.")
+	## Base collapse command - requires BAM file, UMI family file optional
+	c_parser = subparsers.add_parser('collapse', help="Base collapsing from given UMI families file.")
 	c_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
 	c_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
 	c_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
 	c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file.')
 	c_parser.add_argument('-c', '--config', help='Path to your config file.')
-	c_parser.set_defaults(func=call_variants)
+	c_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to collapse on.') ##implement
+	c_parser.add_argument('-v', '--vcf_sizes', help='Comma-separated list of family sizes to make VCF files for.') ##implement
+	c_parser.set_defaults(func=collapse, single_run=False)
+
+	## Variant call command - requires BAM file (can only run after collapse)
+	v_parser = subparsers.add_parser('call', help="Variant calling from analyzed BAM file.")
+	v_parser.add_argument('-o', '--output_path', help='Path to writer output files to.', required=True)
+	v_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
+	v_parser.add_argument('-c', '--config', help='Path to your config file.')
+	v_parser.set_defaults(func=call_variants)
+
+	## Clean command - gets rid of temp files created by Debarcer
+	## TODO... 
 
 	args = parser.parse_args()
 	args.func(args)

@@ -40,11 +40,7 @@ def add_base(mode, seq, pos, family, allele):
 
 
 def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
-    """
-    Returns a nested dictionary representing counts of each base in each family at each base pos'n.
-     - Keys: each base position in the region
-     - Values: tables of A,C,G,T (etc) counts from each UMI+Pos family
-    """
+    """ Returns consensus info for each family at each base position in the given region."""
     consensus_seq = {}
 
     pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10

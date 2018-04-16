@@ -106,3 +106,4 @@ def get_umi_families(contig, region_start, region_end, bam_file, config):
 
     return umi_table
 
+

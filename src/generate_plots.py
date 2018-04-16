@@ -1,6 +1,6 @@
 
 import pysam
-#import ggplot as gg
+import ggplot as gg
 import pandas as pd
 
 def plot_umis(contig, region_start, region_end, cons_file):
