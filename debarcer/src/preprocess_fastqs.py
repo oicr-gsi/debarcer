@@ -39,7 +39,6 @@ def verify_spacer(reads, umis, spacer_seq):
             if umi in read:
                 if not read.split(umi)[1].startswith(spacer_seq):
                     return False
-
     return True
 
 
@@ -47,6 +46,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     """
     (Main) Reheaders fastq files according to specified library prep.
     - removes reads without a valid spacer (if applicable)
+    - gzip module is very slow, consider subprocess (at the cost of compatibility)
     """
 
     prep = parse_prep(prepname, prepfile)
@@ -211,3 +211,4 @@ if __name__ == '__main__':
 
     # Preprocess (reheader fastq files)
     reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile)
+
