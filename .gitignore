@@ -10,8 +10,7 @@ data/
 *.posns
 *.cons
 
-# ignore tests
-test/
+# ignore tests (internal for now)
 *.test
 
 # ignore editor artifacts
