@@ -35,4 +35,5 @@ setup(
 	"Operating System :: MacOS",
 	],
 	install_requires=['argparse', 'configparser', 'pysam', 'pandas'],
+	python_requires='>=3.6',
 )
