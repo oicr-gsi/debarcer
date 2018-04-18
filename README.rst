@@ -1,7 +1,10 @@
 Debarcer
 ========
 
-A package for De-Barcoding and Error Correction of sequencing data containing molecular barcodes.
+A package for De-Barcoding and Error Correction of sequencing data containing molecular barcodes. For information on getting started with Debarcer, see the `Installation Guide`_.
+
+.. _`Installation Guide`: https://github.com/oicr-gsi/debarcer/wiki/1.-Installation-Guide
+
 
 Configuration
 -------------
