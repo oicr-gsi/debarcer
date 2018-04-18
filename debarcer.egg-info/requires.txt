@@ -1,0 +1,4 @@
+argparse
+configparser
+pysam
+pandas

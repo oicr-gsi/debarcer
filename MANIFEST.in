@@ -1,0 +1,11 @@
+# include the README
+include *.rst
+
+# include the license file
+include LICENSE
+
+# include the requirements file
+include requirements.txt
+
+# include config files
+recursive-include config *
