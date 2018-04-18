@@ -1,8 +1,0 @@
-README.rst
-setup.py
-debarcer/debarcer.py
-debarcer.egg-info/PKG-INFO
-debarcer.egg-info/SOURCES.txt
-debarcer.egg-info/dependency_links.txt
-debarcer.egg-info/requires.txt
-debarcer.egg-info/top_level.txt
