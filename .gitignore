@@ -12,6 +12,7 @@ data/
 
 # ignore tests (internal for now)
 *.test
+config/working.ini
 
 # ignore editor artifacts
 *.swp

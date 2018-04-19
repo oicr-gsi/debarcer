@@ -41,6 +41,8 @@ def preprocess_reads(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
 					'ERR: No output path provided in args or config.')
 
+	print("Preprocessing reads...")
+
 	reheader_fastqs(
 		r1_file=args.read1, 
 		r2_file=args.read2, 
@@ -48,6 +50,8 @@ def preprocess_reads(args):
 		output_path=output_path, 
 		prepname=args.prepname, 
 		prepfile=prepfile)
+
+	print("Preprocessing complete!")
 
 
 def group_umis(args):
@@ -73,6 +77,8 @@ def group_umis(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'ERR: No output path provided in args or config.')
 
+	print("Grouping UMIs...")
+
 	## Generate an error-corrected list of UMI families
 	umi_families = get_umi_families(
 		contig=contig,
@@ -82,9 +88,9 @@ def group_umis(args):
 		config=config)
 
 	umi_file = "{}/{}.umis".format(output_path, region)
-
 	pickle.dump(umi_families, open(umi_file, "wb"))
-	print(umi_file)
+
+	print("Grouping complete! UMI file written to <{}>.".format(output_path))
 
 
 def collapse(args):
@@ -125,6 +131,8 @@ def collapse(args):
 	else:
 		umi_table = None
 
+	print("Generating consensus...")
+
 	generate_consensus_output(
 		contig=contig,
 		region_start=region_start,
@@ -133,6 +141,8 @@ def collapse(args):
 		umi_table=umi_table,
 		output_path=output_path,
 		config=config)
+
+	print("Consensus generated! Consensus file written to <{}>.".format(output_path))
 
 
 def call_variants(args):
@@ -160,6 +170,8 @@ def call_variants(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
 
+	print("Generating VCFs...")
+
 	generate_vcf_output(
 		cons_file=cons_file, 
 		f_sizes=f_sizes,  
@@ -168,6 +180,8 @@ def call_variants(args):
 		region_end=region_end, 
 		output_path=output_path, 
 		config=config)
+
+	print("VCFs generated! VCF files written to <{}>.".format(output_path))
 
 
 if __name__ == '__main__':
