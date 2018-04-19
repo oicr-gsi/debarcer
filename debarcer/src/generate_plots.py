@@ -7,7 +7,7 @@ def plot_umis(contig, region_start, region_end, cons_file):
 	"""TODO"""
 
 	df = pd.read_csv(cons_file, sep='\t')
-	df = df[column.startswith('#') for column in df]
+	df = df[column.startswith('#')]
 
 	##TEST
 	print(df.to_string())
