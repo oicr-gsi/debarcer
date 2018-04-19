@@ -1,7 +1,10 @@
 Debarcer
 ========
 
-A package for De-Barcoding and Error Correction of sequencing data containing molecular barcodes.
+A package for De-Barcoding and Error Correction of sequencing data containing molecular barcodes. For information on getting started with Debarcer, see the `Installation Guide`_.
+
+.. _`Installation Guide`: https://github.com/oicr-gsi/debarcer/wiki/1.-Installation-Guide
+
 
 Configuration
 -------------
@@ -39,22 +42,27 @@ Typical Workflow
 .. code:: bash
 
 	## Preprocess some fastq files
-	python debarcer.py preprocess -o /path/to/output_dir -r1 /path/to/read1.fastq -r2 /path/to/read2.fastq
-	-prepname "prepname" -prepfile /path/to/library_prep_types.ini
+	$ python debarcer.py preprocess -o /path/to/output_dir -r1 /path/to/read1.fastq -r2 /path/to/read2.fastq
+	  -prepname "prepname" -prepfile /path/to/library_prep_types.ini
 
 	## Align, sort, index
 	## ...
 	## produces: bam_file.bam, bam_file.bam.bai
 
 	## Error-correct and group UMIs into families
-	python debarcer.py group -r chrN:posA-posB -c /path/to/config.ini -b /path/to/bam_file.bam
-	-o /path/to/output_dir
+	$ python debarcer.py group -r chrN:posA-posB -c /path/to/config.ini -b /path/to/bam_file.bam
+	  -o /path/to/output_dir
 
-	## Call variants based on UMI families
-	python debarcer.py call -r chrN:posA-posB -c /path/to/config.ini -b /path/to/bam_file.bam 
-	-o /path/to/output_dir -u /path/to/umi_file.umis
+	## Perform base collapsing
+	$ python debarcer.py collapse -o /path/to/output_dir -r chrN:posA-posB
+          -b /path/to/bam_file.bam -u /path/to/umi_file.umis
+          -c /path/to/config.ini
+	  
+	## Call variants of specified family sizes
+        $ python debarcer.py call -o /path/to/output_dir -r chrN:posA-posB
+          -cf /path/to/cons_file.cons -f 1,2,5 -c path/to/config.ini
 
 Dependencies
 ------------
 
-Debarcer was tested using Python 3.6.4 and depends on the packages pysam and pandas.
+Debarcer was tested using Python 3.6.4 and depends on the packages pysam and pandas. See ``requirements.txt``.

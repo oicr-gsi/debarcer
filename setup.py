@@ -16,7 +16,7 @@ setup(
 	author_email = "tabodak@edu.uwaterloo.ca",
 	description = ("A package for de-barcoding and error correction of sequencing"
 											" data containing molecular barcodes."),
-	license = "MIT",
+	license = "MIT License",
 	keywords = "computational genomics",
 	url = "https://github.com/oicr-gsi/debarcer",
 	packages = ['debarcer', 'tests'],
@@ -25,7 +25,7 @@ setup(
 	"Development Status :: 3 - Alpha",
 	"Intended Audience :: Science/Research",
 	"Intended Audience :: Developers",
-	"License :: MIT",
+	"License :: MIT License",
 	"Programming Language :: Python :: 3",
 	"Programming Language :: Python :: 3.6.4",
 	"Topic :: Software Development",
