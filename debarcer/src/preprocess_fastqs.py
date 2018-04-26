@@ -82,6 +82,8 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     else:
         umi_len_r2 = 0
 
+    print("Preprocessing reads...")
+
     if num_reads == 3:
 
         if actual_reads == 2:
@@ -187,6 +189,8 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     r1_writer.close()
     if r2_writer:
         r2_writer.close() 
+
+    print("Complete. Output written to {}.".format(output_path))
 
 
 if __name__ == '__main__':

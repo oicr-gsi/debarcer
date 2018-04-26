@@ -27,4 +27,5 @@ def get_bed_regions(bed_file, output_path):
             output.write("{},{},{}\n".format(region[0], region[1], region[2]))
 
 
-get_bed_regions(bed_file, output_path)
+if __name__ == '__main__':
+	get_bed_regions(bed_file, output_path)

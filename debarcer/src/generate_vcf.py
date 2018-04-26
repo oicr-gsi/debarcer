@@ -28,9 +28,27 @@ def parse_raw_table(cons_file, f_sizes):
     return rows
 
 
-def write_rows(cons_data, f_size, contig, region_start, region_end, output_path):
+def write_rows(cons_data, f_size, contig, region_start, region_end, output_path, config):
 
     with open("{}/{}:{}-{}.{}.vcf".format(output_path, contig, region_start, region_end, f_size), "w") as writer:
+
+        writer.write("##fileformat=VCFv4.2\n")
+        writer.write("##reference={}\n".format(config['PATHS']['reference_file']))
+        writer.write("##source=Debarcer2\n")
+        writer.write("##f_size={}\n".format(f_size))
+        
+        ## INFO/FILTER/FORMAT metadata
+        writer.write("##INFO=<ID=RDP,Number=1,Type=Integer,Description=\"Raw Depth\">\n")
+        writer.write("##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n")
+        writer.write("##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n")
+        writer.write("##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n")
+        writer.write("##FILTER=<ID=a10,Description=\"Alt allele depth below 10\">\n")
+        writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n")
+        writer.write("##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n")
+        writer.write("##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n")
+  
+        writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n")
+        
         for row in cons_data[f_size]:
             writer.write(row)
 
@@ -108,7 +126,8 @@ def generate_vcf_output(cons_file, f_sizes, contig, region_start, region_end, ou
 
     ## Generate vcf files
     for f_size in f_sizes:
-        write_rows(cons_data, f_size, contig, region_start, region_end, output_path)
+        if f_size in cons_data:
+            write_rows(cons_data, f_size, contig, region_start, region_end, output_path, config)
 
 
 if __name__=="__main__":
