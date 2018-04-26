@@ -131,11 +131,15 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
         if base_pos in uncollapsed_seq:
                 
             depth = sum(uncollapsed_seq[base_pos].values())
-            ref_freq = (uncollapsed_seq[base_pos][ref_base] / depth) * 100 if ref_base in uncollapsed_seq[base_pos] else 0
+            
+            if (ref_base, ref_base) in uncollapsed_seq[base_pos]:
+                ref_freq = (uncollapsed_seq[base_pos][(ref_base, ref_base)] / depth) * 100
+            else:
+                ref_freq = 0
 
             ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = uncollapsed_seq[base_pos]
-            stats = {"rawdp": depth, "consdp": None, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
+            stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
             
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
@@ -265,7 +269,7 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
     ref_seq = get_ref_seq(contig, region_start, region_end, config)
 
     ## Get consensus data for each f_size + uncollapsed data
-    print("Generating consensus...")
+    print("Building consensus data...")
     cons_data = {}
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
 
@@ -277,8 +281,6 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, config)
     
-    print("Complete! Output written to {}.".format(output_path))
-
 
 if __name__=="__main__":
     

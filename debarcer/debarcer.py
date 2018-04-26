@@ -24,6 +24,7 @@ Author: Theodore Bodak
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
+
 def preprocess_reads(args):
 	"""
 	Preprocesses fastq files by removing UMIs from reads and appending
@@ -41,8 +42,6 @@ def preprocess_reads(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
 					'ERR: No output path provided in args or config.')
 
-	print("Preprocessing reads...")
-
 	reheader_fastqs(
 		r1_file=args.read1, 
 		r2_file=args.read2, 
@@ -50,8 +49,6 @@ def preprocess_reads(args):
 		output_path=output_path, 
 		prepname=args.prepname, 
 		prepfile=prepfile)
-
-	print("Preprocessing complete!")
 
 
 def group_umis(args):
@@ -90,7 +87,7 @@ def group_umis(args):
 	umi_file = "{}/{}.umis".format(output_path, region)
 	pickle.dump(umi_families, open(umi_file, "wb"))
 
-	print("Grouping complete! UMI file written to <{}>.".format(output_path))
+	print("Complete. Output written to {}.".format(output_path))
 
 
 def collapse(args):
@@ -116,11 +113,10 @@ def collapse(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'ERR: No output path provided in args or config.')
 
-	if config:
+	if args.umi_file:
+		umi_file = args.umi_file
+	elif config:
 		umi_file = config['PATHS']['umi_file'] if 'umi_file' in config['PATHS'] else None
-
-	if umi_file in args:
-		umi_file = args.umi_file 
 
 	if umi_file:
 		try:
@@ -142,7 +138,7 @@ def collapse(args):
 		output_path=output_path,
 		config=config)
 
-	print("Consensus generated! Consensus file written to <{}>.".format(output_path))
+	print("Consensus generated! Consensus file written to {}.".format(output_path))
 
 
 def call_variants(args):
