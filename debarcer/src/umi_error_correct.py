@@ -22,9 +22,11 @@ class UMIGroup:
 
     @functools.lru_cache(maxsize=4, typed=False)
     def getClosest(self, pos, pos_threshold):
-        dist = lambda x, y: abs(x - y)
-        closest = [fampos for fampos in self.families if dist(pos, fampos) <= pos_threshold]
-        return closest[0] if closest else None
+        for fampos in self.families:
+            if abs(pos - fampos) <= pos_threshold:
+                return fampos
+
+        return None
 
     def key(self):
         return key
@@ -96,14 +98,17 @@ def get_umi_families(contig, region_start, region_end, bam_file, config):
 
     pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
 
+    print("Counting UMIs...")
     counts = umi_count(contig, region_start, region_end, bam_file)
     umis = counts.keys()
 
+    print("Clustering UMIs...")
     clusterer = network.UMIClusterer(cluster_method="directional")
     umi_groups = clusterer(umis, counts, config)
 
+    print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
-
+    
     return umi_table
 
 
