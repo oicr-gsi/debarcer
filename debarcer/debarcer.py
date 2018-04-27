@@ -4,6 +4,7 @@ import configparser
 import pickle
 import sys
 import os
+import datetime
 from src.handle_args import handle_arg
 from src.preprocess_fastqs import reheader_fastqs
 from src.umi_error_correct import get_umi_families
@@ -23,6 +24,10 @@ molecular barcodes.
 Author: Theodore Bodak
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
+
+def timestamp():
+	"""Returns the current time in a nice format for log files."""
+	return "[{}] ".format(str(datetime.datetime.now()).split('.')[0])
 
 
 def preprocess_reads(args):
@@ -74,7 +79,7 @@ def group_umis(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'ERR: No output path provided in args or config.')
 
-	print("Grouping UMIs...")
+	print(timestamp() + "Grouping UMIs...")
 
 	## Generate an error-corrected list of UMI families
 	umi_families = get_umi_families(
@@ -87,7 +92,7 @@ def group_umis(args):
 	umi_file = "{}/{}.umis".format(output_path, region)
 	pickle.dump(umi_families, open(umi_file, "wb"))
 
-	print("Complete. Output written to {}.".format(output_path))
+	print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
 
 
 def collapse(args):
@@ -127,7 +132,7 @@ def collapse(args):
 	else:
 		umi_table = None
 
-	print("Generating consensus...")
+	print(timestamp() + "Generating consensus...")
 
 	generate_consensus_output(
 		contig=contig,
@@ -138,7 +143,7 @@ def collapse(args):
 		output_path=output_path,
 		config=config)
 
-	print("Consensus generated! Consensus file written to {}.".format(output_path))
+	print(timestamp() + "Consensus generated. Consensus file written to {}.".format(output_path))
 
 
 def call_variants(args):
@@ -166,7 +171,7 @@ def call_variants(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
 
-	print("Generating VCFs...")
+	print(timestamp() + "Generating VCFs...")
 
 	generate_vcf_output(
 		cons_file=cons_file, 
@@ -177,7 +182,7 @@ def call_variants(args):
 		output_path=output_path, 
 		config=config)
 
-	print("VCFs generated! VCF files written to <{}>.".format(output_path))
+	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
 
 
 if __name__ == '__main__':
@@ -214,7 +219,7 @@ if __name__ == '__main__':
 	c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file.')
 	c_parser.add_argument('-c', '--config', help='Path to your config file.')
 	c_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to collapse on.') ##implement
-	c_parser.set_defaults(func=collapse, single_run=False)
+	c_parser.set_defaults(func=collapse)
 
 	## Variant call command - requires cons file (can only run after collapse)
 	v_parser = subparsers.add_parser('call', help="Variant calling from analyzed BAM file.")
