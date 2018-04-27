@@ -5,15 +5,7 @@ import operator
 import configparser
 import pysam
 import functools
-import datetime
 import src.umi_network_collapse as network
-
-## TEST
-def timestamp():
-    """Returns the current time in a nice format for log files."""
-    return "[{}] ".format(str(datetime.datetime.now()).split('.')[0])
-
-
 
 class UMIGroup:
     """Contains position and count info for all UMIs representing one group."""
@@ -106,15 +98,15 @@ def get_umi_families(contig, region_start, region_end, bam_file, config):
 
     pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
 
-    print(timestamp() + "Counting UMIs...")
+    print("Counting UMIs...")
     counts = umi_count(contig, region_start, region_end, bam_file)
     umis = counts.keys()
 
-    print(timestamp() + "Clustering UMIs...")
+    print("Clustering UMIs...")
     clusterer = network.UMIClusterer(cluster_method="directional")
     umi_groups = clusterer(umis, counts, config)
 
-    print(timestamp() + "Grouping UMIs by position...")
+    print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
     
     return umi_table
