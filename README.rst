@@ -6,7 +6,7 @@ A package for De-Barcoding and Error Correction of sequencing data containing mo
 .. _`Installation Guide`: https://github.com/oicr-gsi/debarcer/wiki/1.-Installation-Guide
 
 Note : The repository for the original release of Debarcer (V0.3.1) as described in Nature Protocols can be found under 
-https://github.com/oicr-gsi/debarcer/releases/tag/v0.3.1
+https://github.com/oicr-gsi/debarcer/releases/tag/v0.3.1 
 https://github.com/oicr-gsi/debarcer/tree/master-old
 
 
