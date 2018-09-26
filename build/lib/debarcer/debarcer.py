@@ -190,11 +190,8 @@ if __name__ == '__main__':
 	## Argument + config parsing and error handling
 	parser = argparse.ArgumentParser(description="A package for De-Barcoding and Error Correction" \
 	 											 " of sequencing data containing molecular barcodes.")
-	
-	
 	subparsers = parser.add_subparsers()
 
-		
 	## Preprocess command - requires unprocessed fastq file(s)
 	p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files.")
 	p_parser.add_argument('-o', '--output_path', help='Path to write updated fastq files to.', required=True)
@@ -234,16 +231,4 @@ if __name__ == '__main__':
 	v_parser.set_defaults(func=call_variants)
 
 	args = parser.parse_args()
-	
-	#args.func(args)
-
-
-
-	#TEST!!!!!
-	try:
-		args.func(args)
-	except AttributeError:
-		print(parser.format_help())
-
-
-
+	args.func(args)
