@@ -234,12 +234,7 @@ if __name__ == '__main__':
 	v_parser.set_defaults(func=call_variants)
 
 	args = parser.parse_args()
-	
-	#args.func(args)
 
-
-
-	#TEST!!!!!
 	try:
 		args.func(args)
 	except AttributeError:
