@@ -4,7 +4,10 @@ README.rst
 requirements.txt
 setup.cfg
 setup.py
+<<<<<<< HEAD
 config/demo_config.ini
+=======
+>>>>>>> 1fc85b0239081073199e67dec944b515ed790b21
 config/library_prep_types.ini
 config/sample_config.ini
 debarcer/debarcer.py
