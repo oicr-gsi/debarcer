@@ -56,8 +56,13 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     umi_locs = [str(x) for x in prep['UMI_LOCS'].split(',')]
     umi_lens = [int(x) for x in prep['UMI_LENS'].split(',')]
     spacer = bool(prep['SPACER'])
-    spacer_seq = str(prep['SPACER_SEQ'])
-
+    
+    ##Handle SPACER=FALSE condition
+    if prep['SPACER_SEQ'] is not None: 
+        spacer_seq = str(prep['SPACER_SEQ'])
+    else:
+        spacer_seq = None
+    
     r1 = gzip.open(r1_file, "rt")
     r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
     r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
