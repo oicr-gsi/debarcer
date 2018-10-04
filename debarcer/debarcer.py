@@ -6,10 +6,12 @@ import sys
 import os
 import datetime
 from src.handle_args import handle_arg
+from src.handle_args import arg_exists
+from src.handle_args import config_validation
 from src.preprocess_fastqs import reheader_fastqs
 from src.umi_error_correct import get_umi_families
 from src.generate_consensus import generate_consensus_output
-from src.generate_vcf import generate_vcf_output
+
 
 """
 debarcer.py - main interface for Debarcer
@@ -38,7 +40,9 @@ def preprocess_reads(args):
 
 	if args.config:
 		config = configparser.ConfigParser()
-		config.read(args.config)
+		#config.read(args.config)
+		config.read('../config/demo_config.ini')
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
 	else:
 		config = None
 
@@ -47,14 +51,15 @@ def preprocess_reads(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
 					'ERR: No output path provided in args or config.')
 
+	arg_exists(sys.argv) ##Check whether args directories/files exist	
+
 	reheader_fastqs(
 		r1_file=args.read1, 
 		r2_file=args.read2, 
 		r3_file=args.read3, 
 		output_path=output_path, 
-		prepname=args.prepname, 
+		prepname=args.prepname,
 		prepfile=prepfile)
-
 
 def group_umis(args):
 	"""Groups and error-corrects UMIs into families."""
@@ -62,6 +67,7 @@ def group_umis(args):
 	if args.config:
 		config = configparser.ConfigParser()
 		config.read(args.config)
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
 	else:
 		config = None
 
@@ -78,6 +84,8 @@ def group_umis(args):
 					'ERR: No BAM file provided in args or config.')
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'ERR: No output path provided in args or config.')
+
+	arg_exists(sys.argv) ##Check whether args directories/files exist
 
 	print(timestamp() + "Grouping UMIs...")
 
@@ -101,6 +109,7 @@ def collapse(args):
 	if args.config:
 		config = configparser.ConfigParser()
 		config.read(args.config)
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
 	else:
 		config = None
 
@@ -117,6 +126,8 @@ def collapse(args):
 					'ERR: No BAM file provided in args or config.')
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'ERR: No output path provided in args or config.')
+
+	arg_exists(sys.argv) ##Check whether args directories/files exist
 
 	if args.umi_file:
 		umi_file = args.umi_file
@@ -152,6 +163,7 @@ def call_variants(args):
 	if args.config:
 		config = configparser.ConfigParser()
 		config.read(args.config)
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
 	else:
 		config = None
 
@@ -171,6 +183,8 @@ def call_variants(args):
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
 
+	arg_exists(sys.argv) ##Check whether args directories/files exist
+
 	print(timestamp() + "Generating VCFs...")
 
 	generate_vcf_output(
@@ -185,12 +199,12 @@ def call_variants(args):
 	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
 
 
+
 if __name__ == '__main__':
 
 	## Argument + config parsing and error handling
 	parser = argparse.ArgumentParser(description="A package for De-Barcoding and Error Correction" \
 	 											 " of sequencing data containing molecular barcodes.")
-	
 	
 	subparsers = parser.add_subparsers()
 
@@ -234,18 +248,9 @@ if __name__ == '__main__':
 	v_parser.set_defaults(func=call_variants)
 
 	args = parser.parse_args()
-<<<<<<< HEAD
 	
-=======
-
->>>>>>> 1fc85b0239081073199e67dec944b515ed790b21
 	try:
 		args.func(args)
-	except AttributeError:
+	except AttributeError as e:
 		print(parser.format_help())
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> 1fc85b0239081073199e67dec944b515ed790b21
+		print(e)

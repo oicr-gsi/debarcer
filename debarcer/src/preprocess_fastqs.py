@@ -11,7 +11,6 @@ def parse_prep(prepname, prepfile):
 
     preps = configparser.ConfigParser()
     preps.read(prepfile)
-
     return preps[prepname.upper()]
 
 
@@ -48,7 +47,6 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     - removes reads without a valid spacer (if applicable)
     - gzip module is very slow, consider subprocess (at the cost of compatibility)
     """
-
     prep = parse_prep(prepname, prepfile)
 
     num_reads = int(prep['INPUT_READS'])
