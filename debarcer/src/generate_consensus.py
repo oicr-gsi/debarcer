@@ -112,6 +112,7 @@ def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
                     
+
     return cons_data
 
 
@@ -155,8 +156,11 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
 
     with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_end), "w") as writer:
 
+        writer.write("CHROM\tPOS\tREF\t'A's\t'C's\t'G's\t'T's\t'I's\t'D's\t'N's\tRAWDP\tCONSDP\tFAM\tREF_FREQ\n") ##Header
+        
         for base_pos in range(region_start, region_end):
 
+            ref_base = ref_seq[base_pos-region_start]
             if any( [base_pos in cons_data[f_size] for f_size in cons_data] ):
 
                 for f_size in cons_data:
@@ -179,8 +183,9 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                             else:
                                 counts[allele[1]] += cons[allele]
 
-                        writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                            contig, base_pos, counts['A'], counts['C'], counts['G'], counts['T'], 
+
+                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                            contig, base_pos, ref_base, counts['A'], counts['C'], counts['G'], counts['T'], 
                             counts['I'], counts['D'], counts['N'],
                             stats['rawdp'], stats['consdp'], f_size, stats['ref_freq']))
 
@@ -214,8 +219,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                                 smp_string = "{}:{}:{}".format(ref_depth, depth_string, freq_string)
                                 filt = "PASS" if any( [depths[alt] > 10 for alt in snips] ) else "a10"
 
-                                writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                                    contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
+                                #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
 def temp_umi_table(contig, region_start, region_end, bam_file, config):
@@ -253,6 +257,21 @@ def temp_umi_table(contig, region_start, region_end, bam_file, config):
     return umi_table
 
 
+
+def memoize(func):
+    cache = dict()
+
+    def memoized_func(*args):
+        if args in cache:
+            return cache[args]
+        result = func(*args)
+        cache[args] = result
+        return result
+
+    return memoized_func
+
+
+
 def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, config):
     """(Main) generates consensus output file."""
 
@@ -271,12 +290,25 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
     ## Get consensus data for each f_size + uncollapsed data
     print("Building consensus data...")
     cons_data = {}
+    
+    """
+    memoized_uncollapsed = memoize(generate_uncollapsed)
+    cons_data[0] = memoized_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
+
+    memoized_collapsed = memoize(generate_consensus)
+
+
+    for f_size in f_sizes:
+        cons_data[f_size] = memoized_collapsed(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
+    """
+
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
 
     for f_size in f_sizes:
         cons_data[f_size] = generate_consensus(
             umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
-    
+  
+
     ## Output
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, config)
