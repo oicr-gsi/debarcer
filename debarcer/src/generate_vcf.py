@@ -39,7 +39,6 @@ def parse_raw_table(cons_file, f_sizes):
     return rows
 
 
-
 def write_rows(cons_data, f_size, contig, region_start, region_end, output_path, config):
 
     with open("{}/{}:{}-{}.{}.vcf".format(output_path, contig, region_start, region_end, f_size), "w") as writer:
@@ -269,14 +268,14 @@ def generate_vcf_output(cons_file, f_sizes, contig, region_start, region_end, ou
 
 
 
-
-def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string, filt, info, fmt_string, smp_string):
+def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string, filt, info, fmt_string, smp_string, output_path,):
 
     ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
     fam_idx = 0
 
+    #Create vcf file for a given base position for specified min fam size
     for f_size in f_sizes:
-        with open("{}/{}:{}-{}.{}.vcf".format("/u/iwarikoo/Debarcer2", contigs[0][0], region_start, region_end, f_size), "w") as writer:
+        with open("{}/{}:{}-{}.{}.vcf".format(output_path, contigs[0][0], region_start, region_end, f_size), "w") as writer:
 
             writer.write("##fileformat=VCFv4.2\n")
             writer.write("##reference={}\n".format(config['PATHS']['reference_file']))
@@ -295,21 +294,16 @@ def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end
             writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n")
 
             for index in range(len(contigs)):
-                #print("F_SIZE_IDX: "+str(index)+" FAM_IDX: "+str(fam_idx))
-                #print(str(ref_base[index][fam_idx]))
-                #print(str(alt_string[index][fam_idx]))
-                #print(str(filt[index][fam_idx]))
-
-
                 writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
                        contigs[index][fam_idx], base_positions[index][fam_idx], ".", ref_base[index][fam_idx], alt_string[index][fam_idx], "0", filt[index][fam_idx], info[index][fam_idx], fmt_string, smp_string[index][fam_idx]))
         fam_idx += 1
 
 
+
+
 def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string):
     for index in range(len(contigs)): 
        
-        #for f_s in f_sizes:
         for f_size in range(len(f_sizes)):
             AD_string = ""
             alt_string = ""
@@ -317,11 +311,8 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
 
 
             if ref_freq != None:
-
                 alleles = {}
-
                 ref_allele = ref_base[index][f_size]
-
 
                 #Temporarily assigning keys (base) to value (allele depth)
                 alleles['A'] = int(base_A[index][f_size])
@@ -329,25 +320,12 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
                 alleles['G'] = int(base_G[index][f_size])
                 alleles['T'] = int(base_T[index][f_size])
 
-                print(alleles)
-                
-                
-                #temp_tuple = OrderedDict(sorted(alleles.items(), key = lambda t: t[1]))
-                #print(temp_tuple)
-
-                temp_tuple = sorted(alleles.items(), key=operator.itemgetter(1))
-                #set_alleles = [(k, alleles[k]) for k in sorted(alleles, key=alleles.get, reverse=True)] ###################
-                  
-            
+                #Sort dict, alleles, from most-frequent allele to least-frequent allele
+                temp_tuple = sorted(alleles.items(), key=operator.itemgetter(1))                          
                 sorted_alleles = [temp_tuple[3][0], temp_tuple[2][0], temp_tuple[1][0], temp_tuple[0][0]]
                 sorted_alleles_depth = [int(temp_tuple[3][1]), int(temp_tuple[2][1]), int(temp_tuple[1][1]), int(temp_tuple[0][1])]    
-
-                print(sorted_alleles)
-                
+               
                 #getting index of the reference allele, and ref depth
-                print("IDX: "+str(index)+" FAM: "+str(f_size))
-                #print(sorted_alleles)
-                #print(sorted_alleles_depth)
                 ref_index = int(sorted_alleles.index(ref_allele))
                 ref_allele_depth = sorted_alleles_depth[ref_index]
                 AD_string = str(ref_allele_depth) #Sample string: ref allele depth, alt allele depth(s)
@@ -358,6 +336,10 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
                 #Check that the allele is not the ref allele and that it has a depth greater than 0, and append to the appropriate string
                 if count != ref_index and sorted_alleles_depth[count] != 0:
 
+                    #AD_string consists of allele depths as ref_allele_depth:alt_alleles_depths
+                    #alt_string consists of all alternate alleles at each base position, ordered from most-frequenct to least-frequent
+                    #freq_string consists of the frequency that each alternate allele occurs at a given base position
+
                     if AD_string != "":
                         AD_string = AD_string+","+str(sorted_alleles_depth[count])
                     else:
@@ -367,7 +349,7 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
                         alt_string = alt_string+","+sorted_alleles[count] 
                     else:
                         alt_string = sorted_alleles[count]
-                    
+                   
                     AF_value = ((sorted_alleles_depth[count])/(int(consdps[index][f_size])))*100
 
                     if freq_string != "":
@@ -379,14 +361,9 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
                         filt[index][f_size] = "PASS"
 
             alt_string_info[index][f_size] = alt_string
-
-
             allele_data[index][f_size] = "AD="+AD_string+":AF="+freq_string
 
-            #print("Index: "+str(index)+" f_size: "+str(f_size))
-            #print(allele_data[index][f_size])
-
-            sample_data[index][f_size] = "RDP="+rawdps[index][f_size]+":CONSDP="+consdps[index][f_size]+":MNF="+mean_fams[index][f_size]+":"+allele_data[index][f_size]
+            sample_data[index][f_size] = "RDP="+rawdps[index][f_size]+":CDP="+consdps[index][f_size]+":MNF="+mean_fams[index][f_size]+":"+allele_data[index][f_size]
             if f_size != None:
                 min_fam[index][f_size] = "MIF="+str(min(i for i in f_sizes if int(i) > 0))
             else:
@@ -396,40 +373,33 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
 
 
 
-
-
-
 def get_vcf_output(cons_file, contig, region_start, region_end, output_path, config):
 
-    f_sizes = ['1', '2','5']
-
+    f_sizes = [str(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else ['1', '2', '5']
 
     fams, contigs, ref_base, base_positions, base_A, base_C, base_G, base_T, rawdps, consdps, mean_fams, reference_freqs = ([] for i in range(12))
     fmt_string = "RDP:CDP:MNF:AD:AF"
-
 
     ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
     all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
 
 
+    #Read data from each line of the cons file into the appropriate 2-D list, and ignore/skip cons file if it does not exist 
     try:
         with open(cons_file, "r") as reader:
-            #last_line = reader.readlines()[-1]
             next(reader)
             index = 0
             for line in reader:
                 fam_size = int(line.split('\t')[12])
                 if fam_size == 0:
+                    #Create vcf record for base position only if ref_freq <= ref_threshold when reads are uncollapsed
                     ref_freq = float(line.split('\t')[13])
-                    #print("REF-FREQ: "+str(ref_freq))
                     continue
                 if ref_freq <= ref_threshold: 
-                    if fam_size == 1:
+                    if fam_size == int(f_sizes[0]):
                         index += 1
-                        contigs.append([])
-                        base_positions.append([]); ref_base.append([]); base_A.append([]); base_C.append([]); base_G.append([]); base_T.append([]); rawdps.append([]); consdps.append([]); fams.append([]); reference_freqs.append([]); mean_fams.append([])
+                        contigs.append([]); base_positions.append([]); ref_base.append([]); base_A.append([]); base_C.append([]); base_G.append([]); base_T.append([]); rawdps.append([]); consdps.append([]); fams.append([]); reference_freqs.append([]); mean_fams.append([])
                         
-
                     contigs[index-1].append(line.split('\t')[0])
                     base_positions[index-1].append(int(line.split('\t')[1]))
                     ref_base[index-1].append(line.split('\t')[2])
@@ -437,33 +407,28 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
                     base_C[index-1].append(line.split('\t')[4])
                     base_G[index-1].append(line.split('\t')[5])
                     base_T[index-1].append(line.split('\t')[6])
-                    rawdps[index-1].append(line.split('\t')[8])
-                    print(rawdps)
-                    consdps[index-1].append(line.split('\t')[10]) 
+                    rawdps[index-1].append(line.split('\t')[10])
+                    consdps[index-1].append(line.split('\t')[11]) 
                     fams[index-1].append(line.split('\t')[12])
                     reference_freqs[index-1].append(line.split('\t')[13])
-                    mean_fams[index-1].append(line.split('\t')[14])
-
+                    mfam = float(line.split('\t')[14])
+                    mfam = "{:.2f}".format(mfam)
+                    mean_fams[index-1].append(str(mfam))
 
             freq_string=""
             alt_string=""
             filt_string=""
-
 
     except FileNotFoundError:
         pass
 
 
 
-    filt, alt_string_info, allele_data, sample_data, min_fam = ([[0 for x in range(3)] for y in range(len(contigs))] for i in range(5))    
+    filt, alt_string_info, allele_data, sample_data, min_fam = ([[0 for x in range(len(f_sizes))] for y in range(len(contigs))] for i in range(5))    
 
     get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string)
-    #write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string, filt, min_fam, fmt_string, sample_data)
 
-
-    write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data)
-
-
+    write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path)
 
 
 
@@ -508,8 +473,4 @@ if __name__=="__main__":
     #Original
     #generate_vcf_output(cons_file, f_sizes, contig, region_start, region_end, output_path, config)
 
-    #Working, using Debarcer2 data structures
-    #create_consensus_output(cons_file, contig, region_start, region_end, bam_file, output_path, config)
-
-    #Re-done code
     get_vcf_output(cons_file, contig, region_start, region_end, output_path, config)
