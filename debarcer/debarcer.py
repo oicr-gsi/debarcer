@@ -5,13 +5,16 @@ import pickle
 import sys
 import os
 import datetime
+import json
 from src.handle_args import handle_arg
 from src.handle_args import arg_exists
 from src.handle_args import config_validation
 from src.preprocess_fastqs import reheader_fastqs
-from src.umi_error_correct import get_umi_families
+from src.umi_error_correct import get_umi_families, umi_count
 from src.generate_consensus import generate_consensus_output
-
+from src.generate_vcf import generate_vcf_output
+from src.generate_vcf import create_consensus_output
+from src.generate_vcf import get_vcf_output
 
 """
 debarcer.py - main interface for Debarcer
@@ -40,8 +43,8 @@ def preprocess_reads(args):
 
 	if args.config:
 		config = configparser.ConfigParser()
-		#config.read(args.config)
-		config.read('../config/demo_config.ini')
+		config.read(args.config)
+		#config.read('../config/demo_config.ini')
 		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
 	else:
 		config = None
@@ -53,6 +56,7 @@ def preprocess_reads(args):
 
 	arg_exists(sys.argv) ##Check whether args directories/files exist	
 
+	
 	reheader_fastqs(
 		r1_file=args.read1, 
 		r2_file=args.read2, 
@@ -60,6 +64,8 @@ def preprocess_reads(args):
 		output_path=output_path, 
 		prepname=args.prepname,
 		prepfile=prepfile)
+	
+
 
 def group_umis(args):
 	"""Groups and error-corrects UMIs into families."""
@@ -99,6 +105,14 @@ def group_umis(args):
 
 	umi_file = "{}/{}.umis".format(output_path, region)
 	pickle.dump(umi_families, open(umi_file, "wb"))
+	
+	#os.system("python3.6 -m pickletools "+umi_file+" -o /u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/pickletest_"+region+".txt") #Create text file
+	umi_counts = umi_count(contig, region_start, region_end, bam_file)
+	
+	with open("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/datafile_"+region+".txt","w") as file:
+		file.write(json.dumps(umi_counts))
+	#txt_writer = open("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/datafile_"+region+".txt","w") #Pull specific data from file
+	#txt_writer.write(umi_counts) 
 
 	print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
 
@@ -182,21 +196,24 @@ def call_variants(args):
 
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
+	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None,
+                                        'ERR: No BAM file provided in args or config.')
 
 	arg_exists(sys.argv) ##Check whether args directories/files exist
 
 	print(timestamp() + "Generating VCFs...")
 
-	generate_vcf_output(
-		cons_file=cons_file, 
-		f_sizes=f_sizes,  
-		contig=contig, 
-		region_start=region_start, 
-		region_end=region_end, 
-		output_path=output_path, 
-		config=config)
+	#generate_vcf_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+	
+	#create_consensus_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, output_path=output_path, config=config)
+  
+	get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
 
 	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
+
+
+
+
 
 
 
@@ -245,6 +262,7 @@ if __name__ == '__main__':
 	v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
 	v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
 	v_parser.add_argument('-c', '--config', help='Path to your config file.')
+	v_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
 	v_parser.set_defaults(func=call_variants)
 
 	args = parser.parse_args()

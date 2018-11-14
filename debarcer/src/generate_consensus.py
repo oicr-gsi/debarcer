@@ -156,7 +156,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
 
     with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_end), "w") as writer:
 
-        writer.write("CHROM\tPOS\tREF\t'A's\t'C's\t'G's\t'T's\t'I's\t'D's\t'N's\tRAWDP\tCONSDP\tFAM\tREF_FREQ\n") ##Header
+        writer.write("CHROM\tPOS\tREF\t'A's\t'C's\t'G's\t'T's\t'I's\t'D's\t'N's\tRAWDP\tCONSDP\tFAM\tREF_FREQ\tMEAN_FAM\n") ##Header
         
         for base_pos in range(region_start, region_end):
 
@@ -184,10 +184,10 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                                 counts[allele[1]] += cons[allele]
 
 
-                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
                             contig, base_pos, ref_base, counts['A'], counts['C'], counts['G'], counts['T'], 
                             counts['I'], counts['D'], counts['N'],
-                            stats['rawdp'], stats['consdp'], f_size, stats['ref_freq']))
+                            stats['rawdp'], stats['consdp'], f_size, stats['ref_freq'], stats['mean_fam']))
 
                         row = cons_data[f_size][base_pos]
                         ref = row.get_ref_info()
