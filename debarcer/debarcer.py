@@ -16,6 +16,7 @@ from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output
 from src.generate_vcf import get_vcf_output
 
+
 """
 debarcer.py - main interface for Debarcer
 =========================================
@@ -213,6 +214,62 @@ def call_variants(args):
 
 
 
+def find_pos(lines):
+	for i in range(len(lines)):
+		if (i < len(lines) and 'chr' in lines[i][0]):
+			first_pos = i
+			return first_pos
+
+
+
+def generate_scripts(args):
+	
+	bamfile = args.bed_file
+	bedfile = args.bed_file
+	output_dir = args.output_path
+	deb_path = args.deb_path
+
+	#Make directories 
+	if not os.path.exists(output_dir+"umifiles"):
+		os.makedirs(output_dir+"umifiles")
+	if not os.path.exists(output_dir+"consfiles"):
+		os.makedirs(output_dir+"consfiles")
+	if not os.path.exists(output_dir+"vcffiles"):
+		os.makedirs(output_dir+"vcffiles")
+
+
+	#Read bedfile
+	with open(bedfile) as textFile:
+		lines = [line.split() for line in textFile]
+	index = find_pos(lines)
+
+
+	#Create scripts for all subprocesses
+	for i in range(index,len(lines)):
+		chromosome = lines[i][0]
+		pos1 = lines[i][1]
+		pos2 = lines[i][2]
+
+		print(pos1)
+
+
+		#Create umi scripts
+		f = open(output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh","w")
+		os.system("chmod +x "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
+		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
+		f.write("\npython3.6 "+deb_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -c ./config/demo_config.ini")
+
+		#Create cons scripts
+		f = open(output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh","w")
+		os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
+		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
+		f.write("\npython3.6 "+deb_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c ./config/demo_config.ini")
+
+		#Create vcf scripts
+		f = open(output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh","w")
+		os.system("chmod +x "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
+		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
+		f.write("\npython3.6 "+deb_path+"debarcer.py call -o "+output_dir+"vcffiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -cf "+output_dir+"consfiles/"+chromosome+"\:"+pos1+"-"+pos2+".cons -f 1,2,5 -c ./config/demo_config.ini")
 
 
 
@@ -264,6 +321,14 @@ if __name__ == '__main__':
 	v_parser.add_argument('-c', '--config', help='Path to your config file.')
 	v_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
 	v_parser.set_defaults(func=call_variants)
+
+	##Generate scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
+	s_parser = subparsers.add_parser('generate', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
+	s_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
+	s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
+	s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
+	s_parser.add_argument('-d', '--deb_path', help='Path to the debarcer.py script.', required=True)
+	s_parser.set_defaults(func=generate_scripts)
 
 	args = parser.parse_args()
 	
