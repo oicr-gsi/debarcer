@@ -301,7 +301,7 @@ def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end
 
 
 
-def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string):
+def get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string):
     for index in range(len(contigs)): 
        
         for f_size in range(len(f_sizes)):
@@ -310,25 +310,24 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
             freq_string = ""
 
 
-            if ref_freq != None:
-                alleles = {}
-                ref_allele = ref_base[index][f_size]
+            alleles = {}
+            ref_allele = ref_base[index][f_size]
 
-                #Temporarily assigning keys (base) to value (allele depth)
-                alleles['A'] = int(base_A[index][f_size])
-                alleles['C'] = int(base_C[index][f_size])
-                alleles['G'] = int(base_G[index][f_size])
-                alleles['T'] = int(base_T[index][f_size])
+            #Temporarily assigning keys (base) to value (allele depth)
+            alleles['A'] = int(base_A[index][f_size])
+            alleles['C'] = int(base_C[index][f_size])
+            alleles['G'] = int(base_G[index][f_size])
+            alleles['T'] = int(base_T[index][f_size])
 
-                #Sort dict, alleles, from most-frequent allele to least-frequent allele
-                temp_tuple = sorted(alleles.items(), key=operator.itemgetter(1))                          
-                sorted_alleles = [temp_tuple[3][0], temp_tuple[2][0], temp_tuple[1][0], temp_tuple[0][0]]
-                sorted_alleles_depth = [int(temp_tuple[3][1]), int(temp_tuple[2][1]), int(temp_tuple[1][1]), int(temp_tuple[0][1])]    
-               
-                #getting index of the reference allele, and ref depth
-                ref_index = int(sorted_alleles.index(ref_allele))
-                ref_allele_depth = sorted_alleles_depth[ref_index]
-                AD_string = str(ref_allele_depth) #Sample string: ref allele depth, alt allele depth(s)
+            #Sort dict 'alleles' from most-frequent allele to least-frequent allele
+            temp_tuple = sorted(alleles.items(), key=operator.itemgetter(1))                          
+            sorted_alleles = [temp_tuple[3][0], temp_tuple[2][0], temp_tuple[1][0], temp_tuple[0][0]]
+            sorted_alleles_depth = [int(temp_tuple[3][1]), int(temp_tuple[2][1]), int(temp_tuple[1][1]), int(temp_tuple[0][1])]    
+              
+            #getting index of the reference allele, and ref depth
+            ref_index = int(sorted_alleles.index(ref_allele))
+            ref_allele_depth = sorted_alleles_depth[ref_index]
+            AD_string = str(ref_allele_depth) #Sample string: ref allele depth, alt allele depth(s)
 
             filt[index][f_size] = "a10"
 
@@ -340,10 +339,7 @@ def get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_
                     #alt_string consists of all alternate alleles at each base position, ordered from most-frequenct to least-frequent
                     #freq_string consists of the frequency that each alternate allele occurs at a given base position
 
-                    if AD_string != "":
-                        AD_string = AD_string+","+str(sorted_alleles_depth[count])
-                    else:
-                        AD_string = str(sorted_alleles_depth[count])
+                    AD_string = AD_string+","+str(sorted_alleles_depth[count])
                     
                     if alt_string != "":
                         alt_string = alt_string+","+sorted_alleles[count] 
@@ -377,7 +373,7 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
 
     f_sizes = [str(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else ['1', '2', '5']
 
-    fams, contigs, ref_base, base_positions, base_A, base_C, base_G, base_T, rawdps, consdps, mean_fams, reference_freqs = ([] for i in range(12))
+    fams, contigs, ref_base, base_positions, base_A, base_C, base_G, base_T, rawdps, consdps, mean_fams = ([] for i in range(11))
     fmt_string = "RDP:CDP:MNF:AD:AF"
 
     ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
@@ -398,7 +394,7 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
                 if ref_freq <= ref_threshold: 
                     if fam_size == int(f_sizes[0]):
                         index += 1
-                        contigs.append([]); base_positions.append([]); ref_base.append([]); base_A.append([]); base_C.append([]); base_G.append([]); base_T.append([]); rawdps.append([]); consdps.append([]); fams.append([]); reference_freqs.append([]); mean_fams.append([])
+                        contigs.append([]); base_positions.append([]); ref_base.append([]); base_A.append([]); base_C.append([]); base_G.append([]); base_T.append([]); rawdps.append([]); consdps.append([]); fams.append([]); mean_fams.append([])
                         
                     contigs[index-1].append(line.split('\t')[0])
                     base_positions[index-1].append(int(line.split('\t')[1]))
@@ -410,7 +406,6 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
                     rawdps[index-1].append(line.split('\t')[10])
                     consdps[index-1].append(line.split('\t')[11]) 
                     fams[index-1].append(line.split('\t')[12])
-                    reference_freqs[index-1].append(line.split('\t')[13])
                     mfam = float(line.split('\t')[14])
                     mfam = "{:.2f}".format(mfam)
                     mean_fams[index-1].append(str(mfam))
@@ -426,7 +421,7 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
 
     filt, alt_string_info, allele_data, sample_data, min_fam = ([[0 for x in range(len(f_sizes))] for y in range(len(contigs))] for i in range(5))    
 
-    get_data(contigs, f_sizes, ref_freq, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string)
+    get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string)
 
     write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path)
 
