@@ -301,7 +301,7 @@ def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end
 
 
 
-def get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string):
+def get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam):
     for index in range(len(contigs)): 
        
         for f_size in range(len(f_sizes)):
@@ -377,7 +377,7 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
     fmt_string = "RDP:CDP:MNF:AD:AF"
 
     ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
+    #all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
 
 
     #Read data from each line of the cons file into the appropriate 2-D list, and ignore/skip cons file if it does not exist 
@@ -410,18 +410,22 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
                     mfam = "{:.2f}".format(mfam)
                     mean_fams[index-1].append(str(mfam))
 
-            freq_string=""
-            alt_string=""
-            filt_string=""
 
     except FileNotFoundError:
         pass
 
 
+    #freq_string=""
+    #alt_string=""
+    #filt_string=""
+
 
     filt, alt_string_info, allele_data, sample_data, min_fam = ([[0 for x in range(len(f_sizes))] for y in range(len(contigs))] for i in range(5))    
 
-    get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string)
+  
+   #get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string)
+
+    get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam)
 
     write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path)
 
