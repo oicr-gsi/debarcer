@@ -7,7 +7,6 @@ import operator
 import functools
 from src.generate_consensus import ConsDataRow
 from src.get_ref_seq import get_ref_seq
-#--------------------------------------------
 from src.umi_error_correct import UMIGroup
 from src.get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
 from src.handle_args import handle_arg
@@ -301,9 +300,8 @@ def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end
 
 
 
-def get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam):
-    for index in range(len(contigs)): 
-       
+def get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam):
+    for index in range(len(ref_base)):      
         for f_size in range(len(f_sizes)):
             AD_string = ""
             alt_string = ""
@@ -335,7 +333,7 @@ def get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, c
                 #Check that the allele is not the ref allele and that it has a depth greater than 0, and append to the appropriate string
                 if count != ref_index and sorted_alleles_depth[count] != 0:
 
-                    #AD_string consists of allele depths as ref_allele_depth:alt_alleles_depths
+                    #AD_string consists of allele depths as: ref_allele_depth, alt_alleles_depth(s)
                     #alt_string consists of all alternate alleles at each base position, ordered from most-frequenct to least-frequent
                     #freq_string consists of the frequency that each alternate allele occurs at a given base position
 
@@ -349,6 +347,7 @@ def get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, c
                     AF_value = ((sorted_alleles_depth[count])/(int(consdps[index][f_size])))*100
 
                     if freq_string != "":
+
                         freq_string = freq_string+","+"{:.2f}".format(AF_value) 
                     else:
                         freq_string = "{:.2f}".format(AF_value)
@@ -377,8 +376,6 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
     fmt_string = "RDP:CDP:MNF:AD:AF"
 
     ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-    #all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
-
 
     #Read data from each line of the cons file into the appropriate 2-D list, and ignore/skip cons file if it does not exist 
     try:
@@ -415,17 +412,9 @@ def get_vcf_output(cons_file, contig, region_start, region_end, output_path, con
         pass
 
 
-    #freq_string=""
-    #alt_string=""
-    #filt_string=""
-
-
     filt, alt_string_info, allele_data, sample_data, min_fam = ([[0 for x in range(len(f_sizes))] for y in range(len(contigs))] for i in range(5))    
 
-  
-   #get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, freq_string, alt_string, filt_string)
-
-    get_data(contigs, f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam)
+    get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam)
 
     write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path)
 
