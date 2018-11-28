@@ -287,9 +287,8 @@ def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end
             writer.write("##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n")
             writer.write("##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n")
             writer.write("##FILTER=<ID=a10,Description=\"Alt allele depth below 10\">\n")
-            writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n")
-            writer.write("##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n")
-            writer.write("##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n")
+            writer.write("##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth (ref allele depth, alt allele depth(s))\">\n")
+            writer.write("##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Allele Frequency (ref allele frequency, alt allele freq(s))\">\n")
             writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n")
 
             for index in range(len(contigs)):
@@ -326,6 +325,8 @@ def get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, a
             ref_index = int(sorted_alleles.index(ref_allele))
             ref_allele_depth = sorted_alleles_depth[ref_index]
             AD_string = str(ref_allele_depth) #Sample string: ref allele depth, alt allele depth(s)
+            ref_AF = ((ref_allele_depth)/(int(consdps[index][f_size])))*100
+            freq_string = "{:.2f}".format(ref_AF)
 
             filt[index][f_size] = "a10"
 
@@ -346,11 +347,7 @@ def get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, a
                    
                     AF_value = ((sorted_alleles_depth[count])/(int(consdps[index][f_size])))*100
 
-                    if freq_string != "":
-
-                        freq_string = freq_string+","+"{:.2f}".format(AF_value) 
-                    else:
-                        freq_string = "{:.2f}".format(AF_value)
+                    freq_string = freq_string+","+"{:.2f}".format(AF_value) 
 
                     if sorted_alleles_depth[count] >= 10:
                         filt[index][f_size] = "PASS"

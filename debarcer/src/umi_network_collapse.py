@@ -7,7 +7,7 @@ import itertools
 import collections
 
 from src.edit_distance import edit_distance
-
+ 
 """
 Adapted from https://github.com/CGATOxford/UMI-tools/blob/master/umi_tools/network.py
 (Retrieved March 21, 2018)
@@ -33,6 +33,7 @@ def breadth_first_search(node, adj_list):
 
 def recursive_search(node, adj_list):
     children = adj_list[node]
+
     children = [x for x in children if x not in recursive_search.component]
     for child in children:
         recursive_search.component.update((child,))
@@ -109,6 +110,9 @@ def iter_nearest_neighbours(umis, substr_idx):
         for nbr in neighbours:
             yield u, nbr
 
+
+
+
 class UMIClusterer:
     """
     A functor that clusters a dictionary of UMIs and their counts.
@@ -150,15 +154,21 @@ class UMIClusterer:
                 # component = self.search(node, graph)
                 component = breadth_first_search(node, graph)
                 found.update(component)
-                components.append(component)
+                components.append(component)       
         return components
+
 
 
     def _group_directional(self, clusters, adj_list, counts):
         """Return groups for directional method."""
 
+	#'groups' is a 2D list structure, which contains the parent umi at the first position of each row, and all child nodes (uncollapsed umis)
+	#in order of highest-occuring to lowest-occuring  
+
         observed = set()
         groups = []
+
+
         for cluster in clusters:
             if len(cluster) == 1:
                 groups.append(list(cluster))
@@ -188,10 +198,11 @@ class UMIClusterer:
             self.get_adj_list = self._get_adj_list_directional
             self.get_connected_components = self._get_connected_components_adjacency
             self.get_groups = self._group_directional
-        
+
 
     def __call__(self, umis, counts, config):
         """Counts is a dictionary that maps UMIs to their counts."""
+
         
         threshold = int(config['SETTINGS']['umi_edit_distance_threshold']) if config else 1
 

@@ -1,4 +1,4 @@
-
+import os.path
 import argparse
 import configparser
 import pickle
@@ -6,11 +6,12 @@ import sys
 import os
 import datetime
 import json
+import csv
 from src.handle_args import handle_arg
 from src.handle_args import arg_exists
 from src.handle_args import config_validation
 from src.preprocess_fastqs import reheader_fastqs
-from src.umi_error_correct import get_umi_families, umi_count
+from src.umi_error_correct import get_umi_families, umi_count, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output
@@ -97,25 +98,39 @@ def group_umis(args):
 	print(timestamp() + "Grouping UMIs...")
 
 	## Generate an error-corrected list of UMI families
-	umi_families = get_umi_families(
+	umi_families, umi_groups, temp_str = get_umi_families(
 		contig=contig,
 		region_start=region_start,
 		region_end=region_end,
 		bam_file=bam_file,
 		config=config)
 
+	total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis = umi_datafile(umi_groups)
+
+	filename="{}/datafile_{}.csv".format(output_path,region)
+	headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+	csv.register_dialect('myDialect', delimiter='\t', quoting=csv.QUOTE_NONE)
+	csvrow = {'CHR' : contig, 'START' : str(region_start), 'END' : str(region_end), 'PTU' : str(total_parent_umi_count), 'CTU' : str(total_child_umi_count), 'CHILD_NUMS': num_of_children, 'FREQ_PARENTS' : freq_of_parent_umis}
+	info = [contig, region_start, region_end, total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis]
+
+	file = open(filename, "w")
+	writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
+	writer.writeheader()
+	writer.writerow(csvrow)
+
+	
 	umi_file = "{}/{}.umis".format(output_path, region)
 	pickle.dump(umi_families, open(umi_file, "wb"))
-	
-	#os.system("python3.6 -m pickletools "+umi_file+" -o /u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/pickletest_"+region+".txt") #Create text file
-	umi_counts = umi_count(contig, region_start, region_end, bam_file)
-	
-	with open("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/datafile_"+region+".txt","w") as file:
-		file.write(json.dumps(umi_counts))
-	#txt_writer = open("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/datafile_"+region+".txt","w") #Pull specific data from file
-	#txt_writer.write(umi_counts) 
 
+	#umi_counts = umi_count(contig, region_start, region_end, bam_file)
+	
+	#with open("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/datafile_"+region+".txt","w") as file:
+	#	file.write(json.dumps(umi_counts))
+	
+	
 	print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
+
+
 
 
 def collapse(args):
@@ -197,8 +212,6 @@ def call_variants(args):
 
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
-	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None,
-                                        'ERR: No BAM file provided in args or config.')
 
 	arg_exists(sys.argv) ##Check whether args directories/files exist
 
@@ -319,7 +332,6 @@ if __name__ == '__main__':
 	v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
 	v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
 	v_parser.add_argument('-c', '--config', help='Path to your config file.')
-	v_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
 	v_parser.set_defaults(func=call_variants)
 
 	##Generate scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
