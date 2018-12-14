@@ -29,7 +29,7 @@ Debarcer (De-Barcoding and Error Correction) is a package
 for working with next-gen sequencing data that contains
 molecular barcodes.
 
-Author: Theodore Bodak
+Authors: Theodore Bodak, Isha Warikoo
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
@@ -122,12 +122,6 @@ def group_umis(args):
 
 	umi_file = "{}/{}.umis".format(output_path, region)
 	pickle.dump(umi_families, open(umi_file, "wb"))
-
-	#umi_counts = umi_count(contig, region_start, region_end, bam_file)
-	
-	#with open("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/datafile_"+region+".txt","w") as file:
-	#	file.write(json.dumps(umi_counts))
-	
 	
 	print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
 

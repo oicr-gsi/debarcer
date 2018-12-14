@@ -208,6 +208,14 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                             fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
 
                             for ref_base in ref_bases:
+
+                                #Handle error where ref_base is assigned to multiple ref_alleles
+                                if len(ref_base) > 1:
+                                    ref_base = ref_base[0]
+
+                                if (base_pos < 170837514) and (base_pos > 170837510):
+                                    print("--BASE_POS: "+str(base_pos)+" ref_base: "+ref_base+"--")
+
                                 snips = []
                                 for allele in alleles:
                                     if allele[0] == ref_base:

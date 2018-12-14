@@ -1,6 +1,8 @@
 import os
 import sys
-
+import matplotlib as plt
+#import plotly.graph_objs as go
+#import plotly.offline as off
 
 """
 /src/create_plots.py 
@@ -13,6 +15,38 @@ Author: Isha Warikoo
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 
 """
+
+
+def plotly(df):
+	colours = ['red', 'green', 'blue', 'purple']
+	label1 = "Base position"
+	label2 = "Depth"
+
+	data = go.Scatter(
+		x=df['POS'],
+		y=df['CONSDP'],
+		mode='markers',
+		marker=dict(
+			size=6,
+			color=colours
+		),
+		#text=allValues['id']
+	)
+	layout = go.Layout(
+		xaxis=dict(
+			title=label1
+		),
+		yaxis=dict(
+			title=label2
+		)
+	)
+
+	fig = go.Figure(data=[data],layout=layout)
+	off.plot(fig)
+
+
+
+
 
 
 #Umi plots

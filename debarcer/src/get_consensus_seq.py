@@ -74,7 +74,7 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
                             family_key = umi_group.key + str(closest_fam)
 
                             ref_pos = pos - region_start
-
+                    
                             if not read.is_del and not read.indel:
                                 ref_base = ref_seq[ref_pos]
                                 alt_base = read_data.query_sequence[read.query_position]

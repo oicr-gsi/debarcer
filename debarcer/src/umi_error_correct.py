@@ -61,8 +61,6 @@ def umi_count(contig, region_start, region_end, bam_file):
 
 
 
-
-
 def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold):
     """Splits umi_groups into families (umi + position pairs)."""
 
@@ -125,7 +123,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, config):
     print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
     
-    return umi_table, umi_groups, temp_str
+    return umi_table, umi_groups
 
 
 
@@ -145,7 +143,7 @@ def umi_datafile(umi_groups):
     for i in range(len(parent_umis)):
         umis_and_numofchildren[(parent_umis[i])] = children_per_parent[i]
    
-    #var is a list of (key,value) pairs where key=number of children (0,1,2,3...) & value=no. of parents having that number of children
+    #var is a list of (num,freq) pairs where num=number of children (0,1,2,3...) & freq=no. of parents having that number of children
     var = [(k, len(list(v))) for k, v in itertools.groupby(sorted(umis_and_numofchildren.values()))]
 
     num_of_children = ""
@@ -181,7 +179,7 @@ def umi_datafile(umi_groups):
     childdp = str(sum_child_count)
 
     csvrow = {'CHR' : contig, 'START' : str(region_start), 'END' : str(region_end), 'PTU_NUM' : consdp, 'CTU_NUM' : childdp}
-    headers = ['CHR', 'START', 'END', 'PTU_NUM', 'CTU_NUM']
+    headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
 
     #df = pd.DataFrame(csvrow, index=[idx])
 
