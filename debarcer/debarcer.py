@@ -15,8 +15,9 @@ from src.umi_error_correct import get_umi_families, umi_count, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output
-from src.generate_vcf import get_vcf_output
-
+from src.generate_vcf import get_vcf_output2, get_vcf_output, check_consfile
+from src.generate_merge import merge_umi_datafiles2, concat_cons, modify_cons, temp_cons, submit_jobs, check_merge_flag
+from src.create_plots import umi_plot, cons_plot
 
 """
 debarcer.py - main interface for Debarcer
@@ -98,7 +99,7 @@ def group_umis(args):
 	print(timestamp() + "Grouping UMIs...")
 
 	## Generate an error-corrected list of UMI families
-	umi_families, umi_groups, temp_str = get_umi_families(
+	umi_families, umi_groups = get_umi_families(
 		contig=contig,
 		region_start=region_start,
 		region_end=region_end,
@@ -117,8 +118,8 @@ def group_umis(args):
 	writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
 	writer.writeheader()
 	writer.writerow(csvrow)
-
 	
+
 	umi_file = "{}/{}.umis".format(output_path, region)
 	pickle.dump(umi_families, open(umi_file, "wb"))
 
@@ -144,6 +145,8 @@ def collapse(args):
 		config = None
 
 	region = args.region
+	
+
 	if any(item not in region for item in ["chr", ":", "-"]):
 		raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
 		sys.exit(1)
@@ -187,6 +190,7 @@ def collapse(args):
 	print(timestamp() + "Consensus generated. Consensus file written to {}.".format(output_path))
 
 
+
 def call_variants(args):
 	"""Generates VCF files from given cons file."""
 
@@ -198,7 +202,6 @@ def call_variants(args):
 		config = None
 
 	cons_file = args.cons_file
-
 	f_sizes = args.f_sizes.split(',')
 
 	region = args.region
@@ -206,25 +209,167 @@ def call_variants(args):
 		raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
 		sys.exit(1)
 
-	contig = region.split(":")[0]
-	region_start = int(region.split(":")[1].split("-")[0])
-	region_end = int(region.split(":")[1].split("-")[1])
+	#contig = region.split(":")[0]
+	#region_start = int(region.split(":")[1].split("-")[0])
+	#region_end = int(region.split(":")[1].split("-")[1])
+
+	contig = region.split("_")[0].split(":")[0]
+	region_start = region.split("_")[0]
+	region_end = region.split("_")[1]
 
 	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'No output path provided in args or config.')
 
 	arg_exists(sys.argv) ##Check whether args directories/files exist
-
 	print(timestamp() + "Generating VCFs...")
 
 	#generate_vcf_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-	
 	#create_consensus_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, output_path=output_path, config=config)
   
 	get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
 
 	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
 
+
+
+
+def call_variants2(args):
+	"""Generates VCF files from given cons file."""
+
+	if args.config:
+		config = configparser.ConfigParser()
+		config.read(args.config)
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
+	else:
+		config = None
+	
+
+	cons_file = args.cons_file
+	f_sizes = args.f_sizes.split(',')
+
+	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
+					'No output path provided in args or config.')
+	
+	region = args.region
+	arg_exists(sys.argv) ##Check whether args directories/files exist
+
+	cons_is_merged = check_consfile(cons_file)
+
+	if cons_is_merged:
+		region_start = region.split("_")[0]
+		region_end = region.split("_")[1]		
+
+	else:
+		if any(x not in region for x in ["chr", ":", "-"]):
+			raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+			sys.exit(1)
+
+		contig = region.split(":")[0]
+		region_start = int(region.split(":")[1].split("-")[0])
+		region_end = int(region.split(":")[1].split("-")[1])
+
+	print(timestamp() + "Generating VCFs...")
+
+	get_vcf_output2(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+		
+	#call the merged version of the function
+	#get_vcf_output2(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config, is_cons_merged=is_cons_merged)
+
+	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
+
+
+
+
+
+def call_variants_modified(args):
+	"""Generates VCF files from given cons file."""
+
+	if args.config:
+		config = configparser.ConfigParser()
+		config.read(args.config)
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
+	else:
+		config = None
+
+	cons_file = args.cons_file
+
+	if args.f_sizes:
+		f_sizes = args.f_sizes.split(',')
+	else:
+		f_sizes = [n for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
+
+	#If the cons file is not the merged file
+	if check_consfile(cons_file):
+		
+		region = args.region
+		if any(x not in region for x in ["chr", ":", "-"]):
+			raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+			sys.exit(1)
+
+		contig = region.split(":")[0]
+		region_start = int(region.split(":")[1].split("-")[0])
+		region_end = int(region.split(":")[1].split("-")[1])
+
+		output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
+						'No output path provided in args or config.')
+
+
+		arg_exists(sys.argv) ##Check whether args directories/files exist
+
+		print(timestamp() + "Generating VCFs...")
+
+		#generate_vcf_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+
+		#create_consensus_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, output_path=output_path, config=config)
+
+		get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+
+		print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
+
+
+	else:
+		merged_file = cons_file
+
+		headers = ['INTVL', 'CHROM', 'POS', 'REF', 'A', 'C', 'G',' T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
+		regions = []
+		region_rows = []
+		f = open(merged_file, "r")
+		reader = csv.DictReader(f, delimiter='\t', fieldnames=headers)
+		next(reader)
+		row_counter = 1
+		last_row = None
+		index = 0		
+
+		#region_rows is a list of tuples: [(start_row_no, end_row_no)...] listing start and end row numbers of the merged file, of data specific to unique regions 
+		for row in reader:
+			if row['INTVL'] not in regions:
+				regions.append(row['INTVL'])
+				if last_row is not None:
+					region_rows.append(tuple((first_row,last_row)))
+				first_row = row_counter
+			else:
+				last_row = row_counter
+			row_counter+=1
+
+		for region in regions:
+
+			cons_file = temp_cons(output_dir, region, row[index], merged_file)
+
+			contig = region.split(":")[0]
+			region_start = int(region.split(":")[1].split("-")[0])
+			region_end = int(region.split(":")[1].split("-")[1])
+		
+			print(consfile)
+
+			#arg_exists(sys.argv) ##Check whether args directories/files exist
+
+			#print(timestamp() + "Generating VCFs...")
+
+			#get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+
+			#print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
+
+			index+=1
 
 
 def find_pos(lines):
@@ -235,13 +380,29 @@ def find_pos(lines):
 
 
 
-def generate_scripts(args):
-	
+def run_scripts(args):
+
 	bamfile = args.bed_file
 	bedfile = args.bed_file
 	output_dir = args.output_path
-	deb_path = args.deb_path
 
+	if args.config:
+		config_path = args.config
+		config = configparser.ConfigParser()
+		config.read(args.config)
+		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
+	else:
+		config_path = None
+		config = None
+	
+	if args.merge:
+		merge = str(args.merge)
+		check_merge_flag(merge)
+	else:
+		merge = None
+
+	arg_exists(sys.argv) ##Check whether args directories/files exist
+	
 	#Make directories 
 	if not os.path.exists(output_dir+"umifiles"):
 		os.makedirs(output_dir+"umifiles")
@@ -250,7 +411,6 @@ def generate_scripts(args):
 	if not os.path.exists(output_dir+"vcffiles"):
 		os.makedirs(output_dir+"vcffiles")
 
-
 	#Read bedfile
 	with open(bedfile) as textFile:
 		lines = [line.split() for line in textFile]
@@ -258,32 +418,27 @@ def generate_scripts(args):
 
 
 	#Create scripts for all subprocesses
-	for i in range(index,len(lines)):
-		chromosome = lines[i][0]
-		pos1 = lines[i][1]
-		pos2 = lines[i][2]
+	#submit_jobs(bamfile, bedfile, output_dir, config, index)
 
-		print(pos1)
+	#Check 'merge' flag, to determine which data files to merge
+	if merge == 'umi':
+		merge_umi_datafiles2(output_dir)
+	elif merge == 'cons':
+		print("Merging cons...")
+		#merge_cons_files2(output_dir)
+		#modify_cons("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/consfiles/chr13:28592509-28592706.cons", output_dir)
+		#concat_cons(output_dir, config_path)
+		concat_cons(output_dir, config)
+		print("Finished")
 
 
-		#Create umi scripts
-		f = open(output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh","w")
-		os.system("chmod +x "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
-		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
-		f.write("\npython3.6 "+deb_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -c ./config/demo_config.ini")
 
-		#Create cons scripts
-		f = open(output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh","w")
-		os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
-		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
-		f.write("\npython3.6 "+deb_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c ./config/demo_config.ini")
+def generate_plots(args):
+	file_name=args.csv_file
+	output_path=args.output_path
 
-		#Create vcf scripts
-		f = open(output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh","w")
-		os.system("chmod +x "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
-		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
-		f.write("\npython3.6 "+deb_path+"debarcer.py call -o "+output_dir+"vcffiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -cf "+output_dir+"consfiles/"+chromosome+"\:"+pos1+"-"+pos2+".cons -f 1,2,5 -c ./config/demo_config.ini")
-
+	umi_plot(args)
+	cons_plot(args)
 
 
 
@@ -332,15 +487,22 @@ if __name__ == '__main__':
 	v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
 	v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
 	v_parser.add_argument('-c', '--config', help='Path to your config file.')
-	v_parser.set_defaults(func=call_variants)
+	v_parser.set_defaults(func=call_variants2)
 
-	##Generate scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
-	s_parser = subparsers.add_parser('generate', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
+	##Run scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
+	s_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
 	s_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
 	s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
 	s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
-	s_parser.add_argument('-d', '--deb_path', help='Path to the debarcer.py script.', required=True)
-	s_parser.set_defaults(func=generate_scripts)
+	s_parser.add_argument('-c', '--config', help='Path to your config file.')
+	s_parser.add_argument('-m', '--merge', help='Specify which data files you want to merge (umi=merge umi data, cons=merge cons data, vcf=merge vcf data).')
+	s_parser.set_defaults(func=run_scripts)
+
+	##Generate graphs	
+	g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
+	g_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
+	g_parser.add_argument('-c', '--cons_file', help='Path to your CONS fle.', required=True)
+	g_parser.add_argument('-u', '--umi_datafile', help='Path to your umi CSV data file.', required=True)
 
 	args = parser.parse_args()
 	
