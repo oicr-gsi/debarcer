@@ -17,7 +17,7 @@ from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output
 from src.generate_vcf import get_vcf_output2, get_vcf_output, check_consfile
 from src.generate_merge import merge_umi_datafiles2, concat_cons, modify_cons, temp_cons, submit_jobs, check_merge_flag
-from src.create_plots import umi_plot, cons_plot
+from src.create_plots import umi_plot, cons_plot, check_file
 
 """
 debarcer.py - main interface for Debarcer
@@ -434,11 +434,45 @@ def run_scripts(args):
 
 
 def generate_plots(args):
-	file_name=args.csv_file
-	output_path=args.output_path
+	if not umi_flag and not cons_flag:
+		print("ERR: Specify umi or cons flag, and provide the appropriate data file")		
 
-	umi_plot(args)
-	cons_plot(args)
+	if umi_flag:
+		if umi_datafile:
+			umi_plot_type = args.umi_flag
+			umi_file = args.umi_datafile
+			if check_file(umi_file, 'csv'):
+
+				if umi_plot_type == 'rs':
+					umi_plot(output_path, file_name, umi_plot_type)
+				elif umi_plot == 'all or umi_plot == None':
+					#Default: Generate all umi plots
+					umi_plot_type = 'all'
+					umi_plot(output_path, file_name, umi_plot_type)
+				else:
+					print("ERR: Incorrect argument passed to the umi flag option")
+
+			print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.vcf'")
+		else:
+			print("ERR: Missing CSV umi data file")
+	
+
+	if cons_flag:
+		if cons_file:
+			cons_plot_type = args.cons_flag
+			cons_file = args.cons_file
+			if check_file(cons_file, 'cons'):
+
+				if cons_plot_type == 'all' or cons_plot_type == None:
+					cons_plot(output_path, file_name, cons_plot_type)
+				else:
+					print("ERR: Incorrect argument passed to the cons flag option")
+			else:
+				print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.cons'")
+		else:
+			print("ERR: Missing CONS data file")
+
+	
 
 
 
@@ -501,8 +535,10 @@ if __name__ == '__main__':
 	##Generate graphs	
 	g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
 	g_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
-	g_parser.add_argument('-c', '--cons_file', help='Path to your CONS fle.', required=True)
-	g_parser.add_argument('-u', '--umi_datafile', help='Path to your umi CSV data file.', required=True)
+	g_parser.add_argument('-c', '--cons_file', help='Path to your CONS fle.')
+	g_parser.add_argument('-u', '--umi_datafile', help='Path to your umi CSV data file.')
+	g_parser.add_argument('-uf', '--umi_flag', help="Pass 'all' or 'rs' as a parameter, to generate all or region-specific umi plots, respectively.")
+	g_parser.add_argument('-cf', '--cons_flag', help="Pass 'all' as a parameter, to generate all cons plots.")
 
 	args = parser.parse_args()
 	

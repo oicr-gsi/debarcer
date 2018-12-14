@@ -1,3 +1,7 @@
+import os
+import sys
+
+
 """
 /src/create_plots.py 
 =========================================
@@ -12,6 +16,17 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 
 
 #Umi plots
+
+def check_file(file_name, extension):
+	file_exists = file_name.exists()
+	name = file_name.split('/')[-1]
+	ext = name.split('.')[-1]
+
+	if file_exists and ext == extension:
+		return True
+	else:
+		return False
+
 
 def create_umi_dfs(file_name):
 
@@ -107,18 +122,19 @@ def plot_child_pfreq(subframe, output_path, col_nums, regions):
 		plt.savefig(output_path+"Children_vs_ParentFreq_"+str(regions[cnt])+".png")
 		cnt+=1
 
-def umi_plot(args):
-	file_name=args.csv_file
-	output_path=args.output_path
-
+def umi_plot(output_path, file_name, umi_flag):
 	df, subframe, name, col_nums, regions = create_umi_dfs(file_name)
- 
-	plot_cp(df, output_path, name)
-	plot_PTU(df, output_path, name)
-	plot_CTU(df, output_path, name)
-	plot_intvlsize_PTU_CTU(df, output_path, name)
-	plot_child_pfreq(subframe, output_path, col_nums, regions)
 
+	if umi_flag == 'rs':
+		plot_child_pfreq(subframe, output_path, col_nums, regions)
+	elif umi_flag == 'all':
+		plot_cp(df, output_path, name)
+		plot_PTU(df, output_path, name)
+		plot_CTU(df, output_path, name)
+		plot_intvlsize_PTU_CTU(df, output_path, name)
+		plot_child_pfreq(subframe, output_path, col_nums, regions)
+
+		
 
 
 #Consensus plots
@@ -156,11 +172,11 @@ def plot_depth(df, output_path):
 
 
 
-def cons_plot(args):
-	file_name = args.cons_file
-	output_path = args.output_path
-	df = create_consdf(file_name)
-	plot_depth(df, output_path)
+def cons_plot(output_path, file_name, cons_flag):
+
+	if cons_flag == 'all':
+		df = create_consdf(file_name)
+		plot_depth(df, output_path)
 
 
 
