@@ -1,6 +1,23 @@
 import os
 import sys
-import matplotlib as plt
+import matplotlib
+matplotlib.use('Agg')
+import os
+import sys
+import pysam
+import configparser
+import argparse
+import operator
+import functools
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import re
+import csv
+import fnmatch
+import itertools
+from matplotlib.pyplot import figure
+
 #import plotly.graph_objs as go
 #import plotly.offline as off
 
@@ -115,6 +132,8 @@ def plot_cp(df, output_path, name):
 	#Plot Region vs. Child/Parent Ratio
 	fig = plt.figure()
 	df.sort_values('CP', ascending=False)['CP'].plot(kind='bar',x='INTVL',y='CP', color='pink', rot=90, title="Interval vs. Children to Parent Umis")
+	plt.xlabel('Interval')
+	plt.ylabel('Child:Parent Ratio')
 	plt.tight_layout()
 	plt.savefig(output_path+"CP_"+name+".png")
 	plt.close(fig)
@@ -124,6 +143,8 @@ def plot_PTU(df, output_path, name):
 	fig = plt.figure()
 	df.sort_values('PTU', ascending=False)['PTU'].plot(kind='bar',x='INTVL',y='PTU', color='red', rot=90, title="Interval vs. Parent Umi Count")
 	#plt.gcf().subplots_adjust(bottom=0.15)
+	plt.xlabel('Interval')
+	plt.ylabel('Number of Parent UMIs')
 	plt.tight_layout()
 	plt.savefig(output_path+"PTU_"+name+".png")
 	plt.close(fig)
@@ -133,6 +154,8 @@ def plot_CTU(df, output_path, name):
 	#Plot Region vs. Child Umi Count
 	fig = plt.figure()
 	df.sort_values('CTU', ascending=False)['CTU'].plot(kind='bar',x='INTVL',y='CTU', color='blue', rot=90, title="Interval vs. Child Umi Count")
+	plt.xlabel('Interval')
+	plt.ylabel('Number of Child UMIs')
 	plt.tight_layout()
 	plt.savefig(output_path+"CTU_"+name+".png")
 	plt.close(fig)
@@ -152,6 +175,9 @@ def plot_child_pfreq(subframe, output_path, col_nums, regions):
 		#y_col = [subframe.columns[i+1]]
 
 		subframe.plot(kind='scatter', x=i, y=i+1, color='purple', label="Parent Freq", title="No. of Children vs. Parent Freq.")
+		plt.xlabel('Number of UMI Children')
+		plt.ylabel('Frequency of Parents')
+
 		plt.tight_layout()
 		plt.savefig(output_path+"Children_vs_ParentFreq_"+str(regions[cnt])+".png")
 		cnt+=1

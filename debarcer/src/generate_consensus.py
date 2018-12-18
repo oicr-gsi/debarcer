@@ -85,7 +85,7 @@ def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_
             min_fam = min([sum(consensus_seq[base_pos][fam].values()) for fam in consensus_seq[base_pos]]) 
             
             for family in consensus_seq[base_pos]:
-                        
+                       
                 cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
                 cons_denom = sum(consensus_seq[base_pos][family].values())
                 cons_percent = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100

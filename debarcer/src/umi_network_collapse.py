@@ -122,7 +122,9 @@ class UMIClusterer:
     def _get_adj_list_directional(self, umis, counts, threshold):
         """
         Identify all UMIs within the hamming distance threshold, and where
-        the counts of the first UMI is > (2 * second UMI count) - 1
+        the counts of the first UMI is > (2 * second UMI count) - 1.
+	The hamming distance between two strings (of equal length) is equal to 
+	the number of positions at which the string characters are different.
         """
 
         adj_list = {umi: [] for umi in umis}

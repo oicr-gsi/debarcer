@@ -7,6 +7,7 @@ import os
 import datetime
 import json
 import csv
+import time
 from src.handle_args import handle_arg
 from src.handle_args import arg_exists
 from src.handle_args import config_validation
@@ -18,6 +19,7 @@ from src.generate_vcf import create_consensus_output
 from src.generate_vcf import get_vcf_output2, get_vcf_output, check_consfile
 from src.generate_merge import merge_umi_datafiles2, concat_cons, modify_cons, temp_cons, submit_jobs, check_merge_flag
 from src.create_plots import umi_plot, cons_plot, check_file
+
 
 """
 debarcer.py - main interface for Debarcer
@@ -376,7 +378,7 @@ def find_pos(lines):
 
 def run_scripts(args):
 
-	bamfile = args.bed_file
+	bamfile = args.bam_file
 	bedfile = args.bed_file
 	output_dir = args.output_path
 
@@ -388,33 +390,65 @@ def run_scripts(args):
 	else:
 		config_path = None
 		config = None
-	
-	if args.merge:
-		merge = str(args.merge)
-		check_merge_flag(merge)
-	else:
-		merge = None
+
 
 	arg_exists(sys.argv) ##Check whether args directories/files exist
 	
 	#Make directories 
+	print("Making directories")
 	if not os.path.exists(output_dir+"umifiles"):
 		os.makedirs(output_dir+"umifiles")
 	if not os.path.exists(output_dir+"consfiles"):
 		os.makedirs(output_dir+"consfiles")
 	if not os.path.exists(output_dir+"vcffiles"):
 		os.makedirs(output_dir+"vcffiles")
+	if not os.path.exists(output_dir+"logs"):
+		os.makedirs(output_dir+"logs")
 
+
+	debarcer_path = os.getcwd()+"/"
+	#print(debarcer_path)
+
+	"""
 	#Read bedfile
+	print("Reading bed files")
 	with open(bedfile) as textFile:
 		lines = [line.split() for line in textFile]
 	index = find_pos(lines)
 
 
 	#Create scripts for all subprocesses
-	#submit_jobs(bamfile, bedfile, output_dir, config, index)
+	print("Creating scripts for all subprocesses")
+	submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
 
-	#Check 'merge' flag, to determine which data files to merge
+	"""
+
+	#Check UMI job status before merging files
+	print("Checking UMI job status...")
+	umi_job_flag = False
+	while umi_job_flag == False:
+		umi_job_flag = check_umi_status(output_dir)
+		print(umi_job_flag)
+
+	print("Merging UMI datafiles...")
+	merge_umi_datafiles2(output_dir)
+
+	print("Checking CONS job status...")
+	cons_job_flag = False
+	while cons_job_flag == False:
+		cons_job_flag = check_cons_status(output_dir)
+		print(cons_job_flag)
+
+
+	print("Merging cons...")
+	concat_cons(output_dir, config)
+	print("Finished. Output written to: "+output_dir)
+
+
+
+
+	"""
+	#Not needed
 	if merge == 'umi':
 		merge_umi_datafiles2(output_dir)
 	elif merge == 'cons':
@@ -425,6 +459,30 @@ def run_scripts(args):
 		concat_cons(output_dir, config)
 		print("Finished")
 
+	print("---QRLOG Jobs---")
+	os.system("qstat -r | grep 'QRLOG*' > jobs.txt")
+	print("---UMI Jobs---")
+	os.system("qstat -r | grep 'UMI*' >> jobs.txt")
+	print("---CONS Jobs---")
+	os.system("qstat -r | grep 'CONS*' >> jobs.txt")
+
+	job_flag = os.stat("./jobs.txt").st_size == 0
+	print(job_flag)
+	"""
+
+def check_umi_status(output_dir):
+	time.sleep(3)
+	os.system("qstat -r | grep 'UMI*' > "+output_dir+"temp_umi_jobs.txt")
+	job_flag = os.stat(output_dir+"temp_umi_jobs.txt").st_size == 0
+
+	return job_flag
+
+def check_cons_status(output_dir):
+	time.sleep(3)
+	os.system("qstat -r | grep 'CONS*' > "+output_dir+"temp_cons_jobs.txt")
+	job_flag = os.stat(output_dir+"temp_cons_jobs.txt").st_size == 0
+
+	return job_flag
 
 
 def generate_plots(args):
@@ -523,7 +581,6 @@ if __name__ == '__main__':
 	s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
 	s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
 	s_parser.add_argument('-c', '--config', help='Path to your config file.')
-	s_parser.add_argument('-m', '--merge', help='Specify which data files you want to merge (umi=merge umi data, cons=merge cons data, vcf=merge vcf data).')
 	s_parser.set_defaults(func=run_scripts)
 
 	##Generate graphs	

@@ -30,7 +30,10 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 
 
 
-def submit_jobs(bamfile, bedfile, output_dir, config, index):
+def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
+	with open(bedfile) as textFile:
+		lines = [line.split() for line in textFile]
+
 	
 	for i in range(index,len(lines)):
 		chromosome = lines[i][0]
@@ -42,10 +45,12 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index):
 		os.system("chmod +x "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
 		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
 		if config:
-			f.write("\npython3.6 "+"./debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -c "+config)
+			f.write("\npython3.6 "+debarcer_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -c "+config)
 		else:
-			f.write("\npython3.6 "+"./debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile)
-		#os.system("qsub -cwd -b y -N UMI_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
+			f.write("\npython3.6 "+debarcer_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile)
+		os.system("qsub -cwd -b y -N UMI_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
+
+
 
 
 		#Create cons scripts
@@ -53,11 +58,16 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index):
 		os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
 		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
 		if config:
-			f.write("\npython3.6 "+"./debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c "+config)
+			f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c "+config)
 		else:
-			f.write("\npython3.6 "+"./debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis")
-		#os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid UMI_* "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
+			f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis")
+		os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid 'UMI_*' "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
 
+
+
+
+		"""
+		#REMOVE
 		#Create vcf scripts
 		f = open(output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh","w")
 		os.system("chmod +x "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
@@ -66,7 +76,9 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index):
 			f.write("\npython3.6 "+"./debarcer.py call -o "+output_dir+"vcffiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -cf "+output_dir+"consfiles/"+chromosome+"\:"+pos1+"-"+pos2+".cons -f 1,2,5 -c "+config)
 		else:
 			f.write("\npython3.6 "+"./debarcer.py call -o "+output_dir+"vcffiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -cf "+output_dir+"consfiles/"+chromosome+"\:"+pos1+"-"+pos2+".cons")
-		#os.system("qsub -cwd -b y -N CALL_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid CONS_* "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
+		os.system("qsub -cwd -b y -N CALL_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid CONS_* "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
+
+		"""
 
 
 def check_merge_flag(var):
@@ -133,6 +145,7 @@ def merge_umi_datafiles2(output_path):
 def concat_cons(output_path, config):
 
 	path=output_path+"consfiles/"
+	vcf_path=output_path+"vcffiles/"
 	#merged_file=output_path+"consfiles/SORTED_CONCAT_data.cons"
 	header_file = output_path+"consfiles/headers.cons"
 	sorted_names_file = path+"temp_sorted_filenames.txt"
@@ -210,7 +223,7 @@ def concat_cons(output_path, config):
 	#debarcer_path = debarcer_path+"/debarcer/debarcer.py"	
 	#print(debarcer_path)
 	
-	get_vcf_output2(cons_file=merged_file, region_start=first_region, region_end=last_region, output_path=path, config=config)
+	get_vcf_output2(cons_file=merged_file, region_start=first_region, region_end=last_region, output_path=vcf_path, config=config)
 
 
 def modify_cons(file_path, output_path):
