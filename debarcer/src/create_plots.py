@@ -165,7 +165,6 @@ def umi_plot(output_path, file_name, umi_flag):
 
 
 #Consensus plots
-
 def create_consdf(consfile):
 	df_headers=['INTVL', 'CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
 	df_headers2 = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
@@ -176,26 +175,60 @@ def create_consdf(consfile):
 	return df
 
 def plot_depth(df, output_path):
-	#df = pd.DataFrame(line, columns=df_headers)
-	#df.set_index('INTVL', inplace=True)
 	figure(num=None, figsize=(15, 13), dpi=80, facecolor='w', edgecolor='k')
 	groups=("zero","one", "two", "five")
 
-	df.plot(kind='scatter', x='POS', y='CONSDP', color=['red', 'green', 'blue', 'purple'], title="Base position vs. Collapsed depth")
+	colors = ['blue', 'green', 'red', 'purple']
+	ax = plt.scatter(x, y, c=label, cmap=matplotlib.colors.ListedColormap(colors))
+
 	#plt.legend()
+	plt.yscale('log')
+	plt.xlim([min_pos, max_pos])
+	plt.yticks([100, 1000, 10000, 100000, 1000000])
+
+	plt.xticks(np.arange(min_pos, max_pos, step_pos))
+	plt.ticklabel_format(useOffset=False, style='plain', axis='x')
+	plt.xlabel = "Base Position"
+	plt.ylabel = "Depth"
+
+	plt.savefig(output_path+"base_pos_vs_CONSDP.png")
+
+
+def plot_reffeq(df, output_path):
+
+	figure(num=None, figsize=(15, 13), dpi=80, facecolor='w', edgecolor='k')
+
+	groups=("zero","one", "two", "five")
+
+	x = df['POS']
+	y = df['REF_FREQ']
+	label=df['FAM']
+
+	colors = ['blue', 'green', 'red', 'purple']
+	ax = plt.scatter(x, y, c=label, cmap=matplotlib.colors.ListedColormap(colors))
+
+	#plt.legend(label, colors)
+
 	min_pos = min(df['POS'])
 	max_pos = max(df['POS'])
-	step_pos = (max_pos-min_pos)/3
-	min_consdp = min(df['CONSDP'])
-	max_consdp = max(df['CONSDP'])
-	step_consdp = (max_consdp-min_consdp)/5
-	plt.ylim([min_consdp,max_consdp])
+	step_pos = (max_pos-min_pos)/5
+
+	min_reffreq = min(df['REF_FREQ'])
+	max_reffreq = max(df['REF_FREQ'])
+	step_reffreq = (max_reffreq-min_reffreq)/5
+
 	plt.xlim([min_pos, max_pos])
-	plt.yticks(np.arange(min_consdp, max_consdp, step_consdp))
-	plt.yscale('log')
+	plt.yticks(np.arange(min_reffreq, max_reffreq, step_reffreq))
+
 	plt.xticks(np.arange(min_pos, max_pos, step_pos))
-	plt.legend(('red', 'green', 'blue', 'purple'), ('0', '1', '2', '5'))
-	plt.savefig(output_path+"base_pos_vs_CONSDP.png")
+	plt.ticklabel_format(useOffset=False, style='plain', axis='x')
+	plt.xlabel = "Base Position"
+	plt.ylabel = "Refrence Frequency"
+
+	plt.savefig(output_path+"base_pos_vs_REFFREQ.png")
+
+
+
 
 
 
@@ -204,6 +237,7 @@ def cons_plot(output_path, file_name, cons_flag):
 	if cons_flag == 'all':
 		df = create_consdf(file_name)
 		plot_depth(df, output_path)
+		plot_reffeq(df, output_path)
 
 
 
