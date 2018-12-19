@@ -34,40 +34,7 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
 
-def plotly(df):
-	colours = ['red', 'green', 'blue', 'purple']
-	label1 = "Base position"
-	label2 = "Depth"
-
-	data = go.Scatter(
-		x=df['POS'],
-		y=df['CONSDP'],
-		mode='markers',
-		marker=dict(
-			size=6,
-			color=colours
-		),
-		#text=allValues['id']
-	)
-	layout = go.Layout(
-		xaxis=dict(
-			title=label1
-		),
-		yaxis=dict(
-			title=label2
-		)
-	)
-
-	fig = go.Figure(data=[data],layout=layout)
-	off.plot(fig)
-
-
-
-
-
-
 #Umi plots
-
 def check_file(file_name, extension):
 	file_exists = file_name.exists()
 	name = file_name.split('/')[-1]

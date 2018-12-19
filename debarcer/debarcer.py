@@ -17,7 +17,7 @@ from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output
 from src.generate_vcf import get_vcf_output2, get_vcf_output, check_consfile
-from src.generate_merge import merge_umi_datafiles2, concat_cons, modify_cons, temp_cons, submit_jobs, check_merge_flag
+from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
 
 
@@ -187,49 +187,8 @@ def collapse(args):
 
 
 
+
 def call_variants(args):
-	"""Generates VCF files from given cons file."""
-
-	if args.config:
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config = None
-
-	cons_file = args.cons_file
-	f_sizes = args.f_sizes.split(',')
-
-	region = args.region
-	if any(x not in region for x in ["chr", ":", "-"]):
-		raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-		sys.exit(1)
-
-	#contig = region.split(":")[0]
-	#region_start = int(region.split(":")[1].split("-")[0])
-	#region_end = int(region.split(":")[1].split("-")[1])
-
-	contig = region.split("_")[0].split(":")[0]
-	region_start = region.split("_")[0]
-	region_end = region.split("_")[1]
-
-	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-					'No output path provided in args or config.')
-
-	arg_exists(sys.argv) ##Check whether args directories/files exist
-	print(timestamp() + "Generating VCFs...")
-
-	#generate_vcf_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-	#create_consensus_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, output_path=output_path, config=config)
-  
-	get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-
-	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
-
-
-
-
-def call_variants2(args):
 	"""Generates VCF files from given cons file."""
 
 	if args.config:
@@ -277,105 +236,6 @@ def call_variants2(args):
 
 
 
-def call_variants_modified(args):
-	"""Generates VCF files from given cons file."""
-
-	if args.config:
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config = None
-
-	cons_file = args.cons_file
-
-	if args.f_sizes:
-		f_sizes = args.f_sizes.split(',')
-	else:
-		f_sizes = [n for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
-
-	#If the cons file is not the merged file
-	if check_consfile(cons_file):
-		
-		region = args.region
-		if any(x not in region for x in ["chr", ":", "-"]):
-			raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-			sys.exit(1)
-
-		contig = region.split(":")[0]
-		region_start = int(region.split(":")[1].split("-")[0])
-		region_end = int(region.split(":")[1].split("-")[1])
-
-		output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-						'No output path provided in args or config.')
-
-
-		arg_exists(sys.argv) ##Check whether args directories/files exist
-
-		print(timestamp() + "Generating VCFs...")
-
-		#generate_vcf_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-
-		#create_consensus_output(cons_file=cons_file, f_sizes=f_sizes, contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, output_path=output_path, config=config)
-
-		get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-
-		print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
-
-
-	else:
-		merged_file = cons_file
-
-		headers = ['INTVL', 'CHROM', 'POS', 'REF', 'A', 'C', 'G',' T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
-		regions = []
-		region_rows = []
-		f = open(merged_file, "r")
-		reader = csv.DictReader(f, delimiter='\t', fieldnames=headers)
-		next(reader)
-		row_counter = 1
-		last_row = None
-		index = 0		
-
-		#region_rows is a list of tuples: [(start_row_no, end_row_no)...] listing start and end row numbers of the merged file, of data specific to unique regions 
-		for row in reader:
-			if row['INTVL'] not in regions:
-				regions.append(row['INTVL'])
-				if last_row is not None:
-					region_rows.append(tuple((first_row,last_row)))
-				first_row = row_counter
-			else:
-				last_row = row_counter
-			row_counter+=1
-
-		for region in regions:
-
-			cons_file = temp_cons(output_dir, region, row[index], merged_file)
-
-			contig = region.split(":")[0]
-			region_start = int(region.split(":")[1].split("-")[0])
-			region_end = int(region.split(":")[1].split("-")[1])
-		
-			print(consfile)
-
-			#arg_exists(sys.argv) ##Check whether args directories/files exist
-
-			#print(timestamp() + "Generating VCFs...")
-
-			#get_vcf_output(cons_file=cons_file, contig=contig, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-
-			#print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
-
-			index+=1
-
-
-def find_pos(lines):
-	for i in range(len(lines)):
-		if (i < len(lines) and 'chr' in lines[i][0]):
-			first_pos = i
-			return first_pos
-
-
-
 def run_scripts(args):
 
 	bamfile = args.bam_file
@@ -402,87 +262,39 @@ def run_scripts(args):
 		os.makedirs(output_dir+"consfiles")
 	if not os.path.exists(output_dir+"vcffiles"):
 		os.makedirs(output_dir+"vcffiles")
-	if not os.path.exists(output_dir+"logs"):
-		os.makedirs(output_dir+"logs")
 
 
 	debarcer_path = os.getcwd()+"/"
-	#print(debarcer_path)
 
-	"""
 	#Read bedfile
-	print("Reading bed files")
 	with open(bedfile) as textFile:
 		lines = [line.split() for line in textFile]
 	index = find_pos(lines)
 
 
-	#Create scripts for all subprocesses
-	print("Creating scripts for all subprocesses")
+	#Create and run scripts for all subprocesses
 	submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
 
-	"""
 
 	#Check UMI job status before merging files
 	print("Checking UMI job status...")
 	umi_job_flag = False
 	while umi_job_flag == False:
-		umi_job_flag = check_umi_status(output_dir)
-		print(umi_job_flag)
+		umi_job_flag = check_job_status(output_dir, flag='umi', 'temp_umi_jobs.txt')
 
 	print("Merging UMI datafiles...")
-	merge_umi_datafiles2(output_dir)
+	merge_umi_datafiles(output_dir)
 
 	print("Checking CONS job status...")
 	cons_job_flag = False
 	while cons_job_flag == False:
-		cons_job_flag = check_cons_status(output_dir)
-		print(cons_job_flag)
-
+		cons_job_flag = check_job_status(output_dir, flag='cons', 'temp_cons_jobs.txt')
 
 	print("Merging cons...")
 	concat_cons(output_dir, config)
 	print("Finished. Output written to: "+output_dir)
 
 
-
-
-	"""
-	#Not needed
-	if merge == 'umi':
-		merge_umi_datafiles2(output_dir)
-	elif merge == 'cons':
-		print("Merging cons...")
-		#merge_cons_files2(output_dir)
-		#modify_cons("/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/consfiles/chr13:28592509-28592706.cons", output_dir)
-		#concat_cons(output_dir, config_path)
-		concat_cons(output_dir, config)
-		print("Finished")
-
-	print("---QRLOG Jobs---")
-	os.system("qstat -r | grep 'QRLOG*' > jobs.txt")
-	print("---UMI Jobs---")
-	os.system("qstat -r | grep 'UMI*' >> jobs.txt")
-	print("---CONS Jobs---")
-	os.system("qstat -r | grep 'CONS*' >> jobs.txt")
-
-	job_flag = os.stat("./jobs.txt").st_size == 0
-	print(job_flag)
-	"""
-
-def check_umi_status(output_dir):
-	time.sleep(3)
-	os.system("qstat -r | grep 'UMI*' > "+output_dir+"temp_umi_jobs.txt")
-	job_flag = os.stat(output_dir+"temp_umi_jobs.txt").st_size == 0
-
-	return job_flag
-
-def check_cons_status(output_dir):
-	time.sleep(3)
-	os.system("qstat -r | grep 'CONS*' > "+output_dir+"temp_cons_jobs.txt")
-	job_flag = os.stat(output_dir+"temp_cons_jobs.txt").st_size == 0
-
-	return job_flag
 
 
 def generate_plots(args):
@@ -573,7 +385,7 @@ if __name__ == '__main__':
 	v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
 	v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
 	v_parser.add_argument('-c', '--config', help='Path to your config file.')
-	v_parser.set_defaults(func=call_variants2)
+	v_parser.set_defaults(func=call_variants)
 
 	##Run scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
 	s_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")

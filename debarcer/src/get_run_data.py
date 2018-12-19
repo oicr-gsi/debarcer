@@ -12,6 +12,7 @@ import fnmatch
 import itertools
 import glob
 import numpy as np
+import time
 from src.generate_vcf import get_vcf_output2
 
 
@@ -29,12 +30,49 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
 
+def find_pos(lines):
+	for i in range(len(lines)):
+		if (i < len(lines) and 'chr' in lines[i][0]):
+			first_pos = i
+			return first_pos
+
+
+
+
+def check_umi_status(output_dir):
+	time.sleep(3)
+	os.system("qstat -r | grep 'UMI*' > "+output_dir+"temp_umi_jobs.txt")
+	job_flag = os.stat(output_dir+"temp_umi_jobs.txt").st_size == 0
+
+	return job_flag
+
+
+def check_job_status(output_dir, flag, file):
+	time.sleep(3)
+
+	if flag == 'umi':
+		os.system("qstat -r | grep 'UMI*' > "+output_dir+file)
+	elif flag == 'cons':
+		os.system("qstat -r | grep 'CONS*' > "+output_dir+file)
+
+	job_flag = os.stat(output_dir+file).st_size == 0
+
+	return job_flag
+
+
+def check_cons_status(output_dir):
+	time.sleep(3)
+	os.system("qstat -r | grep 'CONS*' > "+output_dir+"temp_cons_jobs.txt")
+	job_flag = os.stat(output_dir+"temp_cons_jobs.txt").st_size == 0
+
+	return job_flag
+
+
 
 def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 	with open(bedfile) as textFile:
 		lines = [line.split() for line in textFile]
 
-	
 	for i in range(index,len(lines)):
 		chromosome = lines[i][0]
 		pos1 = lines[i][1]
@@ -51,8 +89,6 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 		os.system("qsub -cwd -b y -N UMI_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
 
 
-
-
 		#Create cons scripts
 		f = open(output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh","w")
 		os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
@@ -66,56 +102,8 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 
 
 
-		"""
-		#REMOVE
-		#Create vcf scripts
-		f = open(output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh","w")
-		os.system("chmod +x "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
-		f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
-		if config:
-			f.write("\npython3.6 "+"./debarcer.py call -o "+output_dir+"vcffiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -cf "+output_dir+"consfiles/"+chromosome+"\:"+pos1+"-"+pos2+".cons -f 1,2,5 -c "+config)
-		else:
-			f.write("\npython3.6 "+"./debarcer.py call -o "+output_dir+"vcffiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -cf "+output_dir+"consfiles/"+chromosome+"\:"+pos1+"-"+pos2+".cons")
-		os.system("qsub -cwd -b y -N CALL_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid CONS_* "+output_dir+"vcffiles/call_"+chromosome+"_"+pos1+".sh")
-
-		"""
-
-
-def check_merge_flag(var):
-	if var == 'umi': 
-		print("Pass umi!")
-	elif var == 'cons':
-		print("Pass cons!")
-	else:
-		print("ERR: Incorrect flag, "+var+" specified. Input is expected to be 'umi', 'cons' or 'vcf'")
-
 
 def merge_umi_datafiles(output_path):
-	path=output_path+"umifiles/"
-	merged_file=output_path+"umifiles/merged_file.csv"
-	os.chdir(path)
-	#results = pd.DataFrame([])
-	results=[]
-
-	file = open(merged_file, "w")
-
-	headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-	csv.register_dialect('myDialect', delimiter='\t', quoting=csv.QUOTE_NONE)
-	
-	writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
-	writer.writeheader()
-
-	for counter, file in enumerate(glob.glob("*.csv")):
-		f = open(file, "r")
-		reader = csv.DictReader(f, delimiter='\t', fieldnames=headers)
-		next(reader)
-		for row in reader:
-			contig=row['CHR']; start=row['START']; end=row['END']; total_pumis=row['PTU']; total_cumis=row['CTU']; child_nums=row['CHILD_NUMS']; freq_of_parent_umis=row['FREQ_PARENTS']
-			csvrow = {'CHR' : contig, 'START' : start, 'END' : end, 'PTU' : str(total_pumis), 'CTU' : str(total_cumis), 'CHILD_NUMS': child_nums, 'FREQ_PARENTS' : freq_of_parent_umis}
-			writer.writerow(csvrow)	
-
-
-def merge_umi_datafiles2(output_path):
 	path=output_path+"umifiles/"
 	merged_file=output_path+"umifiles/merged2_file.csv"
 	sorted_merge=output_path+"umifiles/merged2_sorted.csv"
@@ -190,39 +178,8 @@ def concat_cons(output_path, config):
 	os.system("rm "+path+"MOD*.cons")
 	os.system("rm "+header_file)
 
-	"""
-	with open(merged_file, 'r') as f:
-		lines = f.read().splitlines()
-		first_line = lines[1]
-		last_line = lines[-1]
 
-		first_region = first_line.split('\t')[0]
-		last_region = last_line.split('\t')[0]
-
-		region=first_region+"_"+last_region		
-
-	with open(sorted_names_file, 'r') as f:
-		lines = f.read().splitlines()
-		first_line = lines[0]
-		last_line = lines[-1]
-
-		first_region = first_line.split('/')[-1]
-		first_region = first_line.split('.')[0]
-
-		last_region = last_line.split('/')[-1]
-		last_region = last_line.split('.')[1]
-
-		region=first_region+"_"+last_region
-	"""
-
-	#os.system("rm "+sorted_names_file)
-
-
-	print("Running variant call")
-	#debarcer_path = config.rsplit('/', 2)[0]
-	#debarcer_path = debarcer_path+"/debarcer/debarcer.py"	
-	#print(debarcer_path)
-	
+	print("Running variant call...")
 	get_vcf_output2(cons_file=merged_file, region_start=first_region, region_end=last_region, output_path=vcf_path, config=config)
 
 
@@ -254,19 +211,7 @@ def modify_cons(file_path, output_path):
 	os.system("rm "+interval_file+" "+unheadered_cons)
 
 
-
 """
-def check_consfile(cons_file):
-	f = open(cons_file, "r")
-	#reader = csv.reader(f, delimiter='\t')
-	line = f.readline()
-	if 'INTVL' in line:
-		return True
-	else:
-		return False
-"""
-
-
 
 def temp_cons(output_dir, region, row, merged_file):
 	file_path=output_path+"/consfiles/temp_"+region+".cons"
@@ -290,4 +235,4 @@ def temp_cons(output_dir, region, row, merged_file):
 
 	return file_path
 
-
+"""
