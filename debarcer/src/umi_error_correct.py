@@ -109,6 +109,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, config):
     pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
 
     print("Counting UMIs...")
+	#counts is a dictionary, where key = UMI, value = UMI_count
     counts = umi_count(contig, region_start, region_end, bam_file)
     umis = counts.keys()
 

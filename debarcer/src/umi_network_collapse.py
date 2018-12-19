@@ -123,8 +123,8 @@ class UMIClusterer:
         """
         Identify all UMIs within the hamming distance threshold, and where
         the counts of the first UMI is > (2 * second UMI count) - 1.
-	The hamming distance between two strings (of equal length) is equal to 
-	the number of positions at which the string characters are different.
+		The hamming distance between two strings (of equal length) is equal to 
+		the number of positions at which the string characters are different.
         """
 
         adj_list = {umi: [] for umi in umis}
@@ -164,8 +164,8 @@ class UMIClusterer:
     def _group_directional(self, clusters, adj_list, counts):
         """Return groups for directional method."""
 
-	#'groups' is a 2D list structure, which contains the parent umi at the first position of each row, and all child nodes (uncollapsed umis)
-	#in order of highest-occuring to lowest-occuring  
+	#'groups' is a 2D list structure, which contains the parent umi at the first position of each row, and all child nodes
+	#(in order of highest-occuring to lowest-occuring) as subsequent elements  
 
         observed = set()
         groups = []
@@ -197,9 +197,9 @@ class UMIClusterer:
         self.positions = 0
         
         if cluster_method == "directional":
-            self.get_adj_list = self._get_adj_list_directional
+            self.get_adj_list = self._get_adj_list_directional #Represent graph data structure by creating an adjacency list 
             self.get_connected_components = self._get_connected_components_adjacency
-            self.get_groups = self._group_directional
+            self.get_groups = self._group_directional #Create 2D list structure to represent graph's groups 
 
 
     def __call__(self, umis, counts, config):

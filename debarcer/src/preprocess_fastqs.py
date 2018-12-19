@@ -24,6 +24,7 @@ def extract_umis(reads, umi_locs, umi_lens):
     """Gets the UMI from a read."""
     umis = []
 
+	#Iterate through (umi_loc, umi_len) pairs in list of tuple pairs
     for umi_loc, umi_len in zip(umi_locs, umi_lens):
         read = reads[int(umi_loc) - 1]
         umis.append(read[0:int(umi_len)])
@@ -61,6 +62,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     else:
         spacer_seq = None
     
+	#Read FASTQ in text mode
     r1 = gzip.open(r1_file, "rt")
     r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
     r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
