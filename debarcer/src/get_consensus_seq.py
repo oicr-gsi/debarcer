@@ -93,7 +93,7 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
                                 alt_base = read_data.query_sequence[read.query_position]
 
                             if not read.is_del:
-                                add_base(mode="consensus", seq=consensus_seq, pos=pos+1,
+                                add_base(mode="consensus", seq=consensus_seq, pos=pos,
                                         family=family_key, allele=(ref_base, alt_base))
 
     return consensus_seq
@@ -135,6 +135,6 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
                         ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                         alt_base = read.alignment.query_sequence[read.query_position]
 
-                    add_base(mode="uncollapsed", seq=uncollapsed_seq, pos=pos+1, family=None, allele=(ref_base, alt_base))
+                    add_base(mode="uncollapsed", seq=uncollapsed_seq, pos=pos, family=None, allele=(ref_base, alt_base))
 
     return uncollapsed_seq
