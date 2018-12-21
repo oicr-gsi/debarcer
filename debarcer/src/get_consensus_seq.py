@@ -48,11 +48,13 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
     # Need to reconsider this for pileup, significant performance improvements possible
     ## read_threshold = int(config['SETTINGS']['max_family_size']) if config else 50
 
+    region_start-=1
+
     with pysam.AlignmentFile(bam_file, "rb") as reader:
 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=1000000):
 
-            pos = pileupcolumn.reference_pos
+            pos = pileupcolumn.reference_pos-1 
             if pos >= region_start and pos < region_end:
 
                 for read in pileupcolumn.pileups:
@@ -77,13 +79,13 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
                     
                             if not read.is_del and not read.indel:
                                 ref_base = ref_seq[ref_pos]
-                                alt_base = read_data.query_sequence[read.query_position]
+                                alt_base = read_data.query_sequence[read.query_position-1]
 
                             # Next position is an insert (current base is ref)
                             elif read.indel > 0:
                                 ref_base = ref_seq[ref_pos]
                                 alt_base = read_data.query_sequence[
-                                    read.query_position:read.query_position + abs(read.indel) + 1]
+                                    read.query_position:read.query_position + abs(read.indel)+1]
 
                             # Next position is a deletion (current base + next bases are ref)
                             elif read.indel < 0:
@@ -91,7 +93,7 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
                                 alt_base = read_data.query_sequence[read.query_position]
 
                             if not read.is_del:
-                                add_base(mode="consensus", seq=consensus_seq, pos=pos,
+                                add_base(mode="consensus", seq=consensus_seq, pos=pos+1,
                                         family=family_key, allele=(ref_base, alt_base))
 
     return consensus_seq
@@ -106,18 +108,21 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
 
     uncollapsed_seq = {}
 
+    region_start-=1
+
     with pysam.AlignmentFile(bam_file, "rb") as reader:
 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=1000000):
 
-            pos = pileupcolumn.reference_pos
+            pos = pileupcolumn.reference_pos - 1
+
             if pos >= region_start and pos < region_end:
 
                 for read in pileupcolumn.pileups:
 
                     if not read.is_del and not read.indel:
                         ref_base = ref_seq[pos - region_start]
-                        alt_base = read.alignment.query_sequence[read.query_position]
+                        alt_base = read.alignment.query_sequence[read.query_position-1]
 
                     # Next position is an insert (current base is ref)
                     elif read.indel > 0:
@@ -130,6 +135,6 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
                         ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                         alt_base = read.alignment.query_sequence[read.query_position]
 
-                    add_base(mode="uncollapsed", seq=uncollapsed_seq, pos=pos, family=None, allele=(ref_base, alt_base))
+                    add_base(mode="uncollapsed", seq=uncollapsed_seq, pos=pos+1, family=None, allele=(ref_base, alt_base))
 
     return uncollapsed_seq
