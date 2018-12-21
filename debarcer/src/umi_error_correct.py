@@ -118,9 +118,6 @@ def get_umi_families(contig, region_start, region_end, bam_file, config):
     
     umi_groups = clusterer(umis, counts, config)
 
-    #Writing datafile
-    #umi_datafile(umi_groups, contig, region_start, region_end, filename)
-
     print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
     

@@ -280,7 +280,7 @@ def check_consfile(cons_file):
 
 
 
-def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string, filt, info, fmt_string, smp_string, output_path, cons_is_merged):
+def write_vcf(id, config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string, filt, info, fmt_string, smp_string, output_path, cons_is_merged):
 
     ref_threshold = 100.0
     #fam_idx = 0
@@ -296,7 +296,7 @@ def write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end
     for f_size in f_sizes:
 
         if cons_is_merged:
-            writer = open("{}/{}_{}.{}.vcf".format(output_path, region_start, region_end, str(f_size)), "w")
+            writer = open("{}/RUNID_{}.{}.vcf".format(output_path, id, str(f_size)), "w")
         else:
             writer = open("{}/{}:{}-{}.{}.vcf".format(output_path, contig, region_start, region_end, str(f_size)), "w")
 
@@ -399,7 +399,7 @@ def get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, a
 
 
 
-def get_vcf_output2(cons_file, region_start, region_end, output_path, config):
+def get_vcf_output(cons_file, region_start, region_end, output_path, config, id):
 
     cons_is_merged = check_consfile(cons_file)
 
@@ -465,102 +465,8 @@ def get_vcf_output2(cons_file, region_start, region_end, output_path, config):
     get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam, intvls)
 
     #Write vcf files
-    write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path, cons_is_merged)
+    write_vcf(id, config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path, cons_is_merged)
 
 
 
 
-def get_vcf_output_original(cons_file, contig, region_start, region_end, output_path, config):
-
-    f_sizes = [str(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else ['1', '2', '5']
-
-    fams, contigs, ref_base, base_positions, base_A, base_C, base_G, base_T, rawdps, consdps, mean_fams = ([] for i in range(11))
-    fmt_string = "RDP:CDP:MNF:AD:AF"
-
-    ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-
-    #Read data from each line of the cons file into the appropriate 2-D list, and ignore/skip cons file if it does not exist 
-    try:
-        with open(cons_file, "r") as reader:
-            next(reader)
-            index = 0
-            for line in reader:
-                fam_size = int(line.split('\t')[12])
-                if fam_size == 0:
-                    #Create vcf record for base position only if ref_freq <= ref_threshold when reads are uncollapsed
-                    ref_freq = float(line.split('\t')[13])
-                    continue
-                if ref_freq <= ref_threshold: 
-                    if fam_size == int(f_sizes[0]):
-                        index += 1
-                        contigs.append([]); base_positions.append([]); ref_base.append([]); base_A.append([]); base_C.append([]); base_G.append([]); base_T.append([]); rawdps.append([]); consdps.append([]); fams.append([]); mean_fams.append([])
-                        
-                    contigs[index-1].append(line.split('\t')[0])
-                    base_positions[index-1].append(int(line.split('\t')[1]))
-                    ref_base[index-1].append(line.split('\t')[2])
-                    base_A[index-1].append(line.split('\t')[3])
-                    base_C[index-1].append(line.split('\t')[4])
-                    base_G[index-1].append(line.split('\t')[5])
-                    base_T[index-1].append(line.split('\t')[6])
-                    rawdps[index-1].append(line.split('\t')[10])
-                    consdps[index-1].append(line.split('\t')[11]) 
-                    fams[index-1].append(line.split('\t')[12])
-                    mfam = float(line.split('\t')[14])
-                    mfam = "{:.2f}".format(mfam)
-                    mean_fams[index-1].append(str(mfam))
-
-
-    except FileNotFoundError:
-        pass
-
-
-    filt, alt_string_info, allele_data, sample_data, min_fam = ([[0 for x in range(len(f_sizes))] for y in range(len(contigs))] for i in range(5))    
-
-    get_data(f_sizes, ref_base, base_A, base_C, base_G, base_T, filt, consdps, alt_string_info, allele_data, sample_data, rawdps, mean_fams, min_fam)
-
-    write_vcf(config, contigs, f_sizes, base_positions, region_start, region_end, ref_base, alt_string_info, filt, min_fam, fmt_string, sample_data, output_path)
-
-
-
-
-if __name__=="__main__":
-    ## Argument + config parsing and error handling
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--cons_file', help='Path to your cons_file.')
-    parser.add_argument('-f', '--f_sizes', help='Comma-separated list of f_sizes to make VCF files for.')
-    parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).')
-    parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-    parser.add_argument('-c', '--config', help='Path to your config file.')
-
-    args = parser.parse_args()
-
-    if args.config:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-    else:
-        config = None
-    
-    cons_file = args.cons_file
-
-    f_sizes = args.f_sizes.split(',')
-
-    region = args.region
-    if any(x not in region for x in ["chr", ":", "-"]):
-        raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-    sys.exit(1)
-
-    contig = region.split(":")[0]
-    region_start = int(region.split(":")[1].split("-")[0])
-    region_end = int(region.split(":")[1].split("-")[1])
-
-    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-                    'No output path provided in args or config.')
-
-    bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
-                    'No BAM file provided in args or config.')
-
-    ## Output
-    #Original
-    #generate_vcf_output(cons_file, f_sizes, contig, region_start, region_end, output_path, config)
-
-    get_vcf_output(cons_file, contig, region_start, region_end, output_path, config)

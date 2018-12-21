@@ -15,8 +15,7 @@ from src.preprocess_fastqs import reheader_fastqs
 from src.umi_error_correct import get_umi_families, umi_count, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
-from src.generate_vcf import create_consensus_output
-from src.generate_vcf import get_vcf_output2, get_vcf_output, check_consfile
+from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
 from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
 
@@ -225,11 +224,8 @@ def call_variants(args):
 
 	print(timestamp() + "Generating VCFs...")
 
-	get_vcf_output2(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+	get_vcf_output(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
 		
-	#call the merged version of the function
-	#get_vcf_output2(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config, is_cons_merged=is_cons_merged)
-
 	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
 
 
@@ -240,7 +236,9 @@ def run_scripts(args):
 
 	bamfile = args.bam_file
 	bedfile = args.bed_file
-	output_dir = args.output_path
+	dir = args.output_path
+	id = str(args.run_id)
+	output_dir = dir+id+"/"
 
 	if args.config:
 		config_path = args.config
@@ -255,7 +253,6 @@ def run_scripts(args):
 	arg_exists(sys.argv) ##Check whether args directories/files exist
 	
 	#Make directories 
-	print("Making directories")
 	if not os.path.exists(output_dir+"umifiles"):
 		os.makedirs(output_dir+"umifiles")
 	if not os.path.exists(output_dir+"consfiles"):
@@ -275,25 +272,25 @@ def run_scripts(args):
 	#Create and run scripts for all subprocesses
 	submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
 
-
+	"""
 	#Check UMI job status before merging files
 	print("Checking UMI job status...")
 	umi_job_flag = False
 	while umi_job_flag == False:
-		umi_job_flag = check_job_status(output_dir, flag='umi', 'temp_umi_jobs.txt')
+		umi_job_flag = check_job_status(output_dir, flag='umi', file='temp_umi_jobs.txt')
 
 	print("Merging UMI datafiles...")
-	merge_umi_datafiles(output_dir)
+	merge_umi_datafiles(output_dir, id)
 
 	print("Checking CONS job status...")
 	cons_job_flag = False
 	while cons_job_flag == False:
-		cons_job_flag = check_job_status(output_dir, flag='cons', 'temp_cons_jobs.txt')
+		cons_job_flag = check_job_status(output_dir, flag='cons', file='temp_cons_jobs.txt')
 
 	print("Merging cons...")
-	concat_cons(output_dir, config)
+	concat_cons(output_dir, config, id)
 	print("Finished. Output written to: "+output_dir)
-
+	"""
 
 
 
@@ -393,6 +390,7 @@ if __name__ == '__main__':
 	s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
 	s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
 	s_parser.add_argument('-c', '--config', help='Path to your config file.')
+	s_parser.add_argument('-id', '--run_id', help='Run id.', required=True)
 	s_parser.set_defaults(func=run_scripts)
 
 	##Generate graphs	

@@ -13,7 +13,7 @@ import itertools
 import glob
 import numpy as np
 import time
-from src.generate_vcf import get_vcf_output2
+from src.generate_vcf import get_vcf_output
 
 
 """
@@ -78,6 +78,7 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 		pos1 = lines[i][1]
 		pos2 = lines[i][2]
 
+		"""
 		#Create umi scripts
 		f = open(output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh","w")
 		os.system("chmod +x "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
@@ -88,7 +89,7 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 			f.write("\npython3.6 "+debarcer_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile)
 		os.system("qsub -cwd -b y -N UMI_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
 
-
+		"""
 		#Create cons scripts
 		f = open(output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh","w")
 		os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
@@ -97,16 +98,16 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 			f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c "+config)
 		else:
 			f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis")
-		os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid 'UMI_*' "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
+		os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
+
+		
 
 
 
-
-
-def merge_umi_datafiles(output_path):
+def merge_umi_datafiles(output_path, id):
 	path=output_path+"umifiles/"
 	merged_file=output_path+"umifiles/merged2_file.csv"
-	sorted_merge=output_path+"umifiles/merged2_sorted.csv"
+	sorted_merge=output_path+"umifiles/RUNID_"+id+"_Merged_UMI.csv"
 
 	os.chdir(path)
 
@@ -130,11 +131,10 @@ def merge_umi_datafiles(output_path):
 	os.system("rm "+merged_file)
 
 
-def concat_cons(output_path, config):
+def concat_cons(output_path, config, id):
 
 	path=output_path+"consfiles/"
 	vcf_path=output_path+"vcffiles/"
-	#merged_file=output_path+"consfiles/SORTED_CONCAT_data.cons"
 	header_file = output_path+"consfiles/headers.cons"
 	sorted_names_file = path+"temp_sorted_filenames.txt"
 	os.chdir(path)
@@ -162,7 +162,7 @@ def concat_cons(output_path, config):
                 
 		region=first_region+"_"+last_region
 
-	merged_file=output_path+"consfiles/Merged_"+str(first_region)+"_"+str(last_region)+".cons"
+	merged_file=output_path+"consfiles/RUNID_"+id+"_Merged_CONS.cons"
 
 	file = open(header_file, "w")
 	headers = ['INTVL', 'CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
@@ -180,8 +180,8 @@ def concat_cons(output_path, config):
 
 
 	print("Running variant call...")
-	get_vcf_output2(cons_file=merged_file, region_start=first_region, region_end=last_region, output_path=vcf_path, config=config)
-
+	get_vcf_output(cons_file=merged_file, region_start=first_region, region_end=last_region, output_path=vcf_path, config=config, id=id)
+	
 
 def modify_cons(file_path, output_path):
 	output_path = output_path
@@ -211,28 +211,3 @@ def modify_cons(file_path, output_path):
 	os.system("rm "+interval_file+" "+unheadered_cons)
 
 
-"""
-
-def temp_cons(output_dir, region, row, merged_file):
-	file_path=output_path+"/consfiles/temp_"+region+".cons"
-
-	headers = ['INTVL', 'CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
-	#f = open(file_path, "w")
-	#writer = csv.DictWriter(f, dialect='myDialect' , field=headers)
-	
-	f = open(file_path, "w")	
-	writer = csv.writer(f)
-	writer.writerow(headers)
-
-	r_file = open(merged_file, "r")
-	#reader = csv.DictReader(r_file, delimiter='\t', fieldnames=headers)
-	reader = csv.reader(r_file)
-	counter = int(row[0])
-	while counter<= int(row[1]):
-		writer.writerow = reader[counter]
-		counter+=1
-
-
-	return file_path
-
-"""
