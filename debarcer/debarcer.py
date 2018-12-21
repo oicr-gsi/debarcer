@@ -272,7 +272,7 @@ def run_scripts(args):
 	#Create and run scripts for all subprocesses
 	submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
 
-	"""
+	
 	#Check UMI job status before merging files
 	print("Checking UMI job status...")
 	umi_job_flag = False
@@ -290,7 +290,7 @@ def run_scripts(args):
 	print("Merging cons...")
 	concat_cons(output_dir, config, id)
 	print("Finished. Output written to: "+output_dir)
-	"""
+	
 
 
 

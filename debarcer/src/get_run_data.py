@@ -78,7 +78,7 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 		pos1 = lines[i][1]
 		pos2 = lines[i][2]
 
-		"""
+		
 		#Create umi scripts
 		f = open(output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh","w")
 		os.system("chmod +x "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
@@ -89,7 +89,7 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 			f.write("\npython3.6 "+debarcer_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile)
 		os.system("qsub -cwd -b y -N UMI_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
 
-		"""
+		
 		#Create cons scripts
 		f = open(output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh","w")
 		os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
@@ -98,7 +98,7 @@ def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
 			f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c "+config)
 		else:
 			f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis")
-		os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
+		os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid 'UMI_*' "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
 
 		
 
