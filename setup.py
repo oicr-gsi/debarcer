@@ -7,7 +7,7 @@ from setuptools import setup
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-version = "2.0.0"
+version = "2.0.2"
 
 setup(
 	name = "debarcer",
@@ -19,7 +19,7 @@ setup(
 	license = "MIT License",
 	keywords = "computational genomics",
 	url = "https://github.com/oicr-gsi/debarcer",
-	packages = ['debarcer', 'tests'],
+	packages = ['debarcer', 'tests', 'debarcer.src'],
 	long_description = read("README.rst"),
 	classifiers = [
 	"Development Status :: 3 - Alpha",
