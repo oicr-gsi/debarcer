@@ -18,7 +18,7 @@ setup(
 											" data containing molecular barcodes."),
 	license = "MIT License",
 	keywords = "computational genomics",
-	url = "https://github.com/oicr-gsi/debarcer",
+	url = "https://github.com/oicr-gsi/debarcer/archive/v2.0.2-alpha.tar.gz",
 	packages = ['debarcer', 'tests', 'debarcer.src'],
 	long_description = read("README.rst"),
 	classifiers = [
