@@ -30,7 +30,7 @@ Debarcer (De-Barcoding and Error Correction) is a package
 for working with next-gen sequencing data that contains
 molecular barcodes.
 
-Authors: Theodore Bodak, Isha Warikoo
+Authors: Alexandra Bodak, Isha Warikoo, Lawrence Heisler
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
