@@ -1,26 +1,26 @@
 
-import sys
-import os
 from setuptools import setup
 
 # Utility function to read the README file.
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+with open("README.rst") as infile:
+    content = infile.read().rstrip()
+
 
 version = "2.0.2"
 
 setup(
 	name = "debarcer",
 	version = version,
-	author = "Theodore Bodak",
-	author_email = "tabodak@edu.uwaterloo.ca",
+	author = "Richard Jovelin",
+	author_email = "richard.jovelin@oicr.on.ca",
 	description = ("A package for de-barcoding and error correction of sequencing"
 											" data containing molecular barcodes."),
 	license = "MIT License",
 	keywords = "computational genomics",
-	url = "https://github.com/oicr-gsi/debarcer/archive/v2.0.2-alpha.tar.gz",
+	url = "https://github.com/oicr-gsi/debarcer",
 	packages = ['debarcer', 'tests', 'debarcer.src'],
-	long_description = read("README.rst"),
+	long_description = content,
 	classifiers = [
 	"Development Status :: 3 - Alpha",
 	"Intended Audience :: Science/Research",
