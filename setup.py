@@ -7,7 +7,7 @@ with open("README.rst") as infile:
     content = infile.read().rstrip()
 
 
-version = "2.0.2"
+version = "2.0.3"
 
 setup(
 	name = "debarcer",
