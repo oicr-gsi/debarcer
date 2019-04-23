@@ -19,7 +19,7 @@ setup(
 	license = "MIT License",
 	keywords = "computational genomics",
 	url = "https://github.com/oicr-gsi/debarcer",
-	packages = ['debarcer', 'tests', 'debarcer.src'],
+	packages = ['debarcer', 'tests', 'debarcer.src',' debarcer.utils'],
 	long_description = content,
 	classifiers = [
 	"Development Status :: 3 - Alpha",
