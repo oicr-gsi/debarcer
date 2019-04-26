@@ -8,9 +8,6 @@ import datetime
 import json
 import csv
 import time
-from src.handle_args import handle_arg
-from src.handle_args import arg_exists
-from src.handle_args import config_validation
 from src.preprocess_fastqs import reheader_fastqs
 from src.umi_error_correct import get_umi_families, umi_count, umi_datafile
 from src.generate_consensus import generate_consensus_output
@@ -35,39 +32,62 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
 def timestamp():
-	"""Returns the current time in a nice format for log files."""
-	return "[{}] ".format(str(datetime.datetime.now()).split('.')[0])
+    """Returns the current time in a nice format for log files."""
+    return "[{}] ".format(str(datetime.datetime.now()).split('.')[0])
 
 
 def preprocess_reads(args):
-	"""
-	Preprocesses fastq files by removing UMIs from reads and appending
-	them to the read names.
-	"""
+    """
+    Preprocesses fastq files by removing UMIs from reads and appending
+	 them to the read names.
+	 """
 
-	if args.config:
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		#config.read('../config/demo_config.ini')
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config = None
-
-	prepfile = handle_arg(args.prepfile, config['PATHS']['prep_file'] if config else None,
-					'ERR: No prepfile provided in args or config.')
-	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
-					'ERR: No output path provided in args or config.')
-
-	arg_exists(sys.argv) ##Check whether args directories/files exist	
-
-	
-	reheader_fastqs(
-		r1_file=args.read1, 
-		r2_file=args.read2, 
-		r3_file=args.read3, 
-		output_path=output_path, 
-		prepname=args.prepname,
-		prepfile=prepfile)
+    
+    # get prepfile and outdir from config in priority
+    try:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        prepfile = config['PATHS']['prep_file']         
+        outdir = config['PATHS']['output_dir']
+    except:
+        # check if prepfile and outdir are provided in the command
+        try:
+            prepfile, outdir = args.prepfile, args.outdir
+        except:
+            # raise error and exit if no prepfile and outdir are provided
+            raise ValueError('ERR: Missing prepfile and/or output directory')
+            sys.exit(1)
+            
+    # code below is executed only if prepfile and outdir are provided  
+    # create outputdir if doesn't exist
+    if os.path.isdir(outdir) == False:
+        os.makedirs(outdir)
+    
+    # check that files are valid
+    for i in [prepfile, args.read1, args.read2, args.read3]:
+        # check that argument (or file) is provided/exists 
+        if i:
+            # check if provided file is file
+            if os.path.isfile(i) == False:
+                # raise error and exit
+                raise ValueError('ERR: prepfile is not a valid file')
+                sys.exit(1)
+    
+    # check if prefix is provided in the command
+    if not args.prefix:
+        # use input fastq to derive prefix
+        filename = os.path.basename(args.read1)
+        # remove extension if possible or keep entire file name as prefix
+        if 'fastq.gz' in filename:
+            prefix = filename[:filename.index('.fastq.gz')]
+        elif 'fq.gz' in filename:
+            prefix = filename[:filename.index('.fq.gz')]
+        else:
+            prefix = filename
+    
+    # reheader fastqs and add umi in new fastqs header
+    reheader_fastqs(r1_file=args.read1, r2_file=args.read2, r3_file=args.read3,
+                    output_path=output_path, prepname=args.prepname, prepfile=prepfile)
 	
 
 
@@ -338,24 +358,24 @@ def generate_plots(args):
 
 
 if __name__ == '__main__':
-
-	## Argument + config parsing and error handling
-	parser = argparse.ArgumentParser(description="A package for De-Barcoding and Error Correction" \
-	 											 " of sequencing data containing molecular barcodes.")
-	
-	subparsers = parser.add_subparsers()
-
-		
-	## Preprocess command - requires unprocessed fastq file(s)
-	p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files.")
-	p_parser.add_argument('-o', '--output_path', help='Path to write updated fastq files to.', required=True)
-	p_parser.add_argument('-r1', '--read1', help='Path to first FASTQ file.', required=True)
-	p_parser.add_argument('-r2', '--read2', help='Path to second FASTQ file, if applicable.')
-	p_parser.add_argument('-r3', '--read3', help='Path to third FASTQ file, if applicable.')
-	p_parser.add_argument('-p', '--prepname', help='Name of library prep to  use (defined in library_prep_types.ini).', required=True)
-	p_parser.add_argument('-pf', '--prepfile', help='Path to your library_prep_types.ini file.')
-	p_parser.add_argument('-c', '--config', help='Path to your config file.')
-	p_parser.set_defaults(func=preprocess_reads)
+    
+    ## Argument + config parsing and error handling
+    parser = argparse.ArgumentParser(prog='debarcer.py', description="A package for De-Barcoding\
+                                     and Error Correction of sequencing data containing molecular barcodes")
+    subparsers = parser.add_subparsers()
+       		
+    ## Preprocess command - requires unprocessed fastq file(s)
+    p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files")
+    p_parser.add_argument('-o', '--OutDir', dest='outdir', help='Output directory. Available from command or config')
+    p_parser.add_argument('-r1', '--Read1', dest='read1', help='Path to first FASTQ file.', required=True)
+    p_parser.add_argument('-r2', '--Read2', dest='read2', help='Path to second FASTQ file, if applicable')
+    p_parser.add_argument('-r3', '--Read3', dest='read3', help='Path to third FASTQ file, if applicable')
+    p_parser.add_argument('-p', '--Prepname', dest='prepname', choices['HALOPLEX', 'SURESELECT', 'EPIC-DS', 'SIMSENSEQ-PE', 'SIMSENSEQ-SE'], 
+                          help='Name of library prep to  use (defined in library_prep_types.ini)', required=True)
+    p_parser.add_argument('-pf', '--Prepfile', dest='prepfile', help='Path to your library_prep_types.ini file')
+    p_parser.add_argument('-c', '--Config', dest='config', help='Path to your config file')
+    p_parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
+    p_parser.set_defaults(func=preprocess_reads)
 
 	## UMI group command - requires BAM file
 	g_parser = subparsers.add_parser('group', help="Groups and error-corrects UMIs into families.")
