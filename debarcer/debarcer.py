@@ -86,10 +86,8 @@ def preprocess_reads(args):
             prefix = filename
     
     # reheader fastqs and add umi in new fastqs header
-    reheader_fastqs(r1_file=args.read1, r2_file=args.read2, r3_file=args.read3,
-                    output_path=output_path, prepname=args.prepname, prepfile=prepfile)
-	
-
+    reheader_fastqs(args.read1, args.read2, args.read3, outdir, prefix, args.prepname, prepfile)
+	 
 
 def group_umis(args):
 	"""Groups and error-corrects UMIs into families."""
