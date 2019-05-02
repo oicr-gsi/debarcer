@@ -8,7 +8,10 @@ from itertools import zip_longest
 
 
 def parse_prep(prepname, prepfile):
-    """Gets parameters from specified prep name and config file."""
+    '''
+    (str, file) --> configparser.SectionProxy
+    Return parameters for prepname specified in the config file
+    '''
 
     preps = configparser.ConfigParser()
     preps.read(prepfile)
@@ -52,25 +55,30 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     - removes reads without a valid spacer (if applicable)
     - gzip module is very slow, consider subprocess (at the cost of compatibility)
     """
+    
+    # get the parameters for prepname from the config
     prep = parse_prep(prepname, prepfile)
 
-    num_reads = int(prep['INPUT_READS'])
-    actual_reads = int(prep['OUTPUT_READS'])
+    # get the number of input (1-3) and reheadered read files (1-2)
+    num_reads, actual_reads  = int(prep['INPUT_READS']), int(prep['OUTPUT_READS'])
+    # get the indices of reads with  UMI (1-3)
     umi_locs = [str(x) for x in prep['UMI_LOCS'].split(',')]
+    # get the length of the umis (1-100)
     umi_lens = [int(x) for x in prep['UMI_LENS'].split(',')]
+    # specify if a spacer is used or not
     spacer = bool(prep['SPACER'])
     
-    ##Handle SPACER=FALSE condition
+    # get the spacer sequence if exists 
     if prep['SPACER_SEQ'] is not None: 
         spacer_seq = str(prep['SPACER_SEQ'])
     else:
         spacer_seq = None
     
-	#Read FASTQ in text mode
+	 # Read FASTQ in text mode
     r1 = gzip.open(r1_file, "rt")
     r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
     r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
-
+    # Open output fastqs in text mode for writing
     r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
     r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
 
