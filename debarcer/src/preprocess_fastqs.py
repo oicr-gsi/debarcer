@@ -69,7 +69,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     spacer = bool(prep['SPACER'])
     
     # get the spacer sequence if exists 
-    if prep['SPACER_SEQ'] is not None: 
+    if spacer:
         spacer_seq = str(prep['SPACER_SEQ'])
     else:
         spacer_seq = None
@@ -81,6 +81,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     # Open output fastqs in text mode for writing
     r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
     r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
+
 
     spacer_len_r1 = 0
     spacer_len_r2 = 0
