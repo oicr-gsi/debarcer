@@ -76,7 +76,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     # get the number of input (1-3) and reheadered read files (1-2)
     num_reads, actual_reads  = int(prep['INPUT_READS']), int(prep['OUTPUT_READS'])
     # get the indices of reads with  UMI (1-3)
-    umi_locs = [str(x.strip()) for x in prep['UMI_LOCS'].split(',')]
+    umi_locs = [int(x.strip()) for x in prep['UMI_LOCS'].split(',')]
     # get the length of the umis (1-100)
     umi_lens = [int(x.strip()) for x in prep['UMI_LENS'].split(',')]
     # specify if a spacer is used or not
