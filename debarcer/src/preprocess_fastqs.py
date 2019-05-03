@@ -10,7 +10,7 @@ from itertools import zip_longest
 def parse_prep(prepname, prepfile):
     '''
     (str, file) --> configparser.SectionProxy
-    Return parameters for prepname specified in the config file
+    Returns parameters for prepname specified in the config file
     '''
 
     preps = configparser.ConfigParser()
@@ -19,20 +19,33 @@ def parse_prep(prepname, prepfile):
 
 
 def getread(fastq_file):
-    """(Iter) slices fastq into 4-line reads."""
+    """
+    (file) -- > itertools.zip_longest
+    Takes a fastq file open for reading (in plain text mode) and returns an
+    iterator slicing the fastq into 4-line reads
+    """
     args = [iter(fastq_file)] * 4
     return zip_longest(*args, fillvalue=None)
 
 
 def extract_umis(reads, umi_locs, umi_lens):
-    """Gets the UMI from a read."""
+    '''
+    (list, list, list) -> list
+    Take a list of read sequences, a list with the 1-base location of umis
+    in the reads (eg umi_locs = [1], umi is located in 1st read of reads, reads[0]),
+    a list of umi lengths corresponding to the umi in each read and return a list
+    of umi sequences
+    '''
+    
+    # make a list with all umis
     umis = []
-
-	#Iterate through (umi_loc, umi_len) pairs in list of tuple pairs
+    
+	 #Iterate through (umi_loc, umi_len) pairs in list of tuple pairs
     for umi_loc, umi_len in zip(umi_locs, umi_lens):
+        # get the read with the umi convert 1-base to 0-base position
         read = reads[int(umi_loc) - 1]
+        # slice the read to extract the umi sequence
         umis.append(read[0:int(umi_len)])
-
     return umis
 
 
@@ -54,6 +67,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     Reheadered fastqs are written in outdir and named prefix.umi.reheadered_RN.fastq.gz       
     - removes reads without a valid spacer (if applicable)
     - gzip module is very slow, consider subprocess (at the cost of compatibility)
+    Pre-condition: fasqs have the same number of reads and files are in sync
     """
     
     # get the parameters for prepname from the config
@@ -82,18 +96,18 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
     r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
 
+    # set default spacer lengths for read1 and read2 files 
+    spacer_len_r1, spacer_len_r2 = 0, 0
 
-    spacer_len_r1 = 0
-    spacer_len_r2 = 0
-
+    # retrieve spacer length if exists
     if spacer:
         spacer_len_r1 = len(spacer_seq)
-
+        # update spacer length for read2 if umi in read2  
         if len(umi_locs) > 1:
             spacer_len_r2 = len(spacer_seq)
 
+    # get the length of the umi for read1 and read2, set to 0 if only in read1
     umi_len_r1 = umi_lens[0]
-
     if len(umi_lens) > 1:
         umi_len_r2 = umi_lens[1]
     else:
@@ -101,14 +115,16 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
 
     print("Preprocessing reads...")
 
+
+    # check the number of input fastqs
     if num_reads == 3:
-
+        # check the number of output fastqs
         if actual_reads == 2:
-
+            # create iterators with slices of 4 read lines from each file
+            # loop over group of 4 read-lines 
             for read1, read2, read3 in zip(getread(r1), getread(r2), getread(r3)):
 
-                umis = extract_umis(
-                    [read1[1], read2[1], read3[1]], umi_locs, umi_lens)
+                umis = extract_umis([read1[1], read2[1], read3[1]], umi_locs, umi_lens)
 
                 read_name1, rest1 = read1[0].rstrip().split(' ')
                 read_name2, rest2 = read3[0].rstrip().split(' ')
@@ -207,7 +223,7 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     if r2_writer:
         r2_writer.close() 
 
-    print("Complete. Output written to {}.".format(output_path))
+    print("Complete. Output written to {}.".format(outdir))
 
 
 if __name__ == '__main__':
