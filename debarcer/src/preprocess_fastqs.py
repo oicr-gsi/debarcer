@@ -196,16 +196,8 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
                 # extract umi from read1
                 umis = extract_umis([read1[1]], umi_locs, umi_lens)
                 # skip parser without reads
-                if spacer:
-
-                    if not verify_spacer([read1[1], read2[1]], umis, spacer_seq):
-                        next
-
-                    spacer_len = len(spacer_seq)
-
-                else:
-                    spacer_len = 0
-
+                if spacer and not verify_spacer([read1[1], read2[1]], umis, spacer_seq):
+                    next
 
                 # edit read name
                 read_name1, rest1 = read1[0].rstrip().split(' ')
