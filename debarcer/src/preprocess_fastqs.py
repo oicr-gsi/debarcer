@@ -100,16 +100,15 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
     r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
 
-    # set default spacer lengths for read1 and read2 files 
-    spacer_len_r1, spacer_len_r2 = 0, 0
-
     # retrieve spacer length if exists
     if spacer:
         spacer_len_r1 = len(spacer_seq)
         # update spacer length for read2 if umi in read2  
         if len(umi_locs) > 1:
             spacer_len_r2 = len(spacer_seq)
-
+    else:
+        spacer_len_r1, spacer_len_r2 = 0, 0    
+            
     # get the length of the umi for read1 and read2, set to 0 if only in read1
     umi_len_r1 = umi_lens[0]
     if len(umi_lens) > 1:
