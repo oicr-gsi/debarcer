@@ -156,7 +156,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
 
     with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_end), "w") as writer:
 
-        writer.write("CHROM\tPOS\tREF\tA\tC\tG\tT\tI\tD\tN\tRAWDP\tCONSDP\tFAM\tREF_FREQ\tMEAN_FAM\n") ##Header
+        writer.write("CHROM\tPOS\tREF\tA\tC\tG\tT\tI\tD\tN\tINDELS\tRAWDP\tCONSDP\tFAM\tREF_FREQ\tMEAN_FAM\n") ##Header
         
         for base_pos in range(region_start, region_end):
 
@@ -164,29 +164,45 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
             if any( [base_pos in cons_data[f_size] for f_size in cons_data] ):
 
                 for f_size in cons_data:
+                    
+                    #if f_size > 0:
+                    #    break
+                        
+                    #input(f_size)
+                    
                     if base_pos in cons_data[f_size]:
 
                         ref = cons_data[f_size][base_pos].get_ref_info()
                         cons = cons_data[f_size][base_pos].get_cons_info()
                         stats = cons_data[f_size][base_pos].get_stats()
+                        
+                        #print(ref)
+                        #print(cons)
+                        #print(stats)
 
                         counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
+                        ### create an indels list
+                        indels = []
                         for allele in cons:
                             # ref > 1 => deletion
                             if len(allele[0]) > 1:
+                                #input("deletion:" + str(allele))
                                 counts['D'] += cons[allele]
+                                indels.append(str(cons[allele]) + ":" + allele[0] + "->" + allele[1])
                                 
                             # allele > 1 => insertion
                             elif len(allele[1]) > 1:
+                                #input("insertion:" + str(allele))
                                 counts['I'] += cons[allele]
+                                indels.append(str(cons[allele]) + ":" + allele[0] + "->" + allele[1])
                                 
                             else:
                                 counts[allele[1]] += cons[allele]
                        
-
-                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                        indel_list=";".join(indels)        
+                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
                             contig, base_pos, ref_base, counts['A'], counts['C'], counts['G'], counts['T'], 
-                            counts['I'], counts['D'], counts['N'],
+                            counts['I'], counts['D'], counts['N'],indel_list,
                             stats['rawdp'], stats['consdp'], f_size, stats['ref_freq'], stats['mean_fam']))
 
                         row = cons_data[f_size][base_pos]
@@ -290,11 +306,11 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
         
     ## Lists of umi families with count >= f_size
     f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
-
+    
     ## Get reference sequence for the region 
     print("Getting reference sequence...")
     ref_seq = get_ref_seq(contig, region_start, region_end, config)
-
+    
     ## Get consensus data for each f_size + uncollapsed data
     print("Building consensus data...")
     cons_data = {}
@@ -311,7 +327,9 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
     """
 
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
-
+    
+    ### LEH : code is generating consesnus for f_size=0, this is confusing things
+    ### SHOULD VERIFY that f_size = 0 is NOT passed to this, it appears to mess up the data
     for f_size in f_sizes:
         cons_data[f_size] = generate_consensus(
             umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)

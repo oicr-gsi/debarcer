@@ -1,6 +1,5 @@
 
 import gzip
-import os
 import sys
 import argparse
 import configparser
@@ -43,12 +42,9 @@ def verify_spacer(reads, umis, spacer_seq):
     return True
 
 
-def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfile):
+def reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile):
     """
-    (str, str, str, str, str, str, str) -> None
-    Take at least 1 input fastq file (r1_file), and reheader fastq file(s)
-    according to the prename-specified library prep. in prepfile. 
-    Reheadered fastqs are written in outdir and named prefix.umi.reheadered_RN.fastq.gz       
+    (Main) Reheaders fastq files according to specified library prep.
     - removes reads without a valid spacer (if applicable)
     - gzip module is very slow, consider subprocess (at the cost of compatibility)
     """
@@ -71,8 +67,9 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
     r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
 
-    r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
-    r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
+    r1_writer = gzip.open(output_path + "_R1.fastq.gz", "wt")
+    r2_writer = gzip.open(output_path + "_R2.fastq.gz",
+                          "wt") if actual_reads > 1 else None
 
     spacer_len_r1 = 0
     spacer_len_r2 = 0
@@ -205,21 +202,22 @@ if __name__ == '__main__':
 
     # Argument parsing
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r1', '--Read1', dest='read1', help='Path to first FASTQ file.', required=True)
-    parser.add_argument('-r2', '--Read2', dest='read2', help='Path to second FASTQ file, if applicable')
-    parser.add_argument('-r3', '--Read3', dest='read3', help='Path to third FASTQ file, if applicable')
-    parser.add_argument('-p',  '--Prepname', dest='prepname', choices=['HALOPLEX', 'SURESELECT', 'EPIC-DS', 'SIMSENSEQ-PE', 'SIMSENSEQ-SE'],
-                        help='Name of library prep to  use (defined in library_prep_types.ini)', required=True)
-    parser.add_argument('-pf', '--Prepfile', dest='prepfile', help='Path to the library_prep_types.ini file', required=True)
-    parser.add_argument('-o', '--OutDir', dest='outdir', help='Output directory where fastqs are written', required=True)
-    parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
-    
+    parser.add_argument('-r1', '--read1', help='Path to first FASTQ file.', required=True)
+    parser.add_argument('-r2', '--read2', help='Path to second FASTQ file, if necessary.')
+    parser.add_argument('-r3', '--read3', help='Path to third FASTQ file, if necessary.')
+    parser.add_argument('-p',  '--prepname', help='Name of library prep to  use (defined in library_prep_types.ini).', required=True)
+    parser.add_argument('-pf', '--prepfile', help='Path to your library_prep_types.ini file.', required=True)
+    parser.add_argument('-o',  '--output_path', help='Path to write new files to.', required=True)
+
     args = parser.parse_args()
 
-    r1_file, r2_file, r3_file = args.read1, args.read2, args.read3
-    outdir, prefix = args.outdir, args.prefix
-    prepname, prepfile = args.prepname, args.prepfile
+    r1_file = args.read1
+    r2_file = args.read2
+    r3_file = args.read3
+    output_path = args.output_path
+    prepname = args.prepname
+    prepfile = args.prepfile
 
     # Preprocess (reheader fastq files)
-    reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfile)
-    
+    reheader_fastqs(r1_file, r2_file, r3_file, output_path, prepname, prepfile)
+
