@@ -36,12 +36,21 @@ def timestamp():
 
 
 def preprocess_reads(args):
-    """
-    Preprocesses fastq files by removing UMIs from reads and appending
-	 them to the read names.
-	 """
-
-    
+    '''
+    (list) -> None
+    Preprocesses fastq files by removing UMIs from reads, appending them to 
+    the read names and writing new fastqs 
+	 
+    :param outdir: Directory where new fastqs are written. From command or config
+    :param read1: Path to first FASTQ file
+    :param read2: Path to second FASTQ file
+    :param read3: Path to third FASTQ file
+    :param prepname: Name of the library preparation
+    :param prepfile: Path to the library preparation ini file. From command or config
+    :param config: Path to the config file. 
+    :param prefix: Prefix for naming umi-reheradered fastqs 
+    '''
+        
     # get prepfile and outdir from config in priority
     try:
         config = configparser.ConfigParser()
