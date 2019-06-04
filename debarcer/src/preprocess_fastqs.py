@@ -109,6 +109,8 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
         # update spacer length for read2 if umi in read2  
         if len(umi_locs) > 1:
             spacer_len_r2 = len(spacer_seq)
+        else:
+            spacer_len_r2 = 0
     else:
         spacer_len_r1, spacer_len_r2 = 0, 0    
             
