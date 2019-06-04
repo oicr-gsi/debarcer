@@ -1,4 +1,3 @@
-import os.path
 import argparse
 import configparser
 import pickle
