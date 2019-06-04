@@ -355,7 +355,7 @@ def generate_plots(args):
 
 
 if __name__ == '__main__':
-    
+        
     ## Argument + config parsing and error handling
     parser = argparse.ArgumentParser(prog='debarcer.py', description="A package for De-Barcoding\
                                      and Error Correction of sequencing data containing molecular barcodes")
@@ -373,55 +373,54 @@ if __name__ == '__main__':
     p_parser.add_argument('-c', '--Config', dest='config', help='Path to your config file')
     p_parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
     p_parser.set_defaults(func=preprocess_reads)
-
-	## UMI group command - requires BAM file
-	g_parser = subparsers.add_parser('group', help="Groups and error-corrects UMIs into families.")
-	g_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-	g_parser.add_argument('-r', '--region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
-	g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-	g_parser.add_argument('-c', '--config', help='Path to your config file.')
-	g_parser.set_defaults(func=group_umis)
-
-	## Base collapse command - requires BAM file, UMI family file optional
-	c_parser = subparsers.add_parser('collapse', help="Base collapsing from given UMI families file.")
-	c_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-	c_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
-	c_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-	c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file.')
-	c_parser.add_argument('-c', '--config', help='Path to your config file.')
-	c_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to collapse on.') ##implement
-	c_parser.set_defaults(func=collapse)
-
-	## Variant call command - requires cons file (can only run after collapse)
-	v_parser = subparsers.add_parser('call', help="Variant calling from analyzed BAM file.")
-	v_parser.add_argument('-o', '--output_path', help='Path to writer output files to.', required=True)
-	v_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
-	v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
-	v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
-	v_parser.add_argument('-c', '--config', help='Path to your config file.')
-	v_parser.set_defaults(func=call_variants)
-
-	##Run scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
-	s_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
-	s_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
-	s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
-	s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
-	s_parser.add_argument('-c', '--config', help='Path to your config file.')
-	s_parser.add_argument('-id', '--run_id', help='Run id.', required=True)
-	s_parser.set_defaults(func=run_scripts)
-
-	##Generate graphs	
-	g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
-	g_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
-	g_parser.add_argument('-c', '--cons_file', help='Path to your CONS fle.')
-	g_parser.add_argument('-u', '--umi_datafile', help='Path to your umi CSV data file.')
-	g_parser.add_argument('-uf', '--umi_flag', help="Pass 'all' or 'rs' as a parameter, to generate all or region-specific umi plots, respectively.")
-	g_parser.add_argument('-cf', '--cons_flag', help="Pass 'all' as a parameter, to generate all cons plots.")
-
-	args = parser.parse_args()
-	
-	try:
-		args.func(args)
-	except AttributeError as e:
-		print(parser.format_help())
-		print(e)
+    
+    ## UMI group command - requires BAM file
+    g_parser = subparsers.add_parser('group', help="Groups and error-corrects UMIs into families.")
+    g_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
+    g_parser.add_argument('-r', '--region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
+    g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
+    g_parser.add_argument('-c', '--config', help='Path to your config file.')
+    g_parser.set_defaults(func=group_umis)
+    
+    ## Base collapse command - requires BAM file, UMI family file optional
+    c_parser = subparsers.add_parser('collapse', help="Base collapsing from given UMI families file.")
+    c_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
+    c_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
+    c_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
+    c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file.')
+    c_parser.add_argument('-c', '--config', help='Path to your config file.')
+    c_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to collapse on.') ##implement
+    c_parser.set_defaults(func=collapse)
+    
+    ## Variant call command - requires cons file (can only run after collapse)
+    v_parser = subparsers.add_parser('call', help="Variant calling from analyzed BAM file.")
+    v_parser.add_argument('-o', '--output_path', help='Path to writer output files to.', required=True)
+    v_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
+    v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
+    v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
+    v_parser.add_argument('-c', '--config', help='Path to your config file.')
+    v_parser.set_defaults(func=call_variants)
+    
+    ##Run scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
+    s_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
+    s_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
+    s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
+    s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
+    s_parser.add_argument('-c', '--config', help='Path to your config file.')
+    s_parser.add_argument('-id', '--run_id', help='Run id.', required=True)
+    s_parser.set_defaults(func=run_scripts)
+    
+    ##Generate graphs	
+    g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
+    g_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
+    g_parser.add_argument('-c', '--cons_file', help='Path to your CONS fle.')
+    g_parser.add_argument('-u', '--umi_datafile', help='Path to your umi CSV data file.')
+    g_parser.add_argument('-uf', '--umi_flag', help="Pass 'all' or 'rs' as a parameter, to generate all or region-specific umi plots, respectively.")
+    g_parser.add_argument('-cf', '--cons_flag', help="Pass 'all' as a parameter, to generate all cons plots.")
+    
+    args = parser.parse_args()
+    try:
+        args.func(args)
+    except AttributeError as e:
+        print(parser.format_help())
+        print(e)
