@@ -1,6 +1,5 @@
 import gzip
 import os
-import sys
 import argparse
 import configparser
 from itertools import zip_longest
