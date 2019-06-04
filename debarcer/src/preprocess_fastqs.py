@@ -159,9 +159,9 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
         else:
             raise ValueError("Invalid configuration of reads/actual reads.")
     elif num_reads == 2:
-        # check if paired end or single end
         if actual_reads == 2:
-            # paired end. loop over iterator with slices of 4 read lines from each file
+            # configuration assumes spacer. paired end reads. (ie EPIC-DS and SIMSENSEQ-PE)
+            # oop over iterator with slices of 4 read lines from each file
             for read1, read2 in zip(getread(r1), getread(r2)):
                 # extract umis from read1 and read2
                 umis = extract_umis([read1[1], read2[1]], umi_locs, umi_lens)
@@ -187,9 +187,9 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
                 r2_writer.write(read2[3][umi_len_r2 + spacer_len_r2:])
         else:
             raise ValueError("Invalid configuration of reads/actual reads.")
-    else:
+    elif num_reads == 1:
         if actual_reads == 1:
-            # loop over reads in r1
+            # loop over iterator with slices of 4 read lines from file r1
             for read1 in getread(r1):
                 # extract umi from read1
                 umis = extract_umis([read1[1]], umi_locs, umi_lens)
