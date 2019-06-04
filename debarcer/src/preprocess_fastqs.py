@@ -54,18 +54,29 @@ def extract_umis(reads, umi_locs, umi_lens):
     return umis
 
 
-def verify_spacer(reads, umis, spacer_seq):
+def correct_spacer(reads, umis, spacer_seq):
     '''
     (list, list, str) -> bool
     Take a list of read sequences, a list of umi sequence and a spacer sequence
     string and return True by default or False if spacer not in read immediately after umi 
     '''
+    
+    # set up bool <- True
+    # by default: spacer seq follows umi seq in read sequences with spacer 
+    Correct = True
+    # for each read seq and umi seq
+    #     Correct <- False if umi in read and spacer position not as expected 
     for read in reads:
         for umi in umis:
+            # check if umi in read. ignore reads if umi not in read
             if umi in read:
-                if not read.split(umi)[1].startswith(spacer_seq):
-                    return False
-    return True
+                # remove umi from read. 
+                read = read[read.index(umi) + len(umi):]
+                # check is spacer seq is immediately after umi 
+                if not read.upper().startswith(spacer_seq.upper()):
+                    # update bool
+                    Correct = False
+    return Correct
 
 
 def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfile):
@@ -157,8 +168,8 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
                 # extract umis from read1 and read2
                 umis = extract_umis([read1[1], read2[1]], umi_locs, umi_lens)
                 
-                # skip reads without spacer
-                if spacer and not verify_spacer([read1[1], read2[1]], umis, spacer_seq):
+                # skip reads with spacer in wrong position
+                if spacer == True and correct_spacer([read1[1], read2[1]], umis, spacer_seq) == False:
                     continue
                 
                 # edit read names from r1 and r2 
@@ -198,8 +209,9 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
             for read1 in getread(r1):
                 # extract umi from read1
                 umis = extract_umis([read1[1]], umi_locs, umi_lens)
-                # skip parser without reads
-                if spacer and not verify_spacer([read1[1], read2[1]], umis, spacer_seq):
+                
+                # skip reads with spacer in wrong position
+                if spacer == True and correct_spacer([read1[1], read2[1]], umis, spacer_seq) == False:
                     continue
 
                 # edit read name
