@@ -1,4 +1,3 @@
-
 import gzip
 import os
 import sys
@@ -10,7 +9,10 @@ from itertools import zip_longest
 def parse_prep(prepname, prepfile):
     '''
     (str, file) --> configparser.SectionProxy
-    Returns parameters for prepname specified in the config file
+    :param prepname: Name of the library preparation
+    :param prepfile: Path to the library preparation ini file
+    
+    Returns key, value pairs of parameters for prepname specified in the prepfile
     '''
 
     preps = configparser.ConfigParser()
@@ -21,8 +23,10 @@ def parse_prep(prepname, prepfile):
 def getread(fastq_file):
     """
     (file) -- > itertools.zip_longest
-    Takes a fastq file open for reading (in plain text mode) and returns an
-    iterator slicing the fastq into 4-line reads
+    :param fastq_file: a fastq file open for reading in plain text mode
+    
+    Returns an iterator slicing the fastq into 4-line reads.
+    Each element of the iterator is a tuple containing read information
     """
     args = [iter(fastq_file)] * 4
     return zip_longest(*args, fillvalue=None)
@@ -70,7 +74,6 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     according to the prename-specified library prep. in prepfile. 
     Reheadered fastqs are written in outdir and named prefix.umi.reheadered_RN.fastq.gz       
     - removes reads without a valid spacer (if applicable)
-    - gzip module is very slow, consider subprocess (at the cost of compatibility)
     Pre-condition: fasqs have the same number of reads and files are in sync
     """
     
