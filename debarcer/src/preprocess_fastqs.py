@@ -34,13 +34,15 @@ def getread(fastq_file):
 def extract_umis(reads, umi_locs, umi_lens):
     '''
     (list, list, list) -> list
-    Take a list of read sequences, a list with the 1-base location of umis
-    in the reads (eg umi_locs = [1], umi is located in 1st read of reads, reads[0]),
-    a list of umi lengths corresponding to the umi in each read and return a list
-    of umi sequences
+    :param reads: A list of read sequences
+    :param umi_locs: A list of 1-based indices indicating which read sequences have the umis.
+     (eg umi_locs = [1]: umi is located in 1st read of reads, reads[0])
+    :param umi_lens: A list with umi lengths for each location
+    
+    Returns a return a list of umi sequences
     '''
     
-    # make a list with all umis
+    # make a list with all umi sequences
     umis = []
     
 	 #Iterate through (umi_loc, umi_len) pairs in list of tuple pairs
