@@ -231,7 +231,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         
         for i in range(len(writers)):
             # add umi to read name and write to outputfile
-            writers[i].write(readnames[i] + ":" + ''.join(umis) + " " + namerests[i] + "\n")
+            writers[i].write(readnames[i] + ":" + ';'.join(umis) + " " + namerests[i] + "\n")
             # remove umi and spacer from read seq. write reamining of read to outputfile
             if i == 0:
                 # determine index for reads k <- 0 for r1, -1 for r2 or r3
