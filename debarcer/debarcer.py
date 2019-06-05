@@ -81,21 +81,11 @@ def preprocess_reads(args):
                 raise ValueError('ERR: prepfile is not a valid file')
                 sys.exit(1)
     
-    # check if prefix is provided in the command
-    if not args.prefix:
-        # use input fastq to derive prefix
-        filename = os.path.basename(args.read1)
-        # remove extension if possible or keep entire file name as prefix
-        if 'fastq.gz' in filename:
-            prefix = filename[:filename.index('.fastq.gz')]
-        elif 'fq.gz' in filename:
-            prefix = filename[:filename.index('.fq.gz')]
-        else:
-            prefix = filename
-    
     # reheader fastqs and add umi in new fastqs header
-    reheader_fastqs(args.read1, args.read2, args.read3, outdir, prefix, args.prepname, prepfile)
+    reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=prefix)
 	 
+    
+    
 
 def group_umis(args):
 	"""Groups and error-corrects UMIs into families."""

@@ -57,8 +57,11 @@ def extract_umis(reads, umi_locs, umi_lens):
 def correct_spacer(reads, umis, spacer_seq):
     '''
     (list, list, str) -> bool
-    Take a list of read sequences, a list of umi sequence and a spacer sequence
-    string and return True by default or False if spacer not in read immediately after umi 
+    :param reads: List of read sequences
+    :param umis: List of umi sequences
+    :spacer_seq: Spacer sequence
+    
+    Return False if spacer in sequence but not at expected position and return True otherwise 
     '''
     
     # set up bool <- True
@@ -79,15 +82,57 @@ def correct_spacer(reads, umis, spacer_seq):
     return Correct
 
 
-def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfile):
+
+def open_optional_file(D, k):
+    '''
+    (dict, str) -> None or opened file in plain text reading mode 
+    :param D: a dictionary with key, value pairs
+    :param k: a specific key, may or may not be in D
+    
+    Return a file opened for reading in plain text if k in D and D[k] == True or None otherwise
+    '''
+    
+    # check if key k in D
+    if k in D:
+        if D[k]:
+            r = gzip.open(D[k], "rt")
+        else:
+            r = None
+    else:
+        r = None
+    return r
+
+
+
+def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     """
     (str, str, str, str, str, str, str) -> None
-    Take at least 1 input fastq file (r1_file), and reheader fastq file(s)
-    according to the prename-specified library prep. in prepfile. 
-    Reheadered fastqs are written in outdir and named prefix.umi.reheadered_RN.fastq.gz       
-    - removes reads without a valid spacer (if applicable)
+    :param r1_file: Path to first FASTQ file
+    :param prepname: Name of the library preparation
+    :param prepfile: Path to the library preparation ini file
+    :param kw: Recognized keyword arguments: \
+               prefix: Prefix for naming umi-reheradered fastqs. Use Prefix from r1 if not provided
+               r2: Path to second FASTQ file
+               r3: Path to third FASTQ file
+    
+    Write new reheadered fastq file(s) prefix.umi.reheadered_RN.fastq.gz in outdir
+    according to settings in prepfile corresponding to prename 
     Pre-condition: fasqs have the same number of reads and files are in sync
     """
+    
+    # check if prefix provided   
+    if 'prefix' in KeyWords:
+        prefix = KeyWords['prefix']
+    else:
+        # use r1_file to derive prefix
+        filename = os.path.basename(r1_file)
+        # remove extension if possible or keep entire file name as prefix
+        if 'fastq.gz' in filename:
+            prefix = filename[:filename.index('.fastq.gz')]
+        elif 'fq.gz' in filename:
+            prefix = filename[:filename.index('.fq.gz')]
+        else:
+            prefix = filename
     
     # get the parameters for prepname from the config
     prep = parse_prep(prepname, prepfile)
@@ -116,11 +161,17 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     
     # Read FASTQ in text mode
     r1 = gzip.open(r1_file, "rt")
-    r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
-    r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
+    
+    # open files r2_file and r2_file if provided, return None otherwise
+    r2 = open_optional_file(KeyWords, 'r2')
+    r3 = open_optional_file(KeyWords, 'r3')
+      
     # Open output fastqs in text mode for writing
     r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
-    r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
+    if r2 != None:
+        r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt")
+    else:
+        r2_writer = None
 
     # get the length of the umi for read1 and read2, set to 0 if only in read1
     umi_len_r1 = umi_lens[0]
@@ -139,87 +190,6 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
 
     print("Preprocessing reads...")
     
-#    # check the number of input fastqs
-#    if num_reads == 3:
-#        # check the number of output fastqs
-#        if actual_reads == 2:
-#            # loop over iterator with slices of 4 read lines from each file
-#            for read1, read2, read3 in zip(getread(r1), getread(r2), getread(r3)):
-#                # extract umi sequences from read2
-#                umis = extract_umis([read1[1], read2[1], read3[1]], umi_locs, umi_lens)
-#                
-#                # skip reads with spacer in wrong position
-#                if spacer == True and correct_spacer([read1[1], read2[1], read3[1]], umis, spacer_seq) == False:
-#                    continue
-#                
-#                # edit read names from r1 and r3
-#                read_name1, rest1 = read1[0].rstrip().split(' ')
-#                read_name2, rest2 = read3[0].rstrip().split(' ')
-#                # add umi seq to read1 name and write read1 to output file 1
-#                r1_writer.write(read_name1 + ":" + ''.join(umis) + " " + rest1 + "\n")
-#                # remove umi and spacer from if present and write read to output file 1
-#                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
-#                r1_writer.write(read1[2])
-#                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
-#                # add umi seq to read3 name and write read3 to output file 2
-#                r2_writer.write(read_name2 + ":" + ''.join(umis) + " " + rest2 + "\n")
-#                # remove umi and spacer from if present and write read to output file 2
-#                r2_writer.write(read3[1][umi_len_r2 + spacer_len_r2:])
-#                r2_writer.write(read3[2])
-#                r2_writer.write(read3[3][umi_len_r2 + spacer_len_r2:])
-#        else:
-#            raise ValueError("Invalid configuration of reads/actual reads.")
-#    elif num_reads == 2:
-#        if actual_reads == 2:
-#            # configuration assumes spacer. paired end reads. (ie EPIC-DS and SIMSENSEQ-PE)
-#            # oop over iterator with slices of 4 read lines from each file
-#            for read1, read2 in zip(getread(r1), getread(r2)):
-#                # extract umis from read1 and read2
-#                umis = extract_umis([read1[1], read2[1]], umi_locs, umi_lens)
-#                
-#                # skip reads with spacer in wrong position
-#                if spacer == True and correct_spacer([read1[1], read2[1]], umis, spacer_seq) == False:
-#                    continue
-#                
-#                # edit read names from r1 and r2 
-#                read_name1, rest1 = read1[0].rstrip().split(' ')
-#                read_name2, rest2 = read2[0].rstrip().split(' ')
-#                # add umis as a single string to read1 name and write read 1 to output file 1
-#                r1_writer.write(read_name1 + ":" + ''.join(umis) + " " + rest1 + "\n")
-#                # remove umi and spacer from read seq. write read to output file 1
-#                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
-#                r1_writer.write(read1[2])
-#                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
-#                # add umis as a single string to read2 name and write read 1 to output file 2 
-#                r2_writer.write(read_name2 + ":" + ''.join(umis) + " " + rest2 + "\n")
-#                # remove umi and spacer from read seq if umi and spacer in r2. write read to output file 2
-#                r2_writer.write(read2[1][umi_len_r2 + spacer_len_r2:])
-#                r2_writer.write(read2[2])
-#                r2_writer.write(read2[3][umi_len_r2 + spacer_len_r2:])
-#        else:
-#            raise ValueError("Invalid configuration of reads/actual reads.")
-#    elif num_reads == 1:
-#        if actual_reads == 1:
-#            # loop over iterator with slices of 4 read lines from file r1
-#            for read1 in getread(r1):
-#                # extract umi from read1
-#                umis = extract_umis([read1[1]], umi_locs, umi_lens)
-#                
-#                # skip reads with spacer in wrong position
-#                if spacer == True and correct_spacer([read1[1]], umis, spacer_seq) == False:
-#                    continue
-#
-#                # edit read name
-#                read_name1, rest1 = read1[0].rstrip().split(' ')
-#                # add umi to read name and write to outputfile
-#                r1_writer.write(read_name1 + ":" + umis[0] + " " + rest1 + "\n")
-#                # remove umi and spacer from read seq. write remaining of read to output file
-#                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
-#                r1_writer.write(read1[2])
-#                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
-#        else:
-#            raise ValueError("Invalid configuration of reads/actual reads.")
-
     # make a list of fastqs open for reading
     fastqs = [i for i in [r1, r2, r3] if i != None]
     
@@ -296,10 +266,6 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    r1_file, r2_file, r3_file = args.read1, args.read2, args.read3
-    outdir, prefix = args.outdir, args.prefix
-    prepname, prepfile = args.prepname, args.prepfile
-
     # Preprocess (reheader fastq files)
-    reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfile)
+    reheader_fastqs(args.read1, args.outdir, args.prepname, args.prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
     
