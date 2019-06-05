@@ -101,22 +101,9 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     # specify if a spacer is used or not
     spacer = bool(prep['SPACER'])
     
-    # get the spacer sequence if exists 
+    # get the spacer sequence and spacer length if exists 
     if spacer:
         spacer_seq = str(prep['SPACER_SEQ'])
-    else:
-        spacer_seq = 'None'
-    
-	 # Read FASTQ in text mode
-    r1 = gzip.open(r1_file, "rt")
-    r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
-    r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
-    # Open output fastqs in text mode for writing
-    r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
-    r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
-
-    # retrieve spacer length if exists
-    if spacer:
         spacer_len_r1 = len(spacer_seq)
         # update spacer length for read2 if umi in read2  
         if len(umi_locs) > 1:
@@ -124,8 +111,17 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
         else:
             spacer_len_r2 = 0
     else:
+        spacer_seq = 'None'
         spacer_len_r1, spacer_len_r2 = 0, 0    
-            
+    
+    # Read FASTQ in text mode
+    r1 = gzip.open(r1_file, "rt")
+    r2 = gzip.open(r2_file, "rt") if num_reads > 1 else None
+    r3 = gzip.open(r3_file, "rt") if num_reads > 2 else None
+    # Open output fastqs in text mode for writing
+    r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
+    r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt") if actual_reads > 1 else None
+
     # get the length of the umi for read1 and read2, set to 0 if only in read1
     umi_len_r1 = umi_lens[0]
     if len(umi_lens) > 1:
@@ -133,100 +129,155 @@ def reheader_fastqs(r1_file, r2_file, r3_file, outdir, prefix, prepname, prepfil
     else:
         umi_len_r2 = 0
 
-    print("Preprocessing reads...")
-
-
-    # check the number of input fastqs
+    # do a check based on number of input and output files currently supported in the library prep ini
     if num_reads == 3:
-        # check the number of output fastqs
-        if actual_reads == 2:
-            # loop over iterator with slices of 4 read lines from each file
-            for read1, read2, read3 in zip(getread(r1), getread(r2), getread(r3)):
-                # extract umi sequences from read2
-                umis = extract_umis([read1[1], read2[1], read3[1]], umi_locs, umi_lens)
-                
-                # skip reads with spacer in wrong position
-                if spacer == True and correct_spacer([read1[1], read2[1], read3[1]], umis, spacer_seq) == False:
-                    continue
-                
-                # edit read names from r1 and r3
-                read_name1, rest1 = read1[0].rstrip().split(' ')
-                read_name2, rest2 = read3[0].rstrip().split(' ')
-                # add umi seq to read1 name and write read1 to output file 1
-                r1_writer.write(read_name1 + ":" + ''.join(umis) + " " + rest1 + "\n")
-                # remove umi and spacer from if present and write read to output file 1
-                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
-                r1_writer.write(read1[2])
-                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
-                # add umi seq to read3 name and write read3 to output file 2
-                r2_writer.write(read_name2 + ":" + ''.join(umis) + " " + rest2 + "\n")
-                # remove umi and spacer from if present and write read to output file 2
-                r2_writer.write(read3[1][umi_len_r2 + spacer_len_r2:])
-                r2_writer.write(read3[2])
-                r2_writer.write(read3[3][umi_len_r2 + spacer_len_r2:])
-        else:
-            raise ValueError("Invalid configuration of reads/actual reads.")
+        assert actual_reads == 2, 'Expecting 2 output fastqs and 3 input fastqs'
     elif num_reads == 2:
-        if actual_reads == 2:
-            # configuration assumes spacer. paired end reads. (ie EPIC-DS and SIMSENSEQ-PE)
-            # oop over iterator with slices of 4 read lines from each file
-            for read1, read2 in zip(getread(r1), getread(r2)):
-                # extract umis from read1 and read2
-                umis = extract_umis([read1[1], read2[1]], umi_locs, umi_lens)
-                
-                # skip reads with spacer in wrong position
-                if spacer == True and correct_spacer([read1[1], read2[1]], umis, spacer_seq) == False:
-                    continue
-                
-                # edit read names from r1 and r2 
-                read_name1, rest1 = read1[0].rstrip().split(' ')
-                read_name2, rest2 = read2[0].rstrip().split(' ')
-                # add umis as a single string to read1 name and write read 1 to output file 1
-                r1_writer.write(read_name1 + ":" + ''.join(umis) + " " + rest1 + "\n")
-                # remove umi and spacer from read seq. write read to output file 1
-                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
-                r1_writer.write(read1[2])
-                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
-                # add umis as a single string to read2 name and write read 1 to output file 2 
-                r2_writer.write(read_name2 + ":" + ''.join(umis) + " " + rest2 + "\n")
-                # remove umi and spacer from read seq if umi and spacer in r2. write read to output file 2
-                r2_writer.write(read2[1][umi_len_r2 + spacer_len_r2:])
-                r2_writer.write(read2[2])
-                r2_writer.write(read2[3][umi_len_r2 + spacer_len_r2:])
-        else:
-            raise ValueError("Invalid configuration of reads/actual reads.")
+        assert actual_reads == 2, 'Expecting 2 output fastqs and 2 input fastqs'
     elif num_reads == 1:
-        if actual_reads == 1:
-            # loop over iterator with slices of 4 read lines from file r1
-            for read1 in getread(r1):
-                # extract umi from read1
-                umis = extract_umis([read1[1]], umi_locs, umi_lens)
-                
-                # skip reads with spacer in wrong position
-                if spacer == True and correct_spacer([read1[1], read2[1]], umis, spacer_seq) == False:
-                    continue
+        assert actual_reads == 1, 'Expecting 1 output fastq and 1 input fastq'
 
-                # edit read name
-                read_name1, rest1 = read1[0].rstrip().split(' ')
-                # add umi to read name and write to outputfile
-                r1_writer.write(read_name1 + ":" + umis[0] + " " + rest1 + "\n")
-                # remove umi and spacer from read seq. write remaining of read to output file
-                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
-                r1_writer.write(read1[2])
-                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
-        else:
-            raise ValueError("Invalid configuration of reads/actual reads.")
+    print("Preprocessing reads...")
+    
+#    # check the number of input fastqs
+#    if num_reads == 3:
+#        # check the number of output fastqs
+#        if actual_reads == 2:
+#            # loop over iterator with slices of 4 read lines from each file
+#            for read1, read2, read3 in zip(getread(r1), getread(r2), getread(r3)):
+#                # extract umi sequences from read2
+#                umis = extract_umis([read1[1], read2[1], read3[1]], umi_locs, umi_lens)
+#                
+#                # skip reads with spacer in wrong position
+#                if spacer == True and correct_spacer([read1[1], read2[1], read3[1]], umis, spacer_seq) == False:
+#                    continue
+#                
+#                # edit read names from r1 and r3
+#                read_name1, rest1 = read1[0].rstrip().split(' ')
+#                read_name2, rest2 = read3[0].rstrip().split(' ')
+#                # add umi seq to read1 name and write read1 to output file 1
+#                r1_writer.write(read_name1 + ":" + ''.join(umis) + " " + rest1 + "\n")
+#                # remove umi and spacer from if present and write read to output file 1
+#                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
+#                r1_writer.write(read1[2])
+#                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
+#                # add umi seq to read3 name and write read3 to output file 2
+#                r2_writer.write(read_name2 + ":" + ''.join(umis) + " " + rest2 + "\n")
+#                # remove umi and spacer from if present and write read to output file 2
+#                r2_writer.write(read3[1][umi_len_r2 + spacer_len_r2:])
+#                r2_writer.write(read3[2])
+#                r2_writer.write(read3[3][umi_len_r2 + spacer_len_r2:])
+#        else:
+#            raise ValueError("Invalid configuration of reads/actual reads.")
+#    elif num_reads == 2:
+#        if actual_reads == 2:
+#            # configuration assumes spacer. paired end reads. (ie EPIC-DS and SIMSENSEQ-PE)
+#            # oop over iterator with slices of 4 read lines from each file
+#            for read1, read2 in zip(getread(r1), getread(r2)):
+#                # extract umis from read1 and read2
+#                umis = extract_umis([read1[1], read2[1]], umi_locs, umi_lens)
+#                
+#                # skip reads with spacer in wrong position
+#                if spacer == True and correct_spacer([read1[1], read2[1]], umis, spacer_seq) == False:
+#                    continue
+#                
+#                # edit read names from r1 and r2 
+#                read_name1, rest1 = read1[0].rstrip().split(' ')
+#                read_name2, rest2 = read2[0].rstrip().split(' ')
+#                # add umis as a single string to read1 name and write read 1 to output file 1
+#                r1_writer.write(read_name1 + ":" + ''.join(umis) + " " + rest1 + "\n")
+#                # remove umi and spacer from read seq. write read to output file 1
+#                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
+#                r1_writer.write(read1[2])
+#                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
+#                # add umis as a single string to read2 name and write read 1 to output file 2 
+#                r2_writer.write(read_name2 + ":" + ''.join(umis) + " " + rest2 + "\n")
+#                # remove umi and spacer from read seq if umi and spacer in r2. write read to output file 2
+#                r2_writer.write(read2[1][umi_len_r2 + spacer_len_r2:])
+#                r2_writer.write(read2[2])
+#                r2_writer.write(read2[3][umi_len_r2 + spacer_len_r2:])
+#        else:
+#            raise ValueError("Invalid configuration of reads/actual reads.")
+#    elif num_reads == 1:
+#        if actual_reads == 1:
+#            # loop over iterator with slices of 4 read lines from file r1
+#            for read1 in getread(r1):
+#                # extract umi from read1
+#                umis = extract_umis([read1[1]], umi_locs, umi_lens)
+#                
+#                # skip reads with spacer in wrong position
+#                if spacer == True and correct_spacer([read1[1]], umis, spacer_seq) == False:
+#                    continue
+#
+#                # edit read name
+#                read_name1, rest1 = read1[0].rstrip().split(' ')
+#                # add umi to read name and write to outputfile
+#                r1_writer.write(read_name1 + ":" + umis[0] + " " + rest1 + "\n")
+#                # remove umi and spacer from read seq. write remaining of read to output file
+#                r1_writer.write(read1[1][umi_len_r1 + spacer_len_r1:])
+#                r1_writer.write(read1[2])
+#                r1_writer.write(read1[3][umi_len_r1 + spacer_len_r1:])
+#        else:
+#            raise ValueError("Invalid configuration of reads/actual reads.")
 
-    r1.close()
-    if r2:
-        r2.close() 
-    if r3:
-        r3.close() 
-
-    r1_writer.close()
-    if r2_writer:
-        r2_writer.close() 
-
+    # make a list of fastqs open for reading
+    fastqs = [i for i in [r1, r2, r3] if i != None]
+    
+    # make a list of files open for writing
+    writers = [i for i in [r1_writer, r2_writer] if i != None]
+    
+    # check the number of input files
+    # create iterator with reads from each file
+    if len(fastqs) == 3:
+        I =  zip(getread(fastqs[0]), getread(fastqs[1]), getread(fastqs[2]))
+    elif len(fastqs) == 2:
+        I =  zip(getread(fastqs[0]), getread(fastqs[1]))
+    elif len(fastqs) == 1:
+        I =  zip(getread(fastqs[0]))
+        
+    # loop over iterator with slices of 4 read lines from each line
+    for reads in I:
+        # extract umi sequences from reads
+        # make a list of read sequences
+        readseqs = [i[1] for i in reads]
+        umis = extract_umis(readseqs, umi_locs, umi_lens)
+        # skip reads with spacer in wrong position
+        if spacer == True and correct_spacer(readseqs, umis, spacer_seq) == False:
+            continue
+        
+        # edit read names and add umi
+        # make parallel lists with begining and end of read name from r1, and from r2 or r3
+        read_name1, rest1 = reads[0][0].rstrip().split(' ')
+        readnames, namerests = [read_name1], [rest1]
+        
+        if len(reads) > 1:
+            # edit read name from r2 (or r3)
+            read_name2, rest2 = reads[-1][0].rstrip().split(' ')
+            readnames.append(read_name2)
+            namerests.append(rest2)
+         
+        # make lists with umi lengths and spacer lengths    
+        UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
+        
+        for i in range(len(writers)):
+            # add umi to read name and write to outputfile
+            writers[i].write(readnames[i] + ":" + ''.join(umis) + " " + namerests[i] + "\n")
+            # remove umi and spacer from read seq. write reamining of read to outputfile
+            if i == 0:
+                # determine index for reads k <- 0 for r1, -1 for r2 or r3
+                k = 0
+            elif i > 0:
+                k = -1
+            writers[i].write(reads[k][1][UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][2])
+            writers[i].write(reads[k][3][UmiLength[i] + SpacerLength[i]:])
+            
+    # close all open files
+    for i in writers:
+        i.close()
+    for i in fastqs:
+        i.close()
+        
     print("Complete. Output written to {}.".format(outdir))
 
 
