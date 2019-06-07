@@ -65,14 +65,21 @@ def preprocess_reads(args):
             # raise error and exit if no prepfile and outdir are provided
             raise ValueError('ERR: Missing prepfile and/or output directory')
             sys.exit(1)
-            
+    finally:
+        # check that prepfile is a valid file
+        if os.path.isfile(prepfile) == False:
+            raise ValueError('ERR: Invalid path to prepfile')
+        
     # code below is executed only if prepfile and outdir are provided  
     # create outputdir if doesn't exist
     if os.path.isdir(outdir) == False:
-        os.makedirs(outdir)
+        if os.path.isfile(outdir) == True:
+            raise ValueError('ERR: Output directory cannot be a file')
+        else:
+            os.makedirs(outdir)
     
     # check that files are valid
-    for i in [prepfile, args.read1, args.read2, args.read3]:
+    for i in [args.read1, args.read2, args.read3]:
         # check that argument (or file) is provided/exists 
         if i:
             # check if provided file is file
@@ -88,60 +95,91 @@ def preprocess_reads(args):
     
 
 def group_umis(args):
-	"""Groups and error-corrects UMIs into families."""
+    '''
+    
+    
+    
+    
+    Groups and error-corrects UMIs into families
+    
+    :param output_path:
+    :param region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
+    g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
+    g_parser.add_argument('-c', '--config', help='Path to your config file.')
+    g_parser.set_defaults(func=group_umis)
+    
+    '''
+    
+    # get bam and outdir from config in priority
+    try:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        bam_file = config['PATHS'['bam_file']]
+        outdir = config['PATHS']['output_dir']
+    except:
+        # check if bam file and outdir are provided in the command
+        try:
+            bam_file, outdir = args.bamfile, args.outdir
+        except:
+            # raise error and exit
+            raise ValueError('ERR: Missing input bam and/or output directory')
+    finally:
+        # check that bam is a valid file
+        if os.path.isfile(bam_file) == False:
+            raise ValueError('ERR: Invalid path to input bam file')
+        
+    # create outputdir if doesn't exist
+    if os.path.isdir(outdir) == False:
+        if os.path.isfile(outdir) == True:
+            raise ValueError('ERR: Output directory cannot be a file')
+        else:
+            os.makedirs(outdir)
+    
+    
+    # continue here
+    
+    
+    
+    region = args.region
+    if any(item not in region for item in ["chr", ":", "-"]):
+        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
+        sys.exit(1)
 
-	if args.config:
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config = None
+   
 
-	region = args.region
-	if any(item not in region for item in ["chr", ":", "-"]):
-	    raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
-	    sys.exit(1)
 
-	contig = region.split(":")[0]
-	region_start = int(region.split(":")[1].split("-")[0])
-	region_end = int(region.split(":")[1].split("-")[1])
 
-	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
-					'ERR: No BAM file provided in args or config.')
-	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-					'ERR: No output path provided in args or config.')
 
-	arg_exists(sys.argv) ##Check whether args directories/files exist
 
-	print(timestamp() + "Grouping UMIs...")
 
-	## Generate an error-corrected list of UMI families
-	umi_families, umi_groups = get_umi_families(
-		contig=contig,
-		region_start=region_start,
-		region_end=region_end,
-		bam_file=bam_file,
-		config=config)
 
-	total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis = umi_datafile(umi_groups)
 
-	filename="{}/datafile_{}.csv".format(output_path,region)
-	headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-	csv.register_dialect('myDialect', delimiter='\t', quoting=csv.QUOTE_NONE)
-	csvrow = {'CHR' : contig, 'START' : str(region_start), 'END' : str(region_end), 'PTU' : str(total_parent_umi_count), 'CTU' : str(total_child_umi_count), 'CHILD_NUMS': num_of_children, 'FREQ_PARENTS' : freq_of_parent_umis}
-	info = [contig, region_start, region_end, total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis]
-
-	file = open(filename, "w")
-	writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
-	writer.writeheader()
-	writer.writerow(csvrow)
-	
-
-	umi_file = "{}/{}.umis".format(output_path, region)
-	pickle.dump(umi_families, open(umi_file, "wb"))
-	
-	print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
-
+    contig = region.split(":")[0]
+    region_start = int(region.split(":")[1].split("-")[0])
+    region_end = int(region.split(":")[1].split("-")[1])
+    
+    print(timestamp() + "Grouping UMIs...")
+    
+    ## Generate an error-corrected list of UMI families
+    umi_families, umi_groups = get_umi_families(contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, config=config)
+    
+    total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis = umi_datafile(umi_groups)
+    
+    filename="{}/datafile_{}.csv".format(output_path,region)
+    headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+    csv.register_dialect('myDialect', delimiter='\t', quoting=csv.QUOTE_NONE)
+    csvrow = {'CHR' : contig, 'START' : str(region_start), 'END' : str(region_end), 'PTU' : str(total_parent_umi_count), 'CTU' : str(total_child_umi_count), 'CHILD_NUMS': num_of_children, 'FREQ_PARENTS' : freq_of_parent_umis}
+    info = [contig, region_start, region_end, total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis]
+    
+    file = open(filename, "w")
+    writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
+    writer.writeheader()
+    writer.writerow(csvrow)
+    
+    umi_file = "{}/{}.umis".format(output_path, region)
+    pickle.dump(umi_families, open(umi_file, "wb"))
+    
+    print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
 
 
 
