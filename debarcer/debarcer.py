@@ -144,8 +144,8 @@ def group_umis(args):
     chromos = [str(i) for i in range(23)] + ['X', 'Y']
     if config[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
         raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
-    # getregion coordinates on chromosome   
-    region_start = int(region.split(":")[1].split("-")[0])
+    # get region coordinates 0-based on chromosome   
+    region_start = int(region.split(":")[1].split("-")[0]) - 1
     region_end = int(region.split(":")[1].split("-")[1])
     if region_start.isnumeric() == False or region_end.isnumeric() == False:
         raise ValueError('ERR: Incorrect start and end coordinates (should look like chr1:1200000-1250000)')
