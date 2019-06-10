@@ -1,5 +1,3 @@
-
-import os as path
 import sys
 import operator
 import configparser
@@ -202,11 +200,8 @@ class UMIClusterer:
             self.get_groups = self._group_directional #Create 2D list structure to represent graph's groups 
 
 
-    def __call__(self, umis, counts, config):
+    def __call__(self, umis, counts, threshold):
         """Counts is a dictionary that maps UMIs to their counts."""
-
-        
-        threshold = int(config['SETTINGS']['umi_edit_distance_threshold']) if config else 1
 
         umis = list(umis)
         
