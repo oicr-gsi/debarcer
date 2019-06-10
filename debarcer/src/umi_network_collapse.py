@@ -1,6 +1,4 @@
 import sys
-import operator
-import configparser
 import itertools
 import collections
 
