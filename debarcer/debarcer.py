@@ -103,10 +103,20 @@ def group_umis(args):
     Groups and error-corrects UMIs into families
     
     :param outdir: Directory where .umis, and datafiles are written
-    :param region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
+    :param region', A string with region coordinates chrN:posA-posB). posA and posB are included
+    
+    
+    
+    
     g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
     g_parser.add_argument('-c', '--config', help='Path to your config file.')
     g_parser.set_defaults(func=group_umis)
+    
+    g_parser.add_argument('-c', '--config', help='Path to your config file.')
+    g_parser.add_argument('-d', '--distance', help='Hamming distance threshold for connecting parent-child umis')
+    g_parser.add_argument('-p', '--position', help='Umi position threshold for grouping umis together')
+    
+    
     
     '''
     
@@ -150,10 +160,33 @@ def group_umis(args):
     if region_start.isnumeric() == False or region_end.isnumeric() == False:
         raise ValueError('ERR: Incorrect start and end coordinates (should look like chr1:1200000-1250000)')
     
+    
+    # get umi position and distance thresholds from config
+    try:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold'])
+        dist_threshold = int(config['SETTINGS']['umi_edit_distance_threshold'])
+    except:
+        # check pos and dist threshold provided in the command
+        try:
+            pos_threshold, dist_threshold = int(args.posthreshold), int(args.distthreshold)
+        except:
+            # raise error and exit
+            raise ValueError('ERR: Missing umi position and/or distance thresholds')
+    finally:
+        # check that threshold are integers
+        if type(pos_threshold) != int and type(dist_threshold) != int:
+            raise ValueError('ERR: Umi position and distance thresholds should be integers')
+        
     print(timestamp() + "Grouping UMIs...")
     
     ## Generate an error-corrected list of UMI families
-    umi_families, umi_groups = get_umi_families(contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, config=config)
+    umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold)
+        
+        
+    
+    
     
     total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis = umi_datafile(umi_groups)
     
@@ -409,6 +442,8 @@ if __name__ == '__main__':
     g_parser.add_argument('-r', '--region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
     g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
     g_parser.add_argument('-c', '--config', help='Path to your config file.')
+    g_parser.add_argument('-d', '--distance', help='Hamming distance threshold for connecting parent-child umis')
+    g_parser.add_argument('-p', '--position', help='Umi position threshold for grouping umis together')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command - requires BAM file, UMI family file optional
