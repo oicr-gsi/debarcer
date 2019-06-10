@@ -1,5 +1,4 @@
-
-import os as path
+import os
 import sys
 import operator
 import configparser
@@ -39,26 +38,30 @@ class UMIGroup:
 
 
 def umi_count(contig, region_start, region_end, bam_file):
-    """Returns tally of UMIs in given region."""
+    '''
+    (str, int, int, file) -> dict
+    
+    :param contig: Chromosome, eg chrN
+    :param region_start: Start index of the region, 0-based
+    :param region_end: End index of the region, 0-based
+    :bam_file: Bam file with umi in read names
+    
+    Returns a dictionary of umi tally for each umi in a given region
+    '''
 
     umi_counts = {}
 
-    
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
-
         for read in bam_reader.fetch(contig, region_start, region_end):
-
-            umi = read.query_name.split(':')[-1]
-
-            if umi in umi_counts:
-                umi_counts[umi] += 1
-            else:
-                umi_counts[umi] = 1
-
-    
+            # extract the umi sequence from read
+            # umi <- list of umi sequences
+            umis = read.query_name.split(':')[-1].split(';')
+            for i in umis:
+                if i in umi_counts:
+                    umi_counts[i] += 1
+                else:
+                    umi_counts[i] = 1
     return umi_counts
-
-
 
 
 def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold):
@@ -100,23 +103,29 @@ def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_t
     return umi_table
 
 
-def get_umi_families(contig, region_start, region_end, bam_file, config):
+def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold):
     """
-    Returns a list of (umi_group, pos) pairs representing
-    error-corrected UMI families.
+    
+    (str, int, int, file, int, int) -> list
+    
+    :param contig: Chromosome name, eg. chrN
+    :param region_start: Start index of the region of interest. 0-based
+    :param region_end: End index of the region of interest. 0-based
+    :param bam_file: Path to the bam file
+    :param pos_threshold: Position threshold to group umis together 
+    :param dist_threshold: The hamming distance threshold to connect parent and child umis     
+        
+    Returns a list of tuples (umi_group, pos) pairs representing error-corrected UMI families.
     """ 
 
-    pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
-
     print("Counting UMIs...")
-	#counts is a dictionary, where key = UMI, value = UMI_count
+    #counts is a dictionary, where key = UMI, value = UMI_count
     counts = umi_count(contig, region_start, region_end, bam_file)
     umis = counts.keys()
-
+    
     print("Clustering UMIs...")
     clusterer = network.UMIClusterer(cluster_method="directional")  
-    
-    umi_groups = clusterer(umis, counts, config)
+    umi_groups = clusterer(umis, counts, dist_threshold)
 
     print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
