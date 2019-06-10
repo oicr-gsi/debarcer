@@ -22,7 +22,7 @@ debarcer.py - main interface for Debarcer
 
 Purpose
 -------
-Debarcer (De-Barcoding and Error Correction) is a package
+Debarcer (De-Barcoding and Error Correction) is a package 
 for working with next-gen sequencing data that contains
 molecular barcodes.
 
@@ -102,7 +102,7 @@ def group_umis(args):
     
     Groups and error-corrects UMIs into families
     
-    :param output_path:
+    :param outdir: Directory where .umis, and datafiles are written
     :param region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
     g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
     g_parser.add_argument('-c', '--config', help='Path to your config file.')
@@ -135,28 +135,20 @@ def group_umis(args):
         else:
             os.makedirs(outdir)
     
-    
-    # continue here
-    
-    
-    
+    # check that region is properly formatted
     region = args.region
-    if any(item not in region for item in ["chr", ":", "-"]):
-        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
-        sys.exit(1)
-
-   
-
-
-
-
-
-
-
-
+    if any(i not in region for i in ["chr", ":", "-"]):
+        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000)')
+    # get chromosome and check format 
     contig = region.split(":")[0]
+    chromos = [str(i) for i in range(23)] + ['X', 'Y']
+    if config[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
+        raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
+    # getregion coordinates on chromosome   
     region_start = int(region.split(":")[1].split("-")[0])
     region_end = int(region.split(":")[1].split("-")[1])
+    if region_start.isnumeric() == False or region_end.isnumeric() == False:
+        raise ValueError('ERR: Incorrect start and end coordinates (should look like chr1:1200000-1250000)')
     
     print(timestamp() + "Grouping UMIs...")
     
