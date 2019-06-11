@@ -43,7 +43,7 @@ class UMIGroup:
 
 
 
-def 
+
 
 
 
@@ -211,63 +211,4 @@ def umi_datafile(umi_groups):
     return total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis
 
 
-
-    """
-    consdp = str(len(umi_groups))
-    elements_per_row = [len(row) for row in umi_groups]
-    sum_child_count = 0
-    regions_child_count = "" #Comma-separated string containing number of child umis per parent umi
-
-    for child_count in elements_per_row:
-        child_count = child_count-1
-
-        if regions_child_count == "":
-            regions_child_count = str(child_count)
-        else:
-            regions_child_count = regions_child_count+","+str(child_count)
-
-        sum_child_count = sum_child_count+child_count
-
-    childdp = str(sum_child_count)
-
-    csvrow = {'CHR' : contig, 'START' : str(region_start), 'END' : str(region_end), 'PTU_NUM' : consdp, 'CTU_NUM' : childdp}
-    headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-
-    #df = pd.DataFrame(csvrow, index=[idx])
-
-    csv.register_dialect('myDialect', delimiter='\t', quoting=csv.QUOTE_NONE)
-
-    dirpath = "/u/iwarikoo/Debarcer2/d_output/haloplex_9538005/umifiles/"
-    num_umifiles = len(fnmatch.filter(path.listdir(dirpath), '*.umis'))
-    print("nu. of umifiles: "+str(num_umifiles))
-
-    file = open(filename, "a")
-    with file:
-        writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
-        writer.writerow(csvrow)
-
-    #df = pd.read_csv(filename)
-    #var = df['START']
-    #print(str(var[0]))
-    #print(str(var[1]))
-
-    start = []
-    parent_umis = []
-    child_umis = []
-    with open(filename, 'r') as f:
-        reader = csv.reader(f, delimiter='\t')
-        row_count = sum(1 for row in reader)
-
-        for line in f.readlines():
-            array = line.split('\t')
-            start.append(array[1])
-            parent_umis.append(array[3])
-            child_umis.append(array[4])
-        f.close()
-
-    print("no. of rows in datafile.csv: " + str(row_count))
-    #umi_plot(filename, start, parent_umis)
-
-    temp_str = "hello"
-    """
 
