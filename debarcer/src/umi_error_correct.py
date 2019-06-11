@@ -34,6 +34,22 @@ class UMIGroup:
     
     def key(self):
         return key
+    
+    
+    ######## added for viewing
+    def __str__(self):
+        return "{0}".format([(i, self.families[i]) for i in self.families])
+
+
+
+
+def 
+
+
+
+
+
+
 
 
 def umi_count(contig, region_start, region_end, bam_file):
@@ -41,8 +57,8 @@ def umi_count(contig, region_start, region_end, bam_file):
     (str, int, int, file) -> dict
     
     :param contig: Chromosome, eg chrN
-    :param region_start: Start index of the region, 1-based inclsive
-    :param region_end: End index of the region, 1-based
+    :param region_start: Start index of the region, 1-based inclusive
+    :param region_end: End index of the region, 1-based inclusive
     :bam_file: Bam file with umi in read names
     
     Returns a dictionary of umi tally for each umi in a given region
@@ -66,8 +82,14 @@ def umi_count(contig, region_start, region_end, bam_file):
 
 def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold):
     """
+    (str, int, int, file, list, int) -> dict
     
-    
+    :param contig: Chromosome, eg ChrN
+    :param region_start: Start index of the region, 1-based inclusive
+    :param region_end: End index of the region, 1-based inclusive
+    :bam_file: Bam file with umi in read names
+    :umi_groups: List with groups of umi sequences separated by given hamming distance
+    :pos_threshold: 
     
     
     Splits umi_groups into families (umi + position pairs)."""
@@ -107,6 +129,24 @@ def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_t
     return umi_table
 
 
+def cluster_umis(umis, counts, dist_threshold):
+    '''
+    (list, dict, int) -> list
+    
+    :param umis: List of umis sequences, keys of dictionary counts
+    :param counts" Dictionary of umi:count value, pairs
+    :param dist_threshold: hamming distance to connect 2 umis
+    Return a list of tuples, each containing a group of umi sequences distant 
+    from each other by dist_threshold mutations
+    '''
+
+    # initialize clusterer
+    clusterer = network.UMIClusterer(cluster_method="directional")  
+    # cluster all umis by dist_threshold
+    umi_groups = clusterer(umis, counts, dist_threshold)
+    return umi_groups
+
+
 def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold):
     """
     
@@ -124,14 +164,14 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     """ 
     
     print("Counting UMIs...")
-    #counts is a dictionary, where key = UMI, value = UMI_count
+    # count umi sequences -> dict {umi_seq: count}
     counts = umi_count(contig, region_start, region_end, bam_file)
     umis = counts.keys()
     
     print("Clustering UMIs...")
-    clusterer = network.UMIClusterer(cluster_method="directional")  
-    umi_groups = clusterer(umis, counts, dist_threshold)
-    
+    # cluster umis -> list of umi groups connected by dist_threshold eg. [('AAA', 'ATA', 'AAG'), ...] 
+    umi_groups = cluster_umis(umis, counts, dist_threshold)
+        
     print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
     
