@@ -14,25 +14,24 @@ import itertools
 
 class UMIGroup:
     """Contains position and count info for all UMIs representing one group."""
-
+    
     def __init__(self, key):
         self.families = {}
         self.key = key
-
+    
     def addNew(self, pos):
         self.families[pos] = 1
-
+    
     def add(self, pos):
         self.families[pos] += 1
-
+    
     @functools.lru_cache(maxsize=4, typed=False)
     def getClosest(self, pos, pos_threshold):
         for fampos in self.families:
             if abs(pos - fampos) <= pos_threshold:
                 return fampos
-
         return None
-
+    
     def key(self):
         return key
 
@@ -42,15 +41,16 @@ def umi_count(contig, region_start, region_end, bam_file):
     (str, int, int, file) -> dict
     
     :param contig: Chromosome, eg chrN
-    :param region_start: Start index of the region, 0-based
-    :param region_end: End index of the region, 0-based
+    :param region_start: Start index of the region, 1-based inclsive
+    :param region_end: End index of the region, 1-based
     :bam_file: Bam file with umi in read names
     
     Returns a dictionary of umi tally for each umi in a given region
+    start and end are 1-based inclusive and get converted to 0-based by pysam
     '''
-
+    
     umi_counts = {}
-
+    
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
         for read in bam_reader.fetch(contig, region_start, region_end):
             # extract the umi sequence from read
@@ -65,7 +65,12 @@ def umi_count(contig, region_start, region_end, bam_file):
 
 
 def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold):
-    """Splits umi_groups into families (umi + position pairs)."""
+    """
+    
+    
+    
+    
+    Splits umi_groups into families (umi + position pairs)."""
 
     umi_table = {}
 
@@ -76,29 +81,28 @@ def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_t
             umi_table[umi] = new_group
 
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
-
         for read in bam_reader.fetch(contig, region_start, region_end):
-
-            umi = read.query_name.split(':')[-1]
+            # umi <- list of umi sequences
+            umis = read.query_name.split(':')[-1].split(';')
+            # get the start position 0-based
             pos = read.reference_start
-
-            if umi in umi_table:
-
-                umi_group = umi_table[umi]
-                families = umi_group.families
-
-                if not families:
-                    umi_group.addNew(pos)
-
-                elif pos in families:
-                    umi_group.add(pos)
-
-                else:
-                    closest = umi_table[umi].getClosest(pos, pos_threshold)
-                    if closest:
-                        umi_group.add(closest)
-                    else:
+            # for each umi sequence
+            for umi in umis:
+                if umi in umi_table:
+                    # get the umi group 
+                    umi_group = umi_table[umi]
+                    # form families
+                    families = umi_group.families
+                    if not families:
                         umi_group.addNew(pos)
+                    elif pos in families:
+                        umi_group.add(pos)
+                    else:
+                        closest = umi_table[umi].getClosest(pos, pos_threshold)
+                        if closest:
+                            umi_group.add(closest)
+                        else:
+                            umi_group.addNew(pos)
 
     return umi_table
 
@@ -109,15 +113,16 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     (str, int, int, file, int, int) -> list
     
     :param contig: Chromosome name, eg. chrN
-    :param region_start: Start index of the region of interest. 0-based
-    :param region_end: End index of the region of interest. 0-based
+    :param region_start: Start index of the region of interest. 1-based inclusive
+    :param region_end: End index of the region of interest. 1-based inclusive
     :param bam_file: Path to the bam file
     :param pos_threshold: Position threshold to group umis together 
     :param dist_threshold: The hamming distance threshold to connect parent and child umis     
         
     Returns a list of tuples (umi_group, pos) pairs representing error-corrected UMI families.
+    start and end are 1-based inclusive and get converted to 0-based by pysam
     """ 
-
+    
     print("Counting UMIs...")
     #counts is a dictionary, where key = UMI, value = UMI_count
     counts = umi_count(contig, region_start, region_end, bam_file)
@@ -126,7 +131,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     print("Clustering UMIs...")
     clusterer = network.UMIClusterer(cluster_method="directional")  
     umi_groups = clusterer(umis, counts, dist_threshold)
-
+    
     print("Grouping UMIs by position...")
     umi_table = group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold)
     
