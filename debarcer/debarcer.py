@@ -186,25 +186,18 @@ def group_umis(args):
         
         
     
-    
-    
-    total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis = umi_datafile(umi_groups)
-    
-    filename="{}/datafile_{}.csv".format(output_path,region)
-    headers = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-    csv.register_dialect('myDialect', delimiter='\t', quoting=csv.QUOTE_NONE)
-    csvrow = {'CHR' : contig, 'START' : str(region_start), 'END' : str(region_end), 'PTU' : str(total_parent_umi_count), 'CTU' : str(total_child_umi_count), 'CHILD_NUMS': num_of_children, 'FREQ_PARENTS' : freq_of_parent_umis}
-    info = [contig, region_start, region_end, total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis]
-    
-    file = open(filename, "w")
-    writer = csv.DictWriter(file, dialect='myDialect', fieldnames=headers)
-    writer.writeheader()
-    writer.writerow(csvrow)
+    # get the number of parent umis, number of children and number of parent given a number of children
+    filename="{}/datafile_{}.csv".format(outdir,region)
+    header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+    info = [contig, region_start, region_end] + umi_datafile(umi_groups)
+    with open(filename, 'w') as newfile:
+        newfile.write('\t'.join(header) + '\n')
+        newfile.write('\t'.join(info) + '\n')
     
     umi_file = "{}/{}.umis".format(output_path, region)
     pickle.dump(umi_families, open(umi_file, "wb"))
     
-    print(timestamp() + "UMI grouping complete. Output written to {}.".format(output_path))
+    print(timestamp() + "UMI grouping complete. Output written to {}.".format(outdir))
 
 
 
