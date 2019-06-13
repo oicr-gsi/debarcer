@@ -181,11 +181,9 @@ def group_umis(args):
         
     print(timestamp() + "Grouping UMIs...")
     
-    ## Generate an error-corrected list of UMI families
+    # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold)
         
-        
-    
     # get the number of parent umis, number of children and number of parent given a number of children
     filename="{}/datafile_{}.csv".format(outdir,region)
     header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
@@ -195,8 +193,9 @@ def group_umis(args):
         newfile.write('\t'.join(info) + '\n')
     
     umi_file = "{}/{}.umis".format(output_path, region)
-    pickle.dump(umi_families, open(umi_file, "wb"))
-    
+    with open(umi_file, 'w') as newfile:
+        json.dump(umi_families, newfile)
+        
     print(timestamp() + "UMI grouping complete. Output written to {}.".format(outdir))
 
 
