@@ -182,7 +182,8 @@ def group_umis(args):
     print(timestamp() + "Grouping UMIs...")
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
-    umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold)
+    # keep the most abundant family within group and ignore others if args.ignore is True
+    umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore)
         
     # get the number of parent umis, number of children and number of parent given a number of children
     filename="{}/datafile_{}.csv".format(outdir,region)
@@ -436,6 +437,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-c', '--config', help='Path to your config file.')
     g_parser.add_argument('-d', '--distance', help='Hamming distance threshold for connecting parent-child umis')
     g_parser.add_argument('-p', '--position', help='Umi position threshold for grouping umis together')
+    g_parser.add_argument('-i', '--ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command - requires BAM file, UMI family file optional

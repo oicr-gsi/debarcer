@@ -280,7 +280,7 @@ def find_group_families(umi_families, pos_threshold, ignore_others):
     return C
 
 
-def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold):
+def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore_others):
     """
     
     (str, int, int, file, int, int) -> list
@@ -291,6 +291,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     :param bam_file: Path to the bam file
     :param pos_threshold: Position threshold to group umis together 
     :param dist_threshold: The hamming distance threshold to connect parent and child umis     
+    :param ignore_others: Ignore families distant from the most abundant family    
         
     Returns a list of tuples (umi_group, pos) pairs representing error-corrected UMI families.
     start and end are 1-based inclusive and get converted to 0-based by pysam
@@ -310,7 +311,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     umi_positions = extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups)
     
     # get the positions and counts of umi families within each group (position is from the most abundant family)  
-    umi_families = find_group_families(umi_positions, pos_threshold)
+    umi_families = find_group_families(umi_positions, pos_threshold, ignore_others)
     
     return umi_families, umi_groups
 
