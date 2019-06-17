@@ -1,19 +1,8 @@
-import os
-import sys
-import operator
-import configparser
-
-
 import pysam
-import functools
 import src.umi_network_collapse as network
 
-import csv
-from utils.generate_plots import umi_plot
-import matplotlib.pyplot as plt
-import pandas as pd
-import fnmatch
-import itertools
+#from utils.generate_plots import umi_plot
+
 
 #class UMIGroup:
 #    """Contains position and count info for all UMIs representing one group."""
