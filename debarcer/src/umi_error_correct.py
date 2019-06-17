@@ -217,12 +217,13 @@ def most_frequent(L):
     return (pos, frequent)
     
 
-def find_group_families(umi_families, pos_threshold):
+def find_group_families(umi_families, pos_threshold, ignore_others):
     '''
-    (dict, int) -> dict
+    (dict, int, bool) -> dict
     
     :param umi_families: A dictionary holding parent umi, their children and their count at positions where they are found
     :param pos_threshold: Window size to group indivual umis into families within groups 
+    :param ignore_others: Ignore families distant from the most abundant family
     
     Return a dictionary with umi key and dictionary with parent and umi family count at each position as value     
     '''
@@ -261,7 +262,18 @@ def find_group_families(umi_families, pos_threshold):
             # remove posisions from L
             for i in to_remove:
                 L.remove(i)
-        # add position and counts to individual umi within group
+        # remove families distant from the most abundant family if option is actioned
+        if ignore_others == True:
+            if len(D) > 1:
+                # make a list of (position, count) sorted by positions
+                L = [(pos, D[pos]) for pos in D]
+                L.sort()
+                keep_pos = most_frequent(L)[0]
+                # make a list of positions to remove
+                to_remove = [i for i in D if i != keep_pos]
+                for i in D:
+                    del D[i]
+        # add position and counts to individual umi within group   
         for umi in umi_families[parent]:
             assert umi not in C
             C[umi] = {'parent': parent, 'positions': D}
