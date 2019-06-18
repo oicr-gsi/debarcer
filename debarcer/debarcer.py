@@ -182,7 +182,7 @@ def group_umis(args):
         newfile.write('\t'.join(header) + '\n')
         newfile.write('\t'.join(info) + '\n')
     
-    umi_file = "{}/{}.umis".format(output_path, region)
+    umi_file = "{}/{}.umis".format(outdir, region)
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile)
         
