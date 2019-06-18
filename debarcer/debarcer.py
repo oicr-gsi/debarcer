@@ -56,7 +56,7 @@ def preprocess_reads(args):
         config = configparser.ConfigParser()
         config.read(args.config)
         prepfile = config['PATHS']['prep_file']         
-        outdir = config['PATHS']['output_dir']
+        outdir = config['PATHS']['outdir']
     except:
         # check if prepfile and outdir are provided in the command
         try:
