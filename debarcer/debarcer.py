@@ -177,7 +177,7 @@ def group_umis(args):
     # get the number of parent umis, number of children and number of parent given a number of children
     filename="{}/datafile_{}.csv".format(outdir,region)
     header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-    info = [contig, region_start, region_end] + umi_datafile(umi_groups)
+    info = [contig, str(region_start), str(region_end)] + umi_datafile(umi_groups)
     with open(filename, 'w') as newfile:
         newfile.write('\t'.join(header) + '\n')
         newfile.write('\t'.join(info) + '\n')
