@@ -89,7 +89,7 @@ def preprocess_reads(args):
                 sys.exit(1)
     
     # reheader fastqs and add umi in new fastqs header
-    reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=prefix)
+    reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
 	 
     
     
