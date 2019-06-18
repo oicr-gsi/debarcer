@@ -100,24 +100,15 @@ def group_umis(args):
     
     
     
-    Groups and error-corrects UMIs into families
+    Groups by hamming distance and form families based on physical distances within groups
     
     :param outdir: Directory where .umis, and datafiles are written
-    :param region', A string with region coordinates chrN:posA-posB). posA and posB are included
-    
-    
-    
-    
-    g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-    g_parser.add_argument('-c', '--config', help='Path to your config file.')
-    g_parser.set_defaults(func=group_umis)
-    
-    g_parser.add_argument('-c', '--config', help='Path to your config file.')
-    g_parser.add_argument('-d', '--distance', help='Hamming distance threshold for connecting parent-child umis')
-    g_parser.add_argument('-p', '--position', help='Umi position threshold for grouping umis together')
-    
-    
-    
+    :param region: A string with region coordinates chrN:posA-posB. posA and posB are 1-based included
+    :param bamfile: Path to the bam file
+    :param config: Path to your config file
+    :param distance: Hamming distance threshold for connecting parent-children umis
+    :param position: Distance threshold in bp for defining families within groups
+    :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
     '''
     
     # get bam and outdir from config in priority
