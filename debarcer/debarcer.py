@@ -141,7 +141,7 @@ def group_umis(args):
     # get chromosome and check format 
     contig = region.split(":")[0]
     chromos = [str(i) for i in range(23)] + ['X', 'Y']
-    if config[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
+    if contig[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
         raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
     # get region coordinates. use 1-based inclusive. this will be converted to 0-based by pysam   
     region_start = int(region.split(":")[1].split("-")[0])
