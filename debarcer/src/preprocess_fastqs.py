@@ -103,6 +103,25 @@ def open_optional_file(D, k):
     return r
 
 
+def extract_prefix_from_filename(fastqfile):
+    '''
+    (file) -> str
+    
+    :param fastqfile: Path to FASTQ file
+    
+    Return a prefix extracted from the name of the fastq file
+    '''
+    
+    filename = os.path.basename(fastqfile)
+    # remove extension if possible or keep entire file name as prefix
+    if 'fastq.gz' in filename:
+        prefix = filename[:filename.index('.fastq.gz')]
+    elif 'fq.gz' in filename:
+        prefix = filename[:filename.index('.fq.gz')]
+    else:
+        prefix = filename
+    return prefix
+    
 
 def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     """
@@ -123,17 +142,13 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     # check if prefix provided   
     if 'prefix' in KeyWords:
         prefix = KeyWords['prefix']
+        # extract prefix from r1_file if no value
+        if prefix == None:
+            prefix = extract_prefix_from_filename(r1_file)
     else:
-        # use r1_file to derive prefix
-        filename = os.path.basename(r1_file)
-        # remove extension if possible or keep entire file name as prefix
-        if 'fastq.gz' in filename:
-            prefix = filename[:filename.index('.fastq.gz')]
-        elif 'fq.gz' in filename:
-            prefix = filename[:filename.index('.fq.gz')]
-        else:
-            prefix = filename
-    
+        # extract prefix from r1_file
+        prefix = extract_prefix_from_filename(r1_file)
+        
     # get the parameters for prepname from the config
     prep = parse_prep(prepname, prepfile)
 
