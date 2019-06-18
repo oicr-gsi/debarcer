@@ -96,12 +96,8 @@ def preprocess_reads(args):
 
 def group_umis(args):
     '''
-    
-    
-    
-    
-    Groups by hamming distance and form families based on physical distances within groups
-    
+    (list) -> None
+       
     :param outdir: Directory where .umis, and datafiles are written
     :param region: A string with region coordinates chrN:posA-posB. posA and posB are 1-based included
     :param bamfile: Path to the bam file
@@ -109,6 +105,8 @@ def group_umis(args):
     :param distance: Hamming distance threshold for connecting parent-children umis
     :param position: Distance threshold in bp for defining families within groups
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
+    
+    Groups by hamming distance and form families based on physical distances within groups
     '''
     
     # get bam and outdir from config in priority
@@ -116,7 +114,7 @@ def group_umis(args):
         config = configparser.ConfigParser()
         config.read(args.config)
         bam_file = config['PATHS'['bam_file']]
-        outdir = config['PATHS']['output_dir']
+        outdir = config['PATHS']['outdir']
     except:
         # check if bam file and outdir are provided in the command
         try:
@@ -161,7 +159,7 @@ def group_umis(args):
     except:
         # check pos and dist threshold provided in the command
         try:
-            pos_threshold, dist_threshold = int(args.posthreshold), int(args.distthreshold)
+            pos_threshold, dist_threshold = int(args.postthreshold), int(args.distthreshold)
         except:
             # raise error and exit
             raise ValueError('ERR: Missing umi position and/or distance thresholds')
@@ -422,13 +420,13 @@ if __name__ == '__main__':
     
     ## UMI group command - requires BAM file
     g_parser = subparsers.add_parser('group', help="Groups and error-corrects UMIs into families.")
-    g_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-    g_parser.add_argument('-r', '--region', help='Region to find UMIs in (string of the form chrX:posA-posB).', required=True)
-    g_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-    g_parser.add_argument('-c', '--config', help='Path to your config file.')
-    g_parser.add_argument('-d', '--distance', help='Hamming distance threshold for connecting parent-child umis')
-    g_parser.add_argument('-p', '--position', help='Umi position threshold for grouping umis together')
-    g_parser.add_argument('-i', '--ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
+    g_parser.add_argument('-o', '--Outdir', dest='outdir', help='Directory where .umis and datafiles are written')
+    g_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
+    g_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
+    g_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
+    g_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
+    g_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
+    g_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command - requires BAM file, UMI family file optional
