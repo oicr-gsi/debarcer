@@ -195,212 +195,182 @@ def group_umis(args):
 
 
 def collapse(args):
-	"""Base collapses from given BAM and umi family file."""
+    """Base collapses from given BAM and umi family file."""
 
-	if args.config:
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config = None
+    if args.config:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
+    else:
+        config = None
 
-	region = args.region
+    region = args.region
 	
 
-	if any(item not in region for item in ["chr", ":", "-"]):
-		raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
-		sys.exit(1)
+    if any(item not in region for item in ["chr", ":", "-"]):
+        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
+        sys.exit(1)
 
-	contig = region.split(":")[0]
-	region_start = int(region.split(":")[1].split("-")[0])
-	region_end = int(region.split(":")[1].split("-")[1])
+    contig = region.split(":")[0]
+    region_start = int(region.split(":")[1].split("-")[0])
+    region_end = int(region.split(":")[1].split("-")[1])
 
-	bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
+    bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
 					'ERR: No BAM file provided in args or config.')
-	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
+    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
 					'ERR: No output path provided in args or config.')
 
-	arg_exists(sys.argv) ##Check whether args directories/files exist
+    arg_exists(sys.argv) ##Check whether args directories/files exist
 
-	if args.umi_file:
-		umi_file = args.umi_file
-	elif config:
-		umi_file = config['PATHS']['umi_file'] if 'umi_file' in config['PATHS'] else None
+    if args.umi_file:
+        umi_file = args.umi_file
+    elif config:
+        umi_file = config['PATHS']['umi_file'] if 'umi_file' in config['PATHS'] else None
 
-	if umi_file:
-		try:
-			umi_table = pickle.load(open(umi_file, "rb"))
-		except IOError:
-			print("ERR: Unable to load .umis file.", file=sys.stderr)
-			sys.exit(1)
-	else:
-		umi_table = None
+    if umi_file:
+        try:
+            umi_table = pickle.load(open(umi_file, "rb"))
+        except IOError:
+            print("ERR: Unable to load .umis file.", file=sys.stderr)
+            sys.exit(1)
+    else:
+        umi_table = None
 
-	print(timestamp() + "Generating consensus...")
+    print(timestamp() + "Generating consensus...")
 
-	generate_consensus_output(
-		contig=contig,
-		region_start=region_start,
-		region_end=region_end,
-		bam_file=bam_file,
-		umi_table=umi_table,
-		output_path=output_path,
-		config=config)
+    generate_consensus_output(contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, umi_table=umi_table, output_path=output_path, config=config)
 
-	print(timestamp() + "Consensus generated. Consensus file written to {}.".format(output_path))
-
-
+    print(timestamp() + "Consensus generated. Consensus file written to {}.".format(output_path))
 
 
 def call_variants(args):
-	"""Generates VCF files from given cons file."""
+    """Generates VCF files from given cons file."""
 
-	if args.config:
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config = None
+    if args.config:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
+    else:
+        config = None
 	
+    cons_file = args.cons_file
+    f_sizes = args.f_sizes.split(',')
 
-	cons_file = args.cons_file
-	f_sizes = args.f_sizes.split(',')
-
-	output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
+    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
 					'No output path provided in args or config.')
-	
-	region = args.region
-	arg_exists(sys.argv) ##Check whether args directories/files exist
+    
+    region = args.region
+    arg_exists(sys.argv) ##Check whether args directories/files exist
 
-	cons_is_merged = check_consfile(cons_file)
+    cons_is_merged = check_consfile(cons_file)
 
-	if cons_is_merged:
-		region_start = region.split("_")[0]
-		region_end = region.split("_")[1]		
+    if cons_is_merged:
+        region_start = region.split("_")[0]
+        region_end = region.split("_")[1]		
+    else:
+        if any(x not in region for x in ["chr", ":", "-"]):
+            raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+            sys.exit(1)
 
-	else:
-		if any(x not in region for x in ["chr", ":", "-"]):
-			raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-			sys.exit(1)
+        contig = region.split(":")[0]
+        region_start = int(region.split(":")[1].split("-")[0])
+        region_end = int(region.split(":")[1].split("-")[1])
 
-		contig = region.split(":")[0]
-		region_start = int(region.split(":")[1].split("-")[0])
-		region_end = int(region.split(":")[1].split("-")[1])
+    print(timestamp() + "Generating VCFs...")
 
-	print(timestamp() + "Generating VCFs...")
-
-	get_vcf_output(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
-		
-	print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
-
-
-
-
+    get_vcf_output(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+    
+    print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
 
 def run_scripts(args):
+   
+    bamfile = args.bam_file
+    bedfile = args.bed_file
+    dir = args.output_path
+    id = str(args.run_id)
+    output_dir = dir+id+"/"
+    
+    if args.config:
+        config_path = args.config
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
+    else:
+        config_path = None
+        config = None
 
-	bamfile = args.bam_file
-	bedfile = args.bed_file
-	dir = args.output_path
-	id = str(args.run_id)
-	output_dir = dir+id+"/"
+    arg_exists(sys.argv) ##Check whether args directories/files exist
+    
+    #Make directories 
+    if not os.path.exists(output_dir+"umifiles"):
+        os.makedirs(output_dir+"umifiles")
+    if not os.path.exists(output_dir+"consfiles"):
+        os.makedirs(output_dir+"consfiles")
+    if not os.path.exists(output_dir+"vcffiles"):
+        os.makedirs(output_dir+"vcffiles")
+    
+    debarcer_path = os.getcwd()+"/"
+    #Read bedfile
+    with open(bedfile) as textFile:
+        lines = [line.split() for line in textFile]
+    index = find_pos(lines)
 
-	if args.config:
-		config_path = args.config
-		config = configparser.ConfigParser()
-		config.read(args.config)
-		config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-	else:
-		config_path = None
-		config = None
-
-
-	arg_exists(sys.argv) ##Check whether args directories/files exist
-	
-	#Make directories 
-	if not os.path.exists(output_dir+"umifiles"):
-		os.makedirs(output_dir+"umifiles")
-	if not os.path.exists(output_dir+"consfiles"):
-		os.makedirs(output_dir+"consfiles")
-	if not os.path.exists(output_dir+"vcffiles"):
-		os.makedirs(output_dir+"vcffiles")
-
-
-	debarcer_path = os.getcwd()+"/"
-
-	#Read bedfile
-	with open(bedfile) as textFile:
-		lines = [line.split() for line in textFile]
-	index = find_pos(lines)
-
-
-	#Create and run scripts for all subprocesses
-	submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
-
-	
-	#Check UMI job status before merging files
-	print("Checking UMI job status...")
-	umi_job_flag = False
-	while umi_job_flag == False:
-		umi_job_flag = check_job_status(output_dir, flag='umi', file='temp_umi_jobs.txt')
-
-	print("Merging UMI datafiles...")
-	merge_umi_datafiles(output_dir, id)
-
-	print("Checking CONS job status...")
-	cons_job_flag = False
-	while cons_job_flag == False:
-		cons_job_flag = check_job_status(output_dir, flag='cons', file='temp_cons_jobs.txt')
-
-	print("Merging cons...")
-	concat_cons(output_dir, config, id)
-	print("Finished. Output written to: "+output_dir)
-	
-
-
+    #Create and run scripts for all subprocesses
+    submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
+    
+    #Check UMI job status before merging files
+    print("Checking UMI job status...")
+    umi_job_flag = False
+    while umi_job_flag == False:
+        umi_job_flag = check_job_status(output_dir, flag='umi', file='temp_umi_jobs.txt')
+    
+    print("Merging UMI datafiles...")
+    merge_umi_datafiles(output_dir, id)
+    
+    print("Checking CONS job status...")
+    cons_job_flag = False
+    while cons_job_flag == False:
+        cons_job_flag = check_job_status(output_dir, flag='cons', file='temp_cons_jobs.txt')
+    
+    print("Merging cons...")
+    concat_cons(output_dir, config, id)
+    print("Finished. Output written to: "+output_dir)
 
 def generate_plots(args):
-	if not umi_flag and not cons_flag:
-		print("ERR: Specify umi or cons flag, and provide the appropriate data file")		
+    if not umi_flag and not cons_flag:
+        print("ERR: Specify umi or cons flag, and provide the appropriate data file")		
 
-	if umi_flag:
-		if umi_datafile:
-			umi_plot_type = args.umi_flag
-			umi_file = args.umi_datafile
-			if check_file(umi_file, 'csv'):
+    if umi_flag:
+        if umi_datafile:
+            umi_plot_type = args.umi_flag
+            umi_file = args.umi_datafile
+            if check_file(umi_file, 'csv'):
+                if umi_plot_type == 'rs':
+                    umi_plot(output_path, file_name, umi_plot_type)
+                elif umi_plot == 'all or umi_plot == None':
+                    #Default: Generate all umi plots
+                    umi_plot_type = 'all'
+                    umi_plot(output_path, file_name, umi_plot_type)
+                else:
+                    print("ERR: Incorrect argument passed to the umi flag option")
 
-				if umi_plot_type == 'rs':
-					umi_plot(output_path, file_name, umi_plot_type)
-				elif umi_plot == 'all or umi_plot == None':
-					#Default: Generate all umi plots
-					umi_plot_type = 'all'
-					umi_plot(output_path, file_name, umi_plot_type)
-				else:
-					print("ERR: Incorrect argument passed to the umi flag option")
+            print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.vcf'")
+        else:
+            print("ERR: Missing CSV umi data file")
 
-			print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.vcf'")
-		else:
-			print("ERR: Missing CSV umi data file")
-	
-
-	if cons_flag:
-		if cons_file:
-			cons_plot_type = args.cons_flag
-			cons_file = args.cons_file
-			if check_file(cons_file, 'cons'):
-
-				if cons_plot_type == 'all' or cons_plot_type == None:
-					cons_plot(output_path, file_name, cons_plot_type)
-				else:
-					print("ERR: Incorrect argument passed to the cons flag option")
-			else:
-				print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.cons'")
-		else:
-			print("ERR: Missing CONS data file")
-
-	
-
-
+    if cons_flag:
+        if cons_file:
+            cons_plot_type = args.cons_flag
+            cons_file = args.cons_file
+            if check_file(cons_file, 'cons'):
+                if cons_plot_type == 'all' or cons_plot_type == None:
+                    cons_plot(output_path, file_name, cons_plot_type)
+                else:
+                    print("ERR: Incorrect argument passed to the cons flag option")
+            else:
+                print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.cons'")
+        else:
+            print("ERR: Missing CONS data file")
 
 if __name__ == '__main__':
         
