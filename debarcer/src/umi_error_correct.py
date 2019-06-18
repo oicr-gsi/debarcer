@@ -271,7 +271,7 @@ def find_group_families(umi_families, pos_threshold, ignore_others):
                 keep_pos = most_frequent(L)[0]
                 # make a list of positions to remove
                 to_remove = [i for i in D if i != keep_pos]
-                for i in D:
+                for i in to_remove:
                     del D[i]
         # add position and counts to individual umi within group   
         for umi in umi_families[parent]:
