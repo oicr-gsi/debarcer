@@ -470,4 +470,4 @@ if __name__ == '__main__':
         args.func(args)
     except AttributeError as e:
         print(parser.format_help())
-        print(e)
+    
