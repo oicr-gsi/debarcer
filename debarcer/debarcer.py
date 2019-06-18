@@ -67,7 +67,9 @@ def preprocess_reads(args):
             sys.exit(1)
     finally:
         # check that prepfile is a valid file
-        if os.path.isfile(prepfile) == False:
+        if prepfile == None:
+            raise ValueError('ERR: Invalid path to prepfile')
+        elif os.path.isfile(prepfile) == False:
             raise ValueError('ERR: Invalid path to prepfile')
         
     # code below is executed only if prepfile and outdir are provided  
@@ -124,7 +126,9 @@ def group_umis(args):
             raise ValueError('ERR: Missing input bam and/or output directory')
     finally:
         # check that bam is a valid file
-        if os.path.isfile(bam_file) == False:
+        if bam_file == None:
+            raise ValueError('ERR: Invalid path to input bam file')
+        elif os.path.isfile(bam_file) == False:
             raise ValueError('ERR: Invalid path to input bam file')
         
     # create outputdir if doesn't exist
