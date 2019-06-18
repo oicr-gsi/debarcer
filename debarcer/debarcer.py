@@ -113,7 +113,7 @@ def group_umis(args):
     try:
         config = configparser.ConfigParser()
         config.read(args.config)
-        bam_file = config['PATHS'['bam_file']]
+        bam_file = config['PATHS']['bam_file']
         outdir = config['PATHS']['outdir']
     except:
         # check if bam file and outdir are provided in the command
