@@ -12,7 +12,9 @@ from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
 from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
-from src.utilities import CheckRegionFormat
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles
+    
+    
 
 """
 debarcer.py - main interface for Debarcer
@@ -49,34 +51,17 @@ def preprocess_reads(args):
     :param prefix: Prefix for naming umi-reheradered fastqs 
     '''
         
-    # get prepfile and outdir from config in priority
-    try:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        prepfile = config['PATHS']['prep_file']         
-        outdir = config['PATHS']['outdir']
-    except:
-        # check if prepfile and outdir are provided in the command
-        try:
-            prepfile, outdir = args.prepfile, args.outdir
-        except:
-            # raise error and exit if no prepfile and outdir are provided
-            raise ValueError('ERR: Missing prepfile and/or output directory')
-            sys.exit(1)
-    finally:
-        # check that prepfile is a valid file
-        if prepfile == None:
-            raise ValueError('ERR: Invalid path to prepfile')
-        elif os.path.isfile(prepfile) == False:
-            raise ValueError('ERR: Invalid path to prepfile')
-        
-    # code below is executed only if prepfile and outdir are provided  
+    # get output directory from the config or command. set to current dir if not provided
+    outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
     if os.path.isdir(outdir) == False:
         if os.path.isfile(outdir) == True:
             raise ValueError('ERR: Output directory cannot be a file')
         else:
             os.makedirs(outdir)
+    
+    # get input prep file from config or command
+    prepfile = GetInputFiles(args.config, args.prepfile, 'prep_file')
     
     # check that files are valid
     for i in [args.read1, args.read2, args.read3]:
@@ -109,32 +94,17 @@ def group_umis(args):
     Groups by hamming distance and form families based on physical distances within groups
     '''
     
-    # get bam and outdir from config in priority
-    try:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        bam_file = config['PATHS']['bam_file']
-        outdir = config['PATHS']['outdir']
-    except:
-        # check if bam file and outdir are provided in the command
-        try:
-            bam_file, outdir = args.bamfile, args.outdir
-        except:
-            # raise error and exit
-            raise ValueError('ERR: Missing input bam and/or output directory')
-    finally:
-        # check that bam is a valid file
-        if bam_file == None:
-            raise ValueError('ERR: Invalid path to input bam file')
-        elif os.path.isfile(bam_file) == False:
-            raise ValueError('ERR: Invalid path to input bam file')
-        
+    # get output directory from the config or command. set to current dir if not provided
+    outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
     if os.path.isdir(outdir) == False:
         if os.path.isfile(outdir) == True:
             raise ValueError('ERR: Output directory cannot be a file')
         else:
             os.makedirs(outdir)
+    
+    # get input bam from config or command
+    bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
     
     # check that region is properly formatted
     region = args.region
@@ -188,26 +158,9 @@ def group_umis(args):
 def collapse(args):
     """Base collapses from given BAM and umi family file."""
 
-    # get bam and outdir from config in priority
-    try:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        bam_file = config['PATHS']['bam_file']
-        outdir = config['PATHS']['outdir']
-    except:
-        # check if bam file and outdir are provided in the command
-        try:
-            bam_file, outdir = args.bamfile, args.outdir
-        except:
-            # raise error and exit
-            raise ValueError('ERR: Missing input bam and/or output directory')
-    finally:
-        # check that bam is a valid file
-        if bam_file == None:
-            raise ValueError('ERR: Invalid path to input bam file')
-        elif os.path.isfile(bam_file) == False:
-            raise ValueError('ERR: Invalid path to input bam file')
 
+    # get output directory from the config or command. set to current dir if not provided
+    outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
     if os.path.isdir(outdir) == False:
         if os.path.isfile(outdir) == True:
@@ -215,6 +168,9 @@ def collapse(args):
         else:
             os.makedirs(outdir)
     
+    # get input bam from config or command
+    bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
+
     # check that region is properly formatted
     region = args.region
     CheckRegionFormat(region)
