@@ -52,10 +52,9 @@ def GetInputFiles(configfile, file, filetype):
     finally:
         # check that input is a valid file
         if inputfile in ['', None]:
-            raise ValueError('ERR: Invalid path to input {0}'.format(filetype.replace('_', ' ')))
+            raise ValueError('ERR: Invalid path to input {0}'.format(filetype))
         elif os.path.isfile(inputfile) == False:
-            raise ValueError('ERR: Invalid path to input {0}'.format(filetype.replace('_', ' ')))
-    
+            raise ValueError('ERR: Invalid path to input {0}'.format(filetype))
     return inputfile
 
 def GetOutputDir(configfile, outputdir):
