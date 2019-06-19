@@ -12,7 +12,7 @@ from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
 from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
-
+from src.utilities import CheckRegionFormat
 
 """
 debarcer.py - main interface for Debarcer
@@ -138,19 +138,12 @@ def group_umis(args):
     
     # check that region is properly formatted
     region = args.region
-    if any(i not in region for i in ["chr", ":", "-"]):
-        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000)')
-    # get chromosome and check format 
+    CheckRegionFormat(region)
+    # get chromosome
     contig = region.split(":")[0]
-    chromos = [str(i) for i in range(23)] + ['X', 'Y']
-    if contig[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
-        raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
     # get region coordinates. use 1-based inclusive. this will be converted to 0-based by pysam   
-    region_start, region_end = region.split(":")[1].split("-")[0], region.split(":")[1].split("-")[1]
-    if region_start.isnumeric() == False or region_end.isnumeric() == False:
-        raise ValueError('ERR: Incorrect start and end coordinates (should look like chr1:1200000-1250000)')
-    region_start, region_end = int(region_start), int(region_end)
-        
+    region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
+       
     
     # get umi position and distance thresholds from config
     try:
@@ -224,20 +217,12 @@ def collapse(args):
     
     # check that region is properly formatted
     region = args.region
-    if any(i not in region for i in ["chr", ":", "-"]):
-        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000)')
-    # get chromosome and check format 
+    CheckRegionFormat(region)
+    # get chromosome 
     contig = region.split(":")[0]
-    chromos = [str(i) for i in range(23)] + ['X', 'Y']
-    if contig[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
-        raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
     # get region coordinates. use 1-based inclusive. this will be converted to 0-based by pysam   
-    region_start, region_end = region.split(":")[1].split("-")[0], region.split(":")[1].split("-")[1]
-    if region_start.isnumeric() == False or region_end.isnumeric() == False:
-        raise ValueError('ERR: Incorrect start and end coordinates (should look like chr1:1200000-1250000)')
-    region_start, region_end = int(region_start), int(region_end)
-
-
+    region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
+    
     # load json with count of umi families per position and umi group
     try:
         infile = open(args.umifile)
