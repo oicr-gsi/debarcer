@@ -81,3 +81,17 @@ def GetOutputDir(configfile, outputdir):
             # set output directy as current directory
             outdir = os.getcwd()
     return outdir
+
+
+def edit_distance(a, b):
+    '''
+    (str, str) -> int
+    
+    :param a": String of length L
+    :param b": String of length L
+    
+    Returns the Hamming edit distance between a and b
+    Pre-condition: a and b have identical length
+    '''
+    
+    return sum(letter_a != letter_b for letter_a, letter_b in zip(a, b))
