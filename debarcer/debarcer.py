@@ -1,11 +1,9 @@
 import argparse
 import configparser
-import pickle
 import sys
 import os
 import datetime
 import json
-import csv
 import time
 from src.preprocess_fastqs import reheader_fastqs
 from src.umi_error_correct import get_umi_families, umi_count, umi_datafile
