@@ -197,50 +197,62 @@ def group_umis(args):
 def collapse(args):
     """Base collapses from given BAM and umi family file."""
 
-    if args.config:
+    # get bam and outdir from config in priority
+    try:
         config = configparser.ConfigParser()
         config.read(args.config)
-        config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-    else:
-        config = None
-
-    region = args.region
-	
-
-    if any(item not in region for item in ["chr", ":", "-"]):
-        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000).')
-        sys.exit(1)
-
-    contig = region.split(":")[0]
-    region_start = int(region.split(":")[1].split("-")[0])
-    region_end = int(region.split(":")[1].split("-")[1])
-
-    bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
-					'ERR: No BAM file provided in args or config.')
-    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-					'ERR: No output path provided in args or config.')
-
-    arg_exists(sys.argv) ##Check whether args directories/files exist
-
-    if args.umi_file:
-        umi_file = args.umi_file
-    elif config:
-        umi_file = config['PATHS']['umi_file'] if 'umi_file' in config['PATHS'] else None
-
-    if umi_file:
+        bam_file = config['PATHS']['bam_file']
+        outdir = config['PATHS']['outdir']
+    except:
+        # check if bam file and outdir are provided in the command
         try:
-            umi_table = pickle.load(open(umi_file, "rb"))
-        except IOError:
-            print("ERR: Unable to load .umis file.", file=sys.stderr)
-            sys.exit(1)
-    else:
-        umi_table = None
+            bam_file, outdir = args.bamfile, args.outdir
+        except:
+            # raise error and exit
+            raise ValueError('ERR: Missing input bam and/or output directory')
+    finally:
+        # check that bam is a valid file
+        if bam_file == None:
+            raise ValueError('ERR: Invalid path to input bam file')
+        elif os.path.isfile(bam_file) == False:
+            raise ValueError('ERR: Invalid path to input bam file')
 
+    # create outputdir if doesn't exist
+    if os.path.isdir(outdir) == False:
+        if os.path.isfile(outdir) == True:
+            raise ValueError('ERR: Output directory cannot be a file')
+        else:
+            os.makedirs(outdir)
+    
+    # check that region is properly formatted
+    region = args.region
+    if any(i not in region for i in ["chr", ":", "-"]):
+        raise ValueError('ERR: Incorrect region string (should look like chr1:1200000-1250000)')
+    # get chromosome and check format 
+    contig = region.split(":")[0]
+    chromos = [str(i) for i in range(23)] + ['X', 'Y']
+    if contig[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
+        raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
+    # get region coordinates. use 1-based inclusive. this will be converted to 0-based by pysam   
+    region_start, region_end = region.split(":")[1].split("-")[0], region.split(":")[1].split("-")[1]
+    if region_start.isnumeric() == False or region_end.isnumeric() == False:
+        raise ValueError('ERR: Incorrect start and end coordinates (should look like chr1:1200000-1250000)')
+    region_start, region_end = int(region_start), int(region_end)
+
+
+    # load json with count of umi families per position and umi group
+    try:
+        infile = open(args.umifile)
+        umi_families = json.load(infile)
+        infile.close()
+    except:
+        raise ValueError("ERR: Unable to load .umi json file")
+        
     print(timestamp() + "Generating consensus...")
 
-    generate_consensus_output(contig=contig, region_start=region_start, region_end=region_end, bam_file=bam_file, umi_table=umi_table, output_path=output_path, config=config)
+    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, config)
 
-    print(timestamp() + "Consensus generated. Consensus file written to {}.".format(output_path))
+    print(timestamp() + "Consensus generated. Consensus file written to {}.".format(outdir))
 
 
 def call_variants(args):
@@ -408,7 +420,7 @@ if __name__ == '__main__':
     c_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
     c_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
     c_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-    c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file.')
+    c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file', required=True)
     c_parser.add_argument('-c', '--config', help='Path to your config file.')
     c_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to collapse on.') ##implement
     c_parser.set_defaults(func=collapse)
