@@ -6,7 +6,7 @@ import datetime
 import json
 import time
 from src.preprocess_fastqs import reheader_fastqs
-from src.umi_error_correct import get_umi_families, umi_count, umi_datafile
+from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
