@@ -2,7 +2,7 @@ import sys
 import itertools
 import collections
 
-from src.edit_distance import edit_distance
+from src.utilities import edit_distance
  
 """
 Adapted from https://github.com/CGATOxford/UMI-tools/blob/master/umi_tools/network.py
