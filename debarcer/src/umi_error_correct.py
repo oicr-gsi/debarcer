@@ -1,41 +1,6 @@
 import pysam
 import src.umi_network_collapse as network
 
-#from utils.generate_plots import umi_plot
-
-
-#class UMIGroup:
-#    """Contains position and count info for all UMIs representing one group."""
-#    
-#    def __init__(self, key):
-#        self.families = {}
-#        self.key = key
-#    
-#    def addNew(self, pos):
-#        self.families[pos] = 1
-#    
-#    def add(self, pos):
-#        self.families[pos] += 1
-#    
-#    @functools.lru_cache(maxsize=4, typed=False)
-#    def getClosest(self, pos, pos_threshold):
-#        for fampos in self.families:
-#            if abs(pos - fampos) <= pos_threshold:
-#                return fampos
-#        return None
-#    
-#    def key(self):
-#        return key
-#    
-#    
-#    ######## added for viewing
-#    def __str__(self):
-#        return "{0}".format([(i, self.families[i]) for i in self.families])
-
-
-
-
-
 def umi_count(contig, region_start, region_end, bam_file):
     '''
     (str, int, int, file) -> dict
@@ -61,58 +26,6 @@ def umi_count(contig, region_start, region_end, bam_file):
                 else:
                     umi_counts[i] = 1
     return umi_counts
-
-
-#def group_position(contig, region_start, region_end, bam_file, umi_groups, pos_threshold):
-#    """
-#    (str, int, int, file, list, int) -> dict
-#    
-#    :param contig: Chromosome, eg ChrN
-#    :param region_start: Start index of the region, 1-based inclusive
-#    :param region_end: End index of the region, 1-based inclusive
-#    :bam_file: Bam file with umi in read names
-#    :umi_groups: List with groups of umi sequences separated by given hamming distance
-#    :pos_threshold: 
-#    
-#    
-#    Splits umi_groups into families (umi + position pairs)."""
-#
-#    umi_table = {}
-#
-#    ## Initialize the table with references to UMIGroup objs
-#    for group in umi_groups:
-#        new_group = UMIGroup(key=group[0])
-#        for umi in group:
-#            umi_table[umi] = new_group
-#
-#    with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
-#        for read in bam_reader.fetch(contig, region_start, region_end):
-#            # umi <- list of umi sequences
-#            umis = read.query_name.split(':')[-1].split(';')
-#            # get the start position 0-based
-#            pos = read.reference_start
-#            # for each umi sequence
-#            for umi in umis:
-#                if umi in umi_table:
-#                    # get the umi group 
-#                    umi_group = umi_table[umi]
-#                    # form families
-#                    families = umi_group.families
-#                    if not families:
-#                        umi_group.addNew(pos)
-#                    elif pos in families:
-#                        umi_group.add(pos)
-#                    else:
-#                        closest = umi_table[umi].getClosest(pos, pos_threshold)
-#                        if closest:
-#                            umi_group.add(closest)
-#                        else:
-#                            umi_group.addNew(pos)
-#
-#    return umi_table
-
-
-
 
 
 def map_umi_to_parent(umi_groups):
@@ -312,49 +225,6 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     umi_families = find_group_families(umi_positions, pos_threshold, ignore_others)
     
     return umi_families, umi_groups
-
-
-
-
-#def umi_datafile(umi_groups):
-#    '''
-#    
-#    
-#    
-#    
-#    '''
-#    
-#    
-#    
-#
-#    #Each 'row' in umi_groups is a tuple, where the first element is the parent umi and all following elements in the tuple are the child umis
-#    elements_per_row = [len(row) for row in umi_groups]
-#    total_parent_umi_count = len(elements_per_row)
-#    total_child_umi_count = sum(elements_per_row)-total_parent_umi_count
-#
-#    parent_umis = [row[0] for row in umi_groups] 
-#    children_per_parent = [count-1 for count in elements_per_row]
-#
-#    #Below dictionary has key=parent umi sequence, and value=num of child umis corresponding to that parent umi
-#    umis_and_numofchildren = {}
-#    for i in range(len(parent_umis)):
-#        umis_and_numofchildren[(parent_umis[i])] = children_per_parent[i]
-#   
-#    #var is a list of (num,freq) pairs where num=number of children (0,1,2,3...) & freq=no. of parents having that number of children
-#    var = [(k, len(list(v))) for k, v in itertools.groupby(sorted(umis_and_numofchildren.values()))]
-#
-#    num_of_children = ""
-#    freq_of_parent_umis = ""
-#    for i in range(len(var)):
-#        if i == 0:
-#            num_of_children = str(var[i][0])
-#            freq_of_parent_umis = str(var[i][1])
-#        else:
-#            num_of_children = num_of_children+","+str(var[i][0])
-#            freq_of_parent_umis = freq_of_parent_umis+","+str(var[i][1])
-#
-#
-#    return total_parent_umi_count, total_child_umi_count, num_of_children, freq_of_parent_umis
 
 
 def umi_datafile(umi_groups):
