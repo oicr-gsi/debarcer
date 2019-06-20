@@ -41,12 +41,11 @@ def umi_count(contig, region_start, region_end, bam_file):
     (str, int, int, file) -> dict
     
     :param contig: Chromosome, eg chrN
-    :param region_start: Start index of the region, 1-based inclusive
-    :param region_end: End index of the region, 1-based inclusive
+    :param region_start: Start index of the region, 0-based half-opened
+    :param region_end: End index of the region, 0-based half opened
     :bam_file: Bam file with umi in read names
     
     Returns a dictionary of umi tally for each umi in a given region
-    start and end are 1-based inclusive and get converted to 0-based by pysam
     '''
     
     umi_counts = {}
@@ -160,8 +159,8 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
     (str, int, int, file, list) -> dict
     
     :param contig: Chromosome, eg ChrN
-    :param region_start: Start index of the region, 1-based inclusive
-    :param region_end: End index of the region, 1-based inclusive
+    :param region_start: Start index of the region, 0-based half opened
+    :param region_end: End index of the region, 0-based half opened
     :bam_file: Bam file with umi in read names
     :umi_groups: List with groups of umi sequences separated by given hamming distance
         
@@ -286,15 +285,14 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     (str, int, int, file, int, int) -> list
     
     :param contig: Chromosome name, eg. chrN
-    :param region_start: Start index of the region of interest. 1-based inclusive
-    :param region_end: End index of the region of interest. 1-based inclusive
+    :param region_start: Start index of the region of interest. 0-based half opened
+    :param region_end: End index of the region of interest. 0-based half opened
     :param bam_file: Path to the bam file
     :param pos_threshold: Position threshold to group umis together 
     :param dist_threshold: The hamming distance threshold to connect parent and child umis     
     :param ignore_others: Ignore families distant from the most abundant family    
         
     Returns a list of tuples (umi_group, pos) pairs representing error-corrected UMI families.
-    start and end are 1-based inclusive and get converted to 0-based by pysam
     """ 
     
     print("Counting UMIs...")
