@@ -19,7 +19,7 @@ def get_ref_seq(contig, region_start, region_end, reference):
     '''
     
     with pysam.FastaFile(reference) as reader:
-        ref_seq = reader.fetch(contig, region_start-1, region_end).upper()
+        ref_seq = reader.fetch(contig, region_start, region_end).upper()
     return ref_seq
 
 
