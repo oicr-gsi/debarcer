@@ -6,11 +6,20 @@ import operator
 import functools
 
 
-def get_ref_seq(contig, region_start, region_end, config):
-    """Gets reference sequence on a region from reference file."""
-    with pysam.FastaFile(config['PATHS']['reference_file']) as reader:
+def get_ref_seq(contig, region_start, region_end, reference):
+    '''
+    (str, int, int, str) -> str
+    
+    :param contig: Chromosome, eg chrN
+    :param region_start: Start index of the region, 0-based half-opened
+    :param region_end: End index of the region, 0-based half opened
+    :param reference: Path to the reference genome
+    
+    Returns the sequence of the reference genome on contig between region_start and region_end included
+    '''
+    
+    with pysam.FastaFile(reference) as reader:
         ref_seq = reader.fetch(contig, region_start-1, region_end).upper()
-
     return ref_seq
 
 
