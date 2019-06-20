@@ -61,41 +61,30 @@ def add_base(mode, seq, pos, family, allele):
             seq[pos] = {}
 
 
-def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold):
+def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000):
     '''
     
     (dict, ......, int) -> 
     
     
     
+    :param contig: Chromosome name, eg. chrN
+    :param region_start: Start index of the region of interest. 0-based half opened
+    :param region_end: End index of the region of interest. 0-based half opened
+    :param bam_file: Path to the bam file
     :param pos_threshold: Window size to group indivual umis into families within groups 
     
     Returns consensus info for each family at each base position in the given region
     
     '''
     
-    
-    
-    
-    
-    
     consensus_seq = {}
     
-    
-    
-    
-
-
-
-
-    # Need to reconsider this for pileup, significant performance improvements possible
-    ## read_threshold = int(config['SETTINGS']['max_family_size']) if config else 50
-
     region_start-=1
 
     with pysam.AlignmentFile(bam_file, "rb") as reader:
-
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=1000000):
+        # loop over pileup columns
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth):
 
             pos = pileupcolumn.reference_pos-1 
             if pos >= region_start and pos < region_end:
@@ -142,7 +131,7 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
     return consensus_seq
 
 
-def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config):
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config, max_depth=1000000):
     """
     Returns a nested dictionary representing counts of each base at each base pos'n.
      - Keys: each base position in the region
@@ -155,7 +144,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
 
     with pysam.AlignmentFile(bam_file, "rb") as reader:
 
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=1000000):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end):
 
             pos = pileupcolumn.reference_pos - 1
 
@@ -246,6 +235,9 @@ def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_
     
     :param pos_threshold: Window size to group indivual umis into families within groups
     
+    :param percent_threshold: Percent consensus threshold 
+    
+    :param count_threshold: Count consensus threshold 
     
     
     Generates consensus data for the given family size and region."""
@@ -253,9 +245,6 @@ def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
     consensus_seq = get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold)
-
-#    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
-#    count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
 
     cons_data = {}
 
