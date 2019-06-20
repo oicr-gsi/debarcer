@@ -61,7 +61,7 @@ def add_base(mode, seq, pos, family, allele):
             seq[pos] = {}
 
 
-def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True):
+def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=False):
     '''
     
     (dict, ......, int) -> 
@@ -84,7 +84,7 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
 
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns. do not consider positions outside of region
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth, truncate=truncate):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
             pos = pileupcolumn.reference_pos-1 
             
 
@@ -129,7 +129,7 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
     return consensus_seq
 
 
-def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config, max_depth=1000000, truncate=True):
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config, max_depth=1000000, truncate=True, ignore_orphans=False):
     """
     Returns a nested dictionary representing counts of each base at each base pos'n.
      - Keys: each base position in the region
@@ -142,7 +142,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
 
     with pysam.AlignmentFile(bam_file, "rb") as reader:
 
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
 
             pos = pileupcolumn.reference_pos - 1
 
