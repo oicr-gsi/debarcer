@@ -239,15 +239,23 @@ class ConsDataRow:
         return self.stats
 
 
-def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, config):
-    """Generates consensus data for the given family size and region."""
+def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold):
+    """
+    
+    
+    
+    :param pos_threshold: Window size to group indivual umis into families within groups
+    
+    
+    
+    Generates consensus data for the given family size and region."""
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
     consensus_seq = get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold)
 
-    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
-    count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
+#    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
+#    count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
 
     cons_data = {}
 
