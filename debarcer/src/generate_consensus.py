@@ -1,16 +1,9 @@
-
 import sys
 import pysam
 import configparser
 import argparse
 import operator
 import functools
-#from src.umi_error_correct import UMIGroup
-from src.get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
-from src.handle_args import handle_arg
-from src.get_ref_seq import get_ref_seq
-
-
 
 
 def get_ref_seq(contig, region_start, region_end, config):
