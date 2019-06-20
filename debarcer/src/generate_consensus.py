@@ -61,11 +61,32 @@ def add_base(mode, seq, pos, family, allele):
             seq[pos] = {}
 
 
-def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
-    """Returns consensus info for each family at each base position in the given region."""
+def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold):
+    '''
+    
+    (dict, ......, int) -> 
+    
+    
+    
+    :param pos_threshold: Window size to group indivual umis into families within groups 
+    
+    Returns consensus info for each family at each base position in the given region
+    
+    '''
+    
+    
+    
+    
+    
+    
     consensus_seq = {}
+    
+    
+    
+    
 
-    pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
+
+
 
     # Need to reconsider this for pileup, significant performance improvements possible
     ## read_threshold = int(config['SETTINGS']['max_family_size']) if config else 50
@@ -218,12 +239,12 @@ class ConsDataRow:
         return self.stats
 
 
-def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config):
+def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, config):
     """Generates consensus data for the given family size and region."""
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
+    consensus_seq = get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold)
 
     percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
     count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
