@@ -111,9 +111,11 @@ def group_umis(args):
     CheckRegionFormat(region)
     # get chromosome
     contig = region.split(":")[0]
-    # get region coordinates. use 1-based inclusive. this will be converted to 0-based by pysam   
+    # get 1-based inclusive region coordinates   
     region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
-       
+    # convert coordinates to 0-based hal opened coordinates
+    region_start = region_start -1
+    
     
     # get umi position and distance thresholds from config
     try:
@@ -142,7 +144,8 @@ def group_umis(args):
     # get the number of parent umis, number of children and number of parent given a number of children
     filename="{}/datafile_{}.csv".format(outdir,region)
     header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-    info = [contig, str(region_start), str(region_end)] + umi_datafile(umi_groups)
+    # use 1-based inclusive coordinates in datafile output
+    info = [contig, str(region_start + 1), str(region_end)] + umi_datafile(umi_groups)
     with open(filename, 'w') as newfile:
         newfile.write('\t'.join(header) + '\n')
         newfile.write('\t'.join(info) + '\n')
