@@ -150,9 +150,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
                             if count >= fam_size:
-                            
+                                
                                 family_key = umi_families[umi]['parent'] + str(closest)
-                            
+                                
                                 ref_pos = pos - region_start
                     
                                 # read.indel is indel length of next position 
@@ -160,6 +160,17 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 
                                 # get reference and alternative bases  
                                 if not read.is_del and read.indel == 0:
+                                    
+                                    try:
+                                        ref_base = ref_seq[ref_pos]
+                                    except:
+                                        print('ref_pos', ref_pos)
+                                        print('pos', pos)
+                                        print('region_start', region_start)
+                                        print(ref_seq)
+                                        
+                                    
+                                    
                                     ref_base = ref_seq[ref_pos]
                                     alt_base = read_data.query_sequence[read.query_position]
                                 elif read.indel > 0:
