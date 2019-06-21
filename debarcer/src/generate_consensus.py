@@ -6,6 +6,7 @@ import operator
 import functools
 
 
+
 def get_ref_seq(contig, region_start, region_end, reference):
     '''
     (str, int, int, str) -> str
@@ -61,10 +62,51 @@ def add_base(mode, seq, pos, family, allele):
             seq[pos] = {}
 
 
-def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=False):
+
+
+
+
+
+
+def find_closest(pos, L):
+    '''
+    (int, list) -> tuple
+    
+    :param pos: Position of interest along chromosome 0-based
+    :param L: List of (positions, counts) 
+    
+    Returns a tuple (i, k) corresponding to the closest position i from pos
+    and the highest count k if multiple counts exist for the smallest distance
+    between pos and i
+    '''
+    
+    # make a dict {distance: count}
+    # with dist being the distance between pos and each positions
+    D = {}
+    for i in L:
+        dist = abs(pos - i[0])
+        if dist in D:
+            D[dist].append(i[1])
+        else:
+            D[dist] = [i[1]]
+    # sort all counts from smallest to highest
+    for i in D:
+        D[i].sort()
+    # make a sorted list of distances from smallest to highest
+    distances = [i for i in D]
+    distances.sort()
+    # get the (distance, count) for the smallest distance from pos
+    # retrieve the highest count if multiple counts recorded per distance
+    return (distances[0], D[distances[0]][-1])
+
+
+def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     '''
     
     (dict, ......, int) -> 
+    
+    
+    :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
     
     
     
@@ -73,6 +115,9 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
     :param region_end: End index of the region of interest. 0-based half opened
     :param bam_file: Path to the bam file
     :param pos_threshold: Window size to group indivual umis into families within groups 
+    :param max_depth: Maximum read depth. Default is 1000000 reads
+    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
     
     Returns consensus info for each family at each base position in the given region
     
@@ -80,56 +125,67 @@ def get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_e
     
     consensus_seq = {}
     
-    region_start-=1
-
     with pysam.AlignmentFile(bam_file, "rb") as reader:
-        # loop over pileup columns. do not consider positions outside of region
+        # loop over pileup columns
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
-            pos = pileupcolumn.reference_pos-1 
-            
-
+            # get column position. by default consider only positions within region
+            # however, number of reads in families consider reads overlapping with region
+            # not only contained within region
+            pos = pileupcolumn.reference_pos  
+            # loop over reads in pileup column
             for read in pileupcolumn.pileups:
-
+                # get read information
                 read_data = read.alignment
-                read_name = read_data.query_name
-                start_pos = read_data.reference_start
+                read_name, start_pos = read_data.query_name, read_data.reference_start
                 umi = read_name.split(":")[-1]
-
-                if umi in umi_table:
-
-                    ## Find the most proximate UMI family
-                    umi_group = umi_table[umi]
-                    closest_fam = umi_group.getClosest(start_pos, pos_threshold)                      
-                    count = umi_group.families[closest_fam]
-
-                    if count >= f_size:
-
-                        family_key = umi_group.key + str(closest_fam)
-
-                        ref_pos = pos - region_start
+                # check that umi is recorded
+                if umi in umi_families:
+                    # find closest family from umi
+                    # make a list of (positions counts)
+                    L = [(i, umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                    closest, count = find_closest(start_pos, L)
+                    # check if closest family is within the position threshold
+                    if abs(start_pos - closest) <= pos_threshold:
+                        # found a umi family. check if family count is greater than family threshold
+                        if count >= fam_size:
+                            
+                            family_key = umi_families[umi]['parent'] + str(closest)
+                            
+                            ref_pos = pos - region_start
                     
-                        if not read.is_del and not read.indel:
-                            ref_base = ref_seq[ref_pos]
-                            alt_base = read_data.query_sequence[read.query_position-1]
-
-                        # Next position is an insert (current base is ref)
-                        elif read.indel > 0:
-                            ref_base = ref_seq[ref_pos]
-                            alt_base = read_data.query_sequence[
-                                read.query_position:read.query_position + abs(read.indel)+1]
-                        # Next position is a deletion (current base + next bases are ref)
-                        elif read.indel < 0:
-                            ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
-                            alt_base = read_data.query_sequence[read.query_position]
-
-                        if not read.is_del:
-                            add_base(mode="consensus", seq=consensus_seq, pos=pos+1,
-                                    family=family_key, allele=(ref_base, alt_base))
-
+                            # read.indel is indel length of next position 
+                            # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                                                
+                            # get reference and alternative bases  
+                            if not read.is_del and read.indel == 0:
+                                ref_base = ref_seq[ref_pos]
+                                alt_base = read_data.query_sequence[read.query_position]
+                            elif read.indel > 0:
+                                # Next position is an insert (current base is ref)
+                                ref_base = ref_seq[ref_pos]
+                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
+                            elif read.indel < 0:
+                                # Next position is a deletion (current base + next bases are ref)
+                                ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
+                                alt_base = read_data.query_sequence[read.query_position]
+                            
+                            # query position is None if is_del or is_refskip is set
+                            if not read.is_del and not read.is_refskip:
+                                # add base info
+                                pos = pos + 1
+                                allele = (ref_base, alt_base)
+                                if pos not in consensus_seq:
+                                    consensus_seq[pos] = {}
+                                if family_key not in consensus_seq[pos]:
+                                    consensus_seq[pos][family_key] = {}
+                                if allele in consensus_seq[pos][family_key]:
+                                    consensus_seq[pos][family_key][allele] += 1
+                                else:
+                                    consensus_seq[pos][family_key][allele] = 1
     return consensus_seq
 
 
-def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config, max_depth=1000000, truncate=True, ignore_orphans=False):
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config, max_depth=1000000, truncate=True, ignore_orphans=True):
     """
     Returns a nested dictionary representing counts of each base at each base pos'n.
      - Keys: each base position in the region
@@ -144,7 +200,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
 
-            pos = pileupcolumn.reference_pos - 1
+            pos = pileupcolumn.reference_pos 
 
             
 
@@ -152,7 +208,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, con
 
                 if not read.is_del and not read.indel:
                     ref_base = ref_seq[pos - region_start]
-                    alt_base = read.alignment.query_sequence[read.query_position -1]
+                    alt_base = read.alignment.query_sequence[read.query_position]
 
                 # Next position is an insert (current base is ref)
                 elif read.indel > 0:
