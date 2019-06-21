@@ -159,7 +159,16 @@ def group_umis(args):
 
 
 def collapse(args):
-    """Base collapses from given BAM and umi family file."""
+    '''
+    
+    
+    
+    
+    
+    Base collapses from given BAM and umi family file
+    
+    
+    '''
 
 
     # get output directory from the config or command. set to current dir if not provided
@@ -179,8 +188,10 @@ def collapse(args):
     CheckRegionFormat(region)
     # get chromosome 
     contig = region.split(":")[0]
-    # get region coordinates. use 1-based inclusive. this will be converted to 0-based by pysam   
+    # get 1-based inclusive region coordinates
     region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
+    # convert coordinates to 0-based hal opened coordinates
+    region_start = region_start -1
     
     # load json with count of umi families per position and umi group
     try:
@@ -191,6 +202,16 @@ def collapse(args):
         raise ValueError("ERR: Unable to load .umi json file")
         
     print(timestamp() + "Generating consensus...")
+
+
+
+
+#    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
+#    count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
+
+
+
+
 
     generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, config)
 
