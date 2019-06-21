@@ -152,7 +152,7 @@ def group_umis(args):
     
     umi_file = "{}/{}.umis".format(outdir, region)
     with open(umi_file, 'w') as newfile:
-        json.dump(str(umi_families), newfile, sort_keys = True, indent=4)
+        json.dump(umi_families, newfile, sort_keys = True, indent=4)
         
     print(timestamp() + "UMI grouping complete. Output written to {}.".format(outdir))
 
