@@ -93,7 +93,7 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
             # umi <- list of umi sequences
             umis = read.query_name.split(':')[-1].split(';')
             # get the start position 0-based
-            pos = read.reference_start
+            pos = int(read.reference_start)
             # for each umi sequence
             for umi in umis:
                 # get the parent umi
