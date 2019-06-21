@@ -137,51 +137,55 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                 # get read information
                 read_data = read.alignment
                 read_name, start_pos = read_data.query_name, int(read_data.reference_start)
-                umi = read_name.split(":")[-1]
-                # check that umi is recorded
-                if umi in umi_families:
-                    # find closest family from umi
-                    # make a list of (positions counts)
-                    L = [(int(i), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
-                    closest, count = find_closest(start_pos, L)
-                    # check if closest family is within the position threshold
-                    if abs(start_pos - closest) <= pos_threshold:
-                        # found a umi family. check if family count is greater than family threshold
-                        if count >= fam_size:
+                # get all recorded umis
+                umis = read_name.split(":")[-1]
+                for umi in umis:
+                
+                
+                    # check that umi is recorded
+                    if umi in umi_families:
+                        # find closest family from umi
+                        # make a list of (positions counts)
+                        L = [(int(i), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                        closest, count = find_closest(start_pos, L)
+                        # check if closest family is within the position threshold
+                        if abs(start_pos - closest) <= pos_threshold:
+                            # found a umi family. check if family count is greater than family threshold
+                            if count >= fam_size:
                             
-                            family_key = umi_families[umi]['parent'] + str(closest)
+                                family_key = umi_families[umi]['parent'] + str(closest)
                             
-                            ref_pos = pos - region_start
+                                ref_pos = pos - region_start
                     
-                            # read.indel is indel length of next position 
-                            # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                                # read.indel is indel length of next position 
+                                # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
                                                 
-                            # get reference and alternative bases  
-                            if not read.is_del and read.indel == 0:
-                                ref_base = ref_seq[ref_pos]
-                                alt_base = read_data.query_sequence[read.query_position]
-                            elif read.indel > 0:
-                                # Next position is an insert (current base is ref)
-                                ref_base = ref_seq[ref_pos]
-                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
-                            elif read.indel < 0:
-                                # Next position is a deletion (current base + next bases are ref)
-                                ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
-                                alt_base = read_data.query_sequence[read.query_position]
+                                # get reference and alternative bases  
+                                if not read.is_del and read.indel == 0:
+                                    ref_base = ref_seq[ref_pos]
+                                    alt_base = read_data.query_sequence[read.query_position]
+                                elif read.indel > 0:
+                                    # Next position is an insert (current base is ref)
+                                    ref_base = ref_seq[ref_pos]
+                                    alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
+                                elif read.indel < 0:
+                                    # Next position is a deletion (current base + next bases are ref)
+                                    ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
+                                    alt_base = read_data.query_sequence[read.query_position]
                             
-                            # query position is None if is_del or is_refskip is set
-                            if not read.is_del and not read.is_refskip:
-                                # add base info
-                                pos = pos + 1
-                                allele = (ref_base, alt_base)
-                                if pos not in consensus_seq:
-                                    consensus_seq[pos] = {}
-                                if family_key not in consensus_seq[pos]:
-                                    consensus_seq[pos][family_key] = {}
-                                if allele in consensus_seq[pos][family_key]:
-                                    consensus_seq[pos][family_key][allele] += 1
-                                else:
-                                    consensus_seq[pos][family_key][allele] = 1
+                                # query position is None if is_del or is_refskip is set
+                                if not read.is_del and not read.is_refskip:
+                                    # add base info
+                                    pos = pos + 1
+                                    allele = (ref_base, alt_base)
+                                    if pos not in consensus_seq:
+                                        consensus_seq[pos] = {}
+                                    if family_key not in consensus_seq[pos]:
+                                        consensus_seq[pos][family_key] = {}
+                                    if allele in consensus_seq[pos][family_key]:
+                                        consensus_seq[pos][family_key][allele] += 1
+                                    else:
+                                        consensus_seq[pos][family_key][allele] = 1
     return consensus_seq
 
 
