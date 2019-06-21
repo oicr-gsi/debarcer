@@ -169,6 +169,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             print('ref_pos', ref_pos)
                                             print('pos', pos)
                                             print('region_start', region_start)
+                                            print('region_end', region_end)
                                             print(ref_seq)
                                         
                                     
