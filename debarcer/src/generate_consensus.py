@@ -138,10 +138,8 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                 read_data = read.alignment
                 read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                 # get all recorded umis
-                umis = read_name.split(":")[-1]
+                umis = read_name.split(":")[-1].split(';')
                 for umi in umis:
-                
-                
                     # check that umi is recorded
                     if umi in umi_families:
                         # find closest family from umi
