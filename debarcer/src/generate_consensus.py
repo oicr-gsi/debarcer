@@ -134,6 +134,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             pos = int(pileupcolumn.reference_pos)  
             # restrict position within the region boundaries
             if region_start <= pos and region_end > pos:
+                assert pos != region_end
                 # loop over reads in pileup column
                 for read in pileupcolumn.pileups:
                     # get read information
