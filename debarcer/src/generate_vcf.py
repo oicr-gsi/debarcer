@@ -8,7 +8,7 @@ import csv
 from src.generate_consensus import ConsDataRow
 from src.generate_consensus import get_ref_seq
 #from src.umi_error_correct import UMIGroup
-from src.get_consensus_seq import get_consensus_seq, get_uncollapsed_seq
+from src.generate_consensus import get_consensus_seq, get_uncollapsed_seq
 from src.handle_args import handle_arg
 from src.get_ref_seq import get_ref_seq
 from src.generate_consensus import temp_umi_table
