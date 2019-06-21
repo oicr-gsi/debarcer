@@ -131,18 +131,18 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
-            pos = pileupcolumn.reference_pos  
+            pos = int(pileupcolumn.reference_pos)  
             # loop over reads in pileup column
             for read in pileupcolumn.pileups:
                 # get read information
                 read_data = read.alignment
-                read_name, start_pos = read_data.query_name, read_data.reference_start
+                read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                 umi = read_name.split(":")[-1]
                 # check that umi is recorded
                 if umi in umi_families:
                     # find closest family from umi
                     # make a list of (positions counts)
-                    L = [(i, umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                    L = [(int(i), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
                     closest, count = find_closest(start_pos, L)
                     # check if closest family is within the position threshold
                     if abs(start_pos - closest) <= pos_threshold:
