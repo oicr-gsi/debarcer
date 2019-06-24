@@ -194,11 +194,11 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                     curr_pos = pos + 1
                     allele = (ref_base, alt_base)
                     if curr_pos not in uncollapsed_seq:
-                        uncollapsed_seq[pos] = {}
-                    if allele not in uncollapsed_seq[pos]:
-                        uncollapsed_seq[pos][allele] = 1
+                        uncollapsed_seq[curr_pos] = {}
+                    if allele not in uncollapsed_seq[curr_pos]:
+                        uncollapsed_seq[curr_pos][allele] = 1
                     else:
-                        uncollapsed_seq[pos][allele] += 1
+                        uncollapsed_seq[curr_pos][allele] += 1
     return uncollapsed_seq
 
 
