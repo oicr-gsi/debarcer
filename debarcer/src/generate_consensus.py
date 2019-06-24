@@ -130,7 +130,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
             pos = int(pileupcolumn.reference_pos)  
-            # restrict position within the region boundaries
             assert pos != region_end
             # loop over reads in pileup column
             for read in pileupcolumn.pileups:
@@ -187,44 +186,62 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     return consensus_seq
 
 
-def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config, max_depth=1000000, truncate=True, ignore_orphans=True):
-    """
-    Returns a nested dictionary representing counts of each base at each base pos'n.
-     - Keys: each base position in the region
-     - Values: tables of A,T,C,G (etc) counts
-    """
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True):
+    '''
+    (str, str, int, int, str, str, int, bool, bool) -> dict
+    
+    :param ref_seq: Sequence of the reference corresponding to the given region
+    :param contig: Chromosome name, eg. chrN
+    :param region_start: Start index of the region of interest. 0-based half opened
+    :param region_end: End index of the region of interest. 0-based half opened
+    :param bam_file: Path to the bam file
+    :param max_depth: Maximum read depth. Default is 1000000 reads
+    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    
+    Returns a nested dictionary representing counts of each base at each base position.
+    '''
 
     uncollapsed_seq = {}
 
-    region_start-=1
-
     with pysam.AlignmentFile(bam_file, "rb") as reader:
-
+        # loop over pileup columns 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
-
-            pos = pileupcolumn.reference_pos 
-
-            
-
+            # get column position. by default consider only positions within region
+            # however, number of reads in families consider reads overlapping with region
+            # not only contained within region
+            pos = int(pileupcolumn.reference_pos) 
+            assert pos != region_end  
+            # loop over reads in pileup column
             for read in pileupcolumn.pileups:
-
-                if not read.is_del and not read.indel:
+                # read.indel is indel length of next position 
+                # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                
+                # get reference and alternative bases
+                if not read.is_del and read.indel == 0:
                     ref_base = ref_seq[pos - region_start]
                     alt_base = read.alignment.query_sequence[read.query_position]
-
-                # Next position is an insert (current base is ref)
                 elif read.indel > 0:
+                    # Next position is an insert (current base is ref)
                     ref_base = ref_seq[pos - region_start]
                     alt_base = read.alignment.query_sequence[
                         read.query_position:read.query_position + abs(read.indel) + 1]
-
-                # Next position is a deletion (current base + next bases are ref)
                 elif read.indel < 0:
+                    # Next position is a deletion (current base + next bases are ref)
                     ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                     alt_base = read.alignment.query_sequence[read.query_position]
-
-                add_base(mode="uncollapsed", seq=uncollapsed_seq, pos=pos+1, family=None, allele=(ref_base, alt_base))
-
+                
+                # query position is None if is_del or is_refskip is set
+                if not read.is_del and not read.is_refskip:
+                    # add base info
+                    curr_pos = pos + 1
+                    allele = (ref_base, alt_base)
+                    if curr_pos not in uncollapsed_seq:
+                        uncollapsed_seq[pos] = {}
+                    if allele not in uncollapsed_seq[pos]:
+                        uncollapsed_seq[pos][allele] = 1
+                    else:
+                        uncollapsed_seq[pos][allele] += 1
     return uncollapsed_seq
 
 
