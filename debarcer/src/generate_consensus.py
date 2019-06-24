@@ -103,13 +103,12 @@ def find_closest(pos, L):
 def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     '''
     
-    (dict, ......, int) -> 
+    (dict, int, str, str, int, int, str, int, int, bool, bool) -> dict
     
     
     :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
-    
-    
-    
+    :param fam_size: Minimum umi family size 
+    :param ref_seq: Sequence of the reference corresponding to the given region
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
@@ -120,7 +119,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
     
     Returns consensus info for each family at each base position in the given region
-    
     '''
     
     consensus_seq = {}
