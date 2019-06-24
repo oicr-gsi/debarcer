@@ -25,49 +25,6 @@ def get_ref_seq(contig, region_start, region_end, reference):
 
 
 
-
-def add_base(mode, seq, pos, family, allele):
-    """(Helper) Adds a base to a seq dictionary."""
-
-    added = False
-
-    while not added and mode == "uncollapsed":
-        if pos in seq:
-            if allele in seq[pos]:
-                seq[pos][allele] += 1
-
-            else:
-                seq[pos][allele] = 1
-
-            added = True
-
-        else:
-            seq[pos] = {}
-
-    while not added and mode == "consensus":
-        if pos in seq:
-            if family in seq[pos]:
-                if allele in seq[pos][family]:
-                    seq[pos][family][allele] += 1
-
-                else:
-                    seq[pos][family][allele] = 1
-
-                added = True
-
-            else:
-                seq[pos][family] = {}
-
-        else:
-            seq[pos] = {}
-
-
-
-
-
-
-
-
 def find_closest(pos, L):
     '''
     (int, list) -> tuple
