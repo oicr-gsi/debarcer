@@ -105,7 +105,15 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         # check if closest family is within the position threshold
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
+                            
+                            
+                            print('count', count, type(count))
+                            print('fam_size', fam_size, type(fam_size))
+                            
+                            
                             if count >= fam_size:
+                                
+                                
                              
                                 family_key = umi_families[umi]['parent'] + str(closest)
                                 
