@@ -273,7 +273,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True)
+    consensus_seq = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     
 
@@ -328,7 +328,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True)
+    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     
     cons_data = {}
     
@@ -487,7 +487,7 @@ def memoize(func):
 
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, fam_size):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """(Main) generates consensus output file."""
 
     ## Make a stand-in umi_table if one is not provided (no error correction)
@@ -500,11 +500,9 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
 
     f_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
 
-
-
     ## Get reference sequence for the region 
     print("Getting reference sequence...")
-    ref_seq = get_ref_seq(contig, region_start, region_end, config)
+    ref_seq = get_ref_seq(contig, region_start, region_end, reference)
 
     ## Get consensus data for each f_size + uncollapsed data
     print("Building consensus data...")
@@ -521,16 +519,14 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
         cons_data[f_size] = memoized_collapsed(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
     """
 
-    cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
+    cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     for f_size in f_sizes:
-        cons_data[f_size] = generate_consensus(
-            umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
-  
-
+        cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, percent_threshold, count_threshold)
+    
     ## Output
     print("Writing output...")
-    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, config)
+    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, ref_threshold, all_threshold)
     
 
 if __name__=="__main__":
