@@ -437,42 +437,6 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                                 #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
-def temp_umi_table(contig, region_start, region_end, bam_file, config):
-    """Makes a UMI table with no error correction (only when one is not provided)."""
-
-    umi_table = {}
-    pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold']) if config else 10
-
-    with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
-
-        for read in bam_reader.fetch(contig, region_start, region_end):
-
-            umi = read.query_name.split(':')[-1]
-            pos = read.reference_start
-
-            if umi in umi_table:
-
-                umi_group = umi_table[umi]
-                families = umi_group.families
-
-                if pos in families:
-                    umi_group.add(pos)
-
-                else:
-                    closest = umi_table[umi].getClosest(pos, pos_threshold)
-                    if closest:
-                        umi_group.add(closest)
-                    else:
-                        umi_group.addNew(pos)
-
-            else:
-                umi_table[umi] = UMIGroup(key=umi)
-                umi_table[umi].addNew(pos)
-
-    return umi_table
-
-
-
 def memoize(func):
     cache = dict()
 
@@ -490,10 +454,7 @@ def memoize(func):
 def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """(Main) generates consensus output file."""
 
-    ## Make a stand-in umi_table if one is not provided (no error correction)
-    if not umi_table:
-        print("Building temporary UMI table...")
-        umi_table = temp_umi_table(contig, region_start, region_end, bam_file, config)
+    
         
 #    ## Lists of umi families with count >= f_size
 #    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
