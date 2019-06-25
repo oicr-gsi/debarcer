@@ -451,7 +451,7 @@ def memoize(func):
 
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
+def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """(Main) generates consensus output file."""
 
     
