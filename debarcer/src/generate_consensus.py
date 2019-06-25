@@ -181,8 +181,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                 elif read.indel > 0:
                     # Next position is an insert (current base is ref)
                     ref_base = ref_seq[pos - region_start]
-                    alt_base = read.alignment.query_sequence[
-                        read.query_position:read.query_position + abs(read.indel) + 1]
+                    alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
                 elif read.indel < 0:
                     # Next position is a deletion (current base + next bases are ref)
                     ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
@@ -258,7 +257,7 @@ class ConsDataRow:
         return self.stats
 
 
-def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold):
+def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True, percent_threshold, count_threshold):
     """
     
     
@@ -274,7 +273,11 @@ def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    consensus_seq = get_consensus_seq(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold)
+    consensus_seq = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True)
+
+    
+
+
 
     cons_data = {}
 
@@ -320,12 +323,12 @@ def generate_consensus(umi_table, f_size, ref_seq, contig, region_start, region_
     return cons_data
 
 
-def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config):
+def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True):
     """Generates uncollapsed consensus data for the given family size and region."""
     
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
-    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, config)
+    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True)
     
     cons_data = {}
     
@@ -352,11 +355,11 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, co
     return cons_data
 
 
-def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, config):
+def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, ref_threshold, all_threshold):
     """Writes a long-form consensus file for every event detected in the collapsed data."""
 
-    ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
+#    ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
+#    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
 
     with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_end), "w") as writer:
 
@@ -484,7 +487,7 @@ def memoize(func):
 
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, config):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_table, output_path, fam_size):
     """(Main) generates consensus output file."""
 
     ## Make a stand-in umi_table if one is not provided (no error correction)
@@ -492,8 +495,12 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_ta
         print("Building temporary UMI table...")
         umi_table = temp_umi_table(contig, region_start, region_end, bam_file, config)
         
-    ## Lists of umi families with count >= f_size
-    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
+#    ## Lists of umi families with count >= f_size
+#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
+
+    f_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
+
+
 
     ## Get reference sequence for the region 
     print("Getting reference sequence...")
