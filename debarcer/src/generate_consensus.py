@@ -437,20 +437,6 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                                 #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
-def memoize(func):
-    cache = dict()
-
-    def memoized_func(*args):
-        if args in cache:
-            return cache[args]
-        result = func(*args)
-        cache[args] = result
-        return result
-
-    return memoized_func
-
-
-
 def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """(Main) generates consensus output file."""
 
@@ -469,24 +455,10 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Building consensus data...")
     cons_data = {}
     
-    """
-    memoized_uncollapsed = memoize(generate_uncollapsed)
-    cons_data[0] = memoized_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, config)
-
-    memoized_collapsed = memoize(generate_consensus)
-
-
-    for f_size in f_sizes:
-        cons_data[f_size] = memoized_collapsed(umi_table, f_size, ref_seq, contig, region_start, region_end, bam_file, config)
-    """
-
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     for f_size in f_sizes:
         cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-    
-    
-    
     
     ## Output
     print("Writing output...")
