@@ -257,7 +257,7 @@ class ConsDataRow:
         return self.stats
 
 
-def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True, percent_threshold, count_threshold):
+def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """
     
     
@@ -522,7 +522,10 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
     cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     for f_size in f_sizes:
-        cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, percent_threshold, count_threshold)
+        cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+    
+    
+    
     
     ## Output
     print("Writing output...")
