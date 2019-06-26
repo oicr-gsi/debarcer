@@ -583,11 +583,19 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Building consensus data...")
     cons_data = {}
     
-    cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-
-    for f_size in f_sizes:
-        cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     
+    for f_size in f_sizes:
+        # check if 0 is passed as fam_size argument
+        if f_size == 0:
+            # compute consensus for uncollapsed data
+            cons_data[f_size] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+        else:
+            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+    
+    # compute consensus for uncollapsed data if not in fam_size argument
+    if 0 not in f_sizes:
+        cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+
     ## Output
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, ref_threshold, all_threshold)
