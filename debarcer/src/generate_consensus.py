@@ -75,7 +75,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
     
-    Returns consensus info for each family at each base position in the given region
+    Returns consensus info at each base position in the given region
     '''
     
     consensus_seq = {}
@@ -106,6 +106,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
                             if count >= fam_size:
+                                # use family key to count allele. collapsing is done within families. not per position
+                                family_key = umi_families[umi]['parent'] + str(closest)
+                                
                                 ref_pos = pos - region_start
                     
                                 # read.indel is indel length of next position 
@@ -127,15 +130,18 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                 # query position is None if is_del or is_refskip is set
                                 if not read.is_del and not read.is_refskip:
                                     # add base info
+                                    # use 1-based inclusive coordinates
                                     curr_pos = pos + 1
                                     allele = (ref_base, alt_base)
                                     # count the number of reads supporting this allele
                                     if curr_pos not in consensus_seq:
                                         consensus_seq[curr_pos] = {}
-                                    if allele in consensus_seq[curr_pos]:
-                                        consensus_seq[curr_pos][allele] += 1
+                                    if family_key not in consensus_seq[curr_pos]:
+                                        consensus_seq[curr_pos][family_key] = {}
+                                    if allele in consensus_seq[curr_pos][family_key]:
+                                        consensus_seq[curr_pos][family_key][allele] += 1
                                     else:
-                                        consensus_seq[curr_pos][allele] = 1
+                                        consensus_seq[curr_pos][family_key][allele] = 1
     return consensus_seq
 
 
@@ -325,7 +331,18 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
 
     ## Keys: each base position in the region
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
+    
+    
+    #  get consensus info for each base position in the given region
+
+
+
     consensus_seq = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+
+
+
+
+
 
 
     # get the count of umi families per group and position
