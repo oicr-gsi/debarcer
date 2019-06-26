@@ -106,9 +106,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
                             if count >= fam_size:
-                                                            
-                                family_key = umi_families[umi]['parent'] + str(closest)
-                                
                                 ref_pos = pos - region_start
                     
                                 # read.indel is indel length of next position 
@@ -135,12 +132,10 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                     # count the number of reads supporting this allele
                                     if curr_pos not in consensus_seq:
                                         consensus_seq[curr_pos] = {}
-                                    if family_key not in consensus_seq[curr_pos]:
-                                        consensus_seq[curr_pos][family_key] = {}
-                                    if allele in consensus_seq[curr_pos][family_key]:
-                                        consensus_seq[curr_pos][family_key][allele] += 1
+                                    if allele in consensus_seq[curr_pos]:
+                                        consensus_seq[curr_pos][allele] += 1
                                     else:
-                                        consensus_seq[curr_pos][family_key][allele] = 1
+                                        consensus_seq[curr_pos][allele] = 1
     return consensus_seq
 
 
