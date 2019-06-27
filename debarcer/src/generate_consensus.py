@@ -113,8 +113,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         
                         
                         if int(pos) == 137781621:
-                            print(umi, pos, umi_families[umi])
-                            print(closest, count)
+                            if closest <= pos_threshold:
+                                print(umi, pos, umi_families[umi])
+                                print(closest, count)
                         
                         
                         
