@@ -77,7 +77,12 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     
     Returns consensus info at each base position in the given region
     '''
-    
+
+
+    # create a dict to store umi family size at each position {position: {parent: {distance: count}}}
+    FamSize = {}
+
+    # create a dict to store consensus seq info
     consensus_seq = {}
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
@@ -114,12 +119,12 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         closest, count = find_closest(start_pos, L)
                         
                         
-                        
-                        if int(pos) == 137781621:
-                            print(L)
-                            if closest <= pos_threshold:
-                                print(umi, pos, umi_families[umi])
-                                print(closest, count)
+#                        
+#                        if int(pos) == 137781621:
+#                            print(L)
+#                            if closest <= pos_threshold:
+#                                print(umi, pos, umi_families[umi])
+#                                print(closest, count)
                         
                         
                         
@@ -128,8 +133,20 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
                             if count >= fam_size:
+                                
+                                parent = umi_families[umi]['parent']
+                                
+                                
+                                # record family size
+                                if pos not in FamSize:
+                                    FamSize[pos] = {}
+                                if parent not in FamSize[pos]:
+                                    FamSize[pos][parent] = {}
+                                FamSize[pos][parent][closest] = count
+                                
+                                                          
                                 # use family key to count allele. collapsing is done within families. not per position
-                                family_key = umi_families[umi]['parent'] + str(closest)
+                                family_key = parent + str(closest)
                                 
                                 ref_pos = pos - region_start
                     
@@ -167,7 +184,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                         consensus_seq[curr_pos][family_key][allele] += 1
                                     else:
                                         consensus_seq[curr_pos][family_key][allele] = 1
-    return consensus_seq
+    return consensus_seq, FamSize
 
 
 def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True):
@@ -291,6 +308,56 @@ class ConsDataRow:
 
 
 
+#def get_count_per_group(umi_families):
+#    '''
+#    (dict) -> dict
+#    
+#    :param umi_families: Information about each umi: parent umi and positions,
+#                         counts of each family within a given group
+#                         positions are 0-based half opened
+#    
+#    Return a dictionary umi count per position and group (ie. parent)
+#    '''
+#      
+#    count_per_group = {}
+#    for umi in umi_families:
+#        parent = umi_families[umi]['parent']
+#        if parent not in count_per_group:
+#            count_per_group[parent] = {}
+#        for pos in umi_families[umi]['positions']:
+#            count_per_group[parent][int(pos)] = umi_families[umi]['positions'][pos]
+#    return count_per_group
+#
+#
+#def get_fam_size(count_per_group, position, fam_size):
+#    '''
+#    (dict, int, int) -> tuple
+#    
+#    :param count_per_group: umi family count per parent group and position
+#    :position: A given position in a genomic region. 0-based half opened
+#    :fam_size: Family size threshold to accept umi
+#    
+#    Return a tuple with minimum and mean umi family size for the given position
+#    '''
+#    
+#    # umis belonging to a same group, ie having same parent, have the same count
+#    # need to count umis at the parent level to avoid redundant counts
+#    
+#    # make a list of umi count for a given position
+#    L = []
+#    for parent in count_per_group:
+#        for pos in count_per_group[parent]:
+#            # check if given position
+#            if pos == position:
+#                # check if umi count greater than fam_size threshold
+#                if count_per_group[parent][pos] >= fam_size:
+#                    L.append(count_per_group[parent][pos])
+#    # compute minimum and mean family size
+#    min_fam_size, mean_fam_size = min(L), sum(L) / len(L)
+#    
+#    return (min_fam_size, mean_fam_size)
+    
+
 def get_count_per_group(umi_families):
     '''
     (dict) -> dict
@@ -312,7 +379,7 @@ def get_count_per_group(umi_families):
     return count_per_group
 
 
-def get_fam_size(count_per_group, position, fam_size):
+def get_fam_size(consensus_seq, umi_families, position):
     '''
     (dict, int, int) -> tuple
     
@@ -327,6 +394,15 @@ def get_fam_size(count_per_group, position, fam_size):
     # need to count umis at the parent level to avoid redundant counts
     
     # make a list of umi count for a given position
+    
+    
+    # loop over fam_key
+    for i in consensus_seq[position]:
+        # get parent
+        parent = ''.join([j for j in i if j.isalpha()])
+        
+    
+    
     L = []
     for parent in count_per_group:
         for pos in count_per_group[parent]:
@@ -339,7 +415,25 @@ def get_fam_size(count_per_group, position, fam_size):
     min_fam_size, mean_fam_size = min(L), sum(L) / len(L)
     
     return (min_fam_size, mean_fam_size)
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
@@ -364,10 +458,10 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     
     
     #  get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
-    consensus_seq = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     # get the count of umi families per group and position
-    group_count = get_count_per_group(umi_families)
+    #group_count = get_count_per_group(umi_families)
 
     # create a dict to store consensus info
     cons_data = {}
@@ -379,7 +473,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         # check if base pos has been recorded 
         
         
-        print(base_pos, base_pos in consensus_seq)
+        #print(base_pos, base_pos in consensus_seq)
         
         
         
@@ -394,15 +488,24 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             
             
             # compute minimum and mean family size
-            min_fam, mean_fam = get_fam_size(group_count, base_pos, fam_size) 
+            
+            L = []
+            for i in FamSize[base_pos]:
+                for j in FamSize[base_pos][i]:
+                    L.append(FamSize[base_pos][i][j])
+            min_fam, mean_fam = min(L), sum(L) / len(L)
+            print(min_fam, mean_fam)
+            
+            
+            #min_fam, mean_fam = get_fam_size(group_count, base_pos, fam_size) 
                         
             for family in consensus_seq[base_pos]:
                        
                 cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
                 
-                print(family, cons_allele)
-                print(consensus_seq[base_pos][family].items())
-                print(operator.itemgetter(1))
+                #print(family, cons_allele)
+                #print(consensus_seq[base_pos][family].items())
+                #print(operator.itemgetter(1))
                 
                 
                 cons_denom = sum(consensus_seq[base_pos][family].values())
