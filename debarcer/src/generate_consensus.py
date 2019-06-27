@@ -350,10 +350,21 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         # extract ref base
         ref_base = ref_seq[base_pos-region_start]
         # check if base pos has been recorded 
+        
+        
+        print(base_pos, base_pos in consensus_seq)
+        
+        
+        
+        
         if base_pos in consensus_seq:
             
             consensuses = {}
             raw_depth = 0
+            
+            
+            
+            
             
             # compute minimum and mean family size
             min_fam, mean_fam = get_fam_size(group_count, base_pos, fam_size) 
