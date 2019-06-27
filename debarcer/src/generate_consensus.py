@@ -98,10 +98,27 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                 for umi in umis:
                     # check that umi is recorded
                     if umi in umi_families:
+                        
+                        
+                        
+                            
+                        
+                        
+                        
                         # find closest family from umi
                         # make a list of (positions counts)
                         L = [(int(i), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
                         closest, count = find_closest(start_pos, L)
+                        
+                        
+                        
+                        if int(pos) == 137781621:
+                            print(umi, pos, umi_families[umi])
+                            print(closest, count)
+                        
+                        
+                        
+                        
                         # check if closest family is within the position threshold
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
