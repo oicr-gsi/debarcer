@@ -148,19 +148,16 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                 # query position is None if is_del or is_refskip is set
                                 if not read.is_del and not read.is_refskip:
                                     # add base info
-                                    # use 1-based inclusive coordinates
-                                    curr_pos = pos + 1
-                                                                        
                                     allele = (ref_base, alt_base)
                                     # count the number of reads supporting this allele
-                                    if curr_pos not in consensus_seq:
-                                        consensus_seq[curr_pos] = {}
-                                    if family_key not in consensus_seq[curr_pos]:
-                                        consensus_seq[curr_pos][family_key] = {}
-                                    if allele in consensus_seq[curr_pos][family_key]:
-                                        consensus_seq[curr_pos][family_key][allele] += 1
+                                    if pos not in consensus_seq:
+                                        consensus_seq[pos] = {}
+                                    if family_key not in consensus_seq[pos]:
+                                        consensus_seq[pos][family_key] = {}
+                                    if allele in consensus_seq[pos][family_key]:
+                                        consensus_seq[pos][family_key][allele] += 1
                                     else:
-                                        consensus_seq[curr_pos][family_key][allele] = 1
+                                        consensus_seq[pos][family_key][allele] = 1
     return consensus_seq, FamSize
 
 
@@ -211,16 +208,14 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                 # query position is None if is_del or is_refskip is set
                 if not read.is_del and not read.is_refskip:
                     # add base info
-                    curr_pos = pos + 1
-                                       
                     allele = (ref_base, alt_base)
                     # count the number of reads supporting this allele
-                    if curr_pos not in uncollapsed_seq:
-                        uncollapsed_seq[curr_pos] = {}
-                    if allele not in uncollapsed_seq[curr_pos]:
-                        uncollapsed_seq[curr_pos][allele] = 1
+                    if pos not in uncollapsed_seq:
+                        uncollapsed_seq[pos] = {}
+                    if allele not in uncollapsed_seq[pos]:
+                        uncollapsed_seq[pos][allele] = 1
                     else:
-                        uncollapsed_seq[curr_pos][allele] += 1
+                        uncollapsed_seq[pos][allele] += 1
     return uncollapsed_seq
 
 
