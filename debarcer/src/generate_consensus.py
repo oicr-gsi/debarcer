@@ -131,7 +131,10 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                 if not read.is_del and not read.is_refskip:
                                     # add base info
                                     # use 1-based inclusive coordinates
-                                    curr_pos = pos + 1
+                                    #curr_pos = pos + 1
+                                    
+                                    curr_pos = pos
+                                    
                                     allele = (ref_base, alt_base)
                                     # count the number of reads supporting this allele
                                     if curr_pos not in consensus_seq:
@@ -192,7 +195,9 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                 # query position is None if is_del or is_refskip is set
                 if not read.is_del and not read.is_refskip:
                     # add base info
-                    curr_pos = pos + 1
+                    #curr_pos = pos + 1
+                    curr_pos = pos
+                    
                     allele = (ref_base, alt_base)
                     # count the number of reads supporting this allele
                     if curr_pos not in uncollapsed_seq:
