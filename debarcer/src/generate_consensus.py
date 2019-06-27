@@ -318,6 +318,9 @@ def get_fam_size(count_per_group, position, fam_size):
 def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """
     
+    :param umi_families: Information about each umi: parent umi and positions,
+                         counts of each family within a given group
+                         positions are 0-based half opened
     
     
     :param pos_threshold: Window size to group indivual umis into families within groups
@@ -333,29 +336,22 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
     
     
-    #  get consensus info for each base position in the given region
-
-
-
+    #  get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
     consensus_seq = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-
-
-
-
-
-
 
     # get the count of umi families per group and position
     group_count = get_count_per_group(umi_families)
 
+    # create a dict to store consensus info
     cons_data = {}
 
+    # loop over positions in region
     for base_pos in range(region_start, region_end):
-
+        # extract ref base
         ref_base = ref_seq[base_pos-region_start]
-
+        # check if base pos has been recorded 
         if base_pos in consensus_seq:
-
+            
             consensuses = {}
             raw_depth = 0
             
@@ -365,6 +361,12 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             for family in consensus_seq[base_pos]:
                        
                 cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
+                
+                print(family, cons_allele)
+                print(consensus_seq[base_pos][family].items())
+                print(operator.itemgetter(1))
+                
+                
                 cons_denom = sum(consensus_seq[base_pos][family].values())
                 cons_percent = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
                 
