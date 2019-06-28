@@ -466,7 +466,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
                     else:
                         counts[allele[1]] += cons[allele]
                 # write line to file
-                line = [contig, base_pos, ref_base, counts['A'], counts['C'],
+                line = [contig, base_pos + 1, ref_base, counts['A'], counts['C'],
                         counts['G'], counts['T'], counts['I'], counts['D'],
                         counts['N'], stats['rawdp'], stats['consdp'], f_size,
                         stats['ref_freq'], stats['mean_fam']]
