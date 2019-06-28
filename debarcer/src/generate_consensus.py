@@ -415,7 +415,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     return cons_data
 
 
-def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, ref_threshold, all_threshold):
+def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold):
     '''
     (dict, str, str, int, int, str, num, num) -> None
     
@@ -423,7 +423,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
-    :param output_path: Output directory
+    :param outdir: Output directory
     
     :param ref_threshold: ??
         
@@ -433,7 +433,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
     '''
     
     # get the path to the output file
-    OutputFile = os.path.join(output_path, '{}:{}-{}.cons'.format(contig, region_start, region_end))
+    OutputFile = os.path.join(outdir, '{}:{}-{}.cons'.format(contig, region_start, region_end))
     newfile = open(OutputFile, 'w')
 
     Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
@@ -516,7 +516,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outpu
 #                        #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
+def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """(Main) generates consensus output file."""
 
     # get minimum umi family sizes
@@ -544,7 +544,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
 
     ## Output
     print("Writing output...")
-    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, ref_threshold, all_threshold)
+    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold)
     
 
 if __name__=="__main__":
