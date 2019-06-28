@@ -1,3 +1,4 @@
+import os
 import sys
 import pysam
 import configparser
@@ -219,60 +220,56 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     return uncollapsed_seq
 
 
-
-
-
-
-class ConsDataRow:
-    """Holds consensus data for one base position."""
-    ref_info  = {}
-    cons_info = {}
-    stats     = {}
-    
-    def __init__(self, ref_info, cons_info, stats):
-        self.ref_info = ref_info
-        self.cons_info = cons_info
-        self.stats = stats
-
-    def impute_allele_depths(self):
-        """Returns allele depths (dict of str tuples -> ints)."""
-        return self.cons_info
-    
-    @functools.lru_cache(maxsize=2, typed=False)
-    def impute_allele_freqs(self, threshold):
-        """Returns allele frequencies (dict of str tuples -> floats)."""
-        
-        is_ref = lambda allele: allele[0] is allele[1]
-        
-        freqs = {}
-        for allele in self.cons_info:
-            freq = (self.cons_info[allele] / sum(self.cons_info.values())) * 100
-            
-            if not is_ref(allele) and freq > threshold:
-                freqs[allele] = freq
-        
-        return freqs
-    
-    def get_alleles(self, threshold):
-        """Returns alt alleles with their associated refs (list of str tuples)."""
-        
-        freqs   = self.impute_allele_freqs(threshold)
-        alleles = []
-        
-        for allele in self.cons_info:
-            if allele in freqs:
-                alleles.append(allele)
-        
-        return alleles
-
-    def get_ref_info(self):
-        return self.ref_info
-    
-    def get_cons_info(self):
-        return self.cons_info
-
-    def get_stats(self):
-        return self.stats
+#class ConsDataRow:
+#    """Holds consensus data for one base position."""
+#    ref_info  = {}
+#    cons_info = {}
+#    stats     = {}
+#    
+#    def __init__(self, ref_info, cons_info, stats):
+#        self.ref_info = ref_info
+#        self.cons_info = cons_info
+#        self.stats = stats
+#
+#    def impute_allele_depths(self):
+#        """Returns allele depths (dict of str tuples -> ints)."""
+#        return self.cons_info
+#    
+#    @functools.lru_cache(maxsize=2, typed=False)
+#    def impute_allele_freqs(self, threshold):
+#        """Returns allele frequencies (dict of str tuples -> floats)."""
+#        
+#        is_ref = lambda allele: allele[0] is allele[1]
+#        
+#        freqs = {}
+#        for allele in self.cons_info:
+#            freq = (self.cons_info[allele] / sum(self.cons_info.values())) * 100
+#            
+#            if not is_ref(allele) and freq > threshold:
+#                freqs[allele] = freq
+#        
+#        return freqs
+#    
+#    def get_alleles(self, threshold):
+#        """Returns alt alleles with their associated refs (list of str tuples)."""
+#        
+#        freqs   = self.impute_allele_freqs(threshold)
+#        alleles = []
+#        
+#        for allele in self.cons_info:
+#            if allele in freqs:
+#                alleles.append(allele)
+#        
+#        return alleles
+#
+#    def get_ref_info(self):
+#        return self.ref_info
+#    
+#    def get_cons_info(self):
+#        return self.cons_info
+#
+#    def get_stats(self):
+#        return self.stats
 
 
 def get_fam_size(FamSize, position):
@@ -419,96 +416,111 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
 
 
 def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, output_path, ref_threshold, all_threshold):
-    """Writes a long-form consensus file for every event detected in the collapsed data."""
-
-#    ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-#    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
-
-    with open("{}/{}:{}-{}.cons".format(output_path, contig, region_start, region_end), "w") as writer:
-
-        writer.write("CHROM\tPOS\tREF\tA\tC\tG\tT\tI\tD\tN\tRAWDP\tCONSDP\tFAM\tREF_FREQ\tMEAN_FAM\n") ##Header
+    '''
+    (dict, str, str, int, int, str, num, num) -> None
+    
+    :param ref_seq: Sequence of the reference corresponding to the given region
+    :param contig: Chromosome name, eg. chrN
+    :param region_start: Start index of the region of interest. 0-based half opened
+    :param region_end: End index of the region of interest. 0-based half opened
+    :param output_path: Output directory
+    
+    :param ref_threshold: ??
         
-        for base_pos in range(region_start, region_end):
+    :param all_threshold: ??
+    
+    Writes a long-form consensus file for every event detected in the collapsed data
+    '''
+    
+    # get the path to the output file
+    OutputFile = os.path.join(output_path, '{}:{}-{}.cons'.format(contig, region_start, region_end))
+    newfile = open(OutputFile, 'w')
 
-            ref_base = ref_seq[base_pos-region_start]
-            if any( [base_pos in cons_data[f_size] for f_size in cons_data] ):
+    Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
+    newfile.write('\t'.join(Header) + '\n')
 
-                for f_size in cons_data:
-                    if base_pos in cons_data[f_size]:
-
-                        ref = cons_data[f_size][base_pos].get_ref_info()
-                        cons = cons_data[f_size][base_pos].get_cons_info()
-                        stats = cons_data[f_size][base_pos].get_stats()
-
-                        counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
-                        for allele in cons:
-                            # ref > 1 => deletion
-                            if len(allele[0]) > 1:
-                                counts['D'] += cons[allele]
+    # loop over positions         
+    for base_pos in range(region_start, region_end):
+        # get the reference
+        ref_base = ref_seq[base_pos-region_start]
+        # loop over fam size
+        for f_size in cons_data:
+            # check if position recorded for given fam size
+            if base_pos in cons_data[f_size]:
+                # get ref, stats and consensus info
+                ref = cons_data[f_size][base_pos]['ref_info']
+                
+                assert ref_base == ref['ref_base']
                                 
-                            # allele > 1 => insertion
-                            elif len(allele[1]) > 1:
-                                counts['I'] += cons[allele]
-                                
-                            else:
-                                counts[allele[1]] += cons[allele]
-                       
+                cons = cons_data[f_size][base_pos]['cons_info']
+                stats = cons_data[f_size][base_pos]['stats']
+                # count each bases
+                counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
+                for allele in cons:
+                    # ref > 1 => deletion
+                    if len(allele[0]) > 1:
+                        counts['D'] += cons[allele]
+                    # allele > 1 => insertion
+                    elif len(allele[1]) > 1:
+                        counts['I'] += cons[allele]
+                    else:
+                        counts[allele[1]] += cons[allele]
+                # write line to file
+                line = [contig, base_pos, ref_base, counts['A'], counts['C'],
+                        counts['G'], counts['T'], counts['I'], counts['D'],
+                        counts['N'], stats['rawdp'], stats['consdp'], f_size,
+                        stats['ref_freq'], stats['mean_fam']]
+                newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
+                
+    
+    # close file after writing
+    newfile.close()
+            
 
-                        writer.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                            contig, base_pos, ref_base, counts['A'], counts['C'], counts['G'], counts['T'], 
-                            counts['I'], counts['D'], counts['N'],
-                            stats['rawdp'], stats['consdp'], f_size, stats['ref_freq'], stats['mean_fam']))
-
-                        row = cons_data[f_size][base_pos]
-                        ref = row.get_ref_info()
-                        cons = row.get_cons_info()
-                        stats = row.get_stats()
-
-                        if stats['ref_freq'] <= ref_threshold:
-
-                            alleles = row.get_alleles(all_threshold)
-                            ref_bases = set([allele[0] for allele in alleles])
-                            ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
-                            depths = row.impute_allele_depths()
-                            ref_depth = depths[ref_allele] if ref_allele in depths else 0
-                            alt_freqs = row.impute_allele_freqs(all_threshold)
-
-                            info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
-                                stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
-                            fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
-
-                            for ref_base in ref_bases:
-
-                                #Handle error where ref_base is assigned to multiple ref_alleles
-                                if len(ref_base) > 1:
-                                    ref_base = ref_base[0]
-
-                                if (base_pos < 170837514) and (base_pos > 170837510):
-                                    print("--BASE_POS: "+str(base_pos)+" ref_base: "+ref_base+"--")
-
-                                snips = []
-                                for allele in alleles:
-                                    if allele[0] == ref_base:
-                                        snips.append(allele)
-
-                                alt_string = ','.join( [allele[1] for allele in snips] )
-                                depth_string = ','.join( [str(depths[allele]) for allele in snips] )
-                                freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in snips] )
-                                smp_string = "{}:{}:{}".format(ref_depth, depth_string, freq_string)
-                                filt = "PASS" if any( [depths[alt] > 10 for alt in snips] ) else "a10"
-
-                                #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
+#                row = cons_data[f_size][base_pos]
+#                ref = row.get_ref_info()
+#                cons = row.get_cons_info()
+#                stats = row.get_stats()
+#
+#                if stats['ref_freq'] <= ref_threshold:
+#
+#                    alleles = row.get_alleles(all_threshold)
+#                    ref_bases = set([allele[0] for allele in alleles])
+#                    ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
+#                    depths = row.impute_allele_depths()
+#                    ref_depth = depths[ref_allele] if ref_allele in depths else 0
+#                    alt_freqs = row.impute_allele_freqs(all_threshold)
+#
+#                    info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
+#                        stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
+#                    fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
+#
+#                    for ref_base in ref_bases:
+#
+#                        #Handle error where ref_base is assigned to multiple ref_alleles
+#                        if len(ref_base) > 1:
+#                            ref_base = ref_base[0]
+#                        if (base_pos < 170837514) and (base_pos > 170837510):
+#                            print("--BASE_POS: "+str(base_pos)+" ref_base: "+ref_base+"--")
+#
+#                        snips = []
+#                        for allele in alleles:
+#                            if allele[0] == ref_base:
+#                                snips.append(allele)
+#
+#                        alt_string = ','.join( [allele[1] for allele in snips] )
+#                        depth_string = ','.join( [str(depths[allele]) for allele in snips] )
+#                        freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in snips] )
+#                        smp_string = "{}:{}:{}".format(ref_depth, depth_string, freq_string)
+#                        filt = "PASS" if any( [depths[alt] > 10 for alt in snips] ) else "a10"
+#                        #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
 def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, output_path, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
     """(Main) generates consensus output file."""
 
-    
-        
-#    ## Lists of umi families with count >= f_size
-#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
-
-    f_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
+    # get minimum umi family sizes
+    family_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
 
     ## Get reference sequence for the region 
     print("Getting reference sequence...")
@@ -518,8 +530,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Building consensus data...")
     cons_data = {}
     
-    
-    for f_size in f_sizes:
+    for f_size in family_sizes:
         # check if 0 is passed as fam_size argument
         if f_size == 0:
             # compute consensus for uncollapsed data
@@ -528,7 +539,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
             cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     
     # compute consensus for uncollapsed data if not in fam_size argument
-    if 0 not in f_sizes:
+    if 0 not in family_sizes:
         cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     ## Output
