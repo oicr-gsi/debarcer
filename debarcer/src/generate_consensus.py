@@ -302,6 +302,12 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
                          positions are 0-based half opened
+    :param fam_size: Minimum umi family size
+    
+    
+    
+    
+    
     
     
     :param pos_threshold: Window size to group indivual umis into families within groups
@@ -317,8 +323,8 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
     
     
-    #  get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
-    # keep track of family size at each position
+    # get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
+    # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
     # create a dict to store consensus info
@@ -341,13 +347,19 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
                        
                 cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
                 
-                #print(family, cons_allele)
-                #print(consensus_seq[base_pos][family].items())
-                #print(operator.itemgetter(1))
+                print('fam', family, 'cons_allele', cons_allele)
+                print(consensus_seq[base_pos][family].items())
+                print(operator.itemgetter(1))
                 
                 
                 cons_denom = sum(consensus_seq[base_pos][family].values())
                 cons_percent = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
+                
+                
+                print('cons_denom', cons_denom)
+                print('cons_percent', cons_percent)
+                
+                
                 
                 raw_depth += cons_denom
     
@@ -366,6 +378,11 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             cons_info = consensuses
             stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            
+            
             row = ConsDataRow(ref_info, cons_info, stats)
             cons_data[base_pos] = row
                     
