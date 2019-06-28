@@ -357,7 +357,11 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             # compute consensus depth across all alleles
             cons_depth = sum(consensuses.values())
             
-            ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
+            # compute ref frequency
+            if (ref_base, ref_base) in consensuses:
+                ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100
+            else:
+                ref_freq = 0
             
             # record ref, consensus and stats info
             ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
@@ -370,34 +374,47 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
 
 
 def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True):
-    """Generates uncollapsed consensus data for the given family size and region."""
+    '''
+    (str, str, int, int, str, int, bool, bool) -> dict
     
-    ## Keys: each base position in the region
-    ## Values: tables of A,T,C,G (etc) counts from each UMI+Pos family
+    :param ref_seq: Sequence of the reference corresponding to the given region
+    :param contig: Chromosome name, eg. chrN
+    :param region_start: Start index of the region of interest. 0-based half opened
+    :param region_end: End index of the region of interest. 0-based half opened
+    :param bam_file: Path to the bam file
+    :param max_depth: Maximum read depth. Default is 1000000 reads
+    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    
+    Generates uncollapsed consensus data for the genomic region
+    '''
+    
+    # get uncolapased seq info {pos: {(ref, atl): count}}
     uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     
+    # create a dict to store consensus info
     cons_data = {}
     
+    # loop over positions in genomic region
     for base_pos in range(region_start, region_end):
-            
+        # extract ref base    
         ref_base = ref_seq[base_pos-region_start]
-            
+        # check if base pos has been recorded     
         if base_pos in uncollapsed_seq:
-                
+            # compute depth at position        
             depth = sum(uncollapsed_seq[base_pos].values())
-            
+            # compute ref frequency
             if (ref_base, ref_base) in uncollapsed_seq[base_pos]:
                 ref_freq = (uncollapsed_seq[base_pos][(ref_base, ref_base)] / depth) * 100
             else:
                 ref_freq = 0
 
+            # record ref, consensus and stats info 
             ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = uncollapsed_seq[base_pos]
             stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
             
-            row = ConsDataRow(ref_info, cons_info, stats)
-            cons_data[base_pos] = row
-    
+            cons_data[base_pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     return cons_data
 
 
