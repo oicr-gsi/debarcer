@@ -360,7 +360,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100 if (ref_base, ref_base) in consensuses else 0
             
             # record ref, consensus and stats info
-            ref_info = {"contig": contig, "base_pos": base_pos + 1, "ref_base": ref_base}
+            ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
             cons_info = consensuses
             stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
