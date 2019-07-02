@@ -517,12 +517,36 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
 
 
 def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
-    """(Main) generates consensus output file."""
-
+    '''
+    (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool) -> None
+    
+    
+    :param reference: Path to the reference genome
+    :param contig: Chromosome name, eg. chrN
+    :param region_start: Start index of the region of interest. 0-based half opened
+    :param region_end: End index of the region of interest. 0-based half opened
+    :param bam_file: Path to the bam file
+    :param umi_families: Information about each umi: parent umi and positions,
+                         counts of each family within a given group
+                         positions are 0-based half opened
+    :param outdir: Output directory
+    :param fam_size: A comma-separated list of minimum umi family size
+    :param pos_threshold: Window size to group indivual umis into families within groups
+    :param percent_threshold: Percent consensus threshold for alternative base within family 
+    :param count_threshold: Count consensus threshold for alternative base within family
+    :param ref_threshold: ??
+    :param all_threshold: ??
+    :param max_depth: Maximum read depth. Default is 1000000 reads
+    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    
+    Generates consensus output file
+    '''
+    
     # get minimum umi family sizes
     family_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
 
-    ## Get reference sequence for the region 
+    # get reference sequence for the region 
     print("Getting reference sequence...")
     ref_seq = get_ref_seq(contig, region_start, region_end, reference)
 
@@ -537,7 +561,6 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
             cons_data[f_size] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
         else:
             cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-    
     # compute consensus for uncollapsed data if not in fam_size argument
     if 0 not in family_sizes:
         cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
