@@ -37,8 +37,8 @@ def GetInputFiles(configfile, file, filetype):
     
     :param configfile: Path to config file
     :param file: Path to input file from the command
-    "param filetype: Type of input file expected in the config.
-                     Accepted values: 'prep_file' or 'bam_file'
+    "param filetype: Type of input file expected in the config. Accepted values:
+                     'prep_file', 'bam_file', 'reference_file'
     '''
     
     # get file from config in priority
