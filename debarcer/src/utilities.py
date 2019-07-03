@@ -123,10 +123,6 @@ def GetThresholds(configfile, parameter, threshold):
             raise ValueError('ERR: Setting threshold should be float')
     return ThresholdVal
 
- ## Lists of umi families with count >= f_size
-#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
-
-
 
 def edit_distance(a, b):
     '''
