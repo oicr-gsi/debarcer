@@ -12,7 +12,7 @@ from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
 from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds
     
     
 
@@ -87,8 +87,8 @@ def group_umis(args):
     :param region: A string with region coordinates chrN:posA-posB. posA and posB are 1-based included
     :param bamfile: Path to the bam file
     :param config: Path to your config file
-    :param distance: Hamming distance threshold for connecting parent-children umis
-    :param position: Distance threshold in bp for defining families within groups
+    :param distthreshold: Hamming distance threshold for connecting parent-children umis
+    :param postthreshold: Distance threshold in bp for defining families within groups
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
     
     Groups by hamming distance and form families based on physical distances within groups
@@ -116,25 +116,10 @@ def group_umis(args):
     # convert coordinates to 0-based hal opened coordinates
     region_start = region_start -1
     
-    
-    # get umi position and distance thresholds from config
-    try:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        pos_threshold = int(config['SETTINGS']['umi_family_pos_threshold'])
-        dist_threshold = int(config['SETTINGS']['umi_edit_distance_threshold'])
-    except:
-        # check pos and dist threshold provided in the command
-        try:
-            pos_threshold, dist_threshold = int(args.postthreshold), int(args.distthreshold)
-        except:
-            # raise error and exit
-            raise ValueError('ERR: Missing umi position and/or distance thresholds')
-    finally:
-        # check that threshold are integers
-        if type(pos_threshold) != int and type(dist_threshold) != int:
-            raise ValueError('ERR: Umi position and distance thresholds should be integers')
-        
+    # get umi position and distance thresholds 
+    pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
+    dist_threshold = GetThresholds(args.config, 'umi_edit_distance_threshold', args.distthreshold)
+                
     print(timestamp() + "Grouping UMIs...")
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
@@ -150,6 +135,7 @@ def group_umis(args):
         newfile.write('\t'.join(header) + '\n')
         newfile.write('\t'.join(info) + '\n')
     
+    # save umi families as a json. positions in the json are 0-based half opened
     umi_file = "{}/{}.umis".format(outdir, region)
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
@@ -169,8 +155,7 @@ def collapse(args):
     
     
     '''
-
-
+    
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
@@ -190,7 +175,7 @@ def collapse(args):
     contig = region.split(":")[0]
     # get 1-based inclusive region coordinates
     region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
-    # convert coordinates to 0-based hal opened coordinates
+    # convert coordinates to 0-based half opened coordinates
     region_start = region_start -1
     
     # load json with count of umi families per position and umi group
@@ -203,15 +188,27 @@ def collapse(args):
         
     print(timestamp() + "Generating consensus...")
 
-
+    
 
 
 #    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
 #    count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
 
 
+#ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
+#    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
 
 
+#    ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
+#    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
+
+#    ## Lists of umi families with count >= f_size
+#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
+
+
+
+ ## Lists of umi families with count >= f_size
+#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
 
     generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, config)
 
