@@ -146,14 +146,25 @@ def group_umis(args):
 
 def collapse(args):
     '''
+    (list) -> None
     
-    
-    
-    
-    
+    :param config: Path to the config file
+    :param outdir: Directory where consensus files are written
+    :param bamfile: Path to the BAM file
+    :param reference: Path to the reference genome
+    :param region: Region coordinates (1-based included) to search for UMIs (eg. chrN:posA-posB)
+    :param umifile: Path to the .umis file
+    :param famsize: Comma-separated list of minimum umi family size to collapase on
+    :param countthreshold: Base count threshold in pileup column
+    :param percentthreshold: Base percent threshold in pileup column
+    :param refthreshold: Reference threshold
+    :param allthreshold: Allele threshold
+    :param postthreshold: Umi position threshold for grouping umis together
+    :param maxdepth: Maximum read depth. Default is 1000000
+    :param truncate: Only consider pileup columns in given region. Default is True\
+    :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
+       
     Base collapses from given BAM and umi family file
-    
-    
     '''
     
     # get output directory from the config or command. set to current dir if not provided
@@ -188,30 +199,36 @@ def collapse(args):
         
     print(timestamp() + "Generating consensus...")
 
+    # get percent threshold 
+    percent_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
+    # get count threshold
+    count_threshold = GetThresholds(args.config, 'count_consensus_threshold', args.countthreshold)
+    # get reference threshold
+    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    # get allele threshold
+    all_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.allthreshold)
+    # get umi position threshold 
+    pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     
-
-
-#    percent_threshold = float(config['SETTINGS']['percent_consensus_threshold']) if config else 70.0
-#    count_threshold = int(config['SETTINGS']['count_consensus_threshold']) if config else 1
-
-
-#ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-#    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
-
-
-#    ref_threshold = float(config['REPORT']['percent_ref_threshold']) if config else 95.0
-#    all_threshold = float(config['REPORT']['percent_allele_threshold']) if config else 2.0
-
-#    ## Lists of umi families with count >= f_size
-#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
-
-
-
- ## Lists of umi families with count >= f_size
-#    f_sizes = [int(n) for n in config['SETTINGS']['min_family_sizes'].split(',')] if config else [1, 2, 5]
-
-    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, config)
-
+    # get reference
+    reference = GetInputFiles(args.config, args.reference, 'reference_file')
+    
+    # get comma-separated list of minimum family sizes 
+    try:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        fam_size = config['SETTINGS']['min_family_sizes']
+    except:
+        # check if provided in command
+        fam_size = args.famsize
+    finally:
+        # check if fam_size is defined
+        if fam_size in [None, '']:
+            raise ValueError('ERR: Missing minimum family sizes')
+    
+    # write consensus output file
+    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
+ 
     print(timestamp() + "Consensus generated. Consensus file written to {}.".format(outdir))
 
 
@@ -351,7 +368,7 @@ if __name__ == '__main__':
                                      and Error Correction of sequencing data containing molecular barcodes")
     subparsers = parser.add_subparsers()
        		
-    ## Preprocess command - requires unprocessed fastq file(s)
+    ## Preprocess command
     p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files")
     p_parser.add_argument('-o', '--OutDir', dest='outdir', help='Output directory. Available from command or config')
     p_parser.add_argument('-r1', '--Read1', dest='read1', help='Path to first FASTQ file.', required=True)
@@ -364,8 +381,8 @@ if __name__ == '__main__':
     p_parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
     p_parser.set_defaults(func=preprocess_reads)
     
-    ## UMI group command - requires BAM file
-    g_parser = subparsers.add_parser('group', help="Groups and error-corrects UMIs into families.")
+    ## UMI group command
+    g_parser = subparsers.add_parser('group', help="Groups UMIs into families.")
     g_parser.add_argument('-o', '--Outdir', dest='outdir', help='Directory where .umis and datafiles are written')
     g_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
     g_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
@@ -375,16 +392,28 @@ if __name__ == '__main__':
     g_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.set_defaults(func=group_umis)
     
-    ## Base collapse command - requires BAM file, UMI family file optional
+    ## Base collapse command
     c_parser = subparsers.add_parser('collapse', help="Base collapsing from given UMI families file.")
-    c_parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-    c_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
-    c_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-    c_parser.add_argument('-u', '--umi_file', help='Path to your .umis file', required=True)
-    c_parser.add_argument('-c', '--config', help='Path to your config file.')
-    c_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to collapse on.') ##implement
+    c_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
+    c_parser.add_argument('-o', '--Outdir', dest='outdir', help='Directory where consensus files are written')
+    c_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
+    c_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
+    c_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
+    c_parser.add_argument('-u', '--Umi', dest='umifile', help='Path to the .umis file', required=True)
+    c_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
+    c_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', help='Base count threshold in pileup column')
+    c_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', help='Base percent threshold in pileup column')
+    c_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
+    c_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
+    c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
+    c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
+    c_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
+                          help='If truncate is True and a region is given,\
+                          only pileup columns in the exact region specificied are returned. Default is True')
+    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', action='store_false',
+                          help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     c_parser.set_defaults(func=collapse)
-    
+
     ## Variant call command - requires cons file (can only run after collapse)
     v_parser = subparsers.add_parser('call', help="Variant calling from analyzed BAM file.")
     v_parser.add_argument('-o', '--output_path', help='Path to writer output files to.', required=True)
