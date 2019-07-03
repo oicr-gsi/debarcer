@@ -1,10 +1,8 @@
 import os
-import sys
 import pysam
 import configparser
 import argparse
 import operator
-import functools
 import json
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds
 
@@ -219,58 +217,6 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                     else:
                         uncollapsed_seq[pos][allele] += 1
     return uncollapsed_seq
-
-
-#class ConsDataRow:
-#    """Holds consensus data for one base position."""
-#    ref_info  = {}
-#    cons_info = {}
-#    stats     = {}
-#    
-#    def __init__(self, ref_info, cons_info, stats):
-#        self.ref_info = ref_info
-#        self.cons_info = cons_info
-#        self.stats = stats
-#
-#    def impute_allele_depths(self):
-#        """Returns allele depths (dict of str tuples -> ints)."""
-#        return self.cons_info
-#    
-#    @functools.lru_cache(maxsize=2, typed=False)
-#    def impute_allele_freqs(self, threshold):
-#        """Returns allele frequencies (dict of str tuples -> floats)."""
-#        
-#        is_ref = lambda allele: allele[0] is allele[1]
-#        
-#        freqs = {}
-#        for allele in self.cons_info:
-#            freq = (self.cons_info[allele] / sum(self.cons_info.values())) * 100
-#            
-#            if not is_ref(allele) and freq > threshold:
-#                freqs[allele] = freq
-#        
-#        return freqs
-#    
-#    def get_alleles(self, threshold):
-#        """Returns alt alleles with their associated refs (list of str tuples)."""
-#        
-#        freqs   = self.impute_allele_freqs(threshold)
-#        alleles = []
-#        
-#        for allele in self.cons_info:
-#            if allele in freqs:
-#                alleles.append(allele)
-#        
-#        return alleles
-#
-#    def get_ref_info(self):
-#        return self.ref_info
-#    
-#    def get_cons_info(self):
-#        return self.cons_info
-#
-#    def get_stats(self):
-#        return self.stats
 
 
 def get_fam_size(FamSize, position):
