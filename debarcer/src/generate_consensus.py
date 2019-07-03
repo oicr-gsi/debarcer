@@ -5,7 +5,8 @@ import configparser
 import argparse
 import operator
 import functools
-
+import json
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds
 
 
 def get_ref_seq(contig, region_start, region_end, reference):
@@ -550,10 +551,9 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Getting reference sequence...")
     ref_seq = get_ref_seq(contig, region_start, region_end, reference)
 
-    ## Get consensus data for each f_size + uncollapsed data
+    # get consensus data for each f_size + uncollapsed data
     print("Building consensus data...")
     cons_data = {}
-    
     for f_size in family_sizes:
         # check if 0 is passed as fam_size argument
         if f_size == 0:
@@ -565,44 +565,93 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     if 0 not in family_sizes:
         cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
-    ## Output
+    # write output consensus file
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold)
     
 
 if __name__=="__main__":
     
-    ## Argument + config parsing and error handling
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--bam_file', help='Path to your BAM file.')
-    parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).')
-    parser.add_argument('-o', '--output_path', help='Path to write output files to.')
-    parser.add_argument('-c', '--config', help='Path to your config file.')
-    parser.add_argument('-t', '--tally', help='Path to your tally (output of UMI_count.py).')
-
-    args = parser.parse_args()
-
-    if args.config:
-        config = configparser.ConfigParser()
-        config.read(config_file)
-    else:
-        config = None
+    # Base collapse command
+    parser = argparse.ArgumentParser(description='generate_consensus.py', help='Base collapsing from given UMI families file')
+    parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
+    parser.add_argument('-o', '--Outdir', dest='outdir', help='Directory where consensus files are written')
+    parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
+    parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
+    parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
+    parser.add_argument('-u', '--Umi', dest='umifile', help='Path to the .umis file', required=True)
+    parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
+    parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', help='Base count threshold in pileup column')
+    parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', help='Base percent threshold in pileup column')
+    parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
+    parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
+    parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
+    parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
+    parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
+                       help='If truncate is True and a region is given,\
+                       only pileup columns in the exact region specificied are returned. Default is True')
+    parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', action='store_false',
+                       help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     
+    args = parser.parse_args()
+    
+    # get output directory from the config or command. set to current dir if not provided
+    outdir = GetOutputDir(args.config, args.outdir)
+    # create outputdir if doesn't exist
+    if os.path.isdir(outdir) == False:
+        if os.path.isfile(outdir) == True:
+            raise ValueError('ERR: Output directory cannot be a file')
+        else:
+            os.makedirs(outdir)
+    
+    # get input bam from config or command
+    bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
+
+    # check that region is properly formatted
     region = args.region
-    if any(x not in region for x in ["chr", ":", "-"]):
-        raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-        sys.exit(1)
-
+    CheckRegionFormat(region)
+    # get chromosome 
     contig = region.split(":")[0]
-    region_start = int(region.split(":")[1].split("-")[0])
-    region_end = int(region.split(":")[1].split("-")[1])
-
-    bam_file = handle_arg(args.bam_file, config['PATHS']['bam_file'] if config else None, 
-                    'No BAM file provided in args or config.')
-    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None, 
-                    'No output path provided in args or config.')
-    tally_file = handle_arg(args.tally, output_path + '/' + region + '.tally' if config else None, 
-                    'No tally file provided.')
-
-    ## Output
-    generate_consensus_output(contig, region_start, region_end, bam_file, tally_file, output_path, config)
+    # get 1-based inclusive region coordinates
+    region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
+    # convert coordinates to 0-based half opened coordinates
+    region_start = region_start -1
+    
+    # load json with count of umi families per position and umi group
+    try:
+        infile = open(args.umifile)
+        umi_families = json.load(infile)
+        infile.close()
+    except:
+        raise ValueError("ERR: Unable to load .umi json file")
+        
+    # get percent threshold 
+    percent_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
+    # get count threshold
+    count_threshold = GetThresholds(args.config, 'count_consensus_threshold', args.countthreshold)
+    # get reference threshold
+    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    # get allele threshold
+    all_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.allthreshold)
+    # get umi position threshold 
+    pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
+    
+    # get reference
+    reference = GetInputFiles(args.config, args.reference, 'reference_file')
+    
+    # get comma-separated list of minimum family sizes 
+    try:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        fam_size = config['SETTINGS']['min_family_sizes']
+    except:
+        # check if provided in command
+        fam_size = args.famsize
+    finally:
+        # check if fam_size is defined
+        if fam_size in [None, '']:
+            raise ValueError('ERR: Missing minimum family sizes')
+    
+    # write consensus output file
+    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
+ 
