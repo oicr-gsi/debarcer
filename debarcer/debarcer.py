@@ -232,8 +232,16 @@ def collapse(args):
     print(timestamp() + "Consensus generated. Consensus file written to {}.".format(outdir))
 
 
-def call_variants(args):
-    """Generates VCF files from given cons file."""
+def VCF_converter(args):
+    '''
+    
+    
+    
+    
+    
+    
+    Converts consensus files tino VCF format
+    '''
 
     if args.config:
         config = configparser.ConfigParser()
@@ -415,13 +423,13 @@ if __name__ == '__main__':
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
-    v_parser = subparsers.add_parser('call', help="Variant calling from analyzed BAM file.")
+    v_parser = subparsers.add_parser('call', help="Convert consensus file into VCF format.")
     v_parser.add_argument('-o', '--output_path', help='Path to writer output files to.', required=True)
     v_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
     v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
     v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
     v_parser.add_argument('-c', '--config', help='Path to your config file.')
-    v_parser.set_defaults(func=call_variants)
+    v_parser.set_defaults(func=VCF_converter)
     
     ##Run scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
     s_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
