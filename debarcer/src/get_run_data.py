@@ -49,14 +49,6 @@ def ExtractRegions(bedfile):
 
 
 
-#def find_pos(lines):
-#    for i in range(len(lines)):
-#        if (i < len(lines) and 'chr' in lines[i][0]):
-#            first_pos = i
-#            return first_pos
-
-
-
 def check_umi_status(output_dir):
     time.sleep(3)
     os.system("qstat -r | grep 'UMI*' > "+output_dir+"temp_umi_jobs.txt")
@@ -89,11 +81,11 @@ def check_cons_status(output_dir):
 
 def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                 percentthreshold, distthreshold, postthreshold, refthreshold,
-                allthreshold, maxdepth, truncate, ignoreorphans, ignore,
+                allthreshold, maxdepth, truncate, ignoreorphans, ignore, merge,
                 mydebarcer, mypython, mem, queue):
     '''
     (str, str, str, str, str, int, float, int, int, float, float, int, bool,
-    bool, bool, str, str, int, str) -> None
+    bool, bool, bool, str, str, int, str) -> None
     
     :param bamfile: Path to the bam file
     :param outdir: Directory where .umis, and datafiles are written
@@ -110,6 +102,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     :param truncate: Only consider pileup columns in given region. Default is True\
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
+    :param merge: Merge datafiles, consensus files and umi files if True
     :param mydebarcer: Pth to the debarcer script
     :param mypython: Path to python
     :param mem: Requested memory
@@ -123,7 +116,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     ConsDir = os.path.join(outdir, 'Consfiles')
     QsubDir = os.path.join(outdir, 'Qsubs')
     LogDir = os.path.join(QsubDir, 'Logs')
-    VCFDir = os.path.join(outdir, 'VCFfiles')
     DataDir = os.path.join(outdir, 'Datafiles')
 
     # set up group command
@@ -173,6 +165,33 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # record jobname2
         ConsJobNames.append(jobname2)
         
+
+    if merge  == True:
+        
+        # submit jobs to merge 
+
+
+        #### continue here
+
+        # submit jobs for merging
+        
+        # define function for merging
+        
+        # hold job until last jobs in list is done
+        
+        
+        # add VCF formatting?
+        
+        # add generate plots???
+
+
+
+
+
+
+
+
+
 
 def merge_umi_datafiles(output_path, id):
     
