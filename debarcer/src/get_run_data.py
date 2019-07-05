@@ -16,6 +16,9 @@ import time
 from src.generate_vcf import get_vcf_output
 
 
+
+
+
 """
 /src/generate_merge.py 
 =========================================
@@ -28,6 +31,38 @@ Author: Isha Warikoo
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 
 """
+
+
+def ExtractRegions(bedfile):
+    '''
+    (str) -> list
+    
+    :param bedfile: Path to bedfile. Positions are 1-based included
+    
+    Returns a list of regions extracted from the bed file
+    Precondition: The 1st 3 columns must be chrN start end.
+                  Other columns are ignored
+                  Chromsome name must starts with 'chr'.
+    '''
+    
+    # create a list to store regions
+    L = []
+    
+    # extract regions from bed file
+    infile = open(bedfile)
+    for line in infile:
+        if line.startswith('chr'):
+            line = line.rstrip().split()
+            chromo, start, end = line[0], line[1], line[2]
+            region = chromo + ':' + start + '-' + end
+            L.append(region)
+    infile.close()
+    
+    return L
+
+
+
+
 
 
 def find_pos(lines):
@@ -70,7 +105,23 @@ def check_cons_status(output_dir):
 
 
 def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
-	with open(bedfile) as textFile:
+    '''
+    (str, str, str, str, str, str) -> None
+    
+    
+    
+    
+    
+    
+    '''
+    
+    
+    
+    # extract regions from bedfile
+    Regions = ExtractRegions(bedfile)
+
+    
+    with open(bedfile) as textFile:
 		lines = [line.split() for line in textFile]
 
 	for i in range(index,len(lines)):
