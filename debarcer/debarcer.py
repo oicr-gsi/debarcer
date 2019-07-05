@@ -12,7 +12,7 @@ from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
 from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize
     
     
 
@@ -83,7 +83,7 @@ def group_umis(args):
     '''
     (list) -> None
        
-    :param outdir: Directory where .umis, and datafiles are written
+    :param outdir: Output directory where subdirectories are created
     :param region: A string with region coordinates chrN:posA-posB. posA and posB are 1-based included
     :param bamfile: Path to the bam file
     :param config: Path to your config file
@@ -156,7 +156,7 @@ def collapse(args):
     (list) -> None
     
     :param config: Path to the config file
-    :param outdir: Directory where consensus files are written
+    :param outdir: Output directory where subdirectories are created
     :param bamfile: Path to the BAM file
     :param reference: Path to the reference genome
     :param region: Region coordinates (1-based included) to search for UMIs (eg. chrN:posA-posB)
@@ -226,17 +226,7 @@ def collapse(args):
     reference = GetInputFiles(args.config, args.reference, 'reference_file')
     
     # get comma-separated list of minimum family sizes 
-    try:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        fam_size = config['SETTINGS']['min_family_sizes']
-    except:
-        # check if provided in command
-        fam_size = args.famsize
-    finally:
-        # check if fam_size is defined
-        if fam_size in [None, '']:
-            raise ValueError('ERR: Missing minimum family sizes')
+    fam_size = GetFamSize(args.config, args.famsize)
     
     # write consensus output file
     generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
@@ -303,18 +293,41 @@ def VCF_converter(args):
 
 def run_scripts(args):
     '''
-    (list) -> 
+    (list) -> None
     
-    
-    
-    
-    
+    :param outdir: Output directory where subdirectories are created
+    :param config: Path to the config file
+    :param bamfile: Path to the BAM file
+    :param reference: Path to the refeence genome
+    :param famsize: Comma-separated list of minimum umi family size to collapase on
+    :param bedfile: Path to the bed file
+    :param countthreshold: Base count threshold in pileup column
+    :param percentthreshold: Base percent threshold in pileup column
+    :param postthreshold: Umi position threshold for grouping umis together
+    :param distthreshold: Hamming distance threshold for connecting parent-children umis
+    :param refthreshold: Reference threshold
+    :param allthreshold: Allele threshold
+    :param maxdepth: Maximum read depth. Default is 1000000
+    :param truncate: If truncate is True and a region is given, only pileup columns
+                     in the exact region specificied are returned. Default is True
+    :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True'
+    :param ignore: Keep the most abundant family and ignore families at other positions within each group. Default is False
+    :param merge: Merge data, json and consensus files respectively into a 1 single file. Default is True
+    :param queue: SGE queue for submitting jobs. Default is default
+    :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
+    :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
+    :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
+       
+    Submits jobs to run Umi Grouping, Collapsing
     '''
 
 
     # get bam file from config or command
     bamfile = GetInputFiles(args.config, args.bamfile, 'bam_file')
     
+    # get reference
+    reference = GetInputFiles(args.config, args.reference, 'reference_file')
+       
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
@@ -327,60 +340,33 @@ def run_scripts(args):
     # create subdirectoy structure
     UmiDir = os.path.join(outdir, 'Umifiles')
     ConsDir = os.path.join(outdir, 'Consfiles')
-    VCFDir = os.path.join(outdir, 'VCFfiles')
     DataDir = os.path.join(outdir, 'Datafiles')
     QsubDir = os.path.join(outdir, 'Qsubs')
-    for i in [UmiDir, ConsDir, VCFDir, DataDir, QsubDir]:
+    for i in [UmiDir, ConsDir, DataDir, QsubDir]:
         if os.path.isdir(i) == False:
             os.mkdir(i)
     LogDir = os.path.join(QsubDir, 'Logs')
     if os.path.isdir(LogDir) == False:
         os.mkdir(LogDir)
     
-    bedfile = args.bed_file
-    #dir = args.output_path
-    id = str(args.run_id)
-    output_dir = dir+id+"/"
+    # get comma-separated list of minimum family size
+    famsize = GetFamSize(args.config, args.famsize)
     
-    debarcer_path = os.getcwd()+"/"
-    #Read bedfile
-    with open(bedfile) as textFile:
-        lines = [line.split() for line in textFile]
-    index = find_pos(lines)
-
-    #Create and run scripts for all subprocesses
-    submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
+    # get thresholds from command or config
+    count_threshold = GetThresholds(args.config, 'count_consensus_threshold', args.countthreshold)
+    percent_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
+    dist_threshold = GetThresholds(args.config, 'umi_edit_distance_threshold', args.distthreshold)
+    post_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
+    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    all_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.allthreshold)
     
-    
-    
-    
-    
+    # create shell scripts and run qsubs to Group and Collapse umis 
+    submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
+                percent_threshold, dist_threshold, post_threshold, ref_threshold,
+                all_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
+                args.ignore, args.merge, args.mydebarcer, args.mypython, args.mem, args.queue)
     
     
-    
-    
-    
-    
-    
-    
-    #Check UMI job status before merging files
-    print("Checking UMI job status...")
-    umi_job_flag = False
-    while umi_job_flag == False:
-        umi_job_flag = check_job_status(output_dir, flag='umi', file='temp_umi_jobs.txt')
-    
-    print("Merging UMI datafiles...")
-    merge_umi_datafiles(output_dir, id)
-    
-    print("Checking CONS job status...")
-    cons_job_flag = False
-    while cons_job_flag == False:
-        cons_job_flag = check_job_status(output_dir, flag='cons', file='temp_cons_jobs.txt')
-    
-    print("Merging cons...")
-    concat_cons(output_dir, config, id)
-    print("Finished. Output written to: "+output_dir)
-
 def generate_plots(args):
     if not umi_flag and not cons_flag:
         print("ERR: Specify umi or cons flag, and provide the appropriate data file")		
@@ -439,7 +425,7 @@ if __name__ == '__main__':
     
     ## UMI group command
     g_parser = subparsers.add_parser('group', help="Groups UMIs into families.")
-    g_parser.add_argument('-o', '--Outdir', dest='outdir', help='Directory where .umis and datafiles are written')
+    g_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
     g_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
     g_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
     g_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
@@ -451,7 +437,7 @@ if __name__ == '__main__':
     ## Base collapse command
     c_parser = subparsers.add_parser('collapse', help="Base collapsing from given UMI families file.")
     c_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
-    c_parser.add_argument('-o', '--Outdir', dest='outdir', help='Directory where consensus files are written')
+    c_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
     c_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
     c_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
     c_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
@@ -479,14 +465,35 @@ if __name__ == '__main__':
     v_parser.add_argument('-c', '--config', help='Path to your config file.')
     v_parser.set_defaults(func=VCF_converter)
     
-    ##Run scripts command - requires bed file, and generates scripts for umi grouping, collapse and call functions
-    s_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapse and call functions for target regions specified by the BED file.")
-    s_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
-    s_parser.add_argument('-be', '--bed_file', help='Path to your BED fle.', required=True)
-    s_parser.add_argument('-b', '--bam_file', help='Path to your BAM file.', required=True)
-    s_parser.add_argument('-c', '--config', help='Path to your config file.')
-    s_parser.add_argument('-id', '--run_id', help='Run id.', required=True)
-    s_parser.set_defaults(func=run_scripts)
+    ## Run scripts command 
+    r_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapsing and VCF formatting for target regions specified by the BED file.")
+    r_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
+    r_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
+    r_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
+    r_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
+    r_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
+    r_parser.add_argument('-bd', '--Bedfile', dest='bedfile', help='Path to the bed file', required=True)
+    r_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', help='Base count threshold in pileup column')
+    r_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', help='Base percent threshold in pileup column')
+    r_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
+    r_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
+    r_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
+    r_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
+    r_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
+    r_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
+                          help='If truncate is True and a region is given,\
+                          only pileup columns in the exact region specificied are returned. Default is True')
+    r_parser.add_argument('-io', '--IgnoreOrphans', dest='ignoreorphans', action='store_false',
+                          help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
+    r_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
+    r_parser.add_argument('-mg', '--Merge', dest='merge', action='store_false', help='Merge data, json and consensus files respectively into a 1 single file. Default is True')
+    r_parser.add_argument('-q', '--Queue', dest='queue', default='default', help='SGE queue for submitting jobs. Default is default')
+    r_parser.add_argument('-mm', '--Memory', dest='mem', default='10', help='Requested memory for submiiting jobs to SGE. Default is 10g')
+    r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
+                          help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
+    r_parser.add_argument('-d', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',
+                          help='Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py')
+    r_parser.set_defaults(func=run_scripts)
     
     ##Generate graphs	
     g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
