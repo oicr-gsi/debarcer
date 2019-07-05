@@ -143,7 +143,7 @@ def group_umis(args):
         newfile.write('\t'.join(info) + '\n')
     
     # save umi families as a json. positions in the json are 0-based half opened
-    umi_file = os.path.join(UmiDir, '{}.umis'.format(region))
+    umi_file = os.path.join(UmiDir, '{}.json'.format(region))
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
         
@@ -207,7 +207,7 @@ def collapse(args):
         umi_families = json.load(infile)
         infile.close()
     except:
-        raise ValueError("ERR: Unable to load .umi json file")
+        raise ValueError("ERR: Unable to load umi json file")
         
     print(timestamp() + "Generating consensus...")
 
@@ -350,6 +350,18 @@ def run_scripts(args):
 
     #Create and run scripts for all subprocesses
     submit_jobs(bamfile, bedfile, output_dir, config_path, index, debarcer_path)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     #Check UMI job status before merging files
     print("Checking UMI job status...")
