@@ -16,6 +16,10 @@ import time
 from src.generate_vcf import get_vcf_output
 
 
+import subprocess
+from src.utilities import CheckRegionFormat
+
+
 def ExtractRegions(bedfile):
     '''
     (str) -> list
@@ -45,11 +49,11 @@ def ExtractRegions(bedfile):
 
 
 
-def find_pos(lines):
-    for i in range(len(lines)):
-        if (i < len(lines) and 'chr' in lines[i][0]):
-            first_pos = i
-            return first_pos
+#def find_pos(lines):
+#    for i in range(len(lines)):
+#        if (i < len(lines) and 'chr' in lines[i][0]):
+#            first_pos = i
+#            return first_pos
 
 
 
@@ -83,47 +87,92 @@ def check_cons_status(output_dir):
 
 
 
-def submit_jobs(bamfile, bedfile, output_dir, config, index, debarcer_path):
+def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
+                percentthreshold, distthreshold, postthreshold, refthreshold,
+                allthreshold, maxdepth, truncate, ignoreorphans, ignore,
+                mydebarcer, mypython, mem, queue):
     '''
-    (str, str, str, str, str, str) -> None
+    (str, str, str, str, str, int, float, int, int, float, float, int, bool,
+    bool, bool, str, str, int, str) -> None
     
+    :param bamfile: Path to the bam file
+    :param outdir: Directory where .umis, and datafiles are written
+    :param reference: Path to the reference genome
+    :param famsize: Comma-separated list of minimum umi family size to collapase on
+    :param bedfile: Bed file with region coordinates. Chromsome must start with chr and positions are 1-based inclusive  
+    :param countthreshold: Base count threshold in pileup column
+    :param percentthreshold: Base percent threshold in pileup column
+    :param distthreshold: Hamming distance threshold for connecting parent-children umis
+    :param postthreshold: Distance threshold in bp for defining families within groups
+    :param refthreshold: Reference threshold
+    :param allthreshold: Allele threshold
+    :param maxdepth: Maximum read depth. Default is 1000000
+    :param truncate: Only consider pileup columns in given region. Default is True\
+    :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
+    :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
+    :param mydebarcer: Pth to the debarcer script
+    :param mypython: Path to python
+    :param mem: Requested memory
+    :param queue: Sge queue to submit jobs to 
     
-    
-    
-    
-    
+    Submit jobs for Umi Group and Collapse
     '''
     
+    # get output directories   
+    UmiDir = os.path.join(outdir, 'Umifiles')
+    ConsDir = os.path.join(outdir, 'Consfiles')
+    QsubDir = os.path.join(outdir, 'Qsubs')
+    LogDir = os.path.join(QsubDir, 'Logs')
+    VCFDir = os.path.join(outdir, 'VCFfiles')
+    DataDir = os.path.join(outdir, 'Datafiles')
+
+    # set up group command
+    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7}'
+    # set up collapse cmd
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -rt {10} -at {11} -p {12} -m {13} -t {14} -i {15}'
+    # set qsub command
+    QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -q {2} -l h_vmem={3}g \"bash {4}\"'
+    QsubCmd2 = 'qsub -b y -cwd -N {0} -hold_jid {1} -o {2} -e {2} -q {3} -l h_vmem={4}g \"bash {5}\"'
     
     # extract regions from bedfile
     Regions = ExtractRegions(bedfile)
 
-    
-    with open(bedfile) as textFile:
-        lines = [line.split() for line in textFile]
-    for i in range(index,len(lines)):
-        chromosome = lines[i][0]
-        pos1 = lines[i][1]
-        pos2 = lines[i][2]
-        #Create umi scripts
-        f = open(output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh","w")
-        os.system("chmod +x "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
-        f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
-        if config:
-            f.write("\npython3.6 "+debarcer_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -c "+config)
-        else:
-            f.write("\npython3.6 "+debarcer_path+"debarcer.py group -o "+output_dir+"umifiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile)
-        os.system("qsub -cwd -b y -N UMI_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g "+output_dir+"umifiles/umigrp_"+chromosome+"_"+pos1+".sh")
-        #Create cons scripts
-        f = open(output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh","w")
-        os.system("chmod +x "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
-        f.write("module load /.mounts/labs/PDE/Modules/modulefiles/python-gsi/3.6.4")
-        if config:
-            f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis -c "+config)
-        else:
-            f.write("\npython3.6 "+debarcer_path+"debarcer.py collapse -o "+output_dir+"consfiles/ -r "+chromosome+"\:"+pos1+"-"+pos2+" -b "+bamfile+" -u "+output_dir+"umifiles/"+chromosome+"\:"+pos1+"-"+pos2+".umis")
-        os.system("qsub -cwd -b y -N CONS_"+str(chromosome)+"_"+str(pos1)+" -e logs -o logs -l h_vmem=10g -hold_jid 'UMI_*' "+output_dir+"consfiles/cons_"+chromosome+"_"+pos1+".sh")
+    # create a list of job names
+    GroupJobNames, ConsJobNames = [], []
 
+    # loop over regions
+    for region in Regions:
+        # check region format
+        CheckRegionFormat(region)
+        
+        ### RUN Group and Collapse for a given region ### 
+        
+        # dump group cmd into a shell script  
+        GroupScript = os.path.join(QsubDir, 'UmiGroup_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
+        newfile = open(GroupScript, 'w')
+        newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(distthreshold), str(postthreshold), ignore) + '\n')
+        newfile.close()
+        jobname1 = 'UmiGroup_' + region.replace(':', '_').replace('-', '_')
+        # run group umi for region
+        subprocess.call(QsubCmd1.format(jobname1, LogDir, queue, str(mem), GroupScript), shell=True)      
+        # record jobname
+        GroupJobNames.append(jobname1)
+        
+        # dump collapse cmd into a shell script  
+        umifile = os.path.join(UmiDir, '{0}.json'.format(region))
+        CollapseScript = os.path.join(QsubDir, 'UmiCollapse_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
+        newfile = open(CollapseScript, 'w')
+        newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, reference, region, umifile,
+                                         str(famsize), str(countthreshold), str(percentthreshold),
+                                         str(refthreshold), str(allthreshold), str(postthreshold),
+                                         str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
+        newfile.close()
+        jobname2 = 'UmiCollapse_' + region.replace(':', '_').replace('-', '_')
+        # run group umi for region
+        subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, queue, str(mem), GroupScript), shell=True)      
+        # record jobname2
+        ConsJobNames.append(jobname2)
+        
 
 def merge_umi_datafiles(output_path, id):
     
