@@ -329,22 +329,18 @@ def run_scripts(args):
     ConsDir = os.path.join(outdir, 'Consfiles')
     VCFDir = os.path.join(outdir, 'VCFfiles')
     DataDir = os.path.join(outdir, 'Datafiles')
-    for i in [UmiDir, ConsDir, VCFDir, DataDir]:
+    QsubDir = os.path.join(outdir, 'Qsubs')
+    for i in [UmiDir, ConsDir, VCFDir, DataDir, QsubDir]:
         if os.path.isdir(i) == False:
             os.mkdir(i)
-    
-    
-    
-    
-    
+    LogDir = os.path.join(QsubDir, 'Logs')
+    if os.path.isdir(LogDir) == False:
+        os.mkdir(LogDir)
     
     bedfile = args.bed_file
     #dir = args.output_path
     id = str(args.run_id)
     output_dir = dir+id+"/"
-    
-    
-    
     
     debarcer_path = os.getcwd()+"/"
     #Read bedfile
