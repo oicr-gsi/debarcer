@@ -124,6 +124,31 @@ def GetThresholds(configfile, parameter, threshold):
     return ThresholdVal
 
 
+def GetFamSize(configfile, famsize):
+    '''
+    (str, str) -> str
+    
+    :param configfile: Path to config file
+    :param famsize: Comma-separated list of family size
+      
+    Returns a comma-separated flist of minimum family size for grouping and collapsing
+    '''
+        
+    # get comma-separated list of minimum family sizes 
+    try:
+        config = configparser.ConfigParser()
+        config.read(configfile)
+        fam_size = config['SETTINGS']['min_family_sizes']
+    except:
+        # check if provided in command
+        fam_size = famsize
+    finally:
+        # check if fam_size is defined
+        if fam_size in [None, '']:
+            raise ValueError('ERR: Missing minimum family sizes')
+    return fam_size
+
+
 def edit_distance(a, b):
     '''
     (str, str) -> int
