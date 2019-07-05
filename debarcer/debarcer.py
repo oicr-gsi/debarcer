@@ -103,6 +103,13 @@ def group_umis(args):
         else:
             os.makedirs(outdir)
     
+    # create subdirectoy structure
+    UmiDir = os.path.join(outdir, 'Umifiles')
+    DataDir = os.path.join(outdir, 'Datafiles')
+    for i in [UmiDir, DataDir]:
+        if os.path.isdir(i) == False:
+            os.mkdir(i)
+    
     # get input bam from config or command
     bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
     
@@ -127,7 +134,7 @@ def group_umis(args):
     umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore)
         
     # get the number of parent umis, number of children and number of parent given a number of children
-    filename="{}/datafile_{}.csv".format(outdir,region)
+    filename= os.path.join(DataDir, 'datafile_{}.csv'.format(region))
     header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
     # use 1-based inclusive coordinates in datafile output
     info = [contig, str(region_start + 1), str(region_end)] + umi_datafile(umi_groups)
@@ -136,7 +143,7 @@ def group_umis(args):
         newfile.write('\t'.join(info) + '\n')
     
     # save umi families as a json. positions in the json are 0-based half opened
-    umi_file = "{}/{}.umis".format(outdir, region)
+    umi_file = os.path.join(UmiDir, '{}.umis'.format(region))
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
         
@@ -175,6 +182,11 @@ def collapse(args):
             raise ValueError('ERR: Output directory cannot be a file')
         else:
             os.makedirs(outdir)
+    
+    # create subdirectoy structure
+    ConsDir = os.path.join(outdir, 'Consfiles')
+    if os.path.isdir(ConsDir) == False:
+        os.mkdir(ConsDir)
     
     # get input bam from config or command
     bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
@@ -227,9 +239,9 @@ def collapse(args):
             raise ValueError('ERR: Missing minimum family sizes')
     
     # write consensus output file
-    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
+    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
  
-    print(timestamp() + "Consensus generated. Consensus file written to {}.".format(outdir))
+    print(timestamp() + "Consensus generated. Consensus file written to {}.".format(ConsDir))
 
 
 def VCF_converter(args):
@@ -243,68 +255,96 @@ def VCF_converter(args):
     Converts consensus files tino VCF format
     '''
 
-    if args.config:
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-    else:
-        config = None
-	
-    cons_file = args.cons_file
-    f_sizes = args.f_sizes.split(',')
-
-    output_path = handle_arg(args.output_path, config['PATHS']['output_path'] if config else None,
-					'No output path provided in args or config.')
+    # get output directory from the config or command. set to current dir if not provided
+    outdir = GetOutputDir(args.config, args.outdir)
+    # create outputdir if doesn't exist
+    if os.path.isdir(outdir) == False:
+        if os.path.isfile(outdir) == True:
+            raise ValueError('ERR: Output directory cannot be a file')
+        else:
+            os.makedirs(outdir)
     
+    # create vcf dir
+    VCFDir = os.path.join(outdir, 'VCFfiles')
+    if os.path.isdir(VCFDir) == False:
+        os.mkdir(VCFDir)
+    
+    # check that region is properly formatted
     region = args.region
-    arg_exists(sys.argv) ##Check whether args directories/files exist
-
-    cons_is_merged = check_consfile(cons_file)
-
-    if cons_is_merged:
-        region_start = region.split("_")[0]
-        region_end = region.split("_")[1]		
-    else:
-        if any(x not in region for x in ["chr", ":", "-"]):
-            raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-            sys.exit(1)
-
-        contig = region.split(":")[0]
-        region_start = int(region.split(":")[1].split("-")[0])
-        region_end = int(region.split(":")[1].split("-")[1])
+    CheckRegionFormat(region)
+    # get chromosome 
+    contig = region.split(":")[0]
+    # get 1-based inclusive region coordinates
+    region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
+    # convert coordinates to 0-based half opened coordinates
+#    region_start = region_start -1
+        
+    
+    
+#    cons_is_merged = check_consfile(cons_file)
+#
+#    if cons_is_merged:
+#        region_start = region.split("_")[0]
+#        region_end = region.split("_")[1]		
+#    else:
+#        if any(x not in region for x in ["chr", ":", "-"]):
+#            raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
+#            sys.exit(1)
+#
+#        contig = region.split(":")[0]
+#        region_start = int(region.split(":")[1].split("-")[0])
+#        region_end = int(region.split(":")[1].split("-")[1])
 
     print(timestamp() + "Generating VCFs...")
 
-    get_vcf_output(cons_file=cons_file, region_start=region_start, region_end=region_end, output_path=output_path, config=config)
+    get_vcf_output(args.consfile, region_start, region_end, outdir, args.config)
     
-    print(timestamp() + "VCFs generated. VCF files written to {}.".format(output_path))
+    print(timestamp() + "VCFs generated. VCF files written to {}.".format(outdir))
 
 def run_scripts(args):
-   
-    bamfile = args.bam_file
+    '''
+    (list) -> 
+    
+    
+    
+    
+    
+    '''
+
+
+    # get bam file from config or command
+    bamfile = GetInputFiles(args.config, args.bamfile, 'bam_file')
+    
+    # get output directory from the config or command. set to current dir if not provided
+    outdir = GetOutputDir(args.config, args.outdir)
+    # create outputdir if doesn't exist
+    if os.path.isdir(outdir) == False:
+        if os.path.isfile(outdir) == True:
+            raise ValueError('ERR: Output directory cannot be a file')
+        else:
+            os.makedirs(outdir)
+    
+    # create subdirectoy structure
+    UmiDir = os.path.join(outdir, 'Umifiles')
+    ConsDir = os.path.join(outdir, 'Consfiles')
+    VCFDir = os.path.join(outdir, 'VCFfiles')
+    DataDir = os.path.join(outdir, 'Datafiles')
+    for i in [UmiDir, ConsDir, VCFDir, DataDir]:
+        if os.path.isdir(i) == False:
+            os.mkdir(i)
+    
+    
+    
+    
+    
+    
     bedfile = args.bed_file
-    dir = args.output_path
+    #dir = args.output_path
     id = str(args.run_id)
     output_dir = dir+id+"/"
     
-    if args.config:
-        config_path = args.config
-        config = configparser.ConfigParser()
-        config.read(args.config)
-        config_validation(conf_paths = dict(config.items('PATHS'))) ##Check whether PATHS in config file exist
-    else:
-        config_path = None
-        config = None
-
-    arg_exists(sys.argv) ##Check whether args directories/files exist
     
-    #Make directories 
-    if not os.path.exists(output_dir+"umifiles"):
-        os.makedirs(output_dir+"umifiles")
-    if not os.path.exists(output_dir+"consfiles"):
-        os.makedirs(output_dir+"consfiles")
-    if not os.path.exists(output_dir+"vcffiles"):
-        os.makedirs(output_dir+"vcffiles")
+    
     
     debarcer_path = os.getcwd()+"/"
     #Read bedfile
