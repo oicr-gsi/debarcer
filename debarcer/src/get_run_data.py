@@ -14,8 +14,6 @@ import glob
 import numpy as np
 import time
 from src.generate_vcf import get_vcf_output
-
-
 import subprocess
 from src.utilities import CheckRegionFormat
 
@@ -160,8 +158,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                                          str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
         newfile.close()
         jobname2 = 'UmiCollapse_' + region.replace(':', '_').replace('-', '_')
-        # run group umi for region
-        subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, queue, str(mem), GroupScript), shell=True)      
+        # run collapse umi for region
+        subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, queue, str(mem), CollapseScript), shell=True)      
         # record jobname2
         ConsJobNames.append(jobname2)
         
