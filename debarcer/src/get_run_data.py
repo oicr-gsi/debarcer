@@ -13,6 +13,7 @@ import itertools
 import glob
 import numpy as np
 import time
+import json
 from src.generate_vcf import get_vcf_output
 import subprocess
 from src.utilities import CheckRegionFormat
@@ -76,6 +77,118 @@ def check_cons_status(output_dir):
     return job_flag
 
 
+def MergeUmiFiles(UmiDir):
+    '''
+    (str) -> None
+
+    :param UmiDir: Directory Umifiles containing .json umi files
+    
+    Merge all .json umi files in Umifiles into a unique Merged_UmiFile.json file in Umifiles
+    '''
+    
+    # make a list of umi files
+    UmiFiles = [i for i in os.listdir(UmiDir) if i[-5:] == '.json']
+    
+    # create a dict to hold all umi data
+    D = {}
+    
+    for i in UmiFiles:
+        # extract coordinates from file name
+        coord = i[:-5]
+        # get umi data as dict
+        umifile = os.path.join(UmiDir, i)    
+        infile = open(umifile)
+        data = json.load(infile)
+        infile.close()
+        # add data in dict
+        D[coord] = data
+    
+    # write merged umi file
+    MergedFile = os.path.join(UmiDir, 'Merged_UmiFile.json')
+    newfile = open(MergedFile, 'w')
+    json.dump(D, newfile, sort_keys = True, indent=4)
+    newfile.close()
+       
+
+def MergeConsensusFiles(ConsDir):
+    '''
+    (str) -> None
+
+    :param ConsDir: Directory Consfiles containing .cons consensus files
+    
+    Merge all .cons consensus files in Consfiles into a unique Merged_ConsensusFile.cons file in Consfiles
+    '''
+    
+    # make a list of consensus files
+    ConsFiles = [i for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')] 
+    # sort files
+    L = []
+    for i in ConsFiles:
+        # extract chromo and start from filename
+        chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+        L.append((chromo, start, i))
+    # sort files on chromo and start
+    L.sort(key=operator.itemgetter(0, 1))
+    
+    # make a sorted list of full paths
+    S = [os.path.join(ConsDir, i[-1]) for i in L]
+    
+    # get Header
+    infile = open(S[0])
+    Header = infile.readline().rstrip().split()
+    infile.close()
+    
+    # write merged consensus file
+    MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
+    newfile = open(MergedFile, 'w')
+    newfile.write('\t'.join(Header) + '\n')
+    for i in S:
+        infile = open(i)
+        # skip header and grab all data
+        infile.readline()
+        data = infile.read().rstrip()
+        infile.close()
+        newfile.write(data + '\n')
+    newfile.close()
+    
+    
+
+def MergeDataFiles(DataDir):
+    '''
+    (str) -> None
+
+    :param DataDir: Directory Datafiles containing .csv data files
+    
+    Merge all csv datafiles in Datafiles into a unique Merged_DataFile.csv file in Datafiles
+    '''
+    
+    # make a list of datafiles
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile_') and i[-4:] == '.csv']
+    
+    Header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+        
+    # read each datafile, store in a list
+    L = []
+    for filename in DataFiles:
+        infile = open(filename)
+        # skip header and grap data
+        infile.readline()
+        data = infile.read().rstrip()
+        infile.close()
+        # get chromosome and start and end positions
+        chromo, start = data.split()[0], int(data.split()[1])        
+        L.append((chromo, start, data))
+    # sort data on chromo and start
+    L.sort(key=operator.itemgetter(0, 1))
+    
+    # write merged datafile
+    MergedFile = os.path.join(DataDir, 'Merged_DataFile.csv')
+    newfile = open(MergedFile, 'w')
+    newfile.write('\t'.join(Header) + '\n')
+    for i in L:
+        newfile.write('\t'.join(i.split()) + '\n')
+    newfile.close()
+    
 
 def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                 percentthreshold, distthreshold, postthreshold, refthreshold,
@@ -101,7 +214,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
     :param merge: Merge datafiles, consensus files and umi files if True
-    :param mydebarcer: Pth to the debarcer script
+    :param mydebarcer: Path to the debarcer script
     :param mypython: Path to python
     :param mem: Requested memory
     :param queue: Sge queue to submit jobs to 
@@ -167,30 +280,49 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     if merge  == True:
         
         # submit jobs to merge 
+        MergeCmd = '{0} {1} merge -d {2} -dt {3}'
 
-
-        #### continue here
-
-        # submit jobs for merging
+        # collect regions
+        Regions = []
+        for i in os.listdir(DataDir):
+            if i.startswith('datafile_') and i[-4:] == '.csv':
+                Regions.append(i[i.index('chr'):-4])
+        for i in os.listdir(ConsDir):
+            if i[-5:] == '.cons':
+                Regions.append(i[:-5])
+        for i in os.listdir(UmiDir):
+            if i[-5:] == '.umis':
+                Regions.append(i[:-5])
+        Regions = list(map(lambda x: x.replace(':', '-'), list(set(Regions))))          
         
-        # define function for merging
+        # merge datafiles
+        MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
+        newfile = open(MergeScript1, 'w')
+        newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
+        newfile.close()
+        jobname3 = 'MergeDataFiles_' + '_'.join(Regions)
+        # run merge datafiles
+        subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '10', MergeScript1), shell=True)    
         
-        # hold job until last jobs in list is done
+        # merge consensus files
+        MergeScript2 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
+        newfile = open(MergeScript2, 'w')
+        newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
+        newfile.close()
+        jobname4 = 'MergeConsensusFiles_' + '_'.join(Regions)
+        # run merge consensus files
+        subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '10', MergeScript2), shell=True)    
+        
+        # merge umi files     
+        MergeScript3 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
+        newfile = open(MergeScript3, 'w')
+        newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
+        newfile.close()
+        jobname5 = 'MergeUmiFiles_' + '_'.join(Regions)
+        # run merge umi files
+        subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '10', MergeScript3), shell=True)
         
         
-        # add VCF formatting?
-        
-        # add generate plots???
-
-
-
-
-
-
-
-
-
-
 def merge_umi_datafiles(output_path, id):
     
     path=output_path+"umifiles/"

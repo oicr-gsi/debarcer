@@ -10,7 +10,7 @@ from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
-from src.get_run_data import merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
+from src.get_run_data import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, merge_umi_datafiles, concat_cons, modify_cons, submit_jobs, check_job_status, find_pos
 from src.create_plots import umi_plot, cons_plot, check_file
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize
     
@@ -291,6 +291,26 @@ def VCF_converter(args):
     
     print(timestamp() + "VCFs generated. VCF files written to {}.".format(outdir))
 
+
+def merge_files(args):
+    '''
+    (list) -> None
+    
+    :param outdir: Output directory where subdirectories are created
+    :param datatype: Type of files to be merged.
+                     Valid options are 'datafiles', 'consensusfiles', 'umifiles'
+    
+    Grab and merge all files of given datatype in corresponding subdirectory
+    '''
+    
+    # check which files need to be merged
+    if args.datatype == 'datafiles':
+        MergeDataFiles(args.directory)
+    elif args.datatype == 'consensusfiles':
+        MergeConsensusFiles(args.directory)
+    elif args.datatype == 'umifiles':
+        MergeUmiFiles(args.directory)
+
 def run_scripts(args):
     '''
     (list) -> None
@@ -494,6 +514,12 @@ if __name__ == '__main__':
     r_parser.add_argument('-d', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',
                           help='Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py')
     r_parser.set_defaults(func=run_scripts)
+    
+    ## Merge files command 
+    m_parser = subparsers.add_parser('merge', help="Merge files from each region into a single file")
+    m_parser.add_argument('-d', '--Directory', dest='directory', help='Directory containing files to be merged')
+    m_parser.add_argument('-dt', '--DataType', dest='datatype', help='Type of files to be merged')
+    m_parser.set_defaults(func=merge_files)
     
     ##Generate graphs	
     g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
