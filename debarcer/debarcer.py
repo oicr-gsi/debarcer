@@ -147,8 +147,8 @@ def group_umis(args):
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
         
-    print(timestamp() + "UMI grouping complete. Output written to {}.".format(outdir))
-
+    print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(DataDir))
+    print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(UmiDir))
 
 
 def collapse(args):
