@@ -1,20 +1,8 @@
-import sys
-import pysam
-import configparser
-import argparse
+#import argparse
 import operator
-import functools
 import os
-import csv
-import matplotlib.pyplot as plt
-import pandas as pd
-import fnmatch
-import itertools
-import glob
-import numpy as np
-import time
 import json
-from src.generate_vcf import get_vcf_output
+#from src.generate_vcf import get_vcf_output
 import subprocess
 from src.utilities import CheckRegionFormat
 
