@@ -10,7 +10,7 @@ from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import generate_vcf_output
 from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
-from src.get_run_data import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
+from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.create_plots import umi_plot, cons_plot, check_file
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize
     
