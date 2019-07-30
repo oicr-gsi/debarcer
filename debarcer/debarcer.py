@@ -1,5 +1,4 @@
 import argparse
-import configparser
 import sys
 import os
 import datetime
@@ -8,12 +7,15 @@ import time
 from src.preprocess_fastqs import reheader_fastqs
 from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
-from src.generate_vcf import generate_vcf_output
-from src.generate_vcf import create_consensus_output, get_vcf_output, check_consfile
+from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.create_plots import umi_plot, cons_plot, check_file
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize
     
+
+
+from src.create_plots import umi_plot, cons_plot, check_file
+
+
     
 
 """
@@ -236,6 +238,11 @@ def collapse(args):
 
 def VCF_converter(args):
     '''
+    (list) --> None
+    
+    :param config: Path to the config file
+    :param outdir: Output directory where subdirectories are created
+    
     
     
     
@@ -259,6 +266,12 @@ def VCF_converter(args):
     if os.path.isdir(VCFDir) == False:
         os.mkdir(VCFDir)
     
+    # extract region from consensus file. merged: single or multiple chromos; not merged: single chromo
+    
+    
+    
+    
+    
     # check that region is properly formatted
     region = args.region
     CheckRegionFormat(region)
@@ -267,24 +280,18 @@ def VCF_converter(args):
     # get 1-based inclusive region coordinates
     region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
     # convert coordinates to 0-based half opened coordinates
-#    region_start = region_start -1
+    region_start = region_start -1
         
     
     
-#    cons_is_merged = check_consfile(cons_file)
-#
-#    if cons_is_merged:
-#        region_start = region.split("_")[0]
-#        region_end = region.split("_")[1]		
-#    else:
-#        if any(x not in region for x in ["chr", ":", "-"]):
-#            raise ValueError('Incorrect region string (should look like chr1:1200000-1250000).')
-#            sys.exit(1)
-#
-#        contig = region.split(":")[0]
-#        region_start = int(region.split(":")[1].split("-")[0])
-#        region_end = int(region.split(":")[1].split("-")[1])
-
+    
+    
+    
+    
+    
+    
+    
+    
     print(timestamp() + "Generating VCFs...")
 
     get_vcf_output(args.consfile, region_start, region_end, outdir, args.config)
