@@ -161,16 +161,20 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_
     
     # plot total umi and coverage in a single plot if firstax option is used
     if 'firstax' in Options:
+        # plot umi count using axis of 1st graph
         ax = Options['firstax'].twinx()
-        ax.scatter([i + 0.1 for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'black', facecolor = marker_face_color, marker=marker_style, lw = 1, s = 60, alpha = 1)
+        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'black', facecolor = marker_face_color, marker=marker_style, lw = 1, s = 60, alpha = 1)
     else:
-        # add a plot to figure (N row, N column, plot N)
+        # add a plot coverage to figure (N row, N column, plot N)
         ax = figure.add_subplot(rows, columns, position)
         # plot data
-        ax.scatter([i -0.1 for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'black', facecolor = marker_face_color, marker=marker_style, lw = 1, s = 60, alpha = 1)
         if 'errorbar' in Options:
             errorbar = Options['errorbar']
-            ax.errorbar([i -0.1 for i in range(len(coordinates))], [data[i] for i in coordinates], yerr=errorbar)
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, yerr=errorbar,
+                    color=marker_face_color, edgecolor='black', linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
+        else:
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, color=marker_face_color, edgecolor='black', linewidth=0.7)
+        
     # make a list of genomic regions 
     Chromos = []
     for i in coordinates:
@@ -313,18 +317,18 @@ def PlotCoverage(directory, FigureFileName, **Options):
     if 'title' in Options:
         Title = Options['title']
         if error == True:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'black', title=Title, legend=legend, errorbar=S)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'white', firstax=ax1)
+            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', title=Title, legend=legend, errorbar=S)
+            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
         else:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'black', title=Title, legend=legend)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'white', firstax=ax1)
+            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', title=Title, legend=legend)
+            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
     else:
         if error == True:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'black', legend=legend, errorbar=S)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'white', firstax=ax1)
+            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', legend=legend, errorbar=S)
+            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
         else:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'black', legend=legend)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'white', firstax=ax1)
+            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', legend=legend)
+            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
     
     # save figure in Figures directory, create directory if doesn't exist    
     FigDir = os.path.join(directory, 'Figures')
