@@ -139,7 +139,7 @@ def SortPositions(L):
              
              
              
-def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_style, marker_face_color, **Options):
+def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Options):
     '''
     (int, int, int, figure_object, dict, list, str, str, dict) -> ax object
     
@@ -149,13 +149,10 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_
     :param figure: Figure object opened for writing
     :param data: Dictionary of region: coverage or total umi key, value pairs
     :param coordinates: List of genomic intervals chrN:A-B
-    :param marker_style: Style of the marker
-    :param marker_face_color: Face color of the marker 
     :param Options: Accepted keys are:
                     'firstax': add a 2nd plot sharing axes of the 1st plot
-                    'errorbar': add error bars
-                    'legend': add legend
-    
+                    'errorbar': error bars for the bar graph 
+           
     Return a ax object in figure
     '''
     
@@ -163,7 +160,7 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_
     if 'firstax' in Options:
         # plot umi count using axis of 1st graph
         ax = Options['firstax'].twinx()
-        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'black', facecolor = marker_face_color, marker=marker_style, lw = 1, s = 60, alpha = 1)
+        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'black', facecolor = 'black', marker='o', lw = 1, s = 60, alpha = 1)
     else:
         # add a plot coverage to figure (N row, N column, plot N)
         ax = figure.add_subplot(rows, columns, position)
@@ -171,9 +168,9 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_
         if 'errorbar' in Options:
             errorbar = Options['errorbar']
             ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, yerr=errorbar,
-                    color=marker_face_color, edgecolor='black', linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
+                    color='white', edgecolor='black', linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
         else:
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, color=marker_face_color, edgecolor='black', linewidth=0.7)
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, color='white', edgecolor='black', linewidth=0.7)
         
     # make a list of genomic regions 
     Chromos = []
@@ -204,10 +201,6 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_
     else:
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
     
-    # write title   
-    if 'title' in Options:
-        Title = Options['title']
-        ax.set_title(Title, size = 14)
     # set up y axis label and grid
     if 'firstax' not in Options:
         # write label for y axis
@@ -242,31 +235,26 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, marker_
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
     
-    if 'legend' in Options:
-        legend = bool(Options['legend'])
-    if legend == True:
-        # add legend
-        legend_elements = [Line2D([0], [0], marker='o', markeredgecolor='black', markerfacecolor='black',
-                           label='coverage', markersize=8, linestyle='None'),
-                           Line2D([0], [0], marker='o', markeredgecolor='black', markerfacecolor='white',
-                           label='umis', markersize=8, linestyle='None')]
-        ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
+    # add legend
+    legend_elements = [Line2D([0], [0], marker='s', markeredgecolor='black', markerfacecolor='white',
+                       label='coverage', markersize=8, linestyle='None'),
+                       Line2D([0], [0], marker='o', markeredgecolor='black', markerfacecolor='black',
+                       label='umis', markersize=8, linestyle='None')]
+    ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
     
     return ax
 
 
-def PlotCoverage(directory, FigureFileName, **Options):
+def PlotCoverage(directory, FigureFileName, extension):
     '''
     (str, str, dict) -> None
     
     :param directory: Directory containaing subdirectories Consfiles and Datafiles
                       respectively with consensus and data files
     :param FigureFileName: Name of the output .png figure file 
-    :param Options: Accepted options are:
-                    'legend': Add legend to plot (True or False)
-                    'errorbar': Add error bar to mean coverage (True or False)
-                    'title': Optional title string
-                                        
+    :param extension: Figure format. Accepted values:
+                      png, pdf, jpeg, tiff                                         
+       
     Generates a plot with mean coverage and total umis per interval
     
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
@@ -305,38 +293,40 @@ def PlotCoverage(directory, FigureFileName, **Options):
     # create a sorted list with sem
     S = [Coverage[i][1] for i in Coordinates]
     
-    # check options for plotting
-    if 'legend' in Options:
-        legend = bool(Options['legend'])
-    else:
-        legend = False
-    if 'errorbar' in Options:
-        error = bool(Options['errorbar'])
-    else:
-        error = False        
-    if 'title' in Options:
-        Title = Options['title']
-        if error == True:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', title=Title, legend=legend, errorbar=S)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
-        else:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', title=Title, legend=legend)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
-    else:
-        if error == True:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', legend=legend, errorbar=S)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
-        else:
-            ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', legend=legend)
-            ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
-    
+    # plot data
+    ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', errorbar=S)
+    ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
+        
     # save figure in Figures directory, create directory if doesn't exist    
     FigDir = os.path.join(directory, 'Figures')
     if os.path.isdir(FigDir) == False:
          os.mkdir(FigDir)
-    Outputfile = os.path.join(FigDir, FigureFileName + '.png')
+    Outputfile = os.path.join(FigDir, FigureFileName + extension)
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   
