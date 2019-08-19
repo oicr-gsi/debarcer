@@ -421,7 +421,7 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     :param Color: List with colors for plotting
     :param Outputfile: Name of the output figure file
            
-    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
     
     # check that file is valid path
@@ -445,40 +445,22 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     
         
 
-#################################################################################
-
-##### plot non-ref #####
+#### plot non-reference frequency ####
 
 
-# -*- coding: utf-8 -*-
-"""
-Created on Tue May 28 15:12:00 2019
 
-@author: rjovelin
-"""
-
-# use this script to plot non-reference frequency for a given interval and sample
-
-# import modules
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
-from matplotlib.lines import Line2D
-from matplotlib import rc
-rc('mathtext', default='regular')
-import os
-import argparse
-import numpy as np
-
-
-def ExtractNonRefFreq(ConsensusFile, Family):
+def ExtractNonRefFreq(ConsensusFile):
     '''
     (file) -> dict
-    Take a file with mean coverage per interval and return a dictionary
-    of interval: coverage value pairs
+
+    :param ConsensusFile: Path to consensus file
+
+    Return a dictionary of interval: coverage value pairs
+    
+    Pre-condition: consensus file is not merged chrN:A-B.cons
     '''
     
+    # create a dict {fam: {pos: non-ref freq}}
     D = {}
     
     infile = open(ConsensusFile)
@@ -486,10 +468,10 @@ def ExtractNonRefFreq(ConsensusFile, Family):
     for line in infile:
         if 'chr' in line:
             line = line.rstrip().split('\t')
-            pos, fam, freq = line[Header.index('POS')], line[Header.index('FAM')], 100 - float(line[Header.index('REF_FREQ')])
-            if Family == fam:
-                assert pos not in D
-                D[pos] = freq
+            pos, fam, freq = line[Header.index('POS')], int(line[Header.index('FAM')]), 100 - float(line[Header.index('REF_FREQ')])
+            if fam not in D:
+                D[fam] = {}
+            D[fam][pos] = freq
     infile.close()
     return D                
                     
@@ -653,6 +635,14 @@ if __name__ == '__main__':
     # pass the args to the default function
     args.func(args)
 
+
+
+
+
+
+
+
+#################################################################################
 
 
 #### plot rawcons depth ###
