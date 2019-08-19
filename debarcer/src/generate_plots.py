@@ -21,7 +21,7 @@ import argparse
 
 
 
-#### plot coverage. use this script to plot coverage for the different regions ###
+#### functions for plotting coverage ####
 
 def ExtractCoverage(ConsFile):
     '''
@@ -251,7 +251,7 @@ def PlotCoverage(directory, FigureFileName, extension):
     
     :param directory: Directory containaing subdirectories Consfiles and Datafiles
                       respectively with consensus and data files
-    :param FigureFileName: Name of the output .png figure file 
+    :param FigureFileName: Name of the output figure file saved to Figures directory 
     :param extension: Figure format. Accepted values:
                       png, pdf, jpeg, tiff                                         
        
@@ -306,43 +306,19 @@ def PlotCoverage(directory, FigureFileName, extension):
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
+#### functions for plotting mean family size ####
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-    
-#### plot mean fam size ####
-
-
-
-
-def ExtractFamSize(ConsensusFile, Family):
+def ExtractFamSize(ConsensusFile):
     '''
     (file) -> dict
-    Take a consensus file for a given interval and sample and return a dictionary
-    of position: mean family size value pairs
+    
+    :param ConsensusFile: Path to consensus file 
+    
+    Return a dictionary of position: mean family size value pairs for each family
+    for a given interval and sample
     '''
     
+    # create a dict {fam: {pos: famsize}}
     D = {}
     
     infile = open(ConsensusFile)
@@ -350,17 +326,31 @@ def ExtractFamSize(ConsensusFile, Family):
     for line in infile:
         if 'chr' in line:
             line = line.rstrip().split('\t')
-            pos, fam, famsize = line[Header.index('POS')], line[Header.index('FAM')], float(line[Header.index('MEAN_FAM')])
-            if Family == fam:
-                assert pos not in D
-                D[pos] = famsize
+            pos, fam, famsize = line[Header.index('POS')], int(line[Header.index('FAM')]), float(line[Header.index('MEAN_FAM')])
+            # record data only for defined family size
+            if fam != 0:
+                # intialize inner dict
+                if fam not in D:
+                    D[fam] = {}
+                # add pos, famsize for given family
+                D[fam][pos] = famsize    
     infile.close()
     return D                
                     
   
-def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel, Title):
+def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel):
     '''
-    (int, int, int, figure_object, list, dict, str, dict) -> ax object
+    (int, int, int, figure_object, dict, list, str, str) -> ax object
+    
+    :param columns: Number of columns
+    :param rows: Number of rows
+    :param position: Ax position in figure
+    :param figure: Figure object opened for writing
+    :param Data: mean family size at position for each family size threshold
+    :param Color: sorted list of colors for plotting
+    :param YLabel: Label of the Y axis
+    :param XLabel: Label of the x axis
+        
     Return a ax in figure
     '''
     
@@ -371,9 +361,12 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel, Title
     
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(Rows, Columns, Position)
-    # plot data
-    for i in range(len(Data)):
-        ax.plot([j for j in range(len(pos))], [Data[i][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+    # make a sorted list of family sizes
+    FamSize = Data.keys()
+    FamSize.sort()
+    # plot data  
+    for i in range(len(FamSize)):
+        ax.plot([j for j in range(len(pos))], [Data[FamSize[i]][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
     
     # limit y axis
     YMax = []
@@ -385,13 +378,8 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel, Title
         YMax = float(YMax + (YMax * 25 /100))
     else:
         YMax = float(YMax + (YMax * 15 /100))
-    
-    
     ax.set_ylim([0, YMax])    
         
-    # write title   
-    ax.set_title(Title, size = 14)
-    
     # write label for y and x axis
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     ax.set_xlabel(XLabel, color = 'black',  size = 14, ha = 'center')
@@ -410,10 +398,7 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel, Title
     ax.spines["bottom"].set_visible(True)    
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
-    # offset the spines
-#    for spine in ax.spines.values():
-#        spine.set_position(('outward', 10))
-    
+        
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
@@ -426,76 +411,57 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel, Title
     ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
     
     # add legend
-    legend_elements = [Line2D([0], [0], marker='', label='1', linestyle='-', color = '#4B0082'),
-                       Line2D([0], [0], marker='', label='2', linestyle='-', color = '#7B68EE'),
-                       Line2D([0], [0], marker='', label='3', linestyle='-', color = '#8A2BE2'),
-                       Line2D([0], [0], marker='', label='5', linestyle='-', color = '#BA55D3'),
-                       Line2D([0], [0], marker='', label='10', linestyle='-', color = '#DDA0DD')]       
+    legend_elements = []
+    # loop over family sizes
+    for i in range(len(FamSize)):
+        legend_elements.append(Line2D([0], [0], marker='', label=str(FamSize[i]), linestyle='-', color = Color[i]))
     ax.legend(handles=legend_elements, frameon=False, ncol=5, loc='lower center')
     return ax
 
 
-
-
-
 # use this function to create a figure for each consensus file for a given sample
-def PlotData(args):
+def PlotMeanFamSize(directory, ConsFile, Color, FigureFileName, extension):
+    '''
+    (str, str, list, str) -> None
+    
+    :param directory: Directory containaing subdirectories Consfiles and Figures
+    :param ConsFile: Path to the consensus file
+    :param Color: List with colors for plotting
+    :param FigureFileName: Name of the output figure file saved to Figures directory
+    :param extension: Figure format. Accepted values:
+                      png, pdf, jpeg, tiff     
+       
+    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
     '''
     
-    '''
+    # check that file is valid path
+    if os.path.isfile(ConsFile) == False:
+        raise ValueError('ERR: Invalid path to consensus file')
     
-    # map sample to pool
-    Pools = {'SWID_14058644':'Pool 1-1', 'SWID_14058646':'Pool 1-2', 'SWID_14058648':'Pool 2-1',
-    'SWID_14058650':'Pool 2-2', 'SWID_14058652':'Pool 4-1', 'SWID_14058654':'Pool 4-2',
-    'SWID_14058656':'Pool 5-1', 'SWID_14058658':'Pool 5-2', 'SWID_14058660':'Pool 6-1',
-    'SWID_14058662':'Pool 6-2', 'SWID_14058664':'Pool 7-1', 'SWID_14058666':'Pool 7-2'}
-
-    # get sample directory
-    sampledir = os.path.join(args.workingdir, args.sample)
-    assert os.path.isdir(sampledir)
+    # extract region from consensus file
+    region = os.path.basename(ConsFile)
+    region = region[:region.index('.cons')]
     
-    # create directory to save figures
-    FigDir = os.path.join(sampledir, 'Figures')
+    # create directory to save figures if it doesn't exist
+    FigDir = os.path.join(directory, 'Figures')
     if os.path.isdir(FigDir) == False:
         os.mkdir(FigDir)
     
-    ConsFile = os.path.join(sampledir, args.region + '.cons')
-    assert os.path.isfile(ConsFile)
+    # extract consensus depth for each family size -> {fam: {pos: meanfamSize}}
+    Data = ExtractFamSize(ConsFile)
     
-    # get outputfile name
-    OutputFile = args.sample + '_MeanFamilySize_' + args.region.replace(':', '-') + '.png'
-    print(OutputFile)
-    OutputFile = os.path.join(FigDir, OutputFile)
-      
-    # extract consesnsus depth
-    C = [ExtractFamSize(ConsFile, j) for j in ['1', '2', '3', '5', '10']]
-        
-    Color = {0: '#4B0082', 1: '#7B68EE', 2: '#8A2BE2', 3: '#BA55D3', 4:'#DDA0DD'}
+    # create figure object + ax
     figure = plt.figure(1, figsize = (10, 7))
+    ax = CreateMeanFamAx(1, 1, 1, figure, Data, Color, 'Mean family size', region)
+    
+    Outputfile = os.path.join(FigDir, FigureFileName + '_' + region.replace(':', '-') + extension)
+    plt.tight_layout()
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
+    
         
-    ax = CreateAx(1, 1, 1, figure, C, Color, 'Mean family size', args.region, Pools[args.sample])
-    figure.savefig(OutputFile, bbox_inches = 'tight')
-        
-        
-if __name__ == '__main__':
 
-    # create top-level parser
-    main_parser = argparse.ArgumentParser(prog = 'PlotMeanFamSize.py', description='Plot mean family size for a given sample and region', add_help=True)
-
-    # form analyses to EGA       
-    main_parser.add_argument('-w', '--WorkingDir', dest='workingdir', default='/.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/',
-                             help='Directory with sample directories containing consensus files. Default is /.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/')
-    main_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name', required=True)
-    main_parser.add_argument('-r', '--Region', dest='region', help='Region', required=True)
-    main_parser.set_defaults(func=PlotData)
-
-    # get arguments from the command line
-    args = main_parser.parse_args()
-    # pass the args to the default function
-    args.func(args)
-
-
-
+#################################################################################
 
 ##### plot non-ref #####
 
