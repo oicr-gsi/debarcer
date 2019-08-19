@@ -420,17 +420,14 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
 
 
 # use this function to create a figure for each consensus file for a given sample
-def PlotMeanFamSize(directory, ConsFile, Color, FigureFileName, extension):
+def PlotMeanFamSize(ConsFile, Color, Outputfile):
     '''
     (str, str, list, str) -> None
     
-    :param directory: Directory containaing subdirectories Consfiles and Figures
     :param ConsFile: Path to the consensus file
     :param Color: List with colors for plotting
-    :param FigureFileName: Name of the output figure file saved to Figures directory
-    :param extension: Figure format. Accepted values:
-                      png, pdf, jpeg, tiff     
-       
+    :param Outputfile: Name of the output figure file
+           
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
     '''
     
@@ -442,11 +439,6 @@ def PlotMeanFamSize(directory, ConsFile, Color, FigureFileName, extension):
     region = os.path.basename(ConsFile)
     region = region[:region.index('.cons')]
     
-    # create directory to save figures if it doesn't exist
-    FigDir = os.path.join(directory, 'Figures')
-    if os.path.isdir(FigDir) == False:
-        os.mkdir(FigDir)
-    
     # extract consensus depth for each family size -> {fam: {pos: meanfamSize}}
     Data = ExtractFamSize(ConsFile)
     
@@ -454,7 +446,6 @@ def PlotMeanFamSize(directory, ConsFile, Color, FigureFileName, extension):
     figure = plt.figure(1, figsize = (10, 7))
     ax = CreateMeanFamAx(1, 1, 1, figure, Data, Color, 'Mean family size', region)
     
-    Outputfile = os.path.join(FigDir, FigureFileName + '_' + region.replace(':', '-') + extension)
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
