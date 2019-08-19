@@ -347,16 +347,17 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     Return a ax in figure
     '''
     
+    # make a sorted list of family sizes
+    FamSize = Data.keys()
+    FamSize.sort()
+    
     # make a sorted list of positions
-    pos = list(map(lambda x: int(x), list(Data[0].keys())))
+    pos = list(map(lambda x: int(x), list(Data[FamSize[0]].keys())))
     pos.sort()
     pos = list(map(lambda x: str(x), pos))
     
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(Rows, Columns, Position)
-    # make a sorted list of family sizes
-    FamSize = Data.keys()
-    FamSize.sort()
     # plot data  
     for i in range(len(FamSize)):
         ax.plot([j for j in range(len(pos))], [Data[FamSize[i]][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
@@ -476,9 +477,17 @@ def ExtractNonRefFreq(ConsensusFile):
     return D                
                     
   
-def CreateAx(Columns, Rows, Position, figure, Data, Color, **Options):
+def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
     '''
     (int, int, int, figure_object, dict, str, str, dict) -> ax object
+    
+    
+    
+    
+    
+    
+    
+    
     Return a ax in figure
     '''
     
