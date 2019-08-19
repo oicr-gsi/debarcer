@@ -245,16 +245,14 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     return ax
 
 
-def PlotCoverage(directory, FigureFileName, extension):
+def PlotCoverage(directory, Outputfile):
     '''
     (str, str, dict) -> None
     
     :param directory: Directory containaing subdirectories Consfiles and Datafiles
                       respectively with consensus and data files
-    :param FigureFileName: Name of the output figure file saved to Figures directory 
-    :param extension: Figure format. Accepted values:
-                      png, pdf, jpeg, tiff                                         
-       
+    :param Outputfile: Name of the output figure file 
+         
     Generates a plot with mean coverage and total umis per interval
     
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
@@ -297,11 +295,6 @@ def PlotCoverage(directory, FigureFileName, extension):
     ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', errorbar=S)
     ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
         
-    # save figure in Figures directory, create directory if doesn't exist    
-    FigDir = os.path.join(directory, 'Figures')
-    if os.path.isdir(FigDir) == False:
-         os.mkdir(FigDir)
-    Outputfile = os.path.join(FigDir, FigureFileName + extension)
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
