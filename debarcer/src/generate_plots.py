@@ -65,6 +65,34 @@ def ExtractTotalUmis(DataFile):
     return (chromo + ':' + start + '-' + end, umis)
 
 
+def ExtractUmiCounts(DataFile):
+    '''
+    (file) -> dict    
+
+    :param DataFile: Data file with umi count for a given region (ie. not merged)
+
+    Return a dictionary with umi count for the different umi categories for a given region
+    '''
+    
+    D = {}
+    
+    infile = open(DataFile)
+    Header = infile.readline()
+    line = infile.readline().strip()
+    if line != '':
+        line = line.split()
+        # get genomic region
+        chromo, start, end = line[Header.index('CHR')], line[Header.index('START')], line[Header.index('END')]
+        # get total parent umis
+        ptu = int(line[Header.index('PTU')])
+        # get total child umis
+        ctu = int(line[Header.index('CTU')])
+        region = chromo + ':' + start + '-' + end
+        D[region] = {'PTU': ptu, 'CTU': ctu} 
+    infile.close()
+    return D
+
+
 def GetSampleUmis(L):
     '''
     (list) -> dict
@@ -260,6 +288,9 @@ def PlotCoverage(directory, Outputfile):
     # get the expected subdirectories in directory
     ConsDir = os.path.join(directory, 'Consfiles')
     DataDir = os.path.join(directory, 'Datafiles')
+    
+    if os.path.isdir(ConsDir) == False or os.path.isdir(DataDir) == False:
+        raise ValueError('ERR: Invalid Consfiles and/or Datafiles directory')
     
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
@@ -801,112 +832,139 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
 ####### existing plots ######
 
 
-import os
-import sys
-import matplotlib
-matplotlib.use('Agg')
-import os
-import sys
-import pysam
-import configparser
-import argparse
-import operator
-import functools
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import re
-import csv
-import fnmatch
-import itertools
-from matplotlib.pyplot import figure
+def PlotChildParentRatio(directory, Outputfile):
+    '''
+    (str, str, dict) -> None
+    
+    :param directory: Directory containaing subdirectories Consfiles and Datafiles
+                      respectively with consensus and data files
+    :param Outputfile: Name of the output figure file 
+         
+    Generates a plot with mean children to parent umis count ratios for each region
+    
+    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    '''
 
-#import plotly.graph_objs as go
-#import plotly.offline as off
+    # get the directory with data files
+    DataDir = os.path.join(directory, 'Datafiles')
+    if os.path.isdir(DataDir) == False:
+        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
+    
+    # make a list of datafiles with umis
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
+    # check that paths to files are valid
+    for i in DataFiles:
+        if os.path.isfile == False:
+            raise ValueError('ERR: Invalid path to data file')
+    
+    # extract ptu and ctu for each region
+    L = [ExtractUmiCounts(i) for i in DataFiles]
+    # compute child/parent umi ratios for each region 
+    Data = {}
+    for d in L:
+        region = list(d.keys())[0]
+        ptu, ctu = d[region]['PTU'], d[region]['CTU']
+        if ptu != 0:
+            Data[region] = ctu/ptu
+        
+    # get a sorted list of positions
+    Coordinates = SortPositions(list(Data.keys()))
+    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot coverage to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+    # plot ctu/ptu ratio for each region
+    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
+    
+    # make a list of genomic regions 
+    Chromos = []
+    for i in Coordinates:
+        i = i.split(':')
+        Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
+    
+    # limit y axis
+    YMax = [Data[i] for i in data]
+    YMax = max(YMax)
+    YMax = float(YMax + (YMax * 10 /100))
+    ax.set_ylim([0, YMax])    
+    # set y ticks    
+    if YMax <=50:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
+    elif 50 < YMax <=200:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
+    elif 200 < YMax <=500:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
+    elif 500 < YMax <=1000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
+    elif 1000 < YMax <=2000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
+    elif 2000 < YMax <=5000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
+    elif 5000 < YMax <=10000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
+    else:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
+    
+    # write label for y axis
+    ax.set_ylabel('Child:Parent Ratio', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
+        
+    # write title   
+    ax.set_title("Interval vs. Children to Parent Umis", size = 14)
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
 
-"""
-/src/create_plots.py 
-=========================================
-Purpose:
-
-Script contains sub-functions for Debarcer's 'plot' sub-process.
-
-Author: Isha Warikoo
-Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
-
-"""
-
-
-#Umi plots
-def check_file(file_name, extension):
-	file_exists = file_name.exists()
-	name = file_name.split('/')[-1]
-	ext = name.split('.')[-1]
-
-	if file_exists and ext == extension:
-		return True
-	else:
-		return False
+    # write label for x axis
+    xPos = [i for i in range(len(Coordinates))]
+    plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
+           
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    
+    plt.tight_layout()
+    figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
-def create_umi_dfs(file_name):
-
-	f = file_name.split('/')[-1]
-	name = f.split('.')[0]
-
-	headers=['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-	df_headers=['INTVL', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS', 'INTVL_SIZE', 'CP']
-	region, total_pumis, total_cumis, child_nums, parent_freq, child_to_parent, size_of_intvl = ([] for i in range(7))
-
-	table = []
-
-	f= open(file_name, "r")
-	reader = csv.DictReader(f, delimiter='\t', fieldnames=headers)
-	next(reader)
-	counter = 0
-	for row in reader:
-		counter+=1
-
-		#Build Sub-dataframe table
-		str_cumi_lst = (row['CHILD_NUMS']).split(','); str_pumi_lst = (row['FREQ_PARENTS']).split(','); cumi_lst = []; pumi_lst = [];
-		for i in str_cumi_lst:
-			cumi_lst.append(int(i))
-		for j in str_pumi_lst:
-			pumi_lst.append(int(j))
-
-		table.append(cumi_lst); table.append(pumi_lst)
 
 
-		intvl_name = row['CHR']+":"+row['START']+"-"+row['END']
-		region_len = str((int(row['END']))-(int(row['START'])))
-		temp_intvl = row['CHR']+":"+row['START']+"+"+region_len
-		c_to_p = (float(row['CTU']))/(float(row['PTU']))
 
-		size_of_intvl.append(int(region_len)); child_to_parent.append(float(round(c_to_p,1))); region.append(temp_intvl); total_pumis.append(int(row['PTU'])); total_cumis.append(int(row['CTU'])); child_nums.append(row['CHILD_NUMS']); parent_freq.append(row['FREQ_PARENTS'])
 
-	line = {'INTVL':region, 'PTU':total_pumis, 'CTU':total_cumis, 'CHILD_NUMS':child_nums, 'FREQ_PARENTS':parent_freq, 'INTVL_SIZE':size_of_intvl, 'CP':child_to_parent}
-	df = pd.DataFrame(line, columns=df_headers)
-	df.set_index('INTVL', inplace=True)
 
-	headers_subdf=[]
-	transp_table = [list(row) for row in itertools.zip_longest(*table, fillvalue=None)]
-	col_nums = len(table)
-	for i in range(1,col_nums+1):
-		headers_subdf.append('col'+str(i))
 
-	subframe = pd.DataFrame(transp_table, columns=headers_subdf)
 
-	return df, subframe, name, col_nums, region
 
-def plot_cp(df, output_path, name):
-	#Plot Region vs. Child/Parent Ratio
-	fig = plt.figure()
-	df.sort_values('CP', ascending=False)['CP'].plot(kind='bar',x='INTVL',y='CP', color='pink', rot=90, title="Interval vs. Children to Parent Umis")
-	plt.xlabel('Interval')
-	plt.ylabel('Child:Parent Ratio')
-	plt.tight_layout()
-	plt.savefig(output_path+"CP_"+name+".png")
-	plt.close(fig)
+
+
+
+
+
+
+
+
+
+
+#############################################################################################
+
+
+
+
+
 
 def plot_PTU(df, output_path, name):
 	#Plot Region vs. Parent Umi Count
@@ -952,95 +1010,9 @@ def plot_child_pfreq(subframe, output_path, col_nums, regions):
 		plt.savefig(output_path+"Children_vs_ParentFreq_"+str(regions[cnt])+".png")
 		cnt+=1
 
-def umi_plot(output_path, file_name, umi_flag):
-	df, subframe, name, col_nums, regions = create_umi_dfs(file_name)
-
-	if umi_flag == 'rs':
-		plot_child_pfreq(subframe, output_path, col_nums, regions)
-	elif umi_flag == 'all':
-		plot_cp(df, output_path, name)
-		plot_PTU(df, output_path, name)
-		plot_CTU(df, output_path, name)
-		plot_intvlsize_PTU_CTU(df, output_path, name)
-		plot_child_pfreq(subframe, output_path, col_nums, regions)
-
+    
 		
-
-
-#Consensus plots
-def create_consdf(consfile):
-	df_headers=['INTVL', 'CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
-	df_headers2 = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
-	#df = pd.read_csv(consfile, sep='\t', columns=df_headers2)
-
-	df = pd.read_csv(consfile, sep='\t')
-	df.columns = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
-	return df
-
-def plot_depth(df, output_path):
-	figure(num=None, figsize=(15, 13), dpi=80, facecolor='w', edgecolor='k')
-	groups=("zero","one", "two", "five")
-
-	colors = ['blue', 'green', 'red', 'purple']
-	ax = plt.scatter(x, y, c=label, cmap=matplotlib.colors.ListedColormap(colors))
-
-	#plt.legend()
-	plt.yscale('log')
-	plt.xlim([min_pos, max_pos])
-	plt.yticks([100, 1000, 10000, 100000, 1000000])
-
-	plt.xticks(np.arange(min_pos, max_pos, step_pos))
-	plt.ticklabel_format(useOffset=False, style='plain', axis='x')
-	plt.xlabel = "Base Position"
-	plt.ylabel = "Depth"
-
-	plt.savefig(output_path+"base_pos_vs_CONSDP.png")
-
-
-def plot_reffeq(df, output_path):
-
-	figure(num=None, figsize=(15, 13), dpi=80, facecolor='w', edgecolor='k')
-
-	groups=("zero","one", "two", "five")
-
-	x = df['POS']
-	y = df['REF_FREQ']
-	label=df['FAM']
-
-	colors = ['blue', 'green', 'red', 'purple']
-	ax = plt.scatter(x, y, c=label, cmap=matplotlib.colors.ListedColormap(colors))
-
-	#plt.legend(label, colors)
-
-	min_pos = min(df['POS'])
-	max_pos = max(df['POS'])
-	step_pos = (max_pos-min_pos)/5
-
-	min_reffreq = min(df['REF_FREQ'])
-	max_reffreq = max(df['REF_FREQ'])
-	step_reffreq = (max_reffreq-min_reffreq)/5
-
-	plt.xlim([min_pos, max_pos])
-	plt.yticks(np.arange(min_reffreq, max_reffreq, step_reffreq))
-
-	plt.xticks(np.arange(min_pos, max_pos, step_pos))
-	plt.ticklabel_format(useOffset=False, style='plain', axis='x')
-	plt.xlabel = "Base Position"
-	plt.ylabel = "Refrence Frequency"
-
-	plt.savefig(output_path+"base_pos_vs_REFFREQ.png")
-
-
-
-
-
-
-def cons_plot(output_path, file_name, cons_flag):
-
-	if cons_flag == 'all':
-		df = create_consdf(file_name)
-		plot_depth(df, output_path)
-		plot_reffeq(df, output_path)
+   
 
 
 
