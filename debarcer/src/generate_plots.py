@@ -17,7 +17,7 @@ import os
 import numpy as np
 from scipy import stats
 import argparse
-
+from src.utilities import FormatRegion
 
 
 
@@ -92,8 +92,8 @@ def GetSampleCoverage(L):
     
     D = {}
     for filename in L:
-        region = os.path.basename(filename)
-        region = region[:region.index('.cons')]
+        # extract region by reading coordinates in file
+        region = FormatRegion(filename)
         M, sem = ExtractCoverage(filename)
         D[region] = [M, sem]
     return D
@@ -416,7 +416,7 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
 # use this function to create a figure for each consensus file for a given sample
 def PlotMeanFamSize(ConsFile, Color, Outputfile):
     '''
-    (str, str, list, str) -> None
+    (str, list, str) -> None
     
     :param ConsFile: Path to the consensus file
     :param Color: List with colors for plotting
@@ -430,9 +430,8 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
         raise ValueError('ERR: Invalid path to consensus file')
     
     # extract region from consensus file
-    region = os.path.basename(ConsFile)
-    region = region[:region.index('.cons')]
-    
+    region = FormatRegion(ConsFile)
+       
     # extract consensus depth for each family size -> {fam: {pos: meanfamSize}}
     Data = ExtractFamSize(ConsFile)
     
@@ -443,12 +442,9 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
-    
         
 
 #### plot non-reference frequency ####
-
-
 
 def ExtractNonRefFreq(ConsensusFile):
     '''
@@ -476,18 +472,25 @@ def ExtractNonRefFreq(ConsensusFile):
     infile.close()
     return D                
                     
-  
+ 
+    
 def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
     '''
-    (int, int, int, figure_object, dict, str, str, dict) -> ax object
+    (int, int, int, figure_object, dict, str, dict) -> ax object
     
-    
-    
-    
-    
-    
-    
-    
+    :param columns: Number of columns
+    :param rows: Number of rows
+    :param position: Ax position in figure
+    :param figure: Figure object opened for writing
+    :param Data: Non-reference frequency at each position for a given family size
+    :param Color: String color of the data
+    :param Options: Accepted keys are:
+                    'YLabel': Label of the Y axis
+                    'XLabel': Label of the X axis
+                    'legend': Add legend (True) or not (False)
+                    'fam_size': List of family sizes in consensus file
+                    'Colors': List of colors, parallel to fam_size 
+                        
     Return a ax in figure
     '''
     
@@ -519,11 +522,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
     else:
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
     
-    # write title   
-    if 'title' in Options:
-        Title = Options['title']
-        ax.set_title(Title, size = 14)
-    
     # write label for y and x axis
     if 'YLabel' in Options:
         YLabel=Options['YLabel']
@@ -546,10 +544,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
     ax.spines["bottom"].set_visible(True)    
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
-    # offset the spines
-#    for spine in ax.spines.values():
-#        spine.set_position(('outward', 10))
-    
+        
     if 'XLabel' in Options:
         # do not show ticks
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
@@ -567,82 +562,65 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
                     labelsize = 12, direction = 'out')  
     if 'legend' in Options:
         if Options['legend'] == True:
+            FamSize = Options['fam_size']
+            Colors = Options['colors']
             # add legend
-            legend_elements = [Line2D([0], [0], marker='s', label='0', linestyle='None', color = 'black'),
-                               Line2D([0], [0], marker='s', label='1', linestyle='None', color = '#4B0082'),
-                               Line2D([0], [0], marker='s', label='2', linestyle='None', color = '#7B68EE'),
-                               Line2D([0], [0], marker='s', label='3', linestyle='None', color = '#8A2BE2'),
-                               Line2D([0], [0], marker='s', label='5', linestyle='None', color = '#BA55D3'),
-                               Line2D([0], [0], marker='s', label='10', linestyle='None', color = '#DDA0DD')]       
+            legend_elements = []
+            for i in range(len(FamSize)):
+                legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Colors[i]))
             ax.legend(handles=legend_elements, frameon=False, ncol=6, bbox_to_anchor=(0.7, 1.6))
     return ax
 
 
-# use this function to create a figure for each consensus file for a given sample
-def PlotData(args):
+def PlotNonRefFreqData(ConsFile, Color, Outputfile):
+    '''
+    (str, list, str) -> None
+    
+    :param ConsFile: Path to the consensus file
+    :param Color: List with colors for plotting
+    :param Outputfile: Name of the output figure file
+           
+    Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
     
-    '''
+    # check that file is valid path
+    if os.path.isfile(ConsFile) == False:
+        raise ValueError('ERR: Invalid path to consensus file')
     
-    # map sample to pool
-    Pools = {'SWID_14058644':'Pool 1-1', 'SWID_14058646':'Pool 1-2', 'SWID_14058648':'Pool 2-1',
-    'SWID_14058650':'Pool 2-2', 'SWID_14058652':'Pool 4-1', 'SWID_14058654':'Pool 4-2',
-    'SWID_14058656':'Pool 5-1', 'SWID_14058658':'Pool 5-2', 'SWID_14058660':'Pool 6-1',
-    'SWID_14058662':'Pool 6-2', 'SWID_14058664':'Pool 7-1', 'SWID_14058666':'Pool 7-2'}
-
-    # get sample directory
-    sampledir = os.path.join(args.workingdir, args.sample)
-    assert os.path.isdir(sampledir)
-    
-    # create directory to save figures
-    FigDir = os.path.join(sampledir, 'Figures')
-    if os.path.isdir(FigDir) == False:
-        os.mkdir(FigDir)
-    
-    ConsFile = os.path.join(sampledir, args.region + '.cons')
-    assert os.path.isfile(ConsFile)
-    
-    # get outputfile name
-    OutputFile = args.sample + '_NonRefFreq_' + args.region.replace(':', '-') + '.png'
-    OutputFile = os.path.join(FigDir, OutputFile)
-      
-    # extract non-reference frequency
-    Data = [ExtractNonRefFreq(ConsFile, j) for j in ['0', '1', '2', '3', '5', '10']]
-    
-    # set up colors  
-    Color = {0:'black', 1: '#4B0082', 2: '#7B68EE', 3: '#8A2BE2', 4: '#BA55D3', 5:'#DDA0DD'}
+    # extract region from consensus file
+    region = FormatRegion(ConsFile)
+       
+    # extract non-reference frequency for all family sizes in consensus file
+    Data = ExtractNonRefFreq(ConsFile)
     
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
-    for i in range(len(Data)):
+    
+    # make a sorted list of family sizes
+    FamSize = list(Data.keys())
+    FamSize.sort()
+    
+    # make a list of dicts {pos: non-ref freq}
+    L = []
+    for i in FamSize:
+        d = {}
+        for pos in Data[i]:
+            d[pos] = Data[i][pos]
+        L.append(d)
+    
+    for i in range(len(L)):
         if i == 0:
-            ax = CreateAx(1, 6, i+1, figure, Data[i], Color[i], title=Pools[args.sample], legend=True)
-        elif i == 3:
-            ax = CreateAx(1, 6, i+1, figure, Data[i], Color[i], Ylabel='Non ref freq.')
-        elif i == 5:
-            ax = CreateAx(1, 6, i+1, figure, Data[i], Color[i], XLabel=args.region)
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], legend=True, fam_size=FamSize, colors=Color)
+        elif i == len(L) // 2:
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], Ylabel='Non ref freq.')
+        elif i == len(L) - 1:
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], XLabel= region)
         else:
-            ax = CreateAx(1, 6, i+1, figure, Data[i], Color[i])
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i])
     plt.tight_layout()
-    figure.savefig(OutputFile, bbox_inches = 'tight')
-        
-        
-if __name__ == '__main__':
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
 
-    # create top-level parser
-    main_parser = argparse.ArgumentParser(prog = 'PlotNonRef.py', description='Plot non-reference frequency for a given sample and region', add_help=True)
-
-    # form analyses to EGA       
-    main_parser.add_argument('-w', '--WorkingDir', dest='workingdir', default='/.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/',
-                             help='Directory with sample directories containing consensus files. Default is /.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/')
-    main_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name', required=True)
-    main_parser.add_argument('-r', '--Region', dest='region', help='Region', required=True)
-    main_parser.set_defaults(func=PlotData)
-
-    # get arguments from the command line
-    args = main_parser.parse_args()
-    # pass the args to the default function
-    args.func(args)
 
 
 
