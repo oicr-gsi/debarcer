@@ -20,7 +20,6 @@ import argparse
 from src.utilities import FormatRegion
 
 
-
 #### functions for plotting coverage ####
 
 def ExtractCoverage(ConsFile):
@@ -622,47 +621,16 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
     
 
 
+#### plot raw and consensus depth ####
 
 
-
-
-
-
-
-#################################################################################
-
-
-#### plot rawcons depth ###
-
-
-# -*- coding: utf-8 -*-
-"""
-Created on Mon May 27 11:41:50 2019
-
-@author: rjovelin
-"""
-
-
-# use this script to plot coverage for the different regions
-
-# import modules
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
-from matplotlib.lines import Line2D
-from matplotlib import rc
-rc('mathtext', default='regular')
-import os
-import argparse
-import numpy as np
-
-
-def ExtractDepth(ConsensusFile, Family):
+def ExtractDepth(ConsensusFile):
     '''
     (file) -> dict
-    Take a file with mean coverage per interval and return a dictionary
-    of interval: coverage value pairs
+    
+    :param ConsensusFile: Path to the consensus file
+    
+    Return a dictionary with coverage at each position for each family size
     '''
     
     D = {}
@@ -673,20 +641,33 @@ def ExtractDepth(ConsensusFile, Family):
         if 'chr' in line:
             line = line.rstrip().split('\t')
             pos, rawdp = line[Header.index('POS')], int(line[Header.index('RAWDP')])
-            consdp, fam = int(line[Header.index('CONSDP')]), line[Header.index('FAM')]
-            if Family == fam:
-                assert pos not in D
-                if Family == '0':
-                    D[pos] = rawdp
-                else:
-                    D[pos] = consdp
+            consdp, fam = int(line[Header.index('CONSDP')]), int(line[Header.index('FAM')])
+            if fam not in D:
+                D[fam] = {}
+            if fam == 0:
+                 D[fam][pos] = rawdp
+            else:
+                D[fam][pos] = consdp
     infile.close()
     return D                
                     
   
-def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
+def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
     '''
-    (int, int, int, figure_object, list, dict, str, dict) -> ax object
+    (int, int, int, figure_object, list, list, str, dict) -> ax object
+    
+    :param columns: Number of columns
+    :param rows: Number of rows
+    :param position: Ax position in figure
+    :param figure: Figure object opened for writing
+    :param Data: Depth at each position for each family size
+    :param Color: List of colors
+    :param Options: Accepted keys are:
+                    'XLabel': Label of the X axis
+                    'legend': Add legend (True) or not (False)
+                    'fam_size': List of family sizes in consensus file
+                    'Colors': List of colors, parallel to fam_size 
+                        
     Return a ax in figure
     '''
     
@@ -727,11 +708,6 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
     else:
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
     
-    # write title   
-    if 'title' in Options:
-        Title = Options['title']
-        ax.set_title(Title, size = 14)
-    
     # write label for y and x axis
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     if 'XLabel' in Options:
@@ -752,10 +728,7 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
     ax.spines["bottom"].set_visible(True)    
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
-    # offset the spines
-#    for spine in ax.spines.values():
-#        spine.set_position(('outward', 10))
-    
+        
     if 'XLabel' in Options:
         # do not show ticks
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
@@ -773,81 +746,57 @@ def CreateAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
                     labelsize = 12, direction = 'out')  
     if 'legend' in Options:
         if Options['legend'] == True:
+            # get parallel lists of family sizes and colors
+            Colors = Options['colors']
+            FamSize = Options['fam_size']
             # add legend
-            legend_elements = [Line2D([0], [0], marker='', label='1', linestyle='-', color = '#4B0082'),
-                               Line2D([0], [0], marker='', label='2', linestyle='-', color = '#7B68EE'),
-                               Line2D([0], [0], marker='', label='3', linestyle='-', color = '#8A2BE2'),
-                               Line2D([0], [0], marker='', label='5', linestyle='-', color = '#BA55D3'),
-                               Line2D([0], [0], marker='', label='10', linestyle='-', color = '#DDA0DD')]       
+            legend_elements = []
+            for i in range(len(FamSize)):
+                legend_elements.append(Line2D([0], [0], marker='', label=str(FamSize[i]), linestyle='-', color = Colors[i]))
             ax.legend(handles=legend_elements, frameon=False, ncol=5, loc='lower center')
     return ax
 
 
-
-
-
-# use this function to create a figure for each consensus file for a given sample
-def PlotData(args):
+def PlotConsDepth(ConsFile, Color, Outputfile):
+    '''
+    (str, list, str) -> None
+    
+    :param ConsFile: Path to the consensus file
+    :param Color: List with colors for plotting
+    :param Outputfile: Name of the output figure file
+           
+    Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
     
-    '''
-    
-    # map sample to pool
-    Pools = {'SWID_14058644':'Pool 1-1', 'SWID_14058646':'Pool 1-2', 'SWID_14058648':'Pool 2-1',
-    'SWID_14058650':'Pool 2-2', 'SWID_14058652':'Pool 4-1', 'SWID_14058654':'Pool 4-2',
-    'SWID_14058656':'Pool 5-1', 'SWID_14058658':'Pool 5-2', 'SWID_14058660':'Pool 6-1',
-    'SWID_14058662':'Pool 6-2', 'SWID_14058664':'Pool 7-1', 'SWID_14058666':'Pool 7-2'}
-
-    # get sample directory
-    sampledir = os.path.join(args.workingdir, args.sample)
-    assert os.path.isdir(sampledir)
-    
-    # create directory to save figures
-    FigDir = os.path.join(sampledir, 'Figures')
-    if os.path.isdir(FigDir) == False:
-        os.mkdir(FigDir)
-    
-    ConsFile = os.path.join(sampledir, args.region + '.cons')
-    assert os.path.isfile(ConsFile)
-    
-    # get outputfile name
-    OutputFile = args.sample + '_RawConsensusDepth_' + args.region.replace(':', '-') + '.png'
-    print(OutputFile)
-    OutputFile = os.path.join(FigDir, OutputFile)
-      
-    # extract rawdepth  data from file
-    R = [ExtractDepth(ConsFile, '0')]
-    # extract consesnsus depth
-    C = [ExtractDepth(ConsFile, j) for j in ['1', '2', '3', '5', '10']]
+    # check that file is valid path
+    if os.path.isfile(ConsFile) == False:
+        raise ValueError('ERR: Invalid path to consensus file')
+       
+    # extract region from consensus file
+    region = FormatRegion(ConsFile)
         
-    rColor = {0:'black'}
-    cColor = {0: '#4B0082', 1: '#7B68EE', 2: '#8A2BE2', 3: '#BA55D3', 4:'#DDA0DD'}
+    # extract depth at each position for each family size
+    Data = ExtractDepth(ConsFile)
+     
+    # make a sorted list of dicts {pos: depth} for each family size
+    FamSize = Data.keys()
+    FamSize.sort()
+    L = []
+    for i in FamSize:
+        d = {}
+        for pos in Data[i]:
+            d[pos] = Data[i][pos]
+        L.append(d)
+    
     figure = plt.figure(1, figsize = (10, 7))
-        
-    ax1 = CreateAx(1, 2, 1, figure, R, rColor, 'Raw depth', title=Pools[args.sample])
-    ax2 = CreateAx(1, 2, 2, figure, C, cColor, 'Consensus depth', XLabel=args.region, legend=True)
+    # plot raw depth, family size = 0    
+    ax1 = CreateAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth')
+    ax2 = CreateAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region, legend=True, fam_size=FamSize, colors=Color)
     plt.tight_layout()
-    figure.savefig(OutputFile, bbox_inches = 'tight')
+    figure.savefig(Outputfile, bbox_inches = 'tight')
         
-        
-if __name__ == '__main__':
-
-    # create top-level parser
-    main_parser = argparse.ArgumentParser(prog = 'PlotRawConsDepth.py', description='Plot raw and consensus depth for a given sample and region', add_help=True)
-
-    # form analyses to EGA       
-    main_parser.add_argument('-w', '--WorkingDir', dest='workingdir', default='/.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/',
-                             help='Directory with sample directories containing consensus files. Default is /.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/')
-    main_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name', required=True)
-    main_parser.add_argument('-r', '--Region', dest='region', help='Region', required=True)
-    main_parser.set_defaults(func=PlotData)
-
-    # get arguments from the command line
-    args = main_parser.parse_args()
-    # pass the args to the default function
-    args.func(args)
-
-
+ 
+    
 
 ####### existing plots ######
 
