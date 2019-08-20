@@ -77,7 +77,7 @@ def ExtractUmiCounts(DataFile):
     D = {}
     
     infile = open(DataFile)
-    Header = infile.readline()
+    Header = infile.readline().strip().split('\t')
     line = infile.readline().strip()
     if line != '':
         line = line.split()
@@ -844,7 +844,7 @@ def PlotChildParentRatio(directory, Outputfile):
     
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
     '''
-
+    
     # get the directory with data files
     DataDir = os.path.join(directory, 'Datafiles')
     if os.path.isdir(DataDir) == False:
@@ -852,6 +852,11 @@ def PlotChildParentRatio(directory, Outputfile):
     
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
+    
+    
+    print(DataFiles)
+    
+    
     # check that paths to files are valid
     for i in DataFiles:
         if os.path.isfile == False:
@@ -884,7 +889,7 @@ def PlotChildParentRatio(directory, Outputfile):
         Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
     
     # limit y axis
-    YMax = [Data[i] for i in data]
+    YMax = [Data[i] for i in Data]
     YMax = max(YMax)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
@@ -917,11 +922,11 @@ def PlotChildParentRatio(directory, Outputfile):
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
-
+    
     # write label for x axis
     xPos = [i for i in range(len(Coordinates))]
     plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
-           
+               
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
@@ -936,8 +941,6 @@ def PlotChildParentRatio(directory, Outputfile):
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
-    
-    plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
