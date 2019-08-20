@@ -322,8 +322,8 @@ def PlotCoverage(directory, Outputfile):
     S = [Coverage[i][1] for i in Coordinates]
     
     # plot data
-    ax1 = CreateAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', errorbar=S)
-    ax2 = CreateAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
+    ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', errorbar=S)
+    ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
         
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
