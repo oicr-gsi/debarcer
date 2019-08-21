@@ -404,7 +404,7 @@ def generate_plots(args):
     # get subdirectories
     ConsDir = os.path.join(args.directory, 'Consfiles')
     if os.path.isdir(ConsDir) == False:
-        ValueError('ERR: Missing ConsFiles directory with consensus files')
+        raise ValueError('ERR: Missing ConsFiles directory with consensus files')
     
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
