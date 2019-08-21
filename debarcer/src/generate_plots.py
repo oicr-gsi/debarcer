@@ -821,8 +821,8 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     
     figure = plt.figure(1, figsize = (10, 7))
     # plot raw depth, family size = 0    
-    ax1 = CreateAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth')
-    ax2 = CreateAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region, legend=True, fam_size=FamSize, colors=Color)
+    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth')
+    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region, legend=True, fam_size=FamSize, colors=Color)
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
         
@@ -834,7 +834,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
 
 def PlotChildParentRatio(directory, Outputfile):
     '''
-    (str, str, dict) -> None
+    (str, str) -> None
     
     :param directory: Directory containaing subdirectories Consfiles and Datafiles
                       respectively with consensus and data files
@@ -852,10 +852,6 @@ def PlotChildParentRatio(directory, Outputfile):
     
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    
-    
-    print(DataFiles)
-    
     
     # check that paths to files are valid
     for i in DataFiles:
@@ -931,40 +927,113 @@ def PlotChildParentRatio(directory, Outputfile):
 
 
 
+def PlotTotalUmiCounts(directory, Outputfile):
+    '''
+    (str, str) -> None
+    
+    :param directory: Directory containaing subdirectories Consfiles and Datafiles
+                      respectively with consensus and data files
+    :param Outputfile: Name of the output figure file 
+         
+    Generates a plot with mean children to parent umis count ratios for each region
+    
+    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    '''
+    
+    # get the directory with data files
+    DataDir = os.path.join(directory, 'Datafiles')
+    if os.path.isdir(DataDir) == False:
+        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
+    
+    # make a list of datafiles with umis
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
+    
+    # check that paths to files are valid
+    for i in DataFiles:
+        if os.path.isfile == False:
+            raise ValueError('ERR: Invalid path to data file')
+    
+    # extract umi counts each region
+    L = [ExtractUmiCounts(i) for i in DataFiles]
+    # compute child/parent umi ratios for each region 
+    Data = {}
+    for d in L:
+        region = list(d.keys())[0]
+        Data[region] = d[region]['PTU']
+        
+    # get a sorted list of positions
+    Coordinates = SortPositions(list(Data.keys()))
+    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot coverage to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+    # plot ctu/ptu ratio for each region
+    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
+    
+    # make a list of genomic regions 
+    Chromos = []
+    for i in Coordinates:
+        i = i.split(':')
+        Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
+    
+    # limit y axis
+    YMax = [Data[i] for i in Data]
+    YMax = max(YMax)
+    YMax = YMax + (YMax * 10/100)
+    ax.set_ylim([0, YMax])
+    # set y ticks    
+    if YMax <=50:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
+    elif 50 < YMax <=200:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
+    elif 200 < YMax <=500:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
+    elif 500 < YMax <=1000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
+    elif 1000 < YMax <=2000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
+    elif 2000 < YMax <=5000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
+    elif 5000 < YMax <=10000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
+    else:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
+    
+    # write label for y axis
+    ax.set_ylabel('Number of Parent UMIs', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
+        
+    # write title   
+    ax.set_title("Total Umi counts", size = 14)
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    # write label for x axis
+    xPos = [i for i in range(len(Coordinates))]
+    plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
+               
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#############################################################################################
-
-
-
-
-
-
-def plot_PTU(df, output_path, name):
-	#Plot Region vs. Parent Umi Count
-	fig = plt.figure()
-	df.sort_values('PTU', ascending=False)['PTU'].plot(kind='bar',x='INTVL',y='PTU', color='red', rot=90, title="Interval vs. Parent Umi Count")
-	#plt.gcf().subplots_adjust(bottom=0.15)
-	plt.xlabel('Interval')
-	plt.ylabel('Number of Parent UMIs')
-	plt.tight_layout()
-	plt.savefig(output_path+"PTU_"+name+".png")
-	plt.close(fig)
+##########################################################################
 
 
 def plot_CTU(df, output_path, name):
