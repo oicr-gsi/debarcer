@@ -68,8 +68,11 @@ def ExtractUmiCounts(DataFile):
         ptu = int(line[Header.index('PTU')])
         # get total child umis
         ctu = int(line[Header.index('CTU')])
+        # get numbers of children
+        children = line[Header.index('CHILD_NUMS')]
+        parents = line[Header.index('FREQ_PARENTS')]
         region = chromo + ':' + start + '-' + end
-        D[region] = {'PTU': ptu, 'CTU': ctu} 
+        D[region] = {'PTU': ptu, 'CTU': ctu, 'children': children, 'parents': parents} 
     infile.close()
     return D
 
@@ -1065,48 +1068,105 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
 
 
 
-
-##########################################################################
-
-def plot_child_pfreq(subframe, output_path, col_nums, regions):
-	cnt = 0
-	for i in range(0, col_nums, 2):
-		#x_col = [subframe.columns[i]]
-		#y_col = [subframe.columns[i+1]]
-
-		subframe.plot(kind='scatter', x=i, y=i+1, color='purple', label="Parent Freq", title="No. of Children vs. Parent Freq.")
-		plt.xlabel('Number of UMI Children')
-		plt.ylabel('Frequency of Parents')
-
-		plt.tight_layout()
-		plt.savefig(output_path+"Children_vs_ParentFreq_"+str(regions[cnt])+".png")
-		cnt+=1
-
+def PlotParentFreq(directory, Color, Outputfile):
+    '''
+    (str, list, str) -> None
     
-		
-   
-
-
-
-
-### need to edit specript below to allow commands for each plot
-
-
-
-if __name__ == '__main__':
-
-    # create top-level parser
-    main_parser = argparse.ArgumentParser(prog = 'PlotCoverage.py', description='Plot mean coverage and total umis per interval', add_help=True)
-
-    # form analyses to EGA       
-    main_parser.add_argument('-w', '--WorkingDir', dest='workingdir', default='/.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/',
-                             help='Directory with sample directories containing consensus files. Default is /.mounts/labs/gsiprojects/genomics/CBALL/GroupCollapse/')
-    main_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name', required=True)
-    main_parser.set_defaults(func=PlotData)
-
-    # get arguments from the command line
-    args = main_parser.parse_args()
-    # pass the args to the default function
-    args.func(args)
-
+    :param directory: Directory containaing subdirectory Datafiles
+    :param Color: List of colors for plotting
+    :param Outputfile: Name of the output figure file 
+     
+    Generates a plot with parent frequencies vs children count for all regions
     
+    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    '''
+    
+    # get the directory with data files
+    DataDir = os.path.join(directory, 'Datafiles')
+    if os.path.isdir(DataDir) == False:
+        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
+    
+    # make a list of datafiles with umis
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
+    
+    # check that paths to files are valid
+    for i in DataFiles:
+        if os.path.isfile == False:
+            raise ValueError('ERR: Invalid path to data file')
+    
+    # extract umi counts for each region
+    L = [ExtractUmiCounts(i) for i in DataFiles]
+     
+    Data = {}
+    for d in L:
+        region = list(d.keys())[0]
+        # get total count
+        ptu = d[region]['PTU']
+        # get the counts of children and parents
+        children, parents = d[region]['children'].split(','), d[region]['parents'].split(',')
+        children = list(map(lambda x: int(x.strip()), children))
+        # compute parent frequencies
+        parents = list(map(lambda x: int(x.strip()) / ptu, parents))
+        # map children to parents   
+        k ={children[i]: parents[i] for i in range(len(children))}
+        Data[region] = k
+    
+    # get a sorted list of positions
+    Coordinates = SortPositions(list(Data.keys()))
+    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot coverage to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+    # loop over sorted regions
+    for i in range(len(Coordinates)):
+        # plot parent frequencies vs sorted number of children
+        ax.scatter(sorted(Data[region].keys()), [Data[region][j] for j in sorted(Data[region].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 60, alpha = 1)
+    
+    # limit y axis to maximum value
+    YMax = []
+    for i in Data:
+        for j in Data[i]:
+            YMax.append(Data[i][j])
+    YMax = max(YMax)
+    # add 10% to max value
+    YMax = YMax + (YMax * 10/100)
+    ax.set_ylim([0, YMax])
+    
+    # set Y axis ticks
+    step = round(YMax/10, 2)    
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+    
+    # write label for y axis
+    ax.set_ylabel('Parent UMI frequency', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
+        
+    # write title   
+    ax.set_title('Parent Frequency vs Children UMIs.', size = 14)
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    # write label for x axis
+    children = sorted(Data[Coordinates[0]].keys()) 
+    xPos = [i for i in range(len(children))]
+    plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
+               
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+
