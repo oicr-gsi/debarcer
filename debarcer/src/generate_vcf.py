@@ -6,14 +6,14 @@ import operator
 import functools
 import csv
 #from src.generate_consensus import ConsDataRow
-from src.generate_consensus import get_ref_seq
+#from src.generate_consensus import get_ref_seq
 #from src.umi_error_correct import UMIGroup
-from src.generate_consensus import get_consensus_seq, get_uncollapsed_seq
+#from src.generate_consensus import get_consensus_seq, get_uncollapsed_seq
 #from src.handle_args import handle_arg
-from src.generate_consensus import temp_umi_table
-from src.generate_consensus import generate_uncollapsed
-from src.generate_consensus import generate_consensus
-from src.generate_consensus import memoize
+#from src.generate_consensus import temp_umi_table
+#from src.generate_consensus import generate_uncollapsed
+#from src.generate_consensus import generate_consensus
+#from src.generate_consensus import memoize
 #from src.generate_merge import check_consfile
 
 
