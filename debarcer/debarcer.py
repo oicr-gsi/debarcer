@@ -9,14 +9,10 @@ from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize
-    
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion
+from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq
 
-
-from src.create_plots import umi_plot, cons_plot, check_file
-
-
-    
+   
 
 """
 debarcer.py - main interface for Debarcer
@@ -395,41 +391,71 @@ def run_scripts(args):
     
     
 def generate_plots(args):
-    if not umi_flag and not cons_flag:
-        print("ERR: Specify umi or cons flag, and provide the appropriate data file")		
-
-    if umi_flag:
-        if umi_datafile:
-            umi_plot_type = args.umi_flag
-            umi_file = args.umi_datafile
-            if check_file(umi_file, 'csv'):
-                if umi_plot_type == 'rs':
-                    umi_plot(output_path, file_name, umi_plot_type)
-                elif umi_plot == 'all or umi_plot == None':
-                    #Default: Generate all umi plots
-                    umi_plot_type = 'all'
-                    umi_plot(output_path, file_name, umi_plot_type)
-                else:
-                    print("ERR: Incorrect argument passed to the umi flag option")
-
-            print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.vcf'")
-        else:
-            print("ERR: Missing CSV umi data file")
-
-    if cons_flag:
-        if cons_file:
-            cons_plot_type = args.cons_flag
-            cons_file = args.cons_file
-            if check_file(cons_file, 'cons'):
-                if cons_plot_type == 'all' or cons_plot_type == None:
-                    cons_plot(output_path, file_name, cons_plot_type)
-                else:
-                    print("ERR: Incorrect argument passed to the cons flag option")
-            else:
-                print("ERR: Incorrect or non-existing file specified. Expecting file with extension '.cons'")
-        else:
-            print("ERR: Missing CONS data file")
-
+    '''
+    (list) -> None
+    
+    :param directory: Directory with subdirectories ConsFiles and Datafiles 
+    :param extension: Figure format. Accepted values: png, pdf, jpeg, tiff
+       
+    Generate plots in Figures directory
+    
+    '''
+    
+    # get subdirectories
+    ConsDir = os.path.join(args.directory, 'Consfiles')
+    if os.path.isdir(ConsDir) == False:
+        ValueError('ERR: Missing ConsFiles directory with consensus files')
+    
+    # create directory to save figures if it doesn't exist
+    FigDir = os.path.join(args.directory, 'Figures')
+    if os.path.isdir(FigDir) == False:
+        os.mkdir(FigDir)
+        
+    # make a list of consensus files
+    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
+    
+    # make a list of colors. each color is used for plotting data for a given family size
+    Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
+              '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
+              '#066024', '#0ba83f', '#0ff05a', '#57f48c', '#9ff9bd',
+              '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
+              '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
+    
+    #plot coverage
+    PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
+        
+    # plot graphs for each consensus file
+    for filename in ConsFiles:
+        # plot mean family size for each consensus file/region
+        region = FormatRegion(filename).replace(':', '-')
+        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+        PlotMeanFamSize(filename, Colors[1:], Outputfile)
+            
+        # plot non-reference frequency
+        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
+        PlotNonRefFreqData(filename, Colors, Outputfile)
+    
+        # plot raw and consensus depth
+        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
+        PlotConsDepth(filename, Colors, Outputfile)
+        
+    # plot children to parent umi count ratio
+    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
+    
+    # plot total umi counts
+    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
+    
+    # plot children umi counts
+    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
+    
+    # plot children vs parent umis for each interval
+    PlotParentsToChildrenCounts(args.directory, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
+    
+    # plot parent frequencies vs children UMI counts
+    PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
+        
+    
+    
 if __name__ == '__main__':
         
     ## Argument + config parsing and error handling
@@ -529,12 +555,10 @@ if __name__ == '__main__':
     m_parser.set_defaults(func=merge_files)
     
     ##Generate graphs	
-    g_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files.")
-    g_parser.add_argument('-o', '--output_path', help='Path to write output files to.', required=True)
-    g_parser.add_argument('-c', '--cons_file', help='Path to your CONS fle.')
-    g_parser.add_argument('-u', '--umi_datafile', help='Path to your umi CSV data file.')
-    g_parser.add_argument('-uf', '--umi_flag', help="Pass 'all' or 'rs' as a parameter, to generate all or region-specific umi plots, respectively.")
-    g_parser.add_argument('-cf', '--cons_flag', help="Pass 'all' as a parameter, to generate all cons plots.")
+    plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
+    plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
+    plot_parser.add_argument('-e', '--Extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
+    plot_parser.set_defaults(func=generate_plots)
     
     args = parser.parse_args()
     try:
