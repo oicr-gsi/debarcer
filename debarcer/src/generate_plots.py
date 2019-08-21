@@ -46,25 +46,6 @@ def ExtractCoverage(ConsFile):
     return M, sem
 
 
-def ExtractTotalUmis(DataFile):
-    '''
-    (file) -> tuple    
-
-    :param DataFile: Data file with total umi count for a given region (ie. not merged)
-
-    Return a tuple with interval and total umis
-    '''
-    
-    infile = open(DataFile)
-    Header = infile.readline()
-    line = infile.readline().strip()
-    if line != '':
-        line = line.split()
-        chromo, start, end, umis = line[Header.index('CHR')], line[Header.index('START')], line[Header.index('END')], int(line[Header.index('PTU')])
-    infile.close()
-    return (chromo + ':' + start + '-' + end, umis)
-
-
 def ExtractUmiCounts(DataFile):
     '''
     (file) -> dict    
@@ -104,8 +85,11 @@ def GetSampleUmis(L):
     
     D = {}
     for filename in L:
-        pos, umis = ExtractTotalUmis(filename)
-        D[pos] = umis
+        # extract umi counts
+        d = ExtractUmiCounts(filename)
+        region = list(d.keys())[0]
+        umis = d[region]['PTU']
+        D[region] = umis
     return D
 
 def GetSampleCoverage(L):
