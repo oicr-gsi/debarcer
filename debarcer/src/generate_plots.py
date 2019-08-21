@@ -816,15 +816,11 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
  
     
 
-####### existing plots ######
-
-
 def PlotUmiCounts(directory, Outputfile, Graph):
     '''
     (str, str, str) -> None
     
-    :param directory: Directory containaing subdirectories Consfiles and Datafiles
-                      respectively with consensus and data files
+    :param directory: Directory containaing subdirectory Datafiles 
     :param Outputfile: Name of the output figure file 
     :param Graph: Type of data to plot. Accepted values:
                   'ratio': children to parent umis ratio
@@ -962,8 +958,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     '''
     (str, str, str) -> None
     
-    :param directory: Directory containaing subdirectories Consfiles and Datafiles
-                      respectively with consensus and data files
+    :param directory: Directory containaing subdirectory Datafiles 
     :param Outputfile: Name of the output figure file 
     :param Graph: Type of data to plot. Accepted values:
                   'ratio': children to parent umis ratio
