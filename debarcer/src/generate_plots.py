@@ -971,17 +971,118 @@ def PlotUmiCounts(directory, Outputfile, Graph):
 
 
 
+def PlotParentsToChildrenCounts(directory, Outputfile):
+    '''
+    (str, str, str) -> None
+    
+    :param directory: Directory containaing subdirectories Consfiles and Datafiles
+                      respectively with consensus and data files
+    :param Outputfile: Name of the output figure file 
+    :param Graph: Type of data to plot. Accepted values:
+                  'ratio': children to parent umis ratio
+                  'parents': total umi count
+                  'children': children umi count 
+    Generates a plot with umi counts (children, parents or children to parents ratio)
+    
+    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    '''
+    
+    # get the directory with data files
+    DataDir = os.path.join(directory, 'Datafiles')
+    if os.path.isdir(DataDir) == False:
+        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
+    
+    # make a list of datafiles with umis
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
+    
+    # check that paths to files are valid
+    for i in DataFiles:
+        if os.path.isfile == False:
+            raise ValueError('ERR: Invalid path to data file')
+    
+    # extract umi counts for each region
+    L = [ExtractUmiCounts(i) for i in DataFiles]
+     
+    Data = {}
+    for d in L:
+        region = list(d.keys())[0]
+        ptu, ctu = d[region]['PTU'], d[region]['CTU']
+        Data[region] = [ctu, ptu]
+    
+    # get a sorted list of positions
+    Coordinates = SortPositions(list(Data.keys()))
+    
+    # make parallel lists of children and parent counts
+    CTU = [Data[i][0] for i in Coordinates]
+    PTU = [Data[i][1] for i in Coordinates]
+    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot coverage to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+    # plot ctu/ptu ratio for each region
+    ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
+    
+    # limit y axis to maximum value
+    YMax = max(CTU)
+    # add 10% to max value
+    YMax = YMax + (YMax * 10/100)
+    ax.set_ylim([0, YMax])
+    
+    # set y ticks    
+    if YMax <=50:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
+    elif 50 < YMax <=200:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
+    elif 200 < YMax <=500:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
+    elif 500 < YMax <=1000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
+    elif 1000 < YMax <=2000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
+    elif 2000 < YMax <=5000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
+    elif 5000 < YMax <=10000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
+    else:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
+        
+    # write label for y axis
+    ax.set_ylabel('Number of children UMIs', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Number of parents UMIs', color = 'black',  size = 14, ha = 'center')
+        
+    # write title   
+    ax.set_title('Interval Size vs. PTU and CTU', size = 14)
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    # write label for x axis
+    xPos = [i for i in range(len(Coordinates))]
+    plt.xticks(xPos, list(map(lambda x: str(x), PTU)), ha = 'center', rotation = 0, fontsize = 9)
+               
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+
+
+
 
 ##########################################################################
-
-
-def plot_intvlsize_PTU_CTU(df, output_path, name):
-	#Plot Interval size vs. Parent Umi Count & Child Umi Count
-	ctu = df.plot(kind='scatter', x='INTVL_SIZE', y='CTU', color='blue', label="Child Umis Count")
-	ptu = df.plot(kind='scatter', x='INTVL_SIZE', y='PTU', color = 'red', title="Interval Size vs. PTU and CTU", label="Parent Umi Count", ax=ctu)
-	plt.legend()
-	plt.tight_layout()
-	plt.savefig(output_path+"CTU_PTU_intvlsize_"+name+".png")
 
 def plot_child_pfreq(subframe, output_path, col_nums, regions):
 	cnt = 0
