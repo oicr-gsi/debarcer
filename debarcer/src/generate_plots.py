@@ -891,26 +891,12 @@ def PlotChildParentRatio(directory, Outputfile):
     # limit y axis
     YMax = [Data[i] for i in Data]
     YMax = max(YMax)
-    YMax = float(YMax + (YMax * 10 /100))
-    ax.set_ylim([0, YMax])    
+    YMax = YMax + (YMax * 10/100)
+    ax.set_ylim([0, YMax])
+    step = round(YMax/10, 2)    
     # set y ticks    
-    if YMax <=50:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    elif 50 < YMax <=200:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-    elif 200 < YMax <=500:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-    elif 500 < YMax <=1000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-    elif 1000 < YMax <=2000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-    elif 2000 < YMax <=5000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-    elif 5000 < YMax <=10000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-    else:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
-    
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+        
     # write label for y axis
     ax.set_ylabel('Child:Parent Ratio', color = 'black',  size = 14, ha = 'center')
     ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
