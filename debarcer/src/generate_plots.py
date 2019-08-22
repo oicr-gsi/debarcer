@@ -300,9 +300,9 @@ def PlotCoverage(directory, Outputfile):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Coverage.keys()))
     
-    # clear previous axes
-    plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)    
+#    # clear previous axes
+#    plt.clf()
+#    plt.gcf().set_size_inches(9, 6, forward=True)    
 
     
     # create figure
@@ -319,11 +319,6 @@ def PlotCoverage(directory, Outputfile):
     ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
         
     plt.tight_layout()
-    
-    
-    print(plt.gcf().get_size_inches())
-    print(mpl.rcParams['figure.figsize'])
-    
     
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
@@ -465,7 +460,7 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     Data = ExtractFamSize(ConsFile)
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     
     # create figure object + ax
     figure = plt.figure(1, figsize = (10, 7))
@@ -626,7 +621,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
     Data = ExtractNonRefFreq(ConsFile)
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
@@ -825,7 +820,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
         L.append(d)
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     
     figure = plt.figure(1, figsize = (10, 7))
     # plot raw depth, family size = 0    
@@ -1024,8 +1019,8 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     PTU = [Data[i][1] for i in Coordinates]
     
     # clear previous axes
-    plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)
+    #plt.clf()
+    #plt.gcf().set_size_inches(9, 6, forward=True)
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -1139,8 +1134,8 @@ def PlotParentFreq(directory, Color, Outputfile):
     Coordinates = SortPositions(list(Data.keys()))
     
     # clear previous axes
-    plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)
+    #plt.clf()
+    #plt.gcf().set_size_inches(9, 6, forward=True)
        
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
