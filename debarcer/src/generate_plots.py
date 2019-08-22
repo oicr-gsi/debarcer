@@ -888,6 +888,7 @@ def PlotUmiCounts(directory, Outputfile, Graph):
     
     # clear previous axes
     plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True) 
         
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
