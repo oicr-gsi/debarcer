@@ -180,10 +180,10 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         # plot data
         if 'errorbar' in Options:
             errorbar = Options['errorbar']
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, yerr=errorbar,
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.2, yerr=errorbar,
                     color='white', edgecolor='black', linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
         else:
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.8, color='white', edgecolor='black', linewidth=0.7)
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.2, color='white', edgecolor='black', linewidth=0.7)
         
     # make a list of genomic regions 
     Chromos = []
@@ -227,6 +227,10 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     
         # write label for x axis
         xPos = [i for i in range(len(coordinates))]
+        
+        print(xPos)
+        
+        
         #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
         plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
     else:
