@@ -10,7 +10,11 @@ from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion
-from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq
+
+#from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq
+
+from src.generate_plots import PlotCoverage
+
 
    
 
@@ -404,9 +408,6 @@ def generate_plots(args):
     # get subdirectories
     ConsDir = os.path.join(args.directory, 'Consfiles')
     if os.path.isdir(ConsDir) == False:
-        
-        print('cannot find consdir')
-        
         raise ValueError('ERR: Missing ConsFiles directory with consensus files')
     
     # create directory to save figures if it doesn't exist
@@ -416,10 +417,7 @@ def generate_plots(args):
         
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
-    
-    
-    
-    
+       
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -432,7 +430,8 @@ def generate_plots(args):
     
     
     PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
-#        
+
+        
 #    # plot graphs for each consensus file
 #    for filename in ConsFiles:
 #        # plot mean family size for each consensus file/region
