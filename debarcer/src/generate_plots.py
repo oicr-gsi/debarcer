@@ -292,8 +292,15 @@ def PlotCoverage(directory, Outputfile):
         if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to data file')
     
+    
+    print('files and dirs valid')
+    
     # get mean coverage per interval
     Coverage = GetSampleCoverage(ConsFiles)
+    
+    print(Coverage)
+    
+    
     # get total parent umis for each interval
     Umis = GetSampleUmis(DataFiles)
     # get a sorted list of positions
