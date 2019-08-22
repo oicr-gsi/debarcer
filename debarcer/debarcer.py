@@ -449,18 +449,18 @@ def generate_plots(args):
     # plot children to parent umi count ratio
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
     
-    # plot total umi counts
-    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
-    
-    # plot children umi counts
-    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
-    
-    # plot children vs parent umis for each interval
-    PlotParentsToChildrenCounts(args.directory, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
-    
-    # plot parent frequencies vs children UMI counts
-    PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
-        
+#    # plot total umi counts
+#    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
+#    
+#    # plot children umi counts
+#    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
+#    
+#    # plot children vs parent umis for each interval
+#    PlotParentsToChildrenCounts(args.directory, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
+#    
+#    # plot parent frequencies vs children UMI counts
+#    PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
+#        
     
     
 if __name__ == '__main__':
