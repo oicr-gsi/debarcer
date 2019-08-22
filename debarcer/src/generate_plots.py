@@ -811,8 +811,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     Data = ExtractDepth(ConsFile)
      
     # make a sorted list of dicts {pos: depth} for each family size
-    FamSize = Data.keys()
-    FamSize.sort()
+    FamSize = sorted(Data.keys())
     L = []
     for i in FamSize:
         d = {}
