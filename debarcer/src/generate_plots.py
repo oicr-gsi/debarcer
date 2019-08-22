@@ -300,6 +300,9 @@ def PlotCoverage(directory, Outputfile):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Coverage.keys()))
     
+    # clear previous axes
+    plt.clf()
+        
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
     # create a dict with mean coverage
@@ -452,6 +455,9 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
        
     # extract consensus depth for each family size -> {fam: {pos: meanfamSize}}
     Data = ExtractFamSize(ConsFile)
+    
+    # clear previous axes
+    plt.clf()
     
     # create figure object + ax
     figure = plt.figure(1, figsize = (10, 7))
@@ -610,6 +616,9 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
        
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
+    
+    # clear previous axes
+    plt.clf()
     
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
@@ -807,6 +816,9 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
             d[pos] = Data[i][pos]
         L.append(d)
     
+    # clear previous axes
+    plt.clf()
+    
     figure = plt.figure(1, figsize = (10, 7))
     # plot raw depth, family size = 0    
     ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth')
@@ -1002,6 +1014,9 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     CTU = [Data[i][0] for i in Coordinates]
     PTU = [Data[i][1] for i in Coordinates]
     
+    # clear previous axes
+    plt.clf()
+    
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
     # add a plot coverage to figure (N row, N column, plot N)
@@ -1113,6 +1128,9 @@ def PlotParentFreq(directory, Color, Outputfile):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Data.keys()))
     
+    # clear previous axes
+    plt.clf()
+       
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
     # add a plot coverage to figure (N row, N column, plot N)
