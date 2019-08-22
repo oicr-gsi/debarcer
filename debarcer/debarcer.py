@@ -446,8 +446,8 @@ def generate_plots(args):
 #        
 
 
-    # plot children to parent umi count ratio
-    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
+#    # plot children to parent umi count ratio
+#    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
     
 #    # plot total umi counts
 #    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
