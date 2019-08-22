@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 from matplotlib import rc
-rc('mathtext', default='regular')
+#rc('mathtext', default='regular')
 import os
 import numpy as np
 from scipy import stats
