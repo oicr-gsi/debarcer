@@ -286,6 +286,10 @@ def PlotCoverage(directory, Outputfile):
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
     
+    
+    print(ConsFiles)
+    print(DataFiles)
+    
     # check that paths to files are valid
     for i in ConsFiles:
         if os.path.isfile == False:
