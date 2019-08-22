@@ -277,6 +277,8 @@ def PlotCoverage(directory, Outputfile):
     DataDir = os.path.join(directory, 'Datafiles')
     
     if os.path.isdir(ConsDir) == False or os.path.isdir(DataDir) == False:
+        print('plot coverage, missing subdirs')
+        
         raise ValueError('ERR: Invalid Consfiles and/or Datafiles directory')
     
     # make a list of consensus files
