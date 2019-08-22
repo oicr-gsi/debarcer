@@ -226,7 +226,11 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         ax.set_axisbelow(True)
     
         # write label for x axis
-        xPos = [i for i in range(len(coordinates))]
+        #xPos = [i for i in range(len(coordinates))]
+        
+        
+        xPos = [i/10 for i in range(len(coordinates))]
+        
         
         #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
         plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
