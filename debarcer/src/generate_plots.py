@@ -308,6 +308,9 @@ def PlotCoverage(directory, Outputfile):
     # create a sorted list with sem
     S = [Coverage[i][1] for i in Coordinates]
     
+    
+    print(M)
+    
     # plot data
     ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
     #ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
