@@ -1138,16 +1138,16 @@ def PlotParentFreq(directory, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(8, 5, forward=True)
+    plt.gcf().set_size_inches(7, 4, forward=True)
        
     # create figure
-    figure = plt.figure(1, figsize = (8, 5))
+    figure = plt.figure(1, figsize = (7, 4))
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # loop over sorted regions
     for i in range(len(Coordinates)):
         # plot parent frequencies vs sorted number of children
-        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 60, alpha = 1)
+        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 60, alpha = 0.7)
     
     # limit y axis to maximum value
     YMax = []
