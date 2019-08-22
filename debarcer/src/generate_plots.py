@@ -1077,7 +1077,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     XMax = max(PTU)
     # add 10% to max value
     XMax = XMax + (XMax * 10/100)
-    ax.set_xlim([0 - (XMax * 10/100), XMax])
+    ax.set_xlim([0 - (XMax * 10/100)/2, XMax])
     
     # set y ticks    
     if XMax <=50:
