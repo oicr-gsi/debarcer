@@ -181,9 +181,9 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         if 'errorbar' in Options:
             errorbar = Options['errorbar']
             ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, yerr=errorbar,
-                    color=(1, 1, 0, 0.5), edgecolor='black', linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
+                    color='red', edgecolor=['black'] * len(data), linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
         else:
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color='white', edgecolor='black', linewidth=0.7)
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color='white', edgecolor=['black'] * len(data), linewidth=0.7)
         
     # make a list of genomic regions 
     Chromos = []
