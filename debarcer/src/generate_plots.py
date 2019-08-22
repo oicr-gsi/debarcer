@@ -371,9 +371,8 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     '''
     
     # make a sorted list of family sizes
-    FamSize = Data.keys()
-    FamSize.sort()
-    
+    FamSize = sorted(Data.keys())
+        
     # make a sorted list of positions
     pos = list(map(lambda x: int(x), list(Data[FamSize[0]].keys())))
     pos.sort()
