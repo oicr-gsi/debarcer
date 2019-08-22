@@ -11,9 +11,9 @@ from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion
 
-#from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq
+from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq
 
-from src.generate_plots import PlotCoverage
+
 
 
    
@@ -425,10 +425,7 @@ def generate_plots(args):
               '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
     
-    #plot coverage
-    print('plotting coverage')
-    
-    
+    # plot coverage
     PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
 
         
@@ -447,8 +444,10 @@ def generate_plots(args):
 #        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
 #        PlotConsDepth(filename, Colors, Outputfile)
 #        
-#    # plot children to parent umi count ratio
-#    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
+
+
+    # plot children to parent umi count ratio
+    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
 #    
 #    # plot total umi counts
 #    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
