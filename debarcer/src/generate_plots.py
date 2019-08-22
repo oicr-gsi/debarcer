@@ -279,10 +279,19 @@ def PlotCoverage(directory, Outputfile):
     if os.path.isdir(ConsDir) == False or os.path.isdir(DataDir) == False:
         raise ValueError('ERR: Invalid Consfiles and/or Datafiles directory')
     
+    print('directories valid')
+    
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
+    
+    
+    
+    print(ConsFiles)
+    print(DataFiles)
+    
+    
     
     # check that paths to files are valid
     for i in ConsFiles:
