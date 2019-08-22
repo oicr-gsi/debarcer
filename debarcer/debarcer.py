@@ -425,35 +425,31 @@ def generate_plots(args):
               '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
     
-    
-        
     # plot coverage
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
     # in future version, a new instance will always be created and returned
     plt.clf(), plt.cla()
     PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
-
         
-#    # plot graphs for each consensus file
-#    for filename in ConsFiles:
-#        # plot mean family size for each consensus file/region
-#        region = FormatRegion(filename).replace(':', '-')
-#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-#        PlotMeanFamSize(filename, Colors[1:], Outputfile)
-#            
-#        # plot non-reference frequency
-#        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
-#        PlotNonRefFreqData(filename, Colors, Outputfile)
-#    
-#        # plot raw and consensus depth
-#        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
-#        PlotConsDepth(filename, Colors, Outputfile)
-#        
-
-
-
+    # plot graphs for each consensus file
+    for filename in ConsFiles:
+        # plot mean family size for each consensus file/region
+        region = FormatRegion(filename).replace(':', '-')
+        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+        plt.clf(), plt.cla()
+        PlotMeanFamSize(filename, Colors[1:], Outputfile)
+            
+        # plot non-reference frequency
+        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
+        plt.clf(), plt.cla()
+        PlotNonRefFreqData(filename, Colors, Outputfile)
     
+        # plot raw and consensus depth
+        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
+        plt.clf(), plt.cla()
+        PlotConsDepth(filename, Colors, Outputfile)
+        
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
