@@ -1069,9 +1069,35 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     ax.set_axisbelow(True)
     
     # write label for x axis
-    xPos = [i for i in range(len(Coordinates))]
-    plt.xticks(xPos, list(map(lambda x: str(x), PTU)), ha = 'center', rotation = 0, fontsize = 9)
-               
+#    xPos = [i for i in range(len(Coordinates))]
+#    plt.xticks(xPos, list(map(lambda x: str(x), PTU)), ha = 'center', rotation = 0, fontsize = 9)
+#      
+
+    # limit x axis to maximum value
+    XMax = max(PTU)
+    # add 10% to max value
+    XMax = XMax + (XMax * 10/100)
+    ax.set_xlim([0, XMax])
+    
+    # set y ticks    
+    if XMax <=50:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 10)], ha = 'center', rotation = 0)
+    elif 50 < XMax <=200:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 20)], ha = 'center', rotation = 0) 
+    elif 200 < XMax <=500:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 50)], ha = 'center', rotation = 0)
+    elif 500 < XMax <=1000:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 100)], ha = 'center', rotation = 0)  
+    elif 1000 < XMax <=2000:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 200)], ha = 'center', rotation = 0)    
+    elif 2000 < XMax <=5000:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 500)], ha = 'center', rotation = 0)
+    elif 5000 < XMax <=10000:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 1000)], ha = 'center', rotation = 0)
+    else:
+        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 2000)], ha = 'center', rotation = 0)
+
+         
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
