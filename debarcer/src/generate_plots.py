@@ -16,7 +16,6 @@ rc('mathtext', default='regular')
 import os
 import numpy as np
 from scipy import stats
-import argparse
 from src.utilities import FormatRegion
 
 
@@ -225,7 +224,7 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
         # hide these grids behind plot objects
         ax.set_axisbelow(True)
-
+    
         # write label for x axis
         xPos = [i for i in range(len(coordinates))]
         #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
@@ -325,8 +324,8 @@ def PlotCoverage(directory, Outputfile):
     S = [Coverage[i][1] for i in Coordinates]
     
     # plot data
-    ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, 'o', 'white', errorbar=S)
-    ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, 'o', 'black', firstax=ax1)
+    ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
+    ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
         
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
