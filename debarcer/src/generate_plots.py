@@ -277,20 +277,11 @@ def PlotCoverage(directory, Outputfile):
     
     if os.path.isdir(ConsDir) == False or os.path.isdir(DataDir) == False:
         raise ValueError('ERR: Invalid Consfiles and/or Datafiles directory')
-    
-    print('directories valid')
-    
+        
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    
-    
-    
-    print(ConsFiles)
-    print(DataFiles)
-    
-    
     
     # check that paths to files are valid
     for i in ConsFiles:
@@ -300,15 +291,9 @@ def PlotCoverage(directory, Outputfile):
         if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to data file')
     
-    
-    print('files and dirs valid')
-    
     # get mean coverage per interval
     Coverage = GetSampleCoverage(ConsFiles)
-    
-    print(Coverage)
-    
-    
+       
     # get total parent umis for each interval
     Umis = GetSampleUmis(DataFiles)
     # get a sorted list of positions
@@ -325,7 +310,7 @@ def PlotCoverage(directory, Outputfile):
     
     # plot data
     ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
-    ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
+    #ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
         
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
