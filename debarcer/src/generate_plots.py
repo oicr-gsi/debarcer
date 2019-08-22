@@ -866,6 +866,9 @@ def PlotUmiCounts(directory, Outputfile, Graph):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Data.keys()))
     
+    # clear previous axes
+    plt.clf()
+        
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
     # add a plot coverage to figure (N row, N column, plot N)
