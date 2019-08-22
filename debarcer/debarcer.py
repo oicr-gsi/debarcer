@@ -425,9 +425,13 @@ def generate_plots(args):
               '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
     
-    plt.clf()
     
+        
     # plot coverage
+    # clear previous ax instances between plots
+    # current matplotlib version reuses the earlier instance
+    # in future version, a new instance will always be created and returned
+    plt.clf(), plt.cla()
     PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
 
         
@@ -449,36 +453,25 @@ def generate_plots(args):
 
 
 
-    plt.clf()
-
+    
     # plot children to parent umi count ratio
+    plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
     
-    
-    plt.clf()
-    
-    
     # plot total umi counts
+    plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
     
-    
-    plt.clf()
-    
-    
     # plot children umi counts
+    plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
     
-    plt.clf()
-    
-    
     # plot children vs parent umis for each interval
+    plt.clf(), plt.cla()
     PlotParentsToChildrenCounts(args.directory, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
     
-    
-    plt.clf()
-    
-    
     # plot parent frequencies vs children UMI counts
+    plt.clf(), plt.cla()
     PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
         
     
