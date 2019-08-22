@@ -300,10 +300,9 @@ def PlotCoverage(directory, Outputfile):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Coverage.keys()))
     
-#    # clear previous axes
-#    plt.clf()
-#    plt.gcf().set_size_inches(9, 6, forward=True)    
-
+    # clear previous axes
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)    
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -460,7 +459,9 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     Data = ExtractFamSize(ConsFile)
     
     # clear previous axes
-    #plt.clf()
+    plt.clf()
+    plt.gcf().set_size_inches(10, 7, forward=True)
+    
     
     # create figure object + ax
     figure = plt.figure(1, figsize = (10, 7))
@@ -621,8 +622,9 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
     Data = ExtractNonRefFreq(ConsFile)
     
     # clear previous axes
-    #plt.clf()
-    
+    plt.clf()
+    plt.gcf().set_size_inches(8, 10, forward=True)
+        
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
     
@@ -820,8 +822,9 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
         L.append(d)
     
     # clear previous axes
-    #plt.clf()
-    
+    plt.clf()
+    plt.gcf().set_size_inches(10, 7, forward=True)
+        
     figure = plt.figure(1, figsize = (10, 7))
     # plot raw depth, family size = 0    
     ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth')
@@ -882,8 +885,8 @@ def PlotUmiCounts(directory, Outputfile, Graph):
     Coordinates = SortPositions(list(Data.keys()))
     
     # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True) 
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True) 
         
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -1019,8 +1022,8 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     PTU = [Data[i][1] for i in Coordinates]
     
     # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True)
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -1134,8 +1137,8 @@ def PlotParentFreq(directory, Color, Outputfile):
     Coordinates = SortPositions(list(Data.keys()))
     
     # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True)
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)
        
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
