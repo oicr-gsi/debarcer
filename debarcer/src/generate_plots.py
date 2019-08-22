@@ -301,7 +301,7 @@ def PlotCoverage(directory, Outputfile):
     Coordinates = SortPositions(list(Coverage.keys()))
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
         
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -317,6 +317,12 @@ def PlotCoverage(directory, Outputfile):
     ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
         
     plt.tight_layout()
+    
+    
+    print(plt.gcf().get_size_inches())
+    print(mpl.rcParams['figure.figsize'])
+    
+    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
