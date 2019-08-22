@@ -1025,6 +1025,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     
     # clear previous axes
     plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -1139,6 +1140,7 @@ def PlotParentFreq(directory, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)
        
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
