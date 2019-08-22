@@ -301,7 +301,7 @@ def PlotCoverage(directory, Outputfile):
     Coordinates = SortPositions(list(Coverage.keys()))
     
     # clear previous axes
-    #plt.clf()
+    plt.clf()
         
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
