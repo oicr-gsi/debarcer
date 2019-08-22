@@ -386,7 +386,7 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     
     # limit y axis
     YMax = []
-    for i in range(len(Data)):
+    for i in Data:
         for j in Data[i]:
             YMax.append(Data[i][j])
     YMax = max(YMax)
