@@ -1138,16 +1138,16 @@ def PlotParentFreq(directory, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)
+    plt.gcf().set_size_inches(8, 5, forward=True)
        
     # create figure
-    figure = plt.figure(1, figsize = (9, 6))
+    figure = plt.figure(1, figsize = (8, 5))
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # loop over sorted regions
     for i in range(len(Coordinates)):
         # plot parent frequencies vs sorted number of children
-        ax.scatter(sorted(Data[region].keys()), [Data[region][j] for j in sorted(Data[region].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 60, alpha = 1)
+        ax.scatter(sorted(Data[i].keys()), [Data[i][j] for j in sorted(i[region].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 60, alpha = 1)
     
     # limit y axis to maximum value
     YMax = []
@@ -1165,7 +1165,7 @@ def PlotParentFreq(directory, Color, Outputfile):
     
     # write label for y axis
     ax.set_ylabel('Parent UMI frequency', color = 'black',  size = 14, ha = 'center')
-    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Number of children UMIs', color = 'black',  size = 14, ha = 'center')
         
     # write title   
     ax.set_title('Parent Frequency vs Children UMIs.', size = 14)
