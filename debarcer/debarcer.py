@@ -572,5 +572,6 @@ if __name__ == '__main__':
     try:
         args.func(args)
     except AttributeError as e:
+        print(e)
         print(parser.format_help())
     
