@@ -277,8 +277,6 @@ def PlotCoverage(directory, Outputfile):
     DataDir = os.path.join(directory, 'Datafiles')
     
     if os.path.isdir(ConsDir) == False or os.path.isdir(DataDir) == False:
-        print('plot coverage, missing subdirs')
-        
         raise ValueError('ERR: Invalid Consfiles and/or Datafiles directory')
     
     # make a list of consensus files
@@ -286,16 +284,12 @@ def PlotCoverage(directory, Outputfile):
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
     
-    
-    print(ConsFiles)
-    print(DataFiles)
-    
     # check that paths to files are valid
     for i in ConsFiles:
-        if os.path.isfile == False:
+        if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to consensus file')
     for i in DataFiles:
-        if os.path.isfile == False:
+        if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to data file')
     
     # get mean coverage per interval
@@ -847,7 +841,7 @@ def PlotUmiCounts(directory, Outputfile, Graph):
     
     # check that paths to files are valid
     for i in DataFiles:
-        if os.path.isfile == False:
+        if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to data file')
     
     # extract umi counts for each region
@@ -985,7 +979,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     
     # check that paths to files are valid
     for i in DataFiles:
-        if os.path.isfile == False:
+        if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to data file')
     
     # extract umi counts for each region
@@ -1092,7 +1086,7 @@ def PlotParentFreq(directory, Color, Outputfile):
     
     # check that paths to files are valid
     for i in DataFiles:
-        if os.path.isfile == False:
+        if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid path to data file')
     
     # extract umi counts for each region
