@@ -565,7 +565,7 @@ if __name__ == '__main__':
     ##Generate graphs	
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
     plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
-    plot_parser.add_argument('-e', '--Extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
+    plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
     plot_parser.set_defaults(func=generate_plots)
     
     args = parser.parse_args()
