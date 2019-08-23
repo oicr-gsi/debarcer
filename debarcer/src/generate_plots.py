@@ -17,7 +17,9 @@ import os
 import numpy as np
 from scipy import stats
 from src.utilities import FormatRegion
-
+import networkx as nx
+import json
+import collections
 
 #### functions for plotting coverage ####
 
@@ -1220,3 +1222,271 @@ def PlotParentFreq(directory, Color, Outputfile):
                 labelsize = 12, direction = 'out')  
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
+
+
+def ParentToChildren(UmiFile):
+    '''
+    (str) -> list
+    
+    :param UmiFile: Path to file with umi sequences and child to parent relationships
+    
+    Return a list of tuples with (parent, child) umi sequences
+    
+    Precondition: the umi file is not merged
+    '''
+    
+    
+    if os.path.isfile(UmiFile) == False:
+        raise ValueError('ERR: Invalid path to umi file {0}'.format(UmiFile))
+        
+    # load umi file with umi sequences and chil to parent relations
+    infile = open(UmiFile)
+    data = json.load(infile)
+    infile.close()
+    
+    # create a dict {parent: [children]}
+    D = {}
+    for i in data:
+        parent = data[i]['parent']
+        if parent not in D:
+            D[parent] = []
+        D[parent].append(i)
+    
+    # make a list of (parent, child)
+    L = []
+    for i in D:
+        for j in D[i]:
+            L.append((i, j))
+    return L
+
+
+def BuildNetwork(UmiFile):
+    '''
+    (str) -> networkx object
+    
+    :param UmiFile:  Path to file with umi sequences and child to parent relationships 
+    
+    Return a networkx object
+    '''
+    
+    # make a list of (parent, child) umi sequences
+    L = ParentToChildren(UmiFile)
+    # build directed network
+    G = nx.DiGraph()
+    # load data into network
+    G.add_edges_from(L)
+    return G
+
+
+def PlotNetwork(UmiFile, Outputfile):
+    '''
+    (str) -> None
+    
+    
+    '''
+
+    #https://networkx.github.io/documentation/stable/_downloads/networkx_reference.pdf
+    
+    # https://networkx.github.io/documentation/latest/auto_examples/drawing/plot_degree_histogram.html#sphx-glr-auto-examples-drawing-plot-degree-histogram-py
+    
+    # https://networkx.github.io/documentation/latest/auto_examples/graph/plot_football.html#sphx-glr-auto-examples-graph-plot-football-py
+    
+    #     https://networkx.github.io/documentation/latest/auto_examples/graph/plot_erdos_renyi.html#sphx-glr-auto-examples-graph-plot-erdos-renyi-py
+
+    # build network
+    G = BuildNetwork(UmiFile)
+    
+    # make a list of (parent, child) umi sequences
+    L = ParentToChildren(UmiFile)
+    # build directed network
+    G = nx.DiGraph()
+    # load data into network
+    G.add_edges_from(L)
+
+    # make a list of parent nodes
+    parents = [i[0] for i in L]
+    # make a list of children nodes
+    children = [i[1] for i in L]
+    
+    AllNodes = list(set(parents + children))
+        
+    # create an ax instance in a figure
+    # clear previous axes
+    plt.clf()
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot coverage to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+    # write title   
+    ax.set_title('Parent-Child UMI network', size = 14)
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(False)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=False, top=False,
+                right=False, left=False, labelbottom=False, labelright=False,
+                colors = 'black', labelsize = 12, direction = 'out')  
+    
+    # draw the entire entire network
+    # nx.draw(G, pos = nx.spring_layout(G), arrows=False,
+    # with_labels=False, node_size=5, node_color='pink',
+    # node_shape='o', alpha=0.8, linewidths=0, width=0.7,
+    # edge_color='grey', ax=ax)
+    
+    # set up same network layout for all drawings
+    Pos = nx.spring_layout(G)
+    
+    # draw edges    
+    nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='k',
+                           style='solid', alpha=0.7, ax=ax, arrows=False,
+                           node_size=5, nodelist=AllNodes,
+                           node_shape='o')
+    # draw children nodes
+    nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
+                           node_color='pink', node_shape='o', alpha=0.8,
+                           linewidths=0, edgecolors='grey',
+                           ax=ax, nodelist=children)
+    # draw parent nodes
+    nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
+                           node_color='blue', node_shape='o', alpha=0.8,
+                           linewidths=0, edgecolors='grey',
+                           ax=ax, nodelist=parents)
+    # save figure
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+   
+ 
+
+def PlotNetworkDegree(UmiFile, Outputfile, draw_network):
+    '''
+    
+    
+    '''
+
+    # build network
+    G = BuildNetwork(UmiFile)
+
+    # make a list of node degree
+    degree_sequence = sorted([d for n, d in G.degree()], reverse=True)
+    # count nodes with a given degree
+    degree_count = collections.Counter(degree_sequence)
+    # make parallel lists of degree and count sorted on degree
+    degree = sorted(degree_count.keys())
+    count = [degree_count[i] for i in degree]
+    
+    # clear previous axes
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)    
+    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # create ax instance in figure
+    ax1 = figure.add_subplot(1, 1, 1)
+    ax1.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
+               
+    # draw graph in inset
+    if draw_network == True:
+        # coordinates in unitless percentages of the figure size. (0,0 is bottom left)
+        left, bottom, width, height = [0.4, 0.4, 0.7, 0.3]
+        plt.axes([left, bottom, width, height])
+        
+        # build network
+        G = BuildNetwork(UmiFile)
+        # make a list of (parent, child) umi sequences
+        L = ParentToChildren(UmiFile)
+        # build directed network
+        G = nx.DiGraph()
+        # load data into network
+        G.add_edges_from(L)
+        # make a list of parent nodes
+        parents = [i[0] for i in L]
+        # make a list of children nodes
+        children = [i[1] for i in L]
+        AllNodes = list(set(parents + children))
+        # set up same network layout for all drawings
+        Pos = nx.spring_layout(G)
+        plt.axis('off')
+        # draw edges    
+        nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey',
+                           style='solid', alpha=0.4, ax=None, arrows=False,
+                           node_size=5, nodelist=AllNodes, node_shape='o')
+        # draw children nodes
+        nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
+                           node_color='pink', node_shape='o', alpha=0.4,
+                           linewidths=0, edgecolors='grey', ax=None, nodelist=children)
+        # draw parent nodes
+        nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
+                           node_color='blue', node_shape='o', alpha=0.4,
+                           linewidths=0, edgecolors='grey', ax=None, nodelist=parents)
+       
+    # limit y axis
+    YMax = max(count)
+    YMax = float(YMax + (YMax * 10 /100))
+    ax.set_ylim([0, YMax])    
+    # set y ticks    
+    if YMax <=50:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
+    elif 50 < YMax <=200:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
+    elif 200 < YMax <=500:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
+    elif 500 < YMax <=1000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
+    elif 1000 < YMax <=2000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
+    elif 2000 < YMax <=5000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
+    elif 5000 < YMax <=10000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
+    else:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
+    
+    # set up y axis label and grid
+    ax.set_ylabel('Count', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Node degree', color = 'black',  size = 14, ha = 'center')
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
+    plt.xticks(degree, list(map(lambda x: str(x), degree)), ha = 'center', rotation = 0, fontsize = 9)
+           
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
