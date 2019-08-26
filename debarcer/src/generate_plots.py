@@ -1278,21 +1278,27 @@ def BuildNetwork(UmiFile):
     return G
 
 
-def PlotNetwork(UmiFile, Outputfile):
-    '''
-    (str) -> None
-    
-    
-    '''
 
-    #https://networkx.github.io/documentation/stable/_downloads/networkx_reference.pdf
-    
-    # https://networkx.github.io/documentation/latest/auto_examples/drawing/plot_degree_histogram.html#sphx-glr-auto-examples-drawing-plot-degree-histogram-py
-    
-    # https://networkx.github.io/documentation/latest/auto_examples/graph/plot_football.html#sphx-glr-auto-examples-graph-plot-football-py
-    
-    #     https://networkx.github.io/documentation/latest/auto_examples/graph/plot_erdos_renyi.html#sphx-glr-auto-examples-graph-plot-erdos-renyi-py
 
+##############
+
+
+def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
+    '''
+    (int, int, int, figure_object, str) -> ax object
+    
+    :param columns: Number of columns
+    :param rows: Number of rows
+    :param position: Ax position in figure
+    :param figure: Figure object opened for writing
+    :param UmiFile: Path to json file with umi parent: children relationships
+    
+    Return a ax in figure
+    '''
+   
+    # add a plot to figure (N row, N column, plot N)
+    ax = figure.add_subplot(Rows, Columns, Position)
+    
     # build network
     G = BuildNetwork(UmiFile)
     
@@ -1307,18 +1313,12 @@ def PlotNetwork(UmiFile, Outputfile):
     parents = [i[0] for i in L]
     # make a list of children nodes
     children = [i[1] for i in L]
-    
+    # make list of all nodes
     AllNodes = list(set(parents + children))
         
-    # create an ax instance in a figure
-    # clear previous axes
-    plt.clf()
-    # create figure
-    figure = plt.figure(1, figsize = (9, 6))
-    # add a plot coverage to figure (N row, N column, plot N)
-    ax = figure.add_subplot(1, 1, 1)
-    # write title   
+    # write title
     ax.set_title('Parent-Child UMI network', size = 14)
+       
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
@@ -1331,47 +1331,47 @@ def PlotNetwork(UmiFile, Outputfile):
        
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=False, top=False,
-                right=False, left=False, labelbottom=False, labelright=False,
-                colors = 'black', labelsize = 12, direction = 'out')  
-    
-    # draw the entire entire network
-    # nx.draw(G, pos = nx.spring_layout(G), arrows=False,
-    # with_labels=False, node_size=5, node_color='pink',
-    # node_shape='o', alpha=0.8, linewidths=0, width=0.7,
-    # edge_color='grey', ax=ax)
+                    right=False, left=False, labelbottom=False, labelright=False,
+                    colors = 'black', labelsize = 12, direction = 'out')  
     
     # set up same network layout for all drawings
     Pos = nx.spring_layout(G)
-    
     # draw edges    
-    nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='k',
-                           style='solid', alpha=0.7, ax=ax, arrows=False,
-                           node_size=5, nodelist=AllNodes,
-                           node_shape='o')
+    nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
+                           alpha=0.4, ax=ax, arrows=False, node_size=5,
+                           nodelist=AllNodes, node_shape='o')
     # draw children nodes
-    nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
-                           node_color='pink', node_shape='o', alpha=0.8,
-                           linewidths=0, edgecolors='grey',
-                           ax=ax, nodelist=children)
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='pink',
+                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+                           ax=None, nodelist=children)
     # draw parent nodes
-    nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
-                           node_color='blue', node_shape='o', alpha=0.8,
-                           linewidths=0, edgecolors='grey',
-                           ax=ax, nodelist=parents)
-    # save figure
-    figure.savefig(Outputfile, bbox_inches = 'tight')
-   
- 
-
-def PlotNetworkDegree(UmiFile, Outputfile, draw_network):
-    '''
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='blue',
+                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+                          ax=None, nodelist=parents)
     
+    return ax
     
+
+
+def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
+    '''
+    (int, int, int, figure_object, str) -> ax object
+    
+    :param columns: Number of columns
+    :param rows: Number of rows
+    :param position: Ax position in figure
+    :param figure: Figure object opened for writing
+    :param UmiFile: Path to json file with umi parent: children relationships
+    
+    Return a ax in figure
     '''
 
+    # add a plot to figure (N row, N column, plot N)
+    ax = figure.add_subplot(Rows, Columns, Position)
+    
     # build network
     G = BuildNetwork(UmiFile)
-
+    
     # make a list of node degree
     degree_sequence = sorted([d for n, d in G.degree()], reverse=True)
     # count nodes with a given degree
@@ -1380,51 +1380,9 @@ def PlotNetworkDegree(UmiFile, Outputfile, draw_network):
     degree = sorted(degree_count.keys())
     count = [degree_count[i] for i in degree]
     
-    # clear previous axes
-    plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)    
-    
-    # create figure
-    figure = plt.figure(1, figsize = (9, 6))
-    # create ax instance in figure
-    ax1 = figure.add_subplot(1, 1, 1)
-    ax1.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
+    # plot network degree
+    ax.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
                
-    # draw graph in inset
-    if draw_network == True:
-        # coordinates in unitless percentages of the figure size. (0,0 is bottom left)
-        left, bottom, width, height = [0.4, 0.4, 0.7, 0.3]
-        plt.axes([left, bottom, width, height])
-        
-        # build network
-        G = BuildNetwork(UmiFile)
-        # make a list of (parent, child) umi sequences
-        L = ParentToChildren(UmiFile)
-        # build directed network
-        G = nx.DiGraph()
-        # load data into network
-        G.add_edges_from(L)
-        # make a list of parent nodes
-        parents = [i[0] for i in L]
-        # make a list of children nodes
-        children = [i[1] for i in L]
-        AllNodes = list(set(parents + children))
-        # set up same network layout for all drawings
-        Pos = nx.spring_layout(G)
-        plt.axis('off')
-        # draw edges    
-        nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey',
-                           style='solid', alpha=0.4, ax=None, arrows=False,
-                           node_size=5, nodelist=AllNodes, node_shape='o')
-        # draw children nodes
-        nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
-                           node_color='pink', node_shape='o', alpha=0.4,
-                           linewidths=0, edgecolors='grey', ax=None, nodelist=children)
-        # draw parent nodes
-        nx.draw_networkx_nodes(G, pos = Pos, with_labels=False, node_size=5,
-                           node_color='blue', node_shape='o', alpha=0.4,
-                           linewidths=0, edgecolors='grey', ax=None, nodelist=parents)
-       
     # limit y axis
     YMax = max(count)
     YMax = float(YMax + (YMax * 10 /100))
@@ -1473,20 +1431,55 @@ def PlotNetworkDegree(UmiFile, Outputfile, draw_network):
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
-    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
+    return ax
     
     
+def PlotNetwork(UmiFile, Outputfile):
+    '''
+    (str) -> None
+    
+    (str, str) -> None
+    
+    :param UmiFile: Path to json file with umi parent: children relationships
+    :param Outputfile: Name of output figure file
+    
+    Plot the entire network of umis parent-children relationships  
+    '''
 
+    # create an ax instance in a figure
+    # clear previous axes
+    plt.clf()
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add an ax instance 
+    ax = CreateNetworkAx(1, 1, 1, figure, UmiFile)
+    # save figure
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+
+
+def PlotNetworkDegree(UmiFile, Outputfile):
+    '''
+    (str, str) -> None
     
+    :param UmiFile: Path to json file with umi parent: children relationships
+    :param Outputfile: Name of output figure file
     
+    Plot an histogram of network degree and the entire network of umis parent-children relationships    
+    '''
+
+    # clear previous axes
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)    
     
-    
-    
-    
-    
-    
-    
-    
-    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # plot network degree
+    ax1 = CreateDegreeAx(1, 2, 1, figure, UmiFile)
+    # plot the network
+    ax2 = CreateNetworkAx(1, 2, 2, figure, UmiFile)
+    # save figure    
+    plt.tight_layout()
+    figure.savefig(Outputfile, bbox_inches = 'tight')
     
     
