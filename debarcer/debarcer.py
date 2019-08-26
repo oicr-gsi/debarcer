@@ -11,8 +11,7 @@ from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion
 
-from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq
-
+from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork, PlotNetworkDegree
 
 import matplotlib.pyplot as plt
 
@@ -407,9 +406,11 @@ def generate_plots(args):
     
     # get subdirectories
     ConsDir = os.path.join(args.directory, 'Consfiles')
-    if os.path.isdir(ConsDir) == False:
-        raise ValueError('ERR: Missing ConsFiles directory with consensus files')
-    
+    UmiDir = os.path.join(args.directory, 'Umifiles')
+    for i in [ConsDir, UmiDir]:
+        if os.path.isdir(i) == False:
+            raise ValueError('ERR: Missing {0} directory with consensus files'.format(i))
+       
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
     if os.path.isdir(FigDir) == False:
@@ -417,7 +418,9 @@ def generate_plots(args):
         
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
-       
+    # make a list of umi files
+    UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5] == '.umis']
+        
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -450,6 +453,21 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         PlotConsDepth(filename, Colors, Outputfile)
         
+    # plot network and network degree for each umi file/region
+    for filename in UmiFiles:
+        # get region from file name
+        region = os.path.basename(filename)
+        region = ':'.join(list(map(lambda x: x.strip(), region.split(':'))))
+        plt.clf(), plt.cla()
+        # plot network
+        Outputfile = 'UMI_network_{0}.{1}'.format(region, args.extension)
+        PlotNetwork(filename, Outputfile)
+        
+        # plot network and degree
+        plt.clf(), plt.cla()
+        Outputfile = 'UMI_network_degree_{0}.{1}'.format(region, args.extension)        
+        PlotNetworkDegree(filename, Outputfile)
+            
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
