@@ -409,8 +409,18 @@ def generate_plots(args):
     UmiDir = os.path.join(args.directory, 'Umifiles')
     for i in [ConsDir, UmiDir]:
         if os.path.isdir(i) == False:
+            
+            print('missing {0}'.format(i))
+            
+            
             raise ValueError('ERR: Missing {0} directory with consensus files'.format(i))
-       
+    
+    
+    
+    
+    
+    
+    
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
     if os.path.isdir(FigDir) == False:
@@ -421,6 +431,14 @@ def generate_plots(args):
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5] == '.umis']
         
+    
+    
+    print(UmiFiles)
+    
+    
+    
+    
+    
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
