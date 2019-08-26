@@ -409,17 +409,7 @@ def generate_plots(args):
     UmiDir = os.path.join(args.directory, 'Umifiles')
     for i in [ConsDir, UmiDir]:
         if os.path.isdir(i) == False:
-            
-            print('missing {0}'.format(i))
-            
-            
             raise ValueError('ERR: Missing {0} directory with consensus files'.format(i))
-    
-    
-    
-    
-    
-    
     
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
@@ -429,16 +419,8 @@ def generate_plots(args):
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
     # make a list of umi files
-    UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5] == '.umis']
-        
-    
-    
-    print(UmiFiles)
-    
-    
-    
-    
-    
+    UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
+      
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -473,11 +455,6 @@ def generate_plots(args):
         
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
-        
-        print(filename)
-        print('plotting network')
-        
-        
         # get region from file name
         region = os.path.basename(filename)
         region = ':'.join(list(map(lambda x: x.strip(), region.split(':'))))
@@ -486,7 +463,6 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_network_{0}.{1}'.format(region, args.extension))
         PlotNetwork(filename, Outputfile)
         
-        print('plotting degree')
         # plot network and degree
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
