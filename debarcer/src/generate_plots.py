@@ -1278,11 +1278,6 @@ def BuildNetwork(UmiFile):
     return G
 
 
-
-
-##############
-
-
 def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     '''
     (int, int, int, figure_object, str) -> ax object
@@ -1331,8 +1326,8 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
        
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=False, top=False,
-                    right=False, left=False, labelbottom=False, labelright=False,
-                    colors = 'black', labelsize = 12, direction = 'out')  
+                    right=False, left=False, labelleft=False, labelbottom=False,
+                    labelright=False, colors = 'black', labelsize = 12, direction = 'out')  
     
     # set up same network layout for all drawings
     Pos = nx.spring_layout(G)
@@ -1454,6 +1449,7 @@ def PlotNetwork(UmiFile, Outputfile):
     figure = plt.figure(1, figsize = (9, 6))
     # add an ax instance 
     ax = CreateNetworkAx(1, 1, 1, figure, UmiFile)
+    plt.axis('off')
     # save figure
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
@@ -1475,9 +1471,9 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
     # plot network degree
-    ax1 = CreateDegreeAx(1, 2, 1, figure, UmiFile)
+    ax1 = CreateDegreeAx(2, 1, 1, figure, UmiFile)
     # plot the network
-    ax2 = CreateNetworkAx(1, 2, 2, figure, UmiFile)
+    ax2 = CreateNetworkAx(2, 1, 2, figure, UmiFile)
     # save figure    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
