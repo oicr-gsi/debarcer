@@ -455,17 +455,23 @@ def generate_plots(args):
         
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
+        
+        print(filename)
+        print('plotting network')
+        
+        
         # get region from file name
         region = os.path.basename(filename)
         region = ':'.join(list(map(lambda x: x.strip(), region.split(':'))))
         plt.clf(), plt.cla()
         # plot network
-        Outputfile = 'UMI_network_{0}.{1}'.format(region, args.extension)
+        Outputfile = os.path.join(FigDir, 'UMI_network_{0}.{1}'.format(region, args.extension))
         PlotNetwork(filename, Outputfile)
         
+        print('plotting degree')
         # plot network and degree
         plt.clf(), plt.cla()
-        Outputfile = 'UMI_network_degree_{0}.{1}'.format(region, args.extension)        
+        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile)
             
     # plot children to parent umi count ratio
