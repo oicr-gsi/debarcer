@@ -457,7 +457,9 @@ def generate_plots(args):
     for filename in UmiFiles:
         # get region from file name
         region = os.path.basename(filename)
-        region = ':'.join(list(map(lambda x: x.strip(), region.split(':'))))
+        region = region[:-5]
+        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
+        
         plt.clf(), plt.cla()
         # plot network
         Outputfile = os.path.join(FigDir, 'UMI_network_{0}.{1}'.format(region, args.extension))
