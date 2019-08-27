@@ -1360,7 +1360,7 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     # build directed network
     G = nx.DiGraph()
     # load data into network
-    G.add_edges_from(L)
+    G.add_weighted_edges_from(L)
 
     # make a list of parent nodes
     parents = [i[0] for i in L]
