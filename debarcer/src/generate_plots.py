@@ -16,7 +16,7 @@ from matplotlib import rc
 import os
 import numpy as np
 from scipy import stats
-from src.utilities import FormatRegion
+from src.utilities import FormatRegion, edit_distance
 import networkx as nx
 import json
 import collections
@@ -1224,6 +1224,61 @@ def PlotParentFreq(directory, Color, Outputfile):
 
 
 
+#def ParentToChildren(UmiFile):
+#    '''
+#    (str) -> list
+#    
+#    :param UmiFile: Path to file with umi sequences and child to parent relationships
+#    
+#    Return a list of tuples with (parent, child) umi sequences
+#    
+#    Precondition: the umi file is not merged
+#    '''
+#    
+#    
+#    if os.path.isfile(UmiFile) == False:
+#        raise ValueError('ERR: Invalid path to umi file {0}'.format(UmiFile))
+#        
+#    # load umi file with umi sequences and chil to parent relations
+#    infile = open(UmiFile)
+#    data = json.load(infile)
+#    infile.close()
+#    
+#    # create a dict {parent: [children]}
+#    D = {}
+#    for i in data:
+#        parent = data[i]['parent']
+#        if parent not in D:
+#            D[parent] = []
+#        D[parent].append(i)
+#    
+#    # make a list of (parent, child)
+#    L = []
+#    for i in D:
+#        for j in D[i]:
+#            L.append((i, j))
+#    return L
+
+
+#def BuildNetwork(UmiFile):
+#    '''
+#    (str) -> networkx object
+#    
+#    :param UmiFile:  Path to file with umi sequences and child to parent relationships 
+#    
+#    Return a networkx object
+#    '''
+#    
+#    # make a list of (parent, child) umi sequences
+#    L = ParentToChildren(UmiFile)
+#    # build directed network
+#    G = nx.DiGraph()
+#    # load data into network
+#    G.add_edges_from(L)
+#    return G
+
+
+
 def ParentToChildren(UmiFile):
     '''
     (str) -> list
@@ -1252,11 +1307,13 @@ def ParentToChildren(UmiFile):
             D[parent] = []
         D[parent].append(i)
     
-    # make a list of (parent, child)
+    # make a list of (parent, child, distance)
     L = []
     for i in D:
         for j in D[i]:
-            L.append((i, j))
+            # compute distance between parent and child umi
+            d = edit_distance(i, j)
+            L.append((i, j, d))
     return L
 
 
@@ -1271,10 +1328,11 @@ def BuildNetwork(UmiFile):
     
     # make a list of (parent, child) umi sequences
     L = ParentToChildren(UmiFile)
+    
     # build directed network
     G = nx.DiGraph()
     # load data into network
-    G.add_edges_from(L)
+    G.add_weighted_edges_from(L)
     return G
 
 
