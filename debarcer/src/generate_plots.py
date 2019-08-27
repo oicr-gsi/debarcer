@@ -1223,62 +1223,6 @@ def PlotParentFreq(directory, Color, Outputfile):
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
-
-#def ParentToChildren(UmiFile):
-#    '''
-#    (str) -> list
-#    
-#    :param UmiFile: Path to file with umi sequences and child to parent relationships
-#    
-#    Return a list of tuples with (parent, child) umi sequences
-#    
-#    Precondition: the umi file is not merged
-#    '''
-#    
-#    
-#    if os.path.isfile(UmiFile) == False:
-#        raise ValueError('ERR: Invalid path to umi file {0}'.format(UmiFile))
-#        
-#    # load umi file with umi sequences and chil to parent relations
-#    infile = open(UmiFile)
-#    data = json.load(infile)
-#    infile.close()
-#    
-#    # create a dict {parent: [children]}
-#    D = {}
-#    for i in data:
-#        parent = data[i]['parent']
-#        if parent not in D:
-#            D[parent] = []
-#        D[parent].append(i)
-#    
-#    # make a list of (parent, child)
-#    L = []
-#    for i in D:
-#        for j in D[i]:
-#            L.append((i, j))
-#    return L
-
-
-#def BuildNetwork(UmiFile):
-#    '''
-#    (str) -> networkx object
-#    
-#    :param UmiFile:  Path to file with umi sequences and child to parent relationships 
-#    
-#    Return a networkx object
-#    '''
-#    
-#    # make a list of (parent, child) umi sequences
-#    L = ParentToChildren(UmiFile)
-#    # build directed network
-#    G = nx.DiGraph()
-#    # load data into network
-#    G.add_edges_from(L)
-#    return G
-
-
-
 def ParentToChildren(UmiFile):
     '''
     (str) -> list
@@ -1351,13 +1295,9 @@ def BuildNetwork(UmiFile):
     
     # make a list of (parent, child) umi sequences
     L = ParentToChildren(UmiFile)
-    
     # build directed network
     G = nx.DiGraph()
     G = LoadDataToNetwork(G, L)
-      
-    # load data into network
-    #G.add_weighted_edges_from(L)
     return G
 
 
@@ -1380,21 +1320,6 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     # build network
     G = BuildNetwork(UmiFile)
     
-    # make a list of (parent, child) umi sequences
-    #L = ParentToChildren(UmiFile)
-    
-    
-    # build directed network
-    #G = nx.DiGraph()
-    # load data into network
-    #G.add_weighted_edges_from(L)
-
-#    # make a list of parent nodes
-#    parents = [i[0] for i in L]
-#    # make a list of children nodes
-#    children = [i[1] for i in L]
-
-
     # convert the graph to a dict
     d = dict(G.adjacency())
     
@@ -1434,22 +1359,6 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     
     # set up same network layout for all drawings
     Pos = nx.spring_layout(G)
-#    # draw edges    
-#    nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
-#                           alpha=0.4, ax=ax, arrows=False, node_size=5,
-#                           nodelist=AllNodes, node_shape='o')
-#    # draw children nodes
-#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='pink',
-#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-#                           ax=None, nodelist=children)
-#    # draw parent nodes
-#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='blue',
-#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-#                          ax=None, nodelist=parents)
-
-
-
-
     # draw edges    
     nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
                            alpha=0.4, ax=ax, arrows=False, node_size=5,
