@@ -1317,6 +1317,29 @@ def ParentToChildren(UmiFile):
     return L
 
 
+
+def LoadDataToNetwork(G, L):
+    '''
+    (networkx.classes.digraph.DiGraph, list) -> networkx.classes.digraph.DiGraph
+    
+    :param G: Directed graph networkx object 
+    :param L: List of nodes and edges
+    
+    Return the network with nodes and edges
+    '''
+    
+    # loop over 
+    for i in L:
+        # do not add self-edges
+        if i[-1] == 0:
+            # distance is 0, add node but no edge 
+            G.add_node(i[0])
+        else:
+            # add edge connection parent to child umi
+            G.add_edge(i[0], i[1])
+    return G
+    
+
 def BuildNetwork(UmiFile):
     '''
     (str) -> networkx object
@@ -1331,8 +1354,10 @@ def BuildNetwork(UmiFile):
     
     # build directed network
     G = nx.DiGraph()
+    G = LoadDataToNetwork(G, L)
+      
     # load data into network
-    G.add_weighted_edges_from(L)
+    #G.add_weighted_edges_from(L)
     return G
 
 
@@ -1356,18 +1381,38 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     G = BuildNetwork(UmiFile)
     
     # make a list of (parent, child) umi sequences
-    L = ParentToChildren(UmiFile)
+    #L = ParentToChildren(UmiFile)
+    
+    
     # build directed network
-    G = nx.DiGraph()
+    #G = nx.DiGraph()
     # load data into network
-    G.add_weighted_edges_from(L)
+    #G.add_weighted_edges_from(L)
 
-    # make a list of parent nodes
-    parents = [i[0] for i in L]
-    # make a list of children nodes
-    children = [i[1] for i in L]
+#    # make a list of parent nodes
+#    parents = [i[0] for i in L]
+#    # make a list of children nodes
+#    children = [i[1] for i in L]
+
+
+    # convert the graph to a dict
+    d = dict(G.adjacency())
+    
+    # make lists of parents, children and nodes without edges 
+    singles, parents, children = [], [], []
+    for i in d:
+        # check if node has edges
+        if len(d[i]) == 0:
+            # no edge
+            singles.append(i)
+    else:
+        # add parent and children
+        parents.append(i)
+        for j in d[i]:
+            children.append(j)
+    
     # make list of all nodes
-    AllNodes = list(set(parents + children))
+    AllNodes = list(set(parents + children + singles))
         
     # write title
     ax.set_title('Parent-Child UMI network', size = 14)
@@ -1389,19 +1434,39 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     
     # set up same network layout for all drawings
     Pos = nx.spring_layout(G)
+#    # draw edges    
+#    nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
+#                           alpha=0.4, ax=ax, arrows=False, node_size=5,
+#                           nodelist=AllNodes, node_shape='o')
+#    # draw children nodes
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='pink',
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                           ax=None, nodelist=children)
+#    # draw parent nodes
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='blue',
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                          ax=None, nodelist=parents)
+
+
+
+
     # draw edges    
     nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
                            alpha=0.4, ax=ax, arrows=False, node_size=5,
                            nodelist=AllNodes, node_shape='o')
     # draw children nodes
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='pink',
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#f8ecf8',
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                           ax=None, nodelist=children)
+                           ax=ax, nodelist=children)
     # draw parent nodes
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='blue',
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#ce85e0',
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                          ax=None, nodelist=parents)
-    
+                          ax=ax, nodelist=parents)
+    # draw nodes without edges
+    # draw parent nodes
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#b54dff',
+                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+                          ax=ax, nodelist=parents)
     return ax
     
 
