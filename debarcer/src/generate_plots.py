@@ -1457,16 +1457,16 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     # draw children nodes
     nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#f8ecf8',
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                           ax=ax, nodelist=children)
+                           ax=None, nodelist=children)
     # draw parent nodes
     nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#ce85e0',
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                          ax=ax, nodelist=parents)
+                          ax=None, nodelist=parents)
     # draw nodes without edges
     # draw parent nodes
     nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#b54dff',
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                          ax=ax, nodelist=parents)
+                          ax=None, nodelist=parents)
     return ax
     
 
