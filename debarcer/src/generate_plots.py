@@ -1411,8 +1411,8 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
         for j in d[i]:
             children.append(j)
     
-    # make list of all nodes
-    AllNodes = list(set(parents + children + singles))
+    # make list of all nodes with edges
+    AllNodes = list(set(parents + children))
         
     # write title
     ax.set_title('Parent-Child UMI network', size = 14)
