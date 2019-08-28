@@ -136,7 +136,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     Write new reheadered fastq file(s) prefix.umi.reheadered_RN.fastq.gz in outdir
     according to settings in prepfile corresponding to prename 
-    Returns a tuple with the counts of reads with correct, incorrect umi/spacer configuration and total
+    Returns a tuple with read counts (correct, incorrect umi/spacer configuration, total)
+    and a list of all umi sequences (with correct umi/spacer configuration)
     
     Pre-condition: fastqs have the same number of reads and files are in sync
     """
@@ -224,7 +225,10 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     # count all reads and reads with incorrect and correct umi/spacer configuration
     Total, Correct, Incorrect = 0
-        
+    # Record all umi sequences with correct umi/spacer configuration    
+    UmiSequences = []
+       
+    
     # loop over iterator with slices of 4 read lines from each line
     for reads in I:
         # count total reads
@@ -241,6 +245,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         
         # count number of reads with correct umi/spacer configuration
         Correct += 1
+        
+        # collect umi sequences
+        UmiSequences.extend(umis)
         
         # edit read names and add umi
         # make parallel lists with begining and end of read name from r1, and from r2 or r3
@@ -277,7 +284,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         
     print("Complete. Output written to {}.".format(outdir))
 
-    return Correct, Incorrect, Total
+    return Correct, Incorrect, Total, UmiSequences
 
 
 if __name__ == '__main__':

@@ -75,8 +75,8 @@ def preprocess_reads(args):
                 sys.exit(1)
     
     # reheader fastqs and add umi in new fastqs header
-    # get the number of correct, incorrect and total reads
-    Correct, Incorrect, Total = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
+    # get the number of correct, incorrect and total reads and list of umi sequences
+    Correct, Incorrect, Total, UmiSequences = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
 	 
     # create subdirectoy structure
     StatsDir = os.path.join(outdir, 'Stats')
@@ -90,6 +90,18 @@ def preprocess_reads(args):
     newfile.write('\t'.join(['Total', 'Correct', 'Incorrect']) + '\n')
     newfile.write('\t'.join(list(map(lambda x: str(x), [Total, Correct, Incorrect]))) + '\n')
     newfile.close()
+
+    # write table with umi sequences counts
+    D = {}
+    for i in UmiSequences:
+        D[i] = UmiSequences.count(i)
+    Outpufile = os.path.join(StatsDir, 'Umi_counts.txt')
+    newfile = open(Outpufile, 'w')
+    newfile.write('\t'.join(['Umi', 'Count']) + '\n')
+    for i in D:
+        newfile.write('\t'.join([i, str(D[i])]) + '\n')
+    newfile.close()
+
 
 
 def group_umis(args):
