@@ -1419,7 +1419,7 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     
     #cax = divider.append_axes("bottom", size="5%", pad=0.05)
     
-    cax = divider.append_axes("bottom", size=width, pad=0.05)
+    cax = divider.append_axes("bottom", size=10, pad=0.05)
     
     
     
