@@ -1369,12 +1369,34 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     # draw nodes without edges
     nodelist = sorted(degree.keys())
     node_color = [degree[i] for i in nodelist]
-    nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
+    
+    
+    # use reversed purple color map
+    cmap=plt.cm.Purples_r
+    # extract all colors from the .jet map
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    # create the new map
+    cmap = mpl.colors.LinearSegmentedColormap.from_list('Custom cmap', cmaplist, cmap.N)
+    # define the bins and normalize
+    bounds = np.linspace(node_color[0], node_color[-1], node_color[-1] + 1)
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+    
+
+    
+    
+    
+    
+    
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.3, linewidths=0, edgecolors='grey',
-                          ax=None, nodelist=nodelist, cmap=plt.cm.Purples_r)
-    
-    plt.colorbar(nodes)
-    
+                          ax=None, nodelist=nodelist, cmap=cmap, norm=norm)
+
+    # create a second axes for the colorbar
+    #ax2 = figure.add_axes([0.95, 0.1, 0.03, 0.8])
+    cb = plt.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm,
+    spacing='proportional', ticks=bounds, boundaries=bounds, format='%1i')
+    #ax2.set_ylabel('Very custom cbar [-]', size=12)
+
     return ax
 
 
