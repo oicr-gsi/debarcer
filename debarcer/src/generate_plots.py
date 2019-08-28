@@ -20,6 +20,9 @@ from src.utilities import FormatRegion, edit_distance
 import networkx as nx
 import json
 import collections
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
 
 #### functions for plotting coverage ####
 
@@ -1403,9 +1406,16 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
 #    #ax2.set_ylabel('Very custom cbar [-]', size=12)
 
 
-    cbar = plt.colorbar(nodes, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
-    cbar.ax.set_xticklabels(list(map(lambda x: str(x), [i for i in range(0, max(node_color)+1)]))) 
+    
 
+#    cbar = plt.colorbar(nodes, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
+#    cbar.ax.set_xticklabels(list(map(lambda x: str(x), [i for i in range(0, max(node_color)+1)]))) 
+
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("bottom", size="5%", pad=0.05)
+    figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
+    
     return ax
 
 
