@@ -20,7 +20,7 @@ from src.utilities import FormatRegion, edit_distance
 import networkx as nx
 import json
 import collections
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 
 
 
@@ -1413,8 +1413,17 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
 
 
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    cb = figure.colorbar(nodes, aspect=15, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
+    aspect=20
+    width = axes_size.AxesY(ax, aspect=1/aspect)
+    
+    
+    #cax = divider.append_axes("bottom", size="5%", pad=0.05)
+    
+    cax = divider.append_axes("bottom", size=width, pad=0.05)
+    
+    
+    
+    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
     
     #cb = plt.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
     
