@@ -1369,68 +1369,25 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
                            alpha=0.4, ax=ax, arrows=False, node_size=5,
                            nodelist=AllNodes, node_shape='o')
-    # draw nodes without edges
+    # draw all nodes, color according to degree
     nodelist = sorted(degree.keys())
     node_color = [degree[i] for i in nodelist]
     
     # use reversed purple color map
+    # limit color map to the highest degree
     cmap=plt.get_cmap('Purples_r', max(node_color))
     
-      
-    
-    #cmap=plt.cm.Purples_r
-    
-    
-#    # extract all colors from the .jet map
-#    cmaplist = [cmap(i) for i in range(cmap.N)]
-#    # create the new map
-#    cmap = mpl.colors.LinearSegmentedColormap.from_list('Custom cmap', cmaplist, cmap.N)
-#    # define the bins and normalize
-#    bounds = np.linspace(node_color[0], node_color[-1], node_color[-1] + 1)
-#    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
-#    
+    nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5,
+                                   node_color=node_color, node_shape='o', alpha=0.3,
+                                   linewidths=0, edgecolors='grey', ax=None,
+                                   nodelist=nodelist, cmap=cmap)
 
-    
-    
-    
-    
-    
-    nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
-                           node_shape='o', alpha=0.3, linewidths=0, edgecolors='grey',
-                          ax=None, nodelist=nodelist, cmap=cmap)
-
-#    # create a second axes for the colorbar
-#    #ax2 = figure.add_axes([0.95, 0.1, 0.03, 0.8])
-#    cb = plt.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm,
-#    spacing='proportional', ticks=bounds, boundaries=bounds, format='%1i')
-#    #ax2.set_ylabel('Very custom cbar [-]', size=12)
-
-
-    
-
-#    cbar = plt.colorbar(nodes, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
-#    cbar.ax.set_xticklabels(list(map(lambda x: str(x), [i for i in range(0, max(node_color)+1)]))) 
-
-
+    # add discrete color bar for node degree
     divider = make_axes_locatable(ax)
-    aspect=20
-    width = axes_size.AxesX(ax, aspect=1/aspect)
-    
-    
-    #cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    
-    cax = divider.append_axes("bottom", size=10, pad=0.05)
-    
-    
-    
-    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
-    
-    #cb = plt.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
-    
-    
+    cax = divider.append_axes("bottom", size="5%", pad=0.05)
+    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+1)], use_gridspec=False)
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
-    
-    
+        
     return ax
 
 
