@@ -1446,24 +1446,35 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
                            alpha=0.4, ax=ax, arrows=False, node_size=5,
                            nodelist=AllNodes, node_shape='o')
-    # draw children nodes
-    nodelist = sorted(children)
-    node_color = [degree[i] for i in nodelist]
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
-                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                           ax=None, nodelist=nodelist, cmap=plt.cm.Reds_r)
-    # draw parent nodes
-    nodelist = sorted(parents)
-    node_color = [degree[i] for i in nodelist]
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
-                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                          ax=None, nodelist=nodelist, cmap=plt.cm.Blues_r)
+#    # draw children nodes
+#    nodelist = sorted(children)
+#    node_color = [degree[i] for i in nodelist]
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                           ax=None, nodelist=nodelist, cmap=plt.cm.Reds_r)
+#    # draw parent nodes
+#    nodelist = sorted(parents)
+#    node_color = [degree[i] for i in nodelist]
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                          ax=None, nodelist=nodelist, cmap=plt.cm.Blues_r)
+#    # draw nodes without edges
+#    nodelist = sorted(singles)
+#    node_color = [degree[i] for i in nodelist]
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                          ax=None, nodelist=nodelist, cmap=plt.cm.Purples_r)
+#    
     # draw nodes without edges
-    nodelist = sorted(singles)
+    nodelist = sorted(degree.keys())
     node_color = [degree[i] for i in nodelist]
     nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
                           ax=None, nodelist=nodelist, cmap=plt.cm.Purples_r)
+    
+      
+    
+    
     return ax
 
 
