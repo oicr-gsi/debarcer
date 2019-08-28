@@ -1414,7 +1414,9 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
+    cb = figure.colorbar(nodes, shrink=0.8, cax=cax, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
+    cb.set_label('Node degree', size=14, ha='center', color='black')
+    
     
     return ax
 
