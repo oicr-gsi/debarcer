@@ -1369,9 +1369,12 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     # draw nodes without edges
     nodelist = sorted(degree.keys())
     node_color = [degree[i] for i in nodelist]
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
+    nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.3, linewidths=0, edgecolors='grey',
                           ax=None, nodelist=nodelist, cmap=plt.cm.Purples_r)
+    
+    plt.colorbar(nodes)
+    
     return ax
 
 
