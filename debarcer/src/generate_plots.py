@@ -1229,7 +1229,7 @@ def ParentToChildren(UmiFile):
     
     :param UmiFile: Path to file with umi sequences and child to parent relationships
     
-    Return a list of tuples with (parent, child) umi sequences
+    Return a list of tuples with (parent, child. hamming_distance) umi sequences
     
     Precondition: the umi file is not merged
     '''
@@ -1301,6 +1301,85 @@ def BuildNetwork(UmiFile):
     return G
 
 
+#def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
+#    '''
+#    (int, int, int, figure_object, str) -> ax object
+#    
+#    :param columns: Number of columns
+#    :param rows: Number of rows
+#    :param position: Ax position in figure
+#    :param figure: Figure object opened for writing
+#    :param UmiFile: Path to json file with umi parent: children relationships
+#    
+#    Return a ax in figure
+#    '''
+#   
+#    # add a plot to figure (N row, N column, plot N)
+#    ax = figure.add_subplot(Rows, Columns, Position)
+#    
+#    # build network
+#    G = BuildNetwork(UmiFile)
+#    
+#    # convert the graph to a dict
+#    d = dict(G.adjacency())
+#    
+#    # make lists of parents, children and nodes without edges 
+#    singles, parents, children = [], [], []
+#    for i in d:
+#        # check if node has edges
+#        if len(d[i]) == 0:
+#            # no edge
+#            singles.append(i)
+#        else:
+#            # add parent and children
+#            parents.append(i)
+#            for j in d[i]:
+#                children.append(j)
+#    
+#    # make list of all nodes with edges
+#    AllNodes = list(set(parents + children))
+#        
+#    # write title
+#    ax.set_title('Parent-Child UMI network', size = 14)
+#       
+#    # add space between axis and tick labels
+#    ax.yaxis.labelpad = 18
+#    ax.xaxis.labelpad = 18
+#    
+#    # do not show lines around figure  
+#    ax.spines["top"].set_visible(False)    
+#    ax.spines["bottom"].set_visible(False)    
+#    ax.spines["right"].set_visible(False)    
+#    ax.spines["left"].set_visible(False)  
+#       
+#    # do not show ticks
+#    plt.tick_params(axis='both', which='both', bottom=False, top=False,
+#                    right=False, left=False, labelleft=False, labelbottom=False,
+#                    labelright=False, colors = 'black', labelsize = 12, direction = 'out')  
+#    
+#    # set up same network layout for all drawings
+#    Pos = nx.spring_layout(G)
+#    # draw edges    
+#    nx.draw_networkx_edges(G, pos=Pos, width=0.7, edge_color='grey', style='solid',
+#                           alpha=0.4, ax=ax, arrows=False, node_size=5,
+#                           nodelist=AllNodes, node_shape='o')
+#    # draw children nodes
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#ce85e0',
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                           ax=None, nodelist=children)
+#    # draw parent nodes
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#b54dff',
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                          ax=None, nodelist=parents)
+#    # draw nodes without edges
+#    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='blue',
+#                           node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
+#                          ax=None, nodelist=singles)
+#    return ax
+    
+
+#################################
+
 def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     '''
     (int, int, int, figure_object, str) -> ax object
@@ -1322,6 +1401,10 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     
     # convert the graph to a dict
     d = dict(G.adjacency())
+
+
+    # get degree for all nodes
+    degree = dict(G.degree())
     
     # make lists of parents, children and nodes without edges 
     singles, parents, children = [], [], []
@@ -1364,20 +1447,27 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
                            alpha=0.4, ax=ax, arrows=False, node_size=5,
                            nodelist=AllNodes, node_shape='o')
     # draw children nodes
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#ce85e0',
+    nodelist = sorted(children)
+    node_color = [degree[i] for i in nodelist]
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                           ax=None, nodelist=children)
+                           ax=None, nodelist=nodelist, cmap=plt.cm.Reds_r)
     # draw parent nodes
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='#b54dff',
+    nodelist = sorted(parents)
+    node_color = [degree[i] for i in nodelist]
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                          ax=None, nodelist=parents)
+                          ax=None, nodelist=nodelist, cmap=plt.cm.Blues_r)
     # draw nodes without edges
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color='blue',
+    nodelist = sorted(singles)
+    node_color = [degree[i] for i in nodelist]
+    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.4, linewidths=0, edgecolors='grey',
-                          ax=None, nodelist=singles)
+                          ax=None, nodelist=nodelist, plt.cm.Purples_r)
     return ax
-    
 
+
+###########################
 
 def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     '''
