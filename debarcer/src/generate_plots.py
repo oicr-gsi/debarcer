@@ -1392,7 +1392,7 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     
     
     
-    nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
+    nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5, node_color=node_color,
                            node_shape='o', alpha=0.3, linewidths=0, edgecolors='grey',
                           ax=None, nodelist=nodelist, cmap=cmap)
 
@@ -1403,7 +1403,7 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
 #    #ax2.set_ylabel('Very custom cbar [-]', size=12)
 
 
-    plt.colorbar(cmap=cmap)
+    plt.colorbar(nodes)
 
 
     return ax
