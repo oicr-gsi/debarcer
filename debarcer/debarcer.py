@@ -40,7 +40,7 @@ def preprocess_reads(args):
     '''
     (list) -> None
     Preprocesses fastq files by removing UMIs from reads, appending them to 
-    the read names and writing new fastqs 
+    the read names and writing new fastqs and also write QC reports in a Stats directory
 	 
     :param outdir: Directory where new fastqs are written. From command or config
     :param read1: Path to first FASTQ file
@@ -75,10 +75,22 @@ def preprocess_reads(args):
                 sys.exit(1)
     
     # reheader fastqs and add umi in new fastqs header
-    reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
+    # get the number of correct, incorrect and total reads
+    Correct, Incorrect, Total = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
 	 
+    # create subdirectoy structure
+    StatsDir = os.path.join(outdir, 'Stats')
+    if os.path.isdir(StatsDir) == False:
+        os.mkdir(StatsDir)
     
-    
+    # write summary report
+    Outpufile = os.path.join(StatsDir, 'Read_Info.txt')
+    newfile = open(Outpufile, 'w')
+    newfile.write('# Read counts with correct/incorrect umi and spacer configuration\n')
+    newfile.write('\t'.join(['Total', 'Correct', 'Incorrect']) + '\n')
+    newfile.write('\t'.join(list(map(lambda x: str(x), [Total, Correct, Incorrect]))) + '\n')
+    newfile.close()
+
 
 def group_umis(args):
     '''

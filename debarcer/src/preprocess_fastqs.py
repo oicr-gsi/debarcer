@@ -125,7 +125,7 @@ def extract_prefix_from_filename(fastqfile):
 
 def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     """
-    (str, str, str, str, str, str, str) -> None
+    (str, str, str, str, str, str, str) -> tuple
     :param r1_file: Path to first FASTQ file
     :param prepname: Name of the library preparation
     :param prepfile: Path to the library preparation ini file
@@ -136,7 +136,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     Write new reheadered fastq file(s) prefix.umi.reheadered_RN.fastq.gz in outdir
     according to settings in prepfile corresponding to prename 
-    Pre-condition: fasqs have the same number of reads and files are in sync
+    Returns a tuple with the counts of reads with correct, incorrect umi/spacer configuration and total
+    
+    Pre-condition: fastqs have the same number of reads and files are in sync
     """
     
     # check if prefix provided   
@@ -219,16 +221,26 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         I =  zip(getread(fastqs[0]), getread(fastqs[1]))
     elif len(fastqs) == 1:
         I =  zip(getread(fastqs[0]))
+    
+    # count all reads and reads with incorrect and correct umi/spacer configuration
+    Total, Correct, Incorrect = 0
         
     # loop over iterator with slices of 4 read lines from each line
     for reads in I:
+        # count total reads
+        Total += 1
         # extract umi sequences from reads
         # make a list of read sequences
         readseqs = [i[1] for i in reads]
         umis = extract_umis(readseqs, umi_locs, umi_lens)
         # skip reads with spacer in wrong position
         if spacer == True and correct_spacer(readseqs, umis, spacer_seq) == False:
+            # count reads with incorrect umi/spacer configuration
+            Incorrect += 1
             continue
+        
+        # count number of reads with correct umi/spacer configuration
+        Correct += 1
         
         # edit read names and add umi
         # make parallel lists with begining and end of read name from r1, and from r2 or r3
@@ -264,6 +276,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         i.close()
         
     print("Complete. Output written to {}.".format(outdir))
+
+    return Correct, Incorrect, Total
 
 
 if __name__ == '__main__':
