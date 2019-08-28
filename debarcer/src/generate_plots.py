@@ -1403,8 +1403,8 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
 #    #ax2.set_ylabel('Very custom cbar [-]', size=12)
 
 
-    cbar = plt.colorbar(nodes, orientation = 'horizontal', ticks=list(map(lambda x: x/10, node_color)), use_gridspec=False)
-    cbar.ax.set_xticklabels(list(map(lambda x: str(x), node_color))) 
+    cbar = plt.colorbar(nodes, orientation = 'horizontal', ticks=[i for i in range(0, max(node_color)+1)], use_gridspec=False)
+    cbar.ax.set_xticklabels(list(map(lambda x: str(x), [i for i in range(0, max(node_color)+1)]))) 
 
     return ax
 
