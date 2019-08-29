@@ -1520,17 +1520,16 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     # save figure    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
 
 
-def PlotUMiFrequency(Datafile, Outputfile):
+
+def GetUmiFreqFromPreprocessing(Datafile):
     '''
-    (str, str) -> None
+    (str) -> dict
     
-    :param Datafile: Path to file with UMI counts
-    :param Outputfile: Name of output figure file
+    :param Datafile: Path to file with UMI counts generated during pre-preprocessing
     
-    Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
+    Returns a dictionary of umi occurence: counts
     '''
     
     # get the umi count from the data file
@@ -1551,12 +1550,74 @@ def PlotUMiFrequency(Datafile, Outputfile):
             D[i] += 1
         else:
             D[i] = 1
+    return D
+
+
+
+def GetUmiFreqFromGrouping(Datafile, umi_type):
+    '''
+    (str) -> dict
+    
+    :param Datafile: Path to file with UMI counts generated during Grouping
+    
+    Returns a dictionary of umi occurence: counts
+    '''
+
+    infile = open(Datafile)
+    Header = infile.readline().rstrip().split()
+    
+    # make a dict {umi_seq: count}
+    Umis = {}
+    for line in infile:
+        line = line.rstrip()
+        if line != '':
+            line = line.split()
+            # check if record parent or children
+            if line[1] == umi_type:
+                # only consider parent or children
+                umi, count = line[0], int(line[2])
+                if umi not in Umis:
+                    Umis[umi] = count
+                else:
+                    Umis[umi] += count
+            else:
+                # check if record all
+                if umi_type == 'all':
+                    umi, count = line[0], int(line[2])
+                    if umi not in Umis:
+                        Umis[umi] = count
+                    else:
+                        Umis[umi] += count
+    infile.close()
+
+    # create a distribution of umi counts
+    D = {}
+    for i in list(Umis.values()):
+        if i in D:
+            D[i] += 1
+        else:
+            D[i] = 1
+    return D
+
+
+def PlotUMiFrequency(umi_occurence, Outputfile):
+    '''
+    (str, str) -> None
+    
+    :param umi_occurence: Dictionary with umi occurence: counts pairs. values
+    
+    
+    :param Datafile: Path to file with UMI counts
+    :param Outputfile: Name of output figure file
+    
+    Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
+    '''
     
     # plot umi frequency as a bar graph
     # make a sorted list of umi count
-    counts = sorted(D.keys())
+    counts = sorted(umi_occurence.keys())
     # make list of umi count tally sorted by umi count
-    vals = [D[i] for i in counts]
+    vals = [umi_occurence[i] for i in counts]
     
     # clear previous axes
     plt.clf()
