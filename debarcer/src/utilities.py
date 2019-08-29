@@ -8,6 +8,7 @@ Created on Wed Jun 19 10:05:10 2019
 import configparser
 import os
 import itertools
+import numpy as np
 
 def CheckRegionFormat(region):
     '''
@@ -246,3 +247,45 @@ def FormatRegion(ConsFile):
     # adjust end to get region
     region = chromo + ':' + str(start) + '-' + str(end + 1)
     return region
+
+
+def GroupQCWriter(umi_families, Outputfile):
+    '''
+    (dict, str) ->  None
+    
+    :param umi_families: A dictionary with umi information output from get_umi_families fucntion 
+    :param Outputfile: Name of the output file
+    
+    Generates a table with information summarized from the umi data resulting from Grouping
+    '''
+    
+    # change dict to collect umi information per family, using parent as key
+    D = {}
+    for i in umi_families:
+        parent = umi_families[i]['parent']
+        if parent not in D:
+            D[parent] = []
+        D[parent].append({'umi':i, 'positions':umi_families[i]['positions']})
+
+    # write a summary file of UMI relationships
+    newfile = open(Outputfile, 'w')
+    newfile.write('\t'.join(['UMI', 'Type', 'Count', 'Parent', 'Distance', 'Position']) + '\n')
+    for seq in D:
+        for i in range(len(D[seq])):
+            umi = D[seq][i]['umi']
+            # compute hamming distance between i and umi
+            distance = edit_distance(seq, umi)
+            if distance == 0:
+                # umi is parent
+                umi_type = 'parent'
+            else:
+                # umi type is children
+                umi_type = 'children'
+            # count occurence of umi
+            count = sum(list(D[seq][i]['positions'].values()))
+            # position is the median of positions
+            position = np.median(list(map(lambda x: int(x), list(D[seq][i]['positions'].keys()))))
+            # write umi info to file       
+            newfile.write('\t'.join([umi, umi_type, str(count), seq, str(distance), str(position)]) + '\n')   
+    newfile.close()    
+

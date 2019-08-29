@@ -9,8 +9,7 @@ from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, edit_distance
-
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, edit_distance, GroupQCWriter
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork, PlotNetworkDegree, PlotUMiFrequency
 
@@ -174,36 +173,10 @@ def group_umis(args):
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
     
-    # write a summar file of UMI relationships
+    # write a summary file of UMI relationships
+    Outputfile = os.path.join(StatsDir, 'UMI_relationships_{0}.txt'.format(region))
+    GroupQCWriter(umi_families, Outputfile)
     
-    D = {}
-    for i in umi_families:
-        parent = umi_families[i]['parent']
-        if parent not in D:
-            D[parent] = []
-        D[parent].append({'umi':i, 'positions':umi_families[i]['positions']})
-
-    newfile = open(os.path.join(StatsDir, 'UMI_relationships_{0}.txt'.format(region)), 'w')
-    newfile.write('\t'.join(['UMI', 'Type', 'Count', 'Parent', 'Distance', 'Position']) + '\n')
-    for seq in D:
-        for i in range(len(D[seq])):
-            umi = D[seq][i]['umi']
-            # compute hamming distance between i and umi
-            distance = edit_distance(seq, umi)
-            if distance == 0:
-                # umi is parent
-                umi_type = 'parent'
-            else:
-                # umi type is children
-                umi_type = 'children'
-            # count occurence of umi
-            count = sum(list(D[seq][i]['positions'].values()))
-            # position is the median of positions
-            position = np.median(list(map(lambda x: int(x), list(D[seq][i]['positions'].keys()))))
-            # write umi info to file       
-            newfile.write('\t'.join([umi, umi_type, str(count), seq, str(distance), str(position)]) + '\n')   
-    newfile.close()    
-
     print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(DataDir))
     print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(UmiDir))
     print(timestamp() + "UMI grouping complete. QC files written to {}.".format(StatsDir))
