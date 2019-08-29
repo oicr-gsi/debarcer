@@ -9,9 +9,10 @@ from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, edit_distance, GroupQCWriter
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, GroupQCWriter
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
- PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork, PlotNetworkDegree, PlotUMiFrequency
+ PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFreqFromGrouping
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -450,7 +451,9 @@ def generate_plots(args):
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
-      
+    # make a list of files with umi relationships
+    RelFiles = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('UMI_relationships') and i[-4:] == '.txt']
+        
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -458,11 +461,12 @@ def generate_plots(args):
               '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
     
-    
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
+    # get umi occurence counts
+    umi_occurence = GetUmiFreqFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing' + args.extention)
-    PlotUMiFrequency(Inputfile, Outputfile)
+    PlotUMiFrequency(umi_occurence, Outputfile)
         
     # plot coverage
     # clear previous ax instances between plots
@@ -527,14 +531,17 @@ def generate_plots(args):
     PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
     
 
-    
-
-
-
-
-    
-    
-    
+    # plot frequency distributions of umi for each position and umi type
+    for umi_type in ['parent', 'children', 'all']:
+        # loop over files with umi counts and relationships for each region
+        for filename in RelFiles:
+            # get umi occurence for that region and umi_type  
+            umi_occurence = GetUmiFreqFromGrouping(filename, umi_type)
+            plt.clf(), plt.cla()
+            Outputfile = os.path.join(FigDir, 'UMI_occurence_grouping_{0}_{1}' + args.extention)
+            PlotUMiFrequency(umi_occurence, Outputfile)
+            
+   
 if __name__ == '__main__':
         
     ## Argument + config parsing and error handling
