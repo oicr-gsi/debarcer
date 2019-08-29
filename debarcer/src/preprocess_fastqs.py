@@ -224,7 +224,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         I =  zip(getread(fastqs[0]))
     
     # count all reads and reads with incorrect and correct umi/spacer configuration
-    Total, Correct, Incorrect = 0
+    Total, Correct, Incorrect = 0, 0, 0
     # Record all umi sequences with correct umi/spacer configuration    
     UmiSequences = []
        
