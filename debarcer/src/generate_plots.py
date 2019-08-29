@@ -1521,4 +1521,102 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
+
+
+def PlotUMiFrequency(Datafile, Outputfile):
+    '''
+    (str, str) -> None
     
+    :param Datafile: Path to file with UMI counts
+    :param Outputfile: Name of output figure file
+    
+    Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
+    '''
+    
+    # get the umi count from the data file
+    infile = open(Datafile)
+    infile.readline()
+    L = []
+    for line in infile:
+        if line.rstrip() != '':
+            line = line.rstrip().split()
+            count = int(line[1])
+            L.append(count)
+    infile.close()
+    
+    # create a distribution of umi counts
+    D = {}
+    for i in L:
+        if i in D:
+            D[i] += 1
+        else:
+            D[i] = 1
+    
+    # plot umi frequency as a bar graph
+    # make a sorted list of umi count
+    counts = sorted(D.keys())
+    # make list of umi count tally sorted by umi count
+    vals = [D[i] for i in counts]
+    
+    # clear previous axes
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+    
+    # plot data
+    plt.bar(counts, vals, width=0.8, color='pink', edgecolor=['lightgrey'] * len(counts), lw=1)
+    
+    # limit y axis
+    YMax = max(vals)
+    YMax = float(YMax + (YMax * 10 /100))
+    ax.set_ylim([0, YMax])    
+    # set y ticks    
+    if YMax <=50:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
+    elif 50 < YMax <=200:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
+    elif 200 < YMax <=500:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
+    elif 500 < YMax <=1000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
+    elif 1000 < YMax <=2000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
+    elif 2000 < YMax <=5000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
+    elif 5000 < YMax <=10000:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
+    else:
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
+    
+    # set up y axis label and grid
+    ax.set_ylabel('Count', color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('UMI occurence', color = 'black',  size = 14, ha = 'center')
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
+    plt.xticks(counts, list(map(lambda x: str(x), counts)), ha = 'center', rotation = 0, fontsize = 12)
+           
+    # add space between axis and tick labels
+    ax.yaxis.labelpad, ax.xaxis.labelpad = 18, 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    # save figure to file    
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
+    
+   

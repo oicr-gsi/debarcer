@@ -11,7 +11,8 @@ from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion
 
-from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork, PlotNetworkDegree
+from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
+ PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork, PlotNetworkDegree, PlotUMiFrequency
 
 import matplotlib.pyplot as plt
 
@@ -425,13 +426,13 @@ def generate_plots(args):
     :param extension: Figure format. Accepted values: png, pdf, jpeg, tiff
        
     Generate plots in Figures directory
-    
     '''
     
     # get subdirectories
     ConsDir = os.path.join(args.directory, 'Consfiles')
     UmiDir = os.path.join(args.directory, 'Umifiles')
-    for i in [ConsDir, UmiDir]:
+    StatsDir = os.path.join(args.directory, 'Stats')
+    for i in [ConsDir, UmiDir, StatsDir]:
         if os.path.isdir(i) == False:
             raise ValueError('ERR: Missing {0} directory with consensus files'.format(i))
     
@@ -452,6 +453,12 @@ def generate_plots(args):
               '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
     
+    
+    # plot UMI occurence resulting from pre-processing
+    Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
+    Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing' + args.extention)
+    PlotUMiFrequency(Inputfile, Outputfile)
+        
     # plot coverage
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
@@ -513,7 +520,14 @@ def generate_plots(args):
     # plot parent frequencies vs children UMI counts
     plt.clf(), plt.cla()
     PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
-        
+    
+
+    
+
+
+
+
+    
     
     
 if __name__ == '__main__':
