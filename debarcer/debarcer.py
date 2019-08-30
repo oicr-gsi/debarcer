@@ -12,7 +12,7 @@ from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles,
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, GroupQCWriter
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
- PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFreqFromGrouping, PlotUMiFreqDistr
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFreqFromGrouping
 
 import matplotlib.pyplot as plt
 import numpy as np
