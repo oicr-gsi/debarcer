@@ -12,7 +12,7 @@ from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles,
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, GroupQCWriter
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
- PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFreqFromGrouping
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFreqFromGrouping, PlotUMiFreqDistr
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -468,6 +468,12 @@ def generate_plots(args):
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
     PlotUMiFrequency(umi_occurence, Outputfile)
         
+    
+    PlotUMiFreqDistr(Inputfile, os.path.join(FigDir, 'test_reads.' + args.extension))
+    
+    
+    
+    
     # plot coverage
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
