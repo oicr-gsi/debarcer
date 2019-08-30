@@ -538,7 +538,7 @@ def generate_plots(args):
             # get umi occurence for that region and umi_type  
             umi_occurence = GetUmiFreqFromGrouping(filename, umi_type)
             plt.clf(), plt.cla()
-            Outputfile = os.path.join(FigDir, 'UMI_occurence_grouping_{0}_{1}' + args.extention)
+            Outputfile = os.path.join(FigDir, 'UMI_occurence_grouping_{0}_{1}'.format(region, args.extension))
             PlotUMiFrequency(umi_occurence, Outputfile)
             
    
