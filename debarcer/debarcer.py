@@ -466,14 +466,8 @@ def generate_plots(args):
     # get umi occurence counts
     umi_occurence = GetUmiFreqFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
-    PlotUMiFrequency(umi_occurence, Outputfile)
+    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI counts', 'Read depth')
         
-    
-    PlotUMiFreqDistr(Inputfile, os.path.join(FigDir, 'test_reads.' + args.extension))
-    
-    
-    
-    
     # plot coverage
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
