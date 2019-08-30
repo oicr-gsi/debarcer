@@ -465,7 +465,7 @@ def generate_plots(args):
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
     # get umi occurence counts
     umi_occurence = GetUmiFreqFromPreprocessing(Inputfile)
-    Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing' + args.extention)
+    Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing' + args.extension)
     PlotUMiFrequency(umi_occurence, Outputfile)
         
     # plot coverage
