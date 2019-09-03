@@ -116,7 +116,7 @@ def GetThresholds(configfile, parameter, threshold):
         except:
             # check if threshold provided in command
             try:
-                ThresholdVal = float(threshold)
+                ThresholdVal = int(threshold)
             except:
                 # raise error and exit
                 raise ValueError('ERR: Missing setting threshold')
