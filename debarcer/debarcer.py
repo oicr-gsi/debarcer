@@ -570,7 +570,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     g_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
     g_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
-    g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=bool, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
+    g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=bool, default=False, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command
@@ -588,11 +588,9 @@ if __name__ == '__main__':
     c_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
     c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
-    c_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
-                          help='If truncate is True and a region is given,\
+    c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=True, type=bool, help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is True')
-    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', action='store_false',
-                          help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
+    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=True, type=bool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
