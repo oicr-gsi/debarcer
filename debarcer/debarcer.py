@@ -587,7 +587,7 @@ if __name__ == '__main__':
     c_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
     c_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
-    c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
+    c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
     c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=True, type=bool, help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is True')
     c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=True, type=bool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
