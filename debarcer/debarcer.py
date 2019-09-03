@@ -132,7 +132,7 @@ def group_umis(args):
     # create subdirectoy structure
     UmiDir = os.path.join(outdir, 'Umifiles')
     DataDir = os.path.join(outdir, 'Datafiles')
-    StatsDir = os.path.join(args.directory, 'Stats')
+    StatsDir = os.path.join(args.outdir, 'Stats')
     for i in [UmiDir, DataDir, StatsDir]:
         if os.path.isdir(i) == False:
             os.mkdir(i)
