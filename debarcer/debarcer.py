@@ -570,7 +570,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     g_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
     g_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
-    g_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
+    g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=bool, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command
