@@ -247,13 +247,36 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         Regions = []
         for i in os.listdir(DataDir):
             if i.startswith('datafile_') and i[-4:] == '.csv':
+                
+                print('datafile', i[-4:])
+                
                 Regions.append(i[i.index('chr'):-4])
+                print(Regions)
+                
         for i in os.listdir(ConsDir):
             if i[-5:] == '.cons':
+                
+                print('cons', i[-5:])
+                
+                
                 Regions.append(i[:-5])
+                
+                print(Regions)
+                
+                
         for i in os.listdir(UmiDir):
             if i[-5:] == '.umis':
+                
+                
+                print('umis', i[-5:])
+                
+                
                 Regions.append(i[:-5])
+                
+                
+                print(Regions)
+                
+                
         Regions = list(map(lambda x: x.replace(':', '-'), list(set(Regions))))          
         
         # merge datafiles
