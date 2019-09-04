@@ -241,7 +241,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     if merge  == True:
         
         # submit jobs to merge 
-        MergeCmd = '{0} {1} merge -d {2} -dt {3}'
+        MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
 
         # collect regions
         Regions = []
