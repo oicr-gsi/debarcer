@@ -144,7 +144,7 @@ def MergeDataFiles(DataDir):
     newfile = open(MergedFile, 'w')
     newfile.write('\t'.join(Header) + '\n')
     for i in L:
-        newfile.write('\t'.join(i.split()) + '\n')
+        newfile.write('\t'.join(i[-1].split()) + '\n')
     newfile.close()
     
 
