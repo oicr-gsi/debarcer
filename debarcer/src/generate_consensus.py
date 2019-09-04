@@ -380,7 +380,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
     '''
     
     # get the path to the output file
-    OutputFile = os.path.join(outdir, '{}:{}-{}.cons'.format(contig, region_start, region_end))
+    OutputFile = os.path.join(outdir, '{}:{}-{}.cons'.format(contig, region_start + 1, region_end))
     newfile = open(OutputFile, 'w')
 
     Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']

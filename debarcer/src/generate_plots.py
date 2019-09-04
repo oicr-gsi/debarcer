@@ -1600,9 +1600,6 @@ def GetUmiFreqFromPreprocessing(Datafile):
 #    return D
 
 
-####
-    
-
 def GetUmiFamilyFreqFromGrouping(UmiFile):
     '''
     (str) -> dict
@@ -1636,29 +1633,6 @@ def GetUmiFamilyFreqFromGrouping(UmiFile):
     for parent in D:
         for i in D[parent]:
             D[parent][i] = sum(D[parent][i])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#########
-
-
-
-
-
 
 
 def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):

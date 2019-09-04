@@ -107,21 +107,39 @@ def GetThresholds(configfile, parameter, threshold):
     elif parameter in ['percent_ref_threshold', 'percent_allele_threshold']:
         Level = 'REPORT'
         
-    try:
-        config = configparser.ConfigParser()
-        config.read(configfile)
-        ThresholdVal = float(config[Level][parameter])
-    except:
-        # check if threshold privided in command
+    
+    if parameter in ['umi_family_pos_threshold', 'umi_edit_distance_threshold']:
         try:
-            ThresholdVal = float(threshold)
+            config = configparser.ConfigParser()
+            config.read(configfile)
+            ThresholdVal = int(config[Level][parameter])
         except:
-            # raise error and exit
-            raise ValueError('ERR: Missing setting threshold')
-    finally:
-        # check that threshold is float
-        if type(ThresholdVal) != float:
-            raise ValueError('ERR: Setting threshold should be float')
+            # check if threshold provided in command
+            try:
+                ThresholdVal = int(threshold)
+            except:
+                # raise error and exit
+                raise ValueError('ERR: Missing setting threshold')
+        finally:
+            # check that threshold is float
+            if type(ThresholdVal) != int:
+                raise ValueError('ERR: Setting threshold should be integer')
+    elif parameter in ['percent_consensus_threshold', 'count_consensus_threshold', 'percent_ref_threshold', 'percent_allele_threshold']:
+        try:
+            config = configparser.ConfigParser()
+            config.read(configfile)
+            ThresholdVal = float(config[Level][parameter])
+        except:
+            # check if threshold provided in command
+            try:
+               ThresholdVal = float(threshold)
+            except:
+                # raise error and exit
+                raise ValueError('ERR: Missing setting threshold')
+        finally:
+            # check that threshold is float
+            if type(ThresholdVal) != float:
+                raise ValueError('ERR: Setting threshold should be float')
     return ThresholdVal
 
 

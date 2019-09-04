@@ -132,7 +132,7 @@ def group_umis(args):
     # create subdirectoy structure
     UmiDir = os.path.join(outdir, 'Umifiles')
     DataDir = os.path.join(outdir, 'Datafiles')
-    StatsDir = os.path.join(args.directory, 'Stats')
+    StatsDir = os.path.join(args.outdir, 'Stats')
     for i in [UmiDir, DataDir, StatsDir]:
         if os.path.isdir(i) == False:
             os.mkdir(i)
@@ -570,7 +570,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     g_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
     g_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
-    g_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
+    g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=bool, default=False, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command
@@ -587,12 +587,10 @@ if __name__ == '__main__':
     c_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
     c_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
-    c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
-    c_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
-                          help='If truncate is True and a region is given,\
+    c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
+    c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=True, type=bool, help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is True')
-    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', action='store_false',
-                          help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
+    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=True, type=bool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -627,7 +625,7 @@ if __name__ == '__main__':
     r_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     r_parser.add_argument('-mg', '--Merge', dest='merge', action='store_false', help='Merge data, json and consensus files respectively into a 1 single file. Default is True')
     r_parser.add_argument('-q', '--Queue', dest='queue', default='default', help='SGE queue for submitting jobs. Default is default')
-    r_parser.add_argument('-mm', '--Memory', dest='mem', default='10', help='Requested memory for submiiting jobs to SGE. Default is 10g')
+    r_parser.add_argument('-mm', '--Memory', dest='mem', default='20', help='Requested memory for submitting jobs to SGE. Default is 20g')
     r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
                           help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
     r_parser.add_argument('-db', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',

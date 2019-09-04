@@ -144,7 +144,7 @@ def MergeDataFiles(DataDir):
     newfile = open(MergedFile, 'w')
     newfile.write('\t'.join(Header) + '\n')
     for i in L:
-        newfile.write('\t'.join(i.split()) + '\n')
+        newfile.write('\t'.join(i[-1].split()) + '\n')
     newfile.close()
     
 
@@ -197,6 +197,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     
     # extract regions from bedfile
     Regions = ExtractRegions(bedfile)
+    
+    print('regions from bed', Regions)
+    
 
     # create a list of job names
     GroupJobNames, ConsJobNames = [], []
@@ -237,22 +240,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
 
     if merge  == True:
         
-        # submit jobs to merge 
-        MergeCmd = '{0} {1} merge -d {2} -dt {3}'
-
-        # collect regions
-        Regions = []
-        for i in os.listdir(DataDir):
-            if i.startswith('datafile_') and i[-4:] == '.csv':
-                Regions.append(i[i.index('chr'):-4])
-        for i in os.listdir(ConsDir):
-            if i[-5:] == '.cons':
-                Regions.append(i[:-5])
-        for i in os.listdir(UmiDir):
-            if i[-5:] == '.umis':
-                Regions.append(i[:-5])
-        Regions = list(map(lambda x: x.replace(':', '-'), list(set(Regions))))          
+        Regions = list(map(lambda x: x.replace(':', '-'), Regions))
         
+        # submit jobs to merge 
+        MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
+
         # merge datafiles
         MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
         newfile = open(MergeScript1, 'w')
@@ -260,7 +252,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.close()
         jobname3 = 'MergeDataFiles_' + '_'.join(Regions)
         # run merge datafiles
-        subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '10', MergeScript1), shell=True)    
+        
+        subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
         
         # merge consensus files
         MergeScript2 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
@@ -269,7 +262,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.close()
         jobname4 = 'MergeConsensusFiles_' + '_'.join(Regions)
         # run merge consensus files
-        subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '10', MergeScript2), shell=True)    
+        subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
         
         # merge umi files     
         MergeScript3 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
@@ -278,5 +271,5 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.close()
         jobname5 = 'MergeUmiFiles_' + '_'.join(Regions)
         # run merge umi files
-        subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '10', MergeScript3), shell=True)
+        subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
         
