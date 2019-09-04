@@ -197,6 +197,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     
     # extract regions from bedfile
     Regions = ExtractRegions(bedfile)
+    
+    print('regions from bed', Regions)
+    
 
     # create a list of job names
     GroupJobNames, ConsJobNames = [], []
