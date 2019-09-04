@@ -1554,7 +1554,57 @@ def GetUmiFreqFromPreprocessing(Datafile):
 
 
 
-def GetUmiFreqFromGrouping(Datafile, umi_type):
+#def GetUmiFreqFromGrouping(Datafile, umi_type):
+#    '''
+#    (str) -> dict
+#    
+#    :param Datafile: Path to file with UMI counts generated during Grouping
+#    
+#    Returns a dictionary of umi occurence: counts
+#    '''
+#
+#    infile = open(Datafile)
+#    Header = infile.readline().rstrip().split()
+#    
+#    # make a dict {umi_seq: count}
+#    Umis = {}
+#    for line in infile:
+#        line = line.rstrip()
+#        if line != '':
+#            line = line.split()
+#            # check if record parent or children
+#            if line[1] == umi_type:
+#                # only consider parent or children
+#                umi, count = line[0], int(line[2])
+#                if umi not in Umis:
+#                    Umis[umi] = count
+#                else:
+#                    Umis[umi] += count
+#            else:
+#                # check if record all
+#                if umi_type == 'all':
+#                    umi, count = line[0], int(line[2])
+#                    if umi not in Umis:
+#                        Umis[umi] = count
+#                    else:
+#                        Umis[umi] += count
+#    infile.close()
+#
+#    # create a distribution of umi counts
+#    D = {}
+#    for i in list(Umis.values()):
+#        if i in D:
+#            D[i] += 1
+#        else:
+#            D[i] = 1
+#    return D
+
+
+
+
+
+
+def GetUmiFamilyFreqFromGrouping(UmiFile):
     '''
     (str) -> dict
     
@@ -1563,41 +1613,34 @@ def GetUmiFreqFromGrouping(Datafile, umi_type):
     Returns a dictionary of umi occurence: counts
     '''
 
-    infile = open(Datafile)
-    Header = infile.readline().rstrip().split()
-    
-    # make a dict {umi_seq: count}
-    Umis = {}
-    for line in infile:
-        line = line.rstrip()
-        if line != '':
-            line = line.split()
-            # check if record parent or children
-            if line[1] == umi_type:
-                # only consider parent or children
-                umi, count = line[0], int(line[2])
-                if umi not in Umis:
-                    Umis[umi] = count
-                else:
-                    Umis[umi] += count
-            else:
-                # check if record all
-                if umi_type == 'all':
-                    umi, count = line[0], int(line[2])
-                    if umi not in Umis:
-                        Umis[umi] = count
-                    else:
-                        Umis[umi] += count
+    infile = open(UmiFile)
+    umis = json.load(infile)
     infile.close()
 
-    # create a distribution of umi counts
-    D = {}
-    for i in list(Umis.values()):
-        if i in D:
-            D[i] += 1
-        else:
-            D[i] = 1
-    return D
+    # group umis by family
+    D ={}
+    for i in umis:
+        parent = umis[i]['parent']
+        if parent not in D:
+            D[parent] = {}
+        for j in umis[i]['positions']:
+            if j not in D[parent]:
+                D[parent][j] = [umis[i]['positions'][j]]
+            else:
+                D[parent][j].append(umis[i]['positions'][j])
+
+
+    ### continue here
+
+    # record family size and 
+
+    for parent in D:
+        for i in D[parent]:
+            D[parent][i] = sum(D[parent][i])
+
+
+
+
 
 
 def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
