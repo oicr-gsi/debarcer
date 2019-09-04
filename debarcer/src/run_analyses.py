@@ -260,6 +260,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.close()
         jobname3 = 'MergeDataFiles_' + '_'.join(Regions)
         # run merge datafiles
+        
+        
+        
+        
         subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
         
         # merge consensus files
@@ -280,3 +284,12 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # run merge umi files
         subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
         
+        
+        
+        
+        print(GroupJobNames[-1])
+        print(ConsJobNames[-1])
+        print(Regions)
+        print(jobname3)
+        print(jobname4)
+        print(jobname5)
