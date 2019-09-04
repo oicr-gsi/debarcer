@@ -1620,31 +1620,31 @@ def GetUmiFamilyFreqFromGrouping(UmiFile):
         if parent not in D:
             D[parent] = {}
         for j in umis[i]['positions']:
-            if j not in D[parent]:
-                D[parent][j] = [umis[i]['positions'][j]]
-            else:
-                D[parent][j].append(umis[i]['positions'][j])
-
-
-    ### continue here
-
-    # record family size and 
-
+            # umi count from grouping is already the count of all umis from a same family at a given position
+            # grab the count for the first umi of the family, no need to record count of other family members
+            D[parent][j] = umis[i]['positions'][j]
+    
+    # count the number of families of given size for each position
+    Counts = {}
     for parent in D:
-        for i in D[parent]:
-            D[parent][i] = sum(D[parent][i])
+        for pos in D[parent]:
+            count = D[parent][pos]
+            if count in Counts:
+                Counts[count] += 1
+            else:
+                Counts[count] = 1
+    return Counts
 
 
 def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
     '''
-    (str, str) -> None
+    (dict, str, str, str) -> None
     
     :param umi_occurence: Dictionary with umi occurence: counts pairs. values
-    
-    
-    :param Datafile: Path to file with UMI counts
     :param Outputfile: Name of output figure file
-    
+    :param YLabel: Label of the Y axis
+    :param XLabel: Label of the X axis
+        
     Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
     '''
     
