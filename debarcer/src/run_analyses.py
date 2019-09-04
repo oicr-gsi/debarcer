@@ -248,7 +248,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         for i in os.listdir(DataDir):
             if i.startswith('datafile_') and i[-4:] == '.csv':
                 
-                print('datafile', i[-4:])
+                print('datafile', i[:-4])
                 
                 Regions.append(i[i.index('chr'):-4])
                 print(Regions)
@@ -256,7 +256,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         for i in os.listdir(ConsDir):
             if i[-5:] == '.cons' and not i.startswith('Merged'):
                 
-                print('cons', i[-5:])
+                print('cons', i[:-5])
                 
                 
                 Regions.append(i[:-5])
@@ -268,7 +268,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             if i[-5:] == '.umis' and not i.startswith('Merged'):
                 
                 
-                print('umis', i[-5:])
+                print('umis', i[:-5])
                 
                 
                 Regions.append(i[:-5])
