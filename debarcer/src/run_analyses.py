@@ -243,42 +243,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # submit jobs to merge 
         MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
 
-        # collect regions
-        Regions = []
-        for i in os.listdir(DataDir):
-            if i.startswith('datafile_') and i[-4:] == '.csv':
-                
-                print('datafile', i[:-4])
-                
-                Regions.append(i[i.index('chr'):-4])
-                print(Regions)
-                
-        for i in os.listdir(ConsDir):
-            if i[-5:] == '.cons' and not i.startswith('Merged'):
-                
-                print('cons', i[:-5])
-                
-                
-                Regions.append(i[:-5])
-                
-                print(Regions)
-                
-                
-        for i in os.listdir(UmiDir):
-            if i[-5:] == '.umis' and not i.startswith('Merged'):
-                
-                
-                print('umis', i[:-5])
-                
-                
-                Regions.append(i[:-5])
-                
-                
-                print(Regions)
-                
-                
-        Regions = list(map(lambda x: x.replace(':', '-'), list(set(Regions))))          
-        
         # merge datafiles
         MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
         newfile = open(MergeScript1, 'w')
@@ -286,9 +250,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.close()
         jobname3 = 'MergeDataFiles_' + '_'.join(Regions)
         # run merge datafiles
-        
-        
-        
         
         subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
         
@@ -310,12 +271,3 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # run merge umi files
         subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
         
-        
-        
-        
-        print(GroupJobNames[-1])
-        print(ConsJobNames[-1])
-        print(Regions)
-        print(jobname3)
-        print(jobname4)
-        print(jobname5)
