@@ -12,7 +12,7 @@ from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles,
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, GroupQCWriter
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
- PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFreqFromGrouping
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -451,9 +451,7 @@ def generate_plots(args):
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
-    # make a list of files with umi relationships
-    RelFiles = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('UMI_relationships') and i[-4:] == '.txt']
-        
+    
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -510,6 +508,13 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile)
             
+        # plot frequency distributions of umi family size for each position
+        plt.clf(), plt.cla()
+        # count family size for each family and position  
+        umi_occurence = GetUmiFamilyFreqFromGrouping(filename)
+        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}_{1}'.format(region, args.extension))
+        PlotUMiFrequency(umi_occurence, Outputfile)
+            
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
@@ -530,18 +535,7 @@ def generate_plots(args):
     plt.clf(), plt.cla()
     PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
     
-
-    # plot frequency distributions of umi for each position and umi type
-    for umi_type in ['parent', 'children', 'all']:
-        # loop over files with umi counts and relationships for each region
-        for filename in RelFiles:
-            # get umi occurence for that region and umi_type  
-            umi_occurence = GetUmiFreqFromGrouping(filename, umi_type)
-            plt.clf(), plt.cla()
-            Outputfile = os.path.join(FigDir, 'UMI_occurence_grouping_{0}_{1}'.format(region, args.extension))
-            PlotUMiFrequency(umi_occurence, Outputfile)
-            
-   
+       
 if __name__ == '__main__':
         
     ## Argument + config parsing and error handling
