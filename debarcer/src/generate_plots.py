@@ -21,8 +21,8 @@ import networkx as nx
 import json
 import collections
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
-
-
+import pandas as pd
+import seaborn as sns
 
 #### functions for plotting coverage ####
 
@@ -1553,54 +1553,58 @@ def GetUmiFreqFromPreprocessing(Datafile):
     return D
 
 
+def GetFamilyReadDepth(UmiFile):
+    '''
+    (str) -> dict
+    
+    :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
+    
+    Returns a dictionary of read depth for each family and position
+    '''
+    
+    infile = open(UmiFile)
+    umis = json.load(infile)
+    infile.close()
 
-#def GetUmiFreqFromGrouping(Datafile, umi_type):
-#    '''
-#    (str) -> dict
-#    
-#    :param Datafile: Path to file with UMI counts generated during Grouping
-#    
-#    Returns a dictionary of umi occurence: counts
-#    '''
-#
-#    infile = open(Datafile)
-#    Header = infile.readline().rstrip().split()
-#    
-#    # make a dict {umi_seq: count}
-#    Umis = {}
-#    for line in infile:
-#        line = line.rstrip()
-#        if line != '':
-#            line = line.split()
-#            # check if record parent or children
-#            if line[1] == umi_type:
-#                # only consider parent or children
-#                umi, count = line[0], int(line[2])
-#                if umi not in Umis:
-#                    Umis[umi] = count
-#                else:
-#                    Umis[umi] += count
-#            else:
-#                # check if record all
-#                if umi_type == 'all':
-#                    umi, count = line[0], int(line[2])
-#                    if umi not in Umis:
-#                        Umis[umi] = count
-#                    else:
-#                        Umis[umi] += count
-#    infile.close()
-#
-#    # create a distribution of umi counts
-#    D = {}
-#    for i in list(Umis.values()):
-#        if i in D:
-#            D[i] += 1
-#        else:
-#            D[i] = 1
-#    return D
+    # group umis by family
+    D ={}
+    for i in umis:
+        parent = umis[i]['parent']
+        if parent not in D:
+            D[parent] = {}
+        for j in umis[i]['positions']:
+            # umi count from grouping is already the count of all umis from a same family at a given position
+            # grab the count for the first umi of the family, no need to record count of other family members
+            D[parent][j] = umis[i]['positions'][j]
+    return D
 
 
 def GetUmiFamilyFreqFromGrouping(UmiFile):
+    '''
+    (str) -> dict
+    
+    :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
+    
+    Returns a dictionary of umi occurence: counts
+    '''
+
+    # get the read depth for each famiuly and position
+    D = GetFamilyReadDepth(UmiFile)
+
+    # count the number of families with given coverage for each position
+    Counts = {}
+    for parent in D:
+        for pos in D[parent]:
+            count = D[parent][pos]
+            if count in Counts:
+                Counts[count] += 1
+            else:
+                Counts[count] = 1
+    return Counts
+
+
+    
+def GetUmiFamilySizeFromGrouping(UmiFile):
     '''
     (str) -> dict
     
@@ -1620,20 +1624,60 @@ def GetUmiFamilyFreqFromGrouping(UmiFile):
         if parent not in D:
             D[parent] = {}
         for j in umis[i]['positions']:
-            # umi count from grouping is already the count of all umis from a same family at a given position
-            # grab the count for the first umi of the family, no need to record count of other family members
-            D[parent][j] = umis[i]['positions'][j]
+            # grab all the umi sequences for a given family
+            if j in D[parent]:
+                D[parent][j].append(i)
+            else:
+                D[parent][j] = [i]
     
-    # count the number of families of given size for each position
-    Counts = {}
+    # get the family size for each family and position
     for parent in D:
         for pos in D[parent]:
-            count = D[parent][pos]
-            if count in Counts:
-                Counts[count] += 1
-            else:
-                Counts[count] = 1
-    return Counts
+            D[parent][pos] = len(list(set(D[parent][pos])))
+    return D
+
+
+def PlotFamSizeReadDepth(UmiFile, Outputfile):
+    '''
+    (str, str) -> dict
+    
+    :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
+    :param Outputfile: Name of output figure file
+          
+    Plot a marginal plot of UMI family size and read depth    
+    '''
+    
+    # get the size of each family
+    FamSize = GetUmiFamilySizeFromGrouping(UmiFile)
+    # get the frequency distribution of read depth for each family
+    ReadDepth =  GetFamilyReadDepth(UmiFile)
+ 
+    # make parallel list of family size and read depth
+    r, s = {}, {}
+    i = 0
+    assert FamSize.keys() == ReadDepth.keys()
+    for parent in FamSize:
+        for pos in FamSize[parent]:
+            r[i] = ReadDepth[parent][pos]
+            s[i] = FamSize[parent][pos]
+            i += 1
+    
+    # create data frames
+    S = pd.DataFrame(list(s.values()), columns=['size'])
+    R = pd.DataFrame(list(r.values()), columns=['depth'])
+    # join dataframes
+    df = S.join(R)    
+        
+    # clear previous axes
+    plt.clf()
+    plt.gcf().set_size_inches(8, 8, forward=True)
+
+    sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
+                  space=0, ratio=4, marginal_kws={'bins':15}, annot_kws=dict(stat='r'),
+                  s=40, linewidth=1).set_axis_labels('Read depth', 'UMI family size')
+    
+    plt.savefig(Outputfile, bbox_inches = 'tight')
+
 
 
 def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):

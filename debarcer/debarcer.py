@@ -12,7 +12,7 @@ from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles,
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, GroupQCWriter
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
- PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping, PlotFamSizeReadDepth
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -449,6 +449,8 @@ def generate_plots(args):
         
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
+    
+    
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
     
@@ -515,6 +517,11 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}_{1}'.format(region, args.extension))
         PlotUMiFrequency(umi_occurence, Outputfile)
             
+        # plot marginal distributions of UMI family size and read depth
+        plt.clf(), plt.cla()
+        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}_{1}'.format(region, args.extension))
+        PlotFamSizeReadDepth(filename, Outputfile)
+        
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
