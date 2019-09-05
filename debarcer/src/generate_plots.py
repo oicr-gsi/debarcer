@@ -1604,7 +1604,7 @@ def GetUmiFamilyFreqFromGrouping(UmiFile):
     '''
     (str) -> dict
     
-    :param Datafile: Path to file with UMI counts generated during Grouping
+    :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
     
     Returns a dictionary of umi occurence: counts
     '''
