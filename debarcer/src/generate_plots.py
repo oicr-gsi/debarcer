@@ -999,39 +999,14 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     DataDir = os.path.join(directory, 'Datafiles')
     if os.path.isdir(DataDir) == False:
         raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
-    # get the directory with consesnsus files
-    ConsDir = os.path.join(directory, 'Consfiles')
-    if os.path.isdir(ConsDir) == False:
-        raise ValueError('ERR: Invalid directory: {0}'.format(ConsDir))
-        
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    
-    # make a list of consensus files
-    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if (i.startswith('chr') and 'Merge' not in i and i[-5:] == '.cons')]
-    
-    # check that paths to files are valid
-    for i in DataFiles + ConsFiles:
+    for i in DataFiles:
         if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid file path {0}'.format(i))
     
     # extract umi counts for each region
     L = [ExtractUmiCounts(i) for i in DataFiles]
-    
-    # compute mean coverage from raw data for each region  
-    #Coverage = [ExtractCoverage(i)[0] for i in ConsFiles]
-        
-    # get the interval size for each region
-    Sizes = []
-    for i in DataFiles:
-        interval = os.path.basename(i)
-        interval = list(map(lambda x: int(x), interval[interval.index('chr'):interval.index('.csv')].split(':')[-1].split('-')))
-        Sizes.append(interval[1] - interval[0])
-    
-    print(Sizes)
-        
-    cmap = plt.get_cmap('Reds', max(Sizes))
-    
     
     Data = {}
     for d in L:
@@ -1041,6 +1016,15 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     
     # get a sorted list of positions
     Coordinates = SortPositions(list(Data.keys()))
+    
+    # get the interval size for each region in sorted ist of coordinates
+    Sizes = []
+    for i in range(len(Coordinates)):
+        interval = list(map(lambda x: float(x), Coordinates[i][Coordinates[i].index(':')+1:].split('-')))
+        Sizes.append(interval[1] - interval[0])
+             
+    cmap = plt.get_cmap('Reds', max(Sizes))
+    print(Sizes)
     
     # make parallel lists of children and parent counts
     CTU = [Data[i][0] for i in Coordinates]
@@ -1055,12 +1039,8 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # plot ctu/ptu ratio for each region
-    #ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
-    
-    ax.scatter(PTU, CTU, edgecolor = 'black', cmap = cmap, marker='o', lw = 1, s = 100, alpha = 1)
-    
-    
-    
+    ax.scatter(PTU, CTU, edgecolor = 'black',clip_on=False, c = Sizes, cmap = cmap, marker='o', lw = 1, s = 160, alpha = 1)
+        
     # limit y axis to maximum value
     YMax = max(CTU)
     # add 10% to max value
@@ -1092,16 +1072,6 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     # write title   
     ax.set_title('Interval Size vs. PTU and CTU', size = 14)
     
-    # add a light grey horizontal grid to the plot, semi-transparent, 
-    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-    # hide these grids behind plot objects
-    ax.set_axisbelow(True)
-    
-    # write label for x axis
-#    xPos = [i for i in range(len(Coordinates))]
-#    plt.xticks(xPos, list(map(lambda x: str(x), PTU)), ha = 'center', rotation = 0, fontsize = 9)
-#      
-
     # limit x axis to maximum value
     XMax = max(PTU)
     # add 10% to max value
@@ -1126,7 +1096,6 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     else:
         ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 2000)])
 
-         
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
@@ -1136,14 +1105,25 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     ax.spines["bottom"].set_visible(True)    
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
+    
+    # offset the x axis
+    for loc, spine in ax.spines.items():
+        spine.set_position(('outward', 10))
+        spine.set_smart_bounds(True)
        
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
-
+    
 
 def PlotParentFreq(directory, Color, Outputfile):
     '''
