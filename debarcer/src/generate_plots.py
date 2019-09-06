@@ -1019,7 +1019,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     L = [ExtractUmiCounts(i) for i in DataFiles]
     
     # compute mean coverage from raw data for each region  
-    Coverage = [ExtractCoverage(i)[0] for i in ConsFiles]
+    #Coverage = [ExtractCoverage(i)[0] for i in ConsFiles]
         
     # get the interval size for each region
     Sizes = []
@@ -1029,9 +1029,8 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
         Sizes.append(interval[1] - interval[0])
     
     print(Sizes)
-    print(Coverage)
-    
-    
+        
+    cmap = plt.get_cmap('Reds', max(Sizes))
     
     
     Data = {}
@@ -1058,7 +1057,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     # plot ctu/ptu ratio for each region
     #ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
     
-    ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = Sizes, alpha = 1)
+    ax.scatter(PTU, CTU, edgecolor = 'black', cmap = cmap, marker='o', lw = 1, s = 100, alpha = 1)
     
     
     
