@@ -1018,6 +1018,9 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
         interval = list(map(lambda x: int(x), interval[interval.index('chr'):interval.index('.csv')].split(':')[-1].split('-')))
         Sizes.append(interval[1] - interval[0])
     
+    print(Sizes)
+    
+    
     Data = {}
     for d in L:
         region = list(d.keys())[0]
