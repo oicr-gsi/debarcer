@@ -999,18 +999,28 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     DataDir = os.path.join(directory, 'Datafiles')
     if os.path.isdir(DataDir) == False:
         raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
-    
+    # get the directory with consesnsus files
+    ConsDir = os.path.join(directory, 'ConsDir')
+    if os.path.isdir(ConsDir) == False:
+        raise ValueError('ERR: Invalid directory: {0}'.format(ConsDir))
+        
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
     
+    # make a list of consensus files
+    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if (i.startswith('chr') and 'Merge' not in i and i[-5:] == '.cons')]
+    
     # check that paths to files are valid
-    for i in DataFiles:
+    for i in DataFiles + ConsFiles:
         if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid path to data file')
+            raise ValueError('ERR: Invalid file path {0}'.format(i))
     
     # extract umi counts for each region
     L = [ExtractUmiCounts(i) for i in DataFiles]
     
+    # compute mean coverage from raw data for each region  
+    Coverage = [ExtractCoverage(i)[0] for i in ConsFiles]
+        
     # get the interval size for each region
     Sizes = []
     for i in DataFiles:
@@ -1018,11 +1028,10 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
         interval = list(map(lambda x: int(x), interval[interval.index('chr'):interval.index('.csv')].split(':')[-1].split('-')))
         Sizes.append(interval[1] - interval[0])
     
-    
-    Sizes[4] = Sizes[4] * 100
-    Sizes[5] = Sizes[5] * 10
-    Sizes[3] = Sizes[3] * 50
     print(Sizes)
+    print(Coverage)
+    
+    
     
     
     Data = {}
