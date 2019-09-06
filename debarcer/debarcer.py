@@ -472,9 +472,9 @@ def generate_plots(args):
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
     # in future version, a new instance will always be created and returned
-    plt.clf(), plt.cla()
-    PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
-        
+#    plt.clf(), plt.cla()
+#    PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
+#        
 #    # plot graphs for each consensus file
 #    for filename in ConsFiles:
 #        # plot mean family size for each consensus file/region
