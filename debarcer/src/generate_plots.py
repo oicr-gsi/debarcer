@@ -1010,7 +1010,14 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     
     # extract umi counts for each region
     L = [ExtractUmiCounts(i) for i in DataFiles]
-     
+    
+    # get the interval size for each region
+    Sizes = []
+    for i in DataFiles:
+        interval = os.path.basename(i)
+        interval = list(map(lambda x: int(x), interval[interval.index('chr'):interval.index('.csv')].split(':')[-1].split('-')))
+        Sizes.append(interval[1] - interval[0])
+    
     Data = {}
     for d in L:
         region = list(d.keys())[0]
@@ -1033,7 +1040,11 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # plot ctu/ptu ratio for each region
-    ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
+    #ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = 60, alpha = 1)
+    
+    ax.scatter(PTU, CTU, edgecolor = 'black', facecolor = 'pink', marker='o', lw = 1, s = Sizes, alpha = 1)
+    
+    
     
     # limit y axis to maximum value
     YMax = max(CTU)
