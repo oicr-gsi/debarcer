@@ -7,7 +7,7 @@ Created on Tue Jul 30 12:56:47 2019
 
 # import modules
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
@@ -16,7 +16,7 @@ from matplotlib import rc
 import os
 import numpy as np
 from scipy import stats
-from src.utilities import FormatRegion, edit_distance
+#from src.utilities import FormatRegion, edit_distance
 import networkx as nx
 import json
 import collections
@@ -1022,10 +1022,10 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     for i in range(len(Coordinates)):
         interval = list(map(lambda x: float(x), Coordinates[i][Coordinates[i].index(':')+1:].split('-')))
         Sizes.append(interval[1] - interval[0])
-             
-    cmap = plt.get_cmap('Reds', max(Sizes))
-    print(Sizes)
     
+    # map colors to interval size          
+    cmap = plt.get_cmap('Reds', max(Sizes))
+        
     # make parallel lists of children and parent counts
     CTU = [Data[i][0] for i in Coordinates]
     PTU = [Data[i][1] for i in Coordinates]
@@ -1043,6 +1043,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
         
     # limit y axis to maximum value
     YMax = max(CTU)
+    
     # add 10% to max value
     YMax = YMax + (YMax * 10/100)
     ax.set_ylim([0, YMax])
@@ -1074,10 +1075,11 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     
     # limit x axis to maximum value
     XMax = max(PTU)
+        
     # add 10% to max value
     XMax = XMax + (XMax * 10/100)
     ax.set_xlim([0 - (XMax * 10/100)/2, XMax])
-    
+        
     # set y ticks    
     if XMax <=50:
         ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 10)])
