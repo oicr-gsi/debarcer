@@ -1000,7 +1000,7 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     if os.path.isdir(DataDir) == False:
         raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
     # get the directory with consesnsus files
-    ConsDir = os.path.join(directory, 'ConsDir')
+    ConsDir = os.path.join(directory, 'Consfiles')
     if os.path.isdir(ConsDir) == False:
         raise ValueError('ERR: Invalid directory: {0}'.format(ConsDir))
         
