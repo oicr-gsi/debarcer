@@ -1638,7 +1638,7 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     # seaborn returns an ax object
     ax = sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
                   space=0, ratio=3, marginal_kws={'bins':15}, annot_kws=dict(stat='r'),
-                  s=35, linewidth=1).set_axis_labels('Read depth', 'UMI family size', size=14, color='black', ha='center')
+                  s=35, linewidth=1).set_axis_labels('Read depth within group', 'Unique UMI seqs per group', size=14, color='black', ha='center')
     
     # axes can be accessed using ax_marg_x/y and ax_joint then passing matplotlib axes methods
     # limit y axis and set y ticks
