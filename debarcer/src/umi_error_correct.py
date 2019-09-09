@@ -129,10 +129,11 @@ def most_frequent(L):
     return (pos, frequent)
     
 
-def find_group_families(umi_families, pos_threshold, ignore_others):
+def find_group_families(contig, umi_families, pos_threshold, ignore_others):
     '''
     (dict, int, bool) -> dict
     
+    :param contig: Chromosome, eg chrN
     :param umi_families: A dictionary holding parent umi, their children and their count at positions where they are found
     :param pos_threshold: Window size to group indivual umis into families within groups 
     :param ignore_others: Ignore families distant from the most abundant family
@@ -152,7 +153,7 @@ def find_group_families(umi_families, pos_threshold, ignore_others):
                 L.append((pos, umi_families[parent][umi][pos]))
         # sort list of positions, counts by position
         L.sort()
-        # create a dict {pos: count} recording umi counts within family merging
+        # create a dict {chr_pos: count} recording umi counts within family merging
         # positions onto the position of the most frequent umi within the pos_threshold
         D = {}
         # stop when all positions have been recorded
@@ -188,7 +189,10 @@ def find_group_families(umi_families, pos_threshold, ignore_others):
         # add position and counts to individual umi within group   
         for umi in umi_families[parent]:
             assert umi not in C
-            C[umi] = {'parent': parent, 'positions': D}
+            d = {}
+            for i in D:
+                d[contig + '_' + str(i)] = D[i]
+            C[umi] = {'parent': parent, 'positions': d}
     return C
 
 

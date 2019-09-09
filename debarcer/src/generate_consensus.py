@@ -106,7 +106,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                     if umi in umi_families:
                         # find closest family from umi
                         # make a list of (positions counts)
-                        L = [(int(i), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                        L = [(int(i.split('_')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
                         closest, count = find_closest(start_pos, L)
 
                         # check if closest family is within the position threshold
