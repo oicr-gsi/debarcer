@@ -9,7 +9,8 @@ from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, FormatRegion, GroupQCWriter
+from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
+ FormatRegion, GroupQCWriter, CreateDirTree
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
  PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping, PlotFamSizeReadDepth
@@ -80,10 +81,8 @@ def preprocess_reads(args):
     Correct, Incorrect, Total, UmiSequences = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
 	 
     # create subdirectoy structure
-    StatsDir = os.path.join(outdir, 'Stats')
-    if os.path.isdir(StatsDir) == False:
-        os.mkdir(StatsDir)
-    
+    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+
     # write summary report
     Outpufile = os.path.join(StatsDir, 'Read_Info.txt')
     newfile = open(Outpufile, 'w')
@@ -130,13 +129,8 @@ def group_umis(args):
             os.makedirs(outdir)
     
     # create subdirectoy structure
-    UmiDir = os.path.join(outdir, 'Umifiles')
-    DataDir = os.path.join(outdir, 'Datafiles')
-    StatsDir = os.path.join(args.outdir, 'Stats')
-    for i in [UmiDir, DataDir, StatsDir]:
-        if os.path.isdir(i) == False:
-            os.mkdir(i)
-    
+    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+
     # get input bam from config or command
     bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
     
@@ -216,10 +210,9 @@ def collapse(args):
             os.makedirs(outdir)
     
     # create subdirectoy structure
-    ConsDir = os.path.join(outdir, 'Consfiles')
-    if os.path.isdir(ConsDir) == False:
-        os.mkdir(ConsDir)
-    
+    # create subdirectoy structure
+    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+
     # get input bam from config or command
     bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
 
@@ -395,17 +388,8 @@ def run_scripts(args):
             os.makedirs(outdir)
     
     # create subdirectoy structure
-    UmiDir = os.path.join(outdir, 'Umifiles')
-    ConsDir = os.path.join(outdir, 'Consfiles')
-    DataDir = os.path.join(outdir, 'Datafiles')
-    QsubDir = os.path.join(outdir, 'Qsubs')
-    for i in [UmiDir, ConsDir, DataDir, QsubDir]:
-        if os.path.isdir(i) == False:
-            os.mkdir(i)
-    LogDir = os.path.join(QsubDir, 'Logs')
-    if os.path.isdir(LogDir) == False:
-        os.mkdir(LogDir)
-    
+    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+
     # get comma-separated list of minimum family size
     famsize = GetFamSize(args.config, args.famsize)
     
@@ -435,13 +419,15 @@ def generate_plots(args):
     '''
     
     # get subdirectories
-    ConsDir = os.path.join(args.directory, 'Consfiles')
-    UmiDir = os.path.join(args.directory, 'Umifiles')
-    StatsDir = os.path.join(args.directory, 'Stats')
-    for i in [ConsDir, UmiDir, StatsDir]:
+    L, T = ['Consfiles', 'Umifiles', 'Stats'], []
+    T = [os.path.join(args.diretory, i) for i in L]
+    for i in T:
         if os.path.isdir(i) == False:
-            raise ValueError('ERR: Missing {0} directory with consensus files'.format(i))
-    
+            raise ValueError('ERR: Expecting directory {0}'.format(i))
+      
+    # unpack directories
+    ConsDir, UmiDir, StatsDir =  T 
+        
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
     if os.path.isdir(FigDir) == False:
