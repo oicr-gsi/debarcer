@@ -7,7 +7,7 @@ Created on Tue Jul 30 12:56:47 2019
 
 # import modules
 import matplotlib as mpl
-#mpl.use('Agg')
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
@@ -16,7 +16,7 @@ from matplotlib import rc
 import os
 import numpy as np
 from scipy import stats
-#from src.utilities import FormatRegion, edit_distance
+from src.utilities import FormatRegion, edit_distance
 import networkx as nx
 import json
 import collections
