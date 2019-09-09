@@ -21,8 +21,45 @@ import networkx as nx
 import json
 import collections
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
+from matplotlib.ticker import MaxNLocator
 import pandas as pd
 import seaborn as sns
+
+
+
+
+
+def SetUpTicks(AxisMax):
+    '''
+    (num) -> int
+    
+    :param AxisMax: maximum value of x or y axis
+    
+    Return the step to set up axis ticks
+    '''
+    
+    if AxisMax <= 10:
+        step = 1 
+    elif 10 < AxisMax <= 20:
+        step = 2
+    elif 20 < AxisMax <=50:
+        step = 10
+    elif 50 < AxisMax <=200:
+        step = 20  
+    elif 200 < AxisMax <=500:
+        step = 50
+    elif 500 < AxisMax <=1000:
+        step = 100   
+    elif 1000 < AxisMax <=2000:
+        step = 200     
+    elif 2000 < AxisMax <=5000:
+        step = 500 
+    elif 5000 < AxisMax <=10000:
+        step = 1000 
+    else:
+        step = 2000
+    return step
+
 
 #### functions for plotting coverage ####
 
@@ -201,24 +238,9 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     YMax = max(YMax)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
-    # set y ticks    
-    if YMax <=50:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    elif 50 < YMax <=200:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-    elif 200 < YMax <=500:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-    elif 500 < YMax <=1000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-    elif 1000 < YMax <=2000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-    elif 2000 < YMax <=5000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-    elif 5000 < YMax <=10000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-    else:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
-    
+    step = SetUpTicks(YMax)
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+        
     # set up y axis label and grid
     if 'firstax' not in Options:
         # write label for y axis
@@ -727,24 +749,9 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     YMax = max(YMax)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
-        
-    if YMax <=50:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    elif 50 < YMax <=200:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-    elif 200 < YMax <=500:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-    elif 500 < YMax <=1000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-    elif 1000 < YMax <=2000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-    elif 2000 < YMax <=5000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-    elif 5000 < YMax <=10000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-    else:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
-    
+    step = SetUpTicks(YMax)    
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+       
     # write label for y and x axis
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     if 'XLabel' in Options:
@@ -918,23 +925,9 @@ def PlotUmiCounts(directory, Outputfile, Graph):
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
     elif Graph == 'parents' or Graph == 'children':
         # set y ticks    
-        if YMax <=50:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-        elif 50 < YMax <=200:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-        elif 200 < YMax <=500:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-        elif 500 < YMax <=1000:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-        elif 1000 < YMax <=2000:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-        elif 2000 < YMax <=5000:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-        elif 5000 < YMax <=10000:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-        else:
-            ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
-        
+        step = SetUpTicks(YMax)
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+                
     # set title and Y axis label
     if Graph == 'ratio':
         YLabel = 'Child:Parent Ratio'
@@ -1043,29 +1036,13 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
         
     # limit y axis to maximum value
     YMax = max(CTU)
-    
     # add 10% to max value
     YMax = YMax + (YMax * 10/100)
     ax.set_ylim([0, YMax])
-    
     # set y ticks    
-    if YMax <=50:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    elif 50 < YMax <=200:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-    elif 200 < YMax <=500:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-    elif 500 < YMax <=1000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-    elif 1000 < YMax <=2000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-    elif 2000 < YMax <=5000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-    elif 5000 < YMax <=10000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-    else:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
-        
+    step = SetUpTicks(YMax)
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+            
     # write label for y axis
     ax.set_ylabel('Number of children UMIs', color = 'black',  size = 14, ha = 'center')
     ax.set_xlabel('Number of parents UMIs', color = 'black',  size = 14, ha = 'center')
@@ -1075,29 +1052,13 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
     
     # limit x axis to maximum value
     XMax = max(PTU)
-        
     # add 10% to max value
     XMax = XMax + (XMax * 10/100)
     ax.set_xlim([0 - (XMax * 10/100)/2, XMax])
-        
     # set y ticks    
-    if XMax <=50:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 10)])
-    elif 50 < XMax <=200:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 20)]) 
-    elif 200 < XMax <=500:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 50)])
-    elif 500 < XMax <=1000:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 100)])  
-    elif 1000 < XMax <=2000:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 200)])    
-    elif 2000 < XMax <=5000:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 500)])
-    elif 5000 < XMax <=10000:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 1000)])
-    else:
-        ax.xaxis.set_ticks([i for i in np.arange(0, XMax, 2000)])
-
+    step = SetUpTicks(XMax)
+    ax.xaxis.set_ticks([i for i in np.arange(0, XMax, step)])
+    
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
@@ -1429,27 +1390,12 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     # plot network degree
     ax.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
                
-    # limit y axis
+    # limit y axis and ste y axis ticks
     YMax = max(count)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
-    # set y ticks    
-    if YMax <=50:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    elif 50 < YMax <=200:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-    elif 200 < YMax <=500:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-    elif 500 < YMax <=1000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-    elif 1000 < YMax <=2000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-    elif 2000 < YMax <=5000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-    elif 5000 < YMax <=10000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-    else:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
+    step = SetUpTicks(YMax)
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
     
     # set up y axis label and grid
     ax.set_ylabel('Count', color = 'black',  size = 14, ha = 'center')
@@ -1655,6 +1601,15 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     Plot a marginal plot of UMI family size and read depth    
     '''
     
+    
+    # set seaborn white style
+    sns.set(style="white", color_codes=True)
+    # restore tick marks
+    plt.rcParams['xtick.major.size'] = 5
+    plt.rcParams['xtick.major.width'] = 1
+    plt.rcParams['xtick.bottom'] = True
+    plt.rcParams['ytick.left'] = True
+       
     # get the size of each family
     FamSize = GetUmiFamilySizeFromGrouping(UmiFile)
     # get the frequency distribution of read depth for each family
@@ -1675,15 +1630,59 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     R = pd.DataFrame(list(r.values()), columns=['depth'])
     # join dataframes
     df = S.join(R)    
-        
+    
     # clear previous axes
     plt.clf()
     plt.gcf().set_size_inches(8, 8, forward=True)
-
-    sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
-                  space=0, ratio=4, marginal_kws={'bins':15}, annot_kws=dict(stat='r'),
-                  s=40, linewidth=1).set_axis_labels('Read depth', 'UMI family size')
     
+    # seaborn returns an ax object
+    ax = sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
+                  space=0, ratio=3, marginal_kws={'bins':15}, annot_kws=dict(stat='r'),
+                  s=35, linewidth=1).set_axis_labels('Read depth', 'UMI family size', size=14, color='black', ha='center')
+    
+    # axes can be accessed using ax_marg_x/y and ax_joint then passing matplotlib axes methods
+    # limit y axis and set y ticks
+    YMax = max(df['size'])
+    YMax = float(YMax + (YMax * 10 /100))
+    ax.ax_joint.set_ylim([0, YMax])    
+    step = SetUpTicks(YMax)
+    ax.ax_joint.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+    
+    # limit x axis and set x ticks
+    XMax = max(df['depth'])
+    XMax = float(XMax + (XMax * 10 /100))
+    ax.ax_joint.set_xlim([0, XMax])    
+    step = SetUpTicks(XMax)
+    ax.ax_joint.xaxis.set_ticks([i for i in np.arange(0, XMax, step)])
+    
+      
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.ax_joint.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.ax_joint.set_axisbelow(True)
+    # add space between axis and tick labels
+    ax.ax_joint.yaxis.labelpad, ax.ax_joint.xaxis.labelpad = 18, 18
+    
+    # do not show lines around figure  
+    ax.ax_joint.spines["top"].set_visible(False)    
+    ax.ax_marg_x.spines['bottom'].set_visible(False)
+    ax.ax_joint.spines["bottom"].set_visible(True)    
+    ax.ax_joint.spines["right"].set_visible(False)    
+    ax.ax_marg_x.spines['right'].set_visible(False)
+    ax.ax_joint.spines["left"].set_visible(False)  
+    ax.ax_marg_y.spines["left"].set_visible(False)  
+
+    # do not show ticks
+    ax.ax_joint.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=True, labelleft=True, labeltop=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    ax.ax_marg_x.tick_params(axis='both', which='both', bottom=False, top=False,
+                right=False, left=False, labelleft=False, labeltop=False, labelbottom=False, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    ax.ax_marg_y.tick_params(axis='both', which='both', bottom=False, top=False,
+                right=False, left=True, labelleft=True, labeltop=False, labelbottom=False, colors = 'black',
+                labelsize = 12, direction = 'out')
+
     plt.savefig(Outputfile, bbox_inches = 'tight')
 
 
@@ -1717,28 +1716,13 @@ def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
     # plot data
     plt.bar(counts, vals, width=0.8, color='pink', edgecolor=['lightgrey'] * len(counts), lw=1)
     
-    # limit y axis
+    # limit y axis and set up y axis ticks
     YMax = max(vals)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
-    # set y ticks    
-    if YMax <=50:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    elif 50 < YMax <=200:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)]) 
-    elif 200 < YMax <=500:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 50)])
-    elif 500 < YMax <=1000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 100)])  
-    elif 1000 < YMax <=2000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 200)])    
-    elif 2000 < YMax <=5000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 500)])
-    elif 5000 < YMax <=10000:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 1000)])
-    else:
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2000)])
-    
+    step = SetUpTicks(YMax)
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+        
     # set up y axis label and grid
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     ax.set_xlabel(XLabel, color = 'black',  size = 14, ha = 'center')
