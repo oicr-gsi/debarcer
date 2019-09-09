@@ -81,10 +81,10 @@ def preprocess_reads(args):
     Correct, Incorrect, Total, UmiSequences = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
 	 
     # create subdirectoy structure
-    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
-
+    CreateDirTree(outdir)
+    
     # write summary report
-    Outpufile = os.path.join(StatsDir, 'Read_Info.txt')
+    Outpufile = os.path.join(outdir, 'Stats/Read_Info.txt')
     newfile = open(Outpufile, 'w')
     newfile.write('# Read counts with correct/incorrect umi and spacer configuration\n')
     newfile.write('\t'.join(['Total', 'Correct', 'Incorrect']) + '\n')
@@ -95,7 +95,7 @@ def preprocess_reads(args):
     D = {}
     for i in UmiSequences:
         D[i] = UmiSequences.count(i)
-    Outpufile = os.path.join(StatsDir, 'Umi_counts.txt')
+    Outpufile = os.path.join(outdir, 'Stats/Umi_counts.txt')
     newfile = open(Outpufile, 'w')
     newfile.write('\t'.join(['Umi', 'Count']) + '\n')
     for i in D:
@@ -129,7 +129,7 @@ def group_umis(args):
             os.makedirs(outdir)
     
     # create subdirectoy structure
-    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+    CreateDirTree(outdir)
 
     # get input bam from config or command
     bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
@@ -153,9 +153,9 @@ def group_umis(args):
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     # keep the most abundant family within group and ignore others if args.ignore is True
     umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore)
-        
+    
     # get the number of parent umis, number of children and number of parent given a number of children
-    filename= os.path.join(DataDir, 'datafile_{}.csv'.format(region))
+    filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
     header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
     # use 1-based inclusive coordinates in datafile output
     info = [contig, str(region_start + 1), str(region_end)] + umi_datafile(umi_groups)
@@ -164,17 +164,17 @@ def group_umis(args):
         newfile.write('\t'.join(info) + '\n')
     
     # save umi families as a json. positions in the json are 0-based half opened
-    umi_file = os.path.join(UmiDir, '{}.json'.format(region))
+    umi_file = os.path.join(outdir, 'Umifiles/{}.json'.format(region))
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
     
     # write a summary file of UMI relationships
-    Outputfile = os.path.join(StatsDir, 'UMI_relationships_{0}.txt'.format(region))
+    Outputfile = os.path.join(outdir, 'Stats/UMI_relationships_{0}.txt'.format(region))
     GroupQCWriter(umi_families, Outputfile)
     
-    print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(DataDir))
-    print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(UmiDir))
-    print(timestamp() + "UMI grouping complete. QC files written to {}.".format(StatsDir))
+    print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(os.path.join(outdir, 'Datafiles')))
+    print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(os.path.join(outdir, 'Umifiles')))
+    print(timestamp() + "UMI grouping complete. QC files written to {}.".format(os.path.join(outdir, 'Stats')))
 
 
 def collapse(args):
@@ -211,7 +211,7 @@ def collapse(args):
     
     # create subdirectoy structure
     # create subdirectoy structure
-    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+    CreateDirTree(outdir)
 
     # get input bam from config or command
     bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
@@ -254,6 +254,7 @@ def collapse(args):
     fam_size = GetFamSize(args.config, args.famsize)
     
     # write consensus output file
+    ConsDir = os.path.join(outdir, 'Consfiles')
     generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
  
     print(timestamp() + "Consensus generated. Consensus file written to {}.".format(ConsDir))
@@ -388,7 +389,7 @@ def run_scripts(args):
             os.makedirs(outdir)
     
     # create subdirectoy structure
-    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir = CreateDirTree(outdir)
+    CreateDirTree(outdir)
 
     # get comma-separated list of minimum family size
     famsize = GetFamSize(args.config, args.famsize)
@@ -419,7 +420,7 @@ def generate_plots(args):
     '''
     
     # get subdirectories
-    L, T = ['Consfiles', 'Umifiles', 'Stats'], []
+    L = ['Consfiles', 'Umifiles', 'Stats']
     T = [os.path.join(args.diretory, i) for i in L]
     for i in T:
         if os.path.isdir(i) == False:
@@ -435,8 +436,7 @@ def generate_plots(args):
         
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
-    
-    
+        
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
     

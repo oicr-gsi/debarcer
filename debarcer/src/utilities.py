@@ -311,11 +311,11 @@ def GroupQCWriter(umi_families, Outputfile):
 
 def CreateDirTree(directory):
     '''
-    (str) -> tuple
+    (str) -> None
     
     :param directory: directory where d=subdirectories should be created
     
-    Create a directory structure under directory and return a tuple with the subdirectories
+    Create a directory structure under directory
     '''
     
     # check that input directory is valid
@@ -323,7 +323,7 @@ def CreateDirTree(directory):
         raise ValueError('not a valid directory {0}'.format(directory))
     
     # create subdirectoy structure
-    L = ['Umifiles', 'Datafiles', 'Stats', 'Consfiles', 'Qsubs', 'Figures']
+    L = ['Umifiles', 'Datafiles', 'Stats', 'Consfiles', 'Qsubs', 'Figures', 'VCFfiles']
     Tree = []
     for i in L:
         j = os.path.join(directory, i)
@@ -331,12 +331,11 @@ def CreateDirTree(directory):
             os.makedirs(j)
             Tree.append(j)
     # unpack variables
-    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, FigDir = Tree 
+    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, FigDir, VCFDir = Tree 
     # create log directory    
     LogDir = os.path.join(QsubDir, 'Logs')
     if os.path.isdir(LogDir) == False:
         os.makedirs(LogDir)
-        
-    return UmiDir, DataDir, StatsDir, ConsDir, QsubDir, LogDir, FigDir
-        
+         
+       
   
