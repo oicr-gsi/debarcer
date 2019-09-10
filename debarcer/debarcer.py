@@ -236,6 +236,13 @@ def collapse(args):
         
     print(timestamp() + "Generating consensus...")
 
+
+
+    print(umi_families)
+
+
+
+
     # get percent threshold 
     percent_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
     # get count threshold
@@ -247,11 +254,26 @@ def collapse(args):
     # get umi position threshold 
     pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     
+    
+    
+    for i in [percent_threshold, count_threshold, ref_threshold, all_threshold, pos_threshold]:
+        print(i)
+    
+    
+    
+    
+    
+    
+    
     # get reference
     reference = GetInputFiles(args.config, args.reference, 'reference_file')
     
     # get comma-separated list of minimum family sizes 
     fam_size = GetFamSize(args.config, args.famsize)
+    
+    
+    print(fam_size)
+    
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
