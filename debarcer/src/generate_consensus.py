@@ -313,6 +313,11 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
             cons_data[base_pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
+    
+    
+    print('cons data per base', len(cons_data))
+    
+    
     return cons_data
 
 
@@ -510,6 +515,14 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     # compute consensus for uncollapsed data if not in fam_size argument
     if 0 not in family_sizes:
         cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+
+
+
+    print('cons data', len(cons_data))
+    for i in cons_data:
+        print(i, len(cons_data[i]))
+
+
 
     # write output consensus file
     print("Writing output...")
