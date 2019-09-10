@@ -103,7 +103,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                 umis = read_name.split(":")[-1].split(';')
                 for umi in umis:
                     
-                    print(umi, umi in umi_families)
+                    print(umi, umi in umi_families, len(umi_families))
                     
                     
                     # check that umi is recorded
