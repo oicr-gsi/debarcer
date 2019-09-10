@@ -113,6 +113,13 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
                             if count >= fam_size:
+                                
+                                
+                                
+                                print('umi', umi, 'closest', closest, 'pos_threshold', pos_threshold, closest <= pos_threshold,   'closest < threshold', 'count', count, 'fam_size', fam_size, count >= fam_size)
+                                
+                                
+                                
                                 # get the parent sequence                                
                                 parent = umi_families[umi]['parent']
                                                                 
@@ -266,6 +273,15 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
     # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+
+
+
+
+    print('cons seq', len(consensus_seq))
+    print('fam size', len(FamSize))
+
+
+
 
     # create a dict to store consensus info
     cons_data = {}
