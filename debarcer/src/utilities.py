@@ -338,4 +338,22 @@ def CreateDirTree(directory):
         os.makedirs(LogDir)
          
        
-  
+def CheckFileContent(File):
+    '''
+    (str) -> bool
+    
+    :param File: Path to File. First line is header
+    
+    Return True if content of the file (excluding header) is not the empty string
+    '''
+    
+    infile = open(File)
+    # skip header
+    header = infile.readline()
+    content = infile.read().rstrip()
+    if content != '':
+        return True
+    else:
+        return False
+    
+    
