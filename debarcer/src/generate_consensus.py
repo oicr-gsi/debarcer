@@ -488,44 +488,6 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
     newfile.close()
             
 
-#                row = cons_data[f_size][base_pos]
-#                ref = row.get_ref_info()
-#                cons = row.get_cons_info()
-#                stats = row.get_stats()
-#
-#                if stats['ref_freq'] <= ref_threshold:
-#
-#                    alleles = row.get_alleles(all_threshold)
-#                    ref_bases = set([allele[0] for allele in alleles])
-#                    ref_allele = (ref_seq[base_pos - region_start], ref_seq[base_pos - region_start])
-#                    depths = row.impute_allele_depths()
-#                    ref_depth = depths[ref_allele] if ref_allele in depths else 0
-#                    alt_freqs = row.impute_allele_freqs(all_threshold)
-#
-#                    info = "RDP={};CDP={};MIF={};MNF={:.1f}".format(
-#                        stats['rawdp'], stats['consdp'], stats['min_fam'], stats['mean_fam'])
-#                    fmt_string = "AD:AL:AF" # Allele depth, alt allele depth, reference frequency
-#
-#                    for ref_base in ref_bases:
-#
-#                        #Handle error where ref_base is assigned to multiple ref_alleles
-#                        if len(ref_base) > 1:
-#                            ref_base = ref_base[0]
-#                        if (base_pos < 170837514) and (base_pos > 170837510):
-#                            print("--BASE_POS: "+str(base_pos)+" ref_base: "+ref_base+"--")
-#
-#                        snips = []
-#                        for allele in alleles:
-#                            if allele[0] == ref_base:
-#                                snips.append(allele)
-#
-#                        alt_string = ','.join( [allele[1] for allele in snips] )
-#                        depth_string = ','.join( [str(depths[allele]) for allele in snips] )
-#                        freq_string = ','.join( ["{:.2f}".format(alt_freqs[allele]) for allele in snips] )
-#                        smp_string = "{}:{}:{}".format(ref_depth, depth_string, freq_string)
-#                        filt = "PASS" if any( [depths[alt] > 10 for alt in snips] ) else "a10"
-#                        #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
-
 
 def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth, truncate, ignore_orphans):
     '''
