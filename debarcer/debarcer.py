@@ -500,17 +500,17 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         # count family size for each family and position  
         umi_occurence = GetUmiFamilyFreqFromGrouping(filename)
-        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}_{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}.{1}'.format(region, args.extension))
         PlotUMiFrequency(umi_occurence, Outputfile)
             
         # plot marginal distributions of UMI family size and read depth
         plt.clf(), plt.cla()
-        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}_{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
         PlotFamSizeReadDepth(filename, Outputfile)
         
         # plot distribution of read depth for each umi families
         plt.clf(), plt.cla()
-        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}_{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
         PlotReadDepth(filename, Outputfile)
         
     # plot children to parent umi count ratio
