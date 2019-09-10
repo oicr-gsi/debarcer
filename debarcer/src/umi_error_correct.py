@@ -191,7 +191,7 @@ def find_group_families(contig, umi_families, pos_threshold, ignore_others):
             assert umi not in C
             d = {}
             for i in D:
-                d[contig + '_' + str(i)] = D[i]
+                d[contig + ':' + str(i)] = D[i]
             C[umi] = {'parent': parent, 'positions': d}
     return C
 
