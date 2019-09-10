@@ -216,6 +216,13 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
+           
+            
+            
+            print('uncollapsed', pileupcolumn)
+            
+            
+            
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
