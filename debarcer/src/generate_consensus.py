@@ -93,6 +93,11 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
             pos = int(pileupcolumn.reference_pos)  
+            
+            print('pos', pos)
+            
+            
+            
             assert pos != region_end
             # loop over reads in pileup column
             for read in pileupcolumn.pileups:
@@ -536,6 +541,11 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     # get minimum umi family sizes
     family_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
 
+
+    print(family_sizes)
+
+
+
     # get reference sequence for the region 
     print("Getting reference sequence...")
     ref_seq = get_ref_seq(contig, region_start, region_end, reference)
@@ -544,6 +554,11 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Building consensus data...")
     cons_data = {}
     for f_size in family_sizes:
+        
+        print(f_size, type(f_size))
+        
+        
+        
         # check if 0 is passed as fam_size argument
         if f_size == 0:
             # compute consensus for uncollapsed data
