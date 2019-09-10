@@ -13,7 +13,7 @@ from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThr
  FormatRegion, GroupQCWriter, CreateDirTree
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
- PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping, PlotFamSizeReadDepth
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping, PlotFamSizeReadDepth, PlotReadDepth
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -507,6 +507,11 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}_{1}'.format(region, args.extension))
         PlotFamSizeReadDepth(filename, Outputfile)
+        
+        # plot distribution of read depth for each umi families
+        plt.clf(), plt.cla()
+        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}_{1}'.format(region, args.extension))
+        PlotReadDepth(filename, Outputfile)
         
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()

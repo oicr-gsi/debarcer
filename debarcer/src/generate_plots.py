@@ -17,6 +17,7 @@ import os
 import numpy as np
 from scipy import stats
 from src.utilities import FormatRegion, edit_distance
+from src.umi_error_correct import most_frequent
 import networkx as nx
 import json
 import collections
@@ -1749,5 +1750,125 @@ def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
                 labelsize = 12, direction = 'out')  
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
+    
+    
+
+def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, **Options):
+    
+    '''
+    
+    :param columns: Number of columns
+    :param rows: Number of rows
+    :param position: Ax position in figure
+    :param figure: Figure object opened for writing
+    
+    
+    Return a ax object in figure
+    '''
+    
+    # create an ax instance in figure
+    ax = figure.add_subplot(rows, columns, position)
+    # plot distribution of read depth
+    ax.hist(data, bins=20, facecolor=Colors, lw=1, edgecolor='lightgrey', align='mid')
+    
+    # set up y axis label and grid
+    if 'ylabel' in Options:
+        ax.set_ylabel(Options['ylabel'], color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Read depth', color = 'black',  size = 14, ha = 'center')
+
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+
+    # add title        
+    ax.set_title(title, size = 14)
+        
+    # add text
+    if 'text' in Options:
+        # use figure coordinates instead of data coordinates 
+        plt.text(0.4, 1, Options['text'], transform=plt.gcf().transFigure, fontsize=14)
+         
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+       
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    
+    return ax
+    
+    
+def PlotReadDepth(UmiFile, Outputfile):
+    '''
+    (str) -> None
+    
+    
+    :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
+    
+    Plot the distribution of read depth for all positions, the position with highest
+    and the lowest read depth within a given umi family 
+    '''
+    
+    # get read depth for each umi family and position {parent: position: read_depth}
+    All = GetFamilyReadDepth(UmiFile)
+    
+    
+    region = os.path.basename(UmiFile)
+    region = region[:-5]
+    if '_' in region:
+        region = region.replace('_', ':')
+    
+    # separately record positions with the highest read depth and other positions
+    MostFrequent, Others = {}, {}
+    for parent in All:
+        L = [(int(i.split(':')[1]), All[parent][i]) for i in All[parent]] 
+           
+        
+        
+        for i in L:
+            assert type(i[0]) == int    
+        
+        
+        L.sort()
+        # identify pos with most abundant umi within given family <-- (pos, read_depth)
+        most_abundant = most_frequent(L)
+        # record only positions with the highest read depth within group 
+        MostFrequent[parent] = {}
+        MostFrequent[parent][most_abundant[0]] = most_abundant[1]
+        # record all other positions
+        for i in L:
+            if (i[0], i[1]) != most_abundant:
+                if parent not in Others:
+                    Others[parent] = {}
+                Others[parent][i[0]] = i[1]
+                
+    # clear previous axes
+    plt.clf()
+    plt.gcf().set_size_inches(9, 6, forward=True)    
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # plot distribution of read depth for all positions and umi groups
+    data1 = [list(All[i].values())[0] for i in All]
+    ax1 = CreateAxHistReadDepth(3, 1, 1, figure, data1, '#7300e6', 'All', ylabel='Umi family count')    
+    # plot distribution of most frequent read depth for umi groups
+    data2 = [list(MostFrequent[i].values())[0] for i in MostFrequent]
+    ax2 = CreateAxHistReadDepth(3, 1, 2, figure, data2, '#b366ff', 'Highest', text=region)    
+    # plot distribution of read depth for positions with lower read depth and umi groups
+    data3 = [list(Others[i].values())[0] for i in Others]
+    ax3 = CreateAxHistReadDepth(3, 1, 3, figure, data3, '#e6ccff', 'Others')    
+    
+    # save figure to file  
+    plt.tight_layout()
+    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
     
     
