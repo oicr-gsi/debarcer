@@ -101,6 +101,13 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                 read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                 # get all recorded umis
                 umis = read_name.split(":")[-1].split(';')
+                
+                
+                print(umis)
+                print(read)
+                print(read_name, start_pos)
+                
+                
                 for umi in umis:
                     
                     print(umi, umi in umi_families, len(umi_families))
