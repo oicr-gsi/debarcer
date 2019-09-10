@@ -392,6 +392,9 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     
     
+    
+    print(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans)
+    
     print('uncollapsed')
     print(uncollapsed_seq)
     
