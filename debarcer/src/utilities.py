@@ -329,7 +329,7 @@ def CreateDirTree(directory):
         j = os.path.join(directory, i)
         if os.path.isdir(j) == False:
             os.makedirs(j)
-            Tree.append(j)
+        Tree.append(j)
     # unpack variables
     UmiDir, DataDir, StatsDir, ConsDir, QsubDir, FigDir, VCFDir = Tree 
     # create log directory    
