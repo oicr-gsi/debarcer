@@ -57,7 +57,7 @@ def find_closest(pos, L):
     return (distances[0], D[distances[0]][-1])
 
 
-def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
+def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=1000000, truncate, ignore_orphans):
     '''
     
     (dict, int, str, str, int, int, str, int, int, bool, bool) -> (dict, dict)
@@ -72,8 +72,8 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     :param bam_file: Path to the bam file
     :param pos_threshold: Window size to group indivual umis into families within groups 
     :param max_depth: Maximum read depth. Default is 1000000 reads
-    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
-    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    :param truncate: Consider only pileup columns within interval defined by region start and end if True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
     Returns a tuple with a dictionary representing consensus info at each base position in the given region
     and a dictionary to keep track of family size for each position
@@ -195,7 +195,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     return consensus_seq, FamSize
 
 
-def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True):
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate, ignore_orphans):
     '''
     (str, str, int, int, str, str, int, bool, bool) -> dict
     
@@ -205,8 +205,8 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     :param region_end: End index of the region of interest. 0-based half opened
     :param bam_file: Path to the bam file
     :param max_depth: Maximum read depth. Default is 1000000 reads
-    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
-    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    :param truncate: Consider only pileup columns within interval defined by region start and end if True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
     Returns a nested dictionary representing counts of each base at each base position.
     '''
@@ -281,7 +281,7 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
+def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=1000000, truncate, ignore_orphans):
     '''
     (dict, int, str, str, int, int, str, int, int, int, int, bool, bool) -> dict
     
@@ -298,8 +298,8 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     :param percent_threshold: Percent consensus threshold for alternative base within family 
     :param count_threshold: Count consensus threshold for alternative base within family
     :param max_depth: Maximum read depth. Default is 1000000 reads
-    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
-    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    :param truncate: Consider only pileup columns within interval defined by region start and end if True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
     Generates consensus data for a given family size and genomic region
     '''
@@ -372,7 +372,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
 
 
 
-def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate=True, ignore_orphans=True):
+def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=1000000, truncate, ignore_orphans):
     '''
     (str, str, int, int, str, int, bool, bool) -> dict
     
@@ -382,8 +382,8 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     :param region_end: End index of the region of interest. 0-based half opened
     :param bam_file: Path to the bam file
     :param max_depth: Maximum read depth. Default is 1000000 reads
-    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
-    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    :param truncate: Consider only pileup columns within interval defined by region start and end if True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
     Generates uncollapsed consensus data for the genomic region
     '''
@@ -524,7 +524,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
 #                        #writer.write("# {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(contig, base_pos, ".", ref_base, alt_string, "0", filt, info, fmt_string, smp_string))
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate=True, ignore_orphans=True):
+def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=1000000, truncate, ignore_orphans):
     '''
     (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool) -> None
     
@@ -545,8 +545,8 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     :param ref_threshold: ??
     :param all_threshold: ??
     :param max_depth: Maximum read depth. Default is 1000000 reads
-    :param truncate: Consider only pileup columns within interval defined by region start and end. Default is True
-    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair). Default is True
+    :param truncate: Consider only pileup columns within interval defined by region start and end if True
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
     Generates consensus output file
     '''
