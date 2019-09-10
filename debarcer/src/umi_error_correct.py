@@ -150,10 +150,18 @@ def find_group_families(contig, umi_families, pos_threshold, ignore_others):
         L = []
         for umi in umi_families[parent]:
             for pos in umi_families[parent][umi]:
+                
+                
+                #### remove code below - for testing #####
+                assert type(pos) == int
+                
+                
+                
+                
                 L.append((pos, umi_families[parent][umi][pos]))
         # sort list of positions, counts by position
         L.sort()
-        # create a dict {chr_pos: count} recording umi counts within family merging
+        # create a dict {'chr:pos': count} recording umi counts within family merging
         # positions onto the position of the most frequent umi within the pos_threshold
         D = {}
         # stop when all positions have been recorded
