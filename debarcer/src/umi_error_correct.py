@@ -150,14 +150,6 @@ def find_group_families(contig, umi_families, pos_threshold, ignore_others):
         L = []
         for umi in umi_families[parent]:
             for pos in umi_families[parent][umi]:
-                
-                
-                #### remove code below - for testing #####
-                assert type(pos) == int
-                
-                
-                
-                
                 L.append((pos, umi_families[parent][umi][pos]))
         # sort list of positions, counts by position
         L.sort()
