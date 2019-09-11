@@ -468,10 +468,6 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
     
-    # check that file is valid path
-    if os.path.isfile(ConsFile) == False:
-        raise ValueError('ERR: Invalid path to consensus file')
-    
     # extract region from consensus file
     region = FormatRegion(ConsFile)
        
@@ -630,10 +626,6 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
            
     Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
-    
-    # check that file is valid path
-    if os.path.isfile(ConsFile) == False:
-        raise ValueError('ERR: Invalid path to consensus file')
     
     # extract region from consensus file
     region = FormatRegion(ConsFile)
@@ -803,13 +795,9 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     :param Color: List with colors for plotting
     :param Outputfile: Name of the output figure file
            
-    Pre-condition: consensus file is not merged chrN:A-B.cons 
+    Pre-condition: consensus file is not merged chrN:A-B.cons and not empty
     '''
     
-    # check that file is valid path
-    if os.path.isfile(ConsFile) == False:
-        raise ValueError('ERR: Invalid path to consensus file')
-       
     # extract region from consensus file
     region = FormatRegion(ConsFile)
         
@@ -1164,10 +1152,6 @@ def ParentToChildren(UmiFile):
     Precondition: the umi file is not merged
     '''
     
-    
-    if os.path.isfile(UmiFile) == False:
-        raise ValueError('ERR: Invalid path to umi file {0}'.format(UmiFile))
-        
     # load umi file with umi sequences and chil to parent relations
     infile = open(UmiFile)
     data = json.load(infile)
