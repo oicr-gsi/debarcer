@@ -491,30 +491,16 @@ def generate_plots(args):
             
 #    # plot graphs for each consensus file
 #    for filename in ConsFiles:
-#        
-#        
-#        
-#        print(os.path.basename(filename))
-#        
-#        print('mean fam size')
-#        
 #        # plot mean family size for each consensus file/region
 #        region = FormatRegion(filename).replace(':', '-')
 #        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
 #        plt.clf(), plt.cla()
 #        PlotMeanFamSize(filename, Colors[1:], Outputfile)
 #            
-#        print('nonreffreq')
-#        
-#        
-#        
 #        # plot non-reference frequency
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
 #        plt.clf(), plt.cla()
 #        PlotNonRefFreqData(filename, Colors, Outputfile)
-#    
-#    
-#        print('rawconsdepth')
 #    
 #        # plot raw and consensus depth
 #        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
@@ -554,27 +540,27 @@ def generate_plots(args):
 #        plt.clf(), plt.cla()
 #        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
 #        PlotReadDepth(filename, Outputfile)
-#    
-#
-#    # plot children to parent umi count ratio
-#    plt.clf(), plt.cla()
-#    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
-#        
-#    # plot total umi counts
-#    plt.clf(), plt.cla()
-#    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
-#    
-#    # plot children umi counts
-#    plt.clf(), plt.cla()
-#    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
-#    
-#    # plot children vs parent umis for each interval
-#    plt.clf(), plt.cla()
-#    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
-#
-#    # plot parent frequencies vs children UMI counts
-#    plt.clf(), plt.cla()
-#    PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
+    
+
+    # plot children to parent umi count ratio
+    plt.clf(), plt.cla()
+    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
+        
+    # plot total umi counts
+    plt.clf(), plt.cla()
+    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
+    
+    # plot children umi counts
+    plt.clf(), plt.cla()
+    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
+    
+    # plot children vs parent umis for each interval
+    plt.clf(), plt.cla()
+    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
+
+    # plot parent frequencies vs children UMI counts
+    plt.clf(), plt.cla()
+    PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
        
     
        
