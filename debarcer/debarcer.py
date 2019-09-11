@@ -443,7 +443,7 @@ def generate_plots(args):
     
     # get subdirectories
     L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
-    T = [os.path.join(args.diretory, i) for i in L]
+    T = [os.path.join(args.directory, i) for i in L]
     for i in T:
         if os.path.isdir(i) == False:
             raise ValueError('ERR: Expecting directory {0}'.format(i))
