@@ -496,7 +496,7 @@ def generate_plots(args):
         
         print(os.path.basename(filename))
         
-        
+        print('mean fam size')
         
         # plot mean family size for each consensus file/region
         region = FormatRegion(filename).replace(':', '-')
@@ -504,10 +504,17 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         PlotMeanFamSize(filename, Colors[1:], Outputfile)
             
+        print('nonreffreq')
+        
+        
+        
         # plot non-reference frequency
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile)
+    
+    
+        print('rawconsdepth')
     
         # plot raw and consensus depth
         Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
