@@ -303,13 +303,29 @@ def PlotCoverage(ConsFiles, DataFiles, Outputfile):
     
     # get mean coverage per interval
     Coverage = GetSampleCoverage(ConsFiles)
-       
+      
+    
+    print(Coverage)
+    
+    
+    
+    
     # get total parent umis for each interval
     Umis = GetSampleUmis(DataFiles)
+    
+    
+    print(Umis)
+    
+    
+    
     
     # make sure that regions are defined for both coverage and umis
     # get a sorted list of positions
     Coordinates = SortPositions(list(set(Coverage.keys()).intersection(set(Umis.keys()))))
+    
+    
+    print(Coordinates)
+    
     
     # clear previous axes
     plt.clf()
@@ -323,6 +339,9 @@ def PlotCoverage(ConsFiles, DataFiles, Outputfile):
         M[i] = Coverage[i][0]
     # create a sorted list with sem
     S = [Coverage[i][1] for i in Coordinates]
+    
+    print(S)
+    
     
     # plot data
     ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
