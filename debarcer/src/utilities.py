@@ -351,6 +351,7 @@ def CheckFileContent(File):
     # skip header
     header = infile.readline()
     content = infile.read().rstrip()
+    infile.close()
     if content != '':
         return True
     else:
