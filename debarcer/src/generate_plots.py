@@ -16,7 +16,7 @@ from matplotlib import rc
 import os
 import numpy as np
 from scipy import stats
-from src.utilities import FormatRegion, edit_distance
+from src.utilities import edit_distance, FormatRegion
 from src.umi_error_correct import most_frequent
 import networkx as nx
 import json
@@ -92,20 +92,20 @@ def ExtractUmiCounts(DataFile):
     '''
     (file) -> dict    
 
-    :param DataFile: Data file with umi count for a given region (ie. not merged)
+    :param DataFile: Data file with umi count for a given region (ie. not merged and not empty)
 
     Return a dictionary with umi count for the different umi categories for a given region
     '''
     
     D = {}
     
+    # get region from file name
+    region = FormatRegion(DataFile)
     infile = open(DataFile)
     Header = infile.readline().strip().split('\t')
     line = infile.readline().strip()
     if line != '':
         line = line.split()
-        # get genomic region
-        chromo, start, end = line[Header.index('CHR')], line[Header.index('START')], line[Header.index('END')]
         # get total parent umis
         ptu = int(line[Header.index('PTU')])
         # get total child umis
@@ -113,7 +113,6 @@ def ExtractUmiCounts(DataFile):
         # get numbers of children
         children = line[Header.index('CHILD_NUMS')]
         parents = line[Header.index('FREQ_PARENTS')]
-        region = chromo + ':' + start + '-' + end
         D[region] = {'PTU': ptu, 'CTU': ctu, 'children': children, 'parents': parents} 
     infile.close()
     return D
@@ -130,9 +129,9 @@ def GetSampleUmis(L):
     
     D = {}
     for filename in L:
+        region = FormatRegion(filename)
         # extract umi counts
         d = ExtractUmiCounts(filename)
-        region = list(d.keys())[0]
         umis = d[region]['PTU']
         D[region] = umis
     return D
@@ -141,14 +140,14 @@ def GetSampleCoverage(L):
     '''
     (list) -> dict
     
-    :param L: A list of full paths to consensus files with umi count per interval (ie. files not merged)
+    :param L: A list of full paths to consensus files with umi count per interval (ie. files not merged and not empty)
     
     Returns a dictionary of interval coordinates with a list with mean and s.e.m. of coverage within the interval
     '''
     
     D = {}
     for filename in L:
-        # extract region by reading coordinates in file
+        # extract region from filename 
         region = FormatRegion(filename)
         M, sem = ExtractCoverage(filename)
         D[region] = [M, sem]
