@@ -829,11 +829,11 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
  
     
 
-def PlotUmiCounts(directory, Outputfile, Graph):
+def PlotUmiCounts(DataFiles, Outputfile, Graph):
     '''
-    (str, str, str) -> None
+    (list, str, str) -> None
     
-    :param directory: Directory containaing subdirectory Datafiles 
+    :param DataFiles: List of .csv data files generated after umi groouping 
     :param Outputfile: Name of the output figure file 
     :param Graph: Type of data to plot. Accepted values:
                   'ratio': children to parent umis ratio
@@ -841,21 +841,8 @@ def PlotUmiCounts(directory, Outputfile, Graph):
                   'children': children umi count 
     Generates a plot with umi counts (children, parents or children to parents ratio)
     
-    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
     '''
-    
-    # get the directory with data files
-    DataDir = os.path.join(directory, 'Datafiles')
-    if os.path.isdir(DataDir) == False:
-        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
-    
-    # make a list of datafiles with umis
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    
-    # check that paths to files are valid
-    for i in DataFiles:
-        if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid path to data file')
     
     # extract umi counts for each region
     L = [ExtractUmiCounts(i) for i in DataFiles]
@@ -957,11 +944,11 @@ def PlotUmiCounts(directory, Outputfile, Graph):
 
 
 
-def PlotParentsToChildrenCounts(directory, Outputfile):
+def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     '''
-    (str, str, str) -> None
+    (list, str) -> None
     
-    :param directory: Directory containaing subdirectory Datafiles 
+    :param DataFiles: List of data files generated after umi grouping 
     :param Outputfile: Name of the output figure file 
     :param Graph: Type of data to plot. Accepted values:
                   'ratio': children to parent umis ratio
@@ -969,18 +956,8 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
                   'children': children umi count 
     Generates a plot with umi counts (children, parents or children to parents ratio)
     
-    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
     '''
-    
-    # get the directory with data files
-    DataDir = os.path.join(directory, 'Datafiles')
-    if os.path.isdir(DataDir) == False:
-        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
-    # make a list of datafiles with umis
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    for i in DataFiles:
-        if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid file path {0}'.format(i))
     
     # extract umi counts for each region
     L = [ExtractUmiCounts(i) for i in DataFiles]
@@ -1072,11 +1049,11 @@ def PlotParentsToChildrenCounts(directory, Outputfile):
 
     
 
-def PlotParentFreq(directory, Color, Outputfile):
+def PlotParentFreq(DataFiles, Color, Outputfile):
     '''
-    (str, list, str) -> None
+    (list, list, str) -> None
     
-    :param directory: Directory containaing subdirectory Datafiles
+    :param DataFiles: List of .csv data files generated after umi grouping
     :param Color: List of colors for plotting
     :param Outputfile: Name of the output figure file 
      
@@ -1084,19 +1061,6 @@ def PlotParentFreq(directory, Color, Outputfile):
     
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
     '''
-    
-    # get the directory with data files
-    DataDir = os.path.join(directory, 'Datafiles')
-    if os.path.isdir(DataDir) == False:
-        raise ValueError('ERR: Invalid directory: {0}'.format(DataDir))
-    
-    # make a list of datafiles with umis
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    
-    # check that paths to files are valid
-    for i in DataFiles:
-        if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid path to data file')
     
     # extract umi counts for each region
     L = [ExtractUmiCounts(i) for i in DataFiles]
