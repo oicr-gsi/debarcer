@@ -10,7 +10,7 @@ from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
- FormatRegion, GroupQCWriter, CreateDirTree
+ FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
  PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping, PlotFamSizeReadDepth, PlotReadDepth
@@ -442,26 +442,32 @@ def generate_plots(args):
     '''
     
     # get subdirectories
-    L = ['Consfiles', 'Umifiles', 'Stats']
+    L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
     T = [os.path.join(args.diretory, i) for i in L]
     for i in T:
         if os.path.isdir(i) == False:
             raise ValueError('ERR: Expecting directory {0}'.format(i))
       
     # unpack directories
-    ConsDir, UmiDir, StatsDir =  T 
+    ConsDir, UmiDir, StatsDir, DataDir =  T 
         
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
     if os.path.isdir(FigDir) == False:
         os.mkdir(FigDir)
         
-    # make a list of consensus files
-    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
-        
+    # make a list of consensus files that are not empty
+    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons' and CheckFileContent(os.path.join(ConsDir, i)) == True]
+    # make a list of datafiles with umis
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv') and CheckFileContent(os.path.join(DataDir, i)) == True]
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
     
+    # check that paths to files are valid
+    for i in ConsFiles + DataFiles + UmiFiles:
+        if os.path.isfile(i) == False:
+            raise ValueError('ERR: Invalid file path {0}'.format(i))
+     
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -475,14 +481,14 @@ def generate_plots(args):
     umi_occurence = GetUmiFreqFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
     PlotUMiFrequency(umi_occurence, Outputfile, 'UMI counts', 'Read depth')
-        
+    
     # plot coverage
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
     # in future version, a new instance will always be created and returned
     plt.clf(), plt.cla()
-    PlotCoverage(args.directory, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
-        
+    PlotCoverage(ConsFiles, DataFiles, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
+            
     # plot graphs for each consensus file
     for filename in ConsFiles:
         # plot mean family size for each consensus file/region
@@ -534,26 +540,28 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
         PlotReadDepth(filename, Outputfile)
-        
+    
+
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
-    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
-    
+    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
+        
     # plot total umi counts
     plt.clf(), plt.cla()
-    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
+    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
     
     # plot children umi counts
     plt.clf(), plt.cla()
-    PlotUmiCounts(args.directory, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
+    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
     
     # plot children vs parent umis for each interval
     plt.clf(), plt.cla()
-    PlotParentsToChildrenCounts(args.directory, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
-    
+    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
+
     # plot parent frequencies vs children UMI counts
     plt.clf(), plt.cla()
-    PlotParentFreq(args.directory, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
+    PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
+       
     
        
 if __name__ == '__main__':
