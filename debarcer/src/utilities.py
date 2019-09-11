@@ -201,69 +201,89 @@ def get_consecutive_items(L):
 
 
 ### use this function to extract regions from a merged consensus file
-def ExtractRegions(ConsFile):
-    '''
-    (str) -> dict
-    
-    :param ConsFile: Path to consensus file (merged or not)
-    
-    Returns all intervals in ConsFile in the form a dictionary with interval range
-    (1-based coordinates) and a list of chromosomes with these coordinates 
-    '''
-    
-    # extract all positions per chromosome
-    D = {}
-    
-    # open file for reading, skip header
-    infile = open(ConsFile)
-    Header = infile.readline().rstrip().split()
-    for line in infile:
-        # consider lines with valid chromosome format
-        if line.startswith('chr'):
-            line = line.rstrip().split()
-            chromo, pos = line[Header.index('CHROM')], int(line[Header.index('POS')])
-            if chromo in D:
-                D[chromo].append(pos)
-            else:
-                D[chromo] = [pos]
-    infile.close()
-    
-    # find intervals for each chromo {range(start, end) : [chromos]}
-    I = {}
-    for chromo in D:
-        # get the consecutive positions for each chromosome
-        intervals = list(get_consecutive_items(D[chromo]))
-        # convert positions to ranges 
-        for i in intervals:
-            # adjust last position, range is not inclusive
-            positions = range(i[0], i[1] + 1)
-            if positions in I:
-                I[positions].append(chromo)
-            else:
-                I[positions] = [chromo]
-    return I    
+#def ExtractRegions(ConsFile):
+#    '''
+#    (str) -> dict
+#    
+#    :param ConsFile: Path to consensus file (merged or not)
+#    
+#    Returns all intervals in ConsFile in the form a dictionary with interval range
+#    (1-based coordinates) and a list of chromosomes with these coordinates 
+#    '''
+#    
+#    # extract all positions per chromosome
+#    D = {}
+#    
+#    # open file for reading, skip header
+#    infile = open(ConsFile)
+#    Header = infile.readline().rstrip().split()
+#    for line in infile:
+#        # consider lines with valid chromosome format
+#        if line.startswith('chr'):
+#            line = line.rstrip().split()
+#            chromo, pos = line[Header.index('CHROM')], int(line[Header.index('POS')])
+#            if chromo in D:
+#                D[chromo].append(pos)
+#            else:
+#                D[chromo] = [pos]
+#    infile.close()
+#    
+#    # find intervals for each chromo {range(start, end) : [chromos]}
+#    I = {}
+#    for chromo in D:
+#        # get the consecutive positions for each chromosome
+#        intervals = list(get_consecutive_items(D[chromo]))
+#        # convert positions to ranges 
+#        for i in intervals:
+#            # adjust last position, range is not inclusive
+#            positions = range(i[0], i[1] + 1)
+#            if positions in I:
+#                I[positions].append(chromo)
+#            else:
+#                I[positions] = [chromo]
+#    return I    
         
 
-def FormatRegion(ConsFile):
+#def FormatRegion(ConsFile):
+#    '''
+#    (str) -> str
+#    
+#    :param ConsFile: Path to consensus file (not merged)
+#    
+#    Returns a region in the format 'chr:start-end'  
+#    
+#    Pre-condition: The consensus file is not merged and coordinates are from a single region
+#    '''
+#    
+#    
+#    # extract interval from file
+#    I = ExtractRegions(ConsFile)
+#    # get start and end positions
+#    start, end = list(I.keys())[0][0], list(I.keys())[0][-1]
+#    # get chromosome
+#    chromo = I[list(I.keys())[0]][0]
+#    # adjust end to get region
+#    region = chromo + ':' + str(start) + '-' + str(end + 1)
+#    return region
+
+
+
+
+def FormatRegion(File):
     '''
     (str) -> str
     
-    :param ConsFile: Path to consensus file (not merged)
+    :param ConsFile: Path to file (not merged)
     
     Returns a region in the format 'chr:start-end'  
-    
-    Pre-condition: The consensus file is not merged and coordinates are from a single region
+    Pre-condition: File is named *chr*:*-*.* 
     '''
     
-    
-    # extract interval from file
-    I = ExtractRegions(ConsFile)
-    # get start and end positions
-    start, end = list(I.keys())[0][0], list(I.keys())[0][-1]
-    # get chromosome
-    chromo = I[list(I.keys())[0]][0]
-    # adjust end to get region
-    region = chromo + ':' + str(start) + '-' + str(end + 1)
+    region = os.path.basename(File)
+    if 'chr' in region and '.' in region:
+        region = region[region.index('chr'):region.index('.')]
+    else:
+        region = 'NA'
     return region
 
 
