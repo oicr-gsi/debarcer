@@ -287,46 +287,29 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     return ax
 
 
-def PlotCoverage(directory, Outputfile):
+def PlotCoverage(ConsFiles, DataFiles, Outputfile):
     '''
-    (str, str, dict) -> None
+    (list, list, dict) -> None
     
-    :param directory: Directory containaing subdirectories Consfiles and Datafiles
-                      respectively with consensus and data files
+    :param ConsFiles: List of .cons consensus files generated after umi collpsing
+    :param DataFiles: List of .csv data files generated after umi grouping
     :param Outputfile: Name of the output figure file 
          
     Generates a plot with mean coverage and total umis per interval
     
-    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
+    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv) and not empty
     '''
     
-    # get the expected subdirectories in directory
-    ConsDir = os.path.join(directory, 'Consfiles')
-    DataDir = os.path.join(directory, 'Datafiles')
-    
-    if os.path.isdir(ConsDir) == False or os.path.isdir(DataDir) == False:
-        raise ValueError('ERR: Invalid Consfiles and/or Datafiles directory')
-        
-    # make a list of consensus files
-    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
-    # make a list of datafiles with umis
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv')]
-    
-    # check that paths to files are valid
-    for i in ConsFiles:
-        if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid path to consensus file')
-    for i in DataFiles:
-        if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid path to data file')
     
     # get mean coverage per interval
     Coverage = GetSampleCoverage(ConsFiles)
        
     # get total parent umis for each interval
     Umis = GetSampleUmis(DataFiles)
+    
+    # make sure that regions are defined for both coverage and umis
     # get a sorted list of positions
-    Coordinates = SortPositions(list(Coverage.keys()))
+    Coordinates = SortPositions(list(set(Coverage.keys()).intersection(set(Umis.keys()))))
     
     # clear previous axes
     plt.clf()
