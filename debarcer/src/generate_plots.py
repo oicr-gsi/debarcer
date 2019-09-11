@@ -385,14 +385,20 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     FamSize = sorted(Data.keys())
         
     # make a sorted list of positions
-    pos = list(map(lambda x: int(x), list(Data[FamSize[0]].keys())))
-    pos.sort()
-    pos = list(map(lambda x: str(x), pos))
+    # collect all positions across families because some positions may be missing for some family size
+    positions = []
+    for i in Data:
+        positions.extend(list(Data[i].keys()))
+    positions = list(map(lambda x: str(x), sorted(list(map(lambda x: int(x), list(set(positions)))))))
     
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(Rows, Columns, Position)
     # plot data  
     for i in range(len(FamSize)):
+        # get the positions corresponding to that family size
+        pos = list(map(lambda x: int(x), list(Data[FamSize[i]].keys())))
+        pos.sort()
+        pos = list(map(lambda x: str(x), pos))
         ax.plot([j for j in range(len(pos))], [Data[FamSize[i]][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
     
     # limit y axis
@@ -432,8 +438,8 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
                 labelsize = 12, direction = 'out')  
 
     # write ticks for y and x axis
-    xtickspos = [i for i in range(0, len(pos), 20)]
-    xticks = [pos[i] for i in xtickspos]
+    xtickspos = [i for i in range(0, len(positions), 20)]
+    xticks = [positions[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
     
