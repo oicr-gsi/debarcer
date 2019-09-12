@@ -1130,7 +1130,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     ax.set_xlabel('Number of children UMIs', color = 'black',  size = 14, ha = 'center')
         
     # write title   
-    ax.set_title('Parent Frequency vs Children UMIs.', size = 14)
+    ax.set_title('Parent Frequency vs Children UMIs', size = 14)
     
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
