@@ -7,7 +7,7 @@ Created on Tue Jul 30 12:56:47 2019
 
 # import modules
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
@@ -16,8 +16,8 @@ from matplotlib import rc
 import os
 import numpy as np
 from scipy import stats
-from src.utilities import edit_distance, FormatRegion
-from src.umi_error_correct import most_frequent
+#from src.utilities import edit_distance, FormatRegion
+#from src.umi_error_correct import most_frequent
 import networkx as nx
 import json
 import collections
@@ -166,7 +166,10 @@ def SortPositions(L):
     # make a sorted list of chromos
     Chromos = {}
     for i in L:
-        i = i.split(':')
+        if ':' in i:
+            i = i.split(':')
+        elif '_' in i:
+            i = i.split('_')
         chromo = i[0]
         start = i[1].split('-')[0]
         end = i[1].split('-')[1]
@@ -1036,18 +1039,26 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
-    
-    # add colorbar
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    #cb = figure.colorbar(Sizes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+1)], use_gridspec=False)
-    #cb = figure.colorbar(Sizes, cax=cax, orientation = 'horizontal', use_gridspec=False)
-    #cb = figure.colorbar(ax, orientation = 'vertical', use_gridspec=False)
-    #cb = figure.colorbar()
-    #cb.set_label('Interval size', size=14, ha='center', color='black', labelpad=18)
-    
-    plt.imshow(Sizes)
-    plt.colorbar()
+        
+    # add color bar
+    # convert interval Sizes to array with shape
+    a = np.array(Sizes)
+    a = np.expand_dims(a, axis=0)
+    # get image, use colors used for coloring interval sizes
+    img = plt.imshow(a, interpolation = 'nearest', cmap = cmap)
+    # set color bar size to graph size
+    aspect=1.0
+    im = ax.get_images()
+    extent = im[0].get_extent()
+    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
+    # create color bar and set ticks
+    b = list(map(lambda x: int(x), Sizes))
+    step = SetUpTicks(max(b) - min(b))
+    cb = plt.colorbar(img, ticks=[i for i in range(min(b), max(b)+1, step)], use_gridspec=True)
+    cb.ax.set_yticklabels([str(i) for i in range(min(b), max(b)+1, step)])
+    cb.ax.tick_params(labelsize=12)    
+    cb.ax.tick_params(direction = 'out')
+    cb.set_label('Interval size', size=14, labelpad=18)
     
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
