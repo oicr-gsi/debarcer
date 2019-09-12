@@ -1042,8 +1042,8 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     #cax = divider.append_axes("bottom", size="5%", pad=0.05)
     #cb = figure.colorbar(PTU+CTU, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+1)], use_gridspec=False)
     #cb = figure.colorbar(ax, orientation = 'vertical', use_gridspec=False)
-    cb = figure.colorbar()
-    
+    #cb = figure.colorbar()
+    cb = plt.colorbar()
     
     cb.set_label('Interval size', size=14, ha='center', color='black', labelpad=18)
     
