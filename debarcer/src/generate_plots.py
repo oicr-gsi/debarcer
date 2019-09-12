@@ -1152,6 +1152,11 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
        
+    # offset the x axis
+    for loc, spine in ax.spines.items():
+        spine.set_position(('outward', 5))
+        spine.set_smart_bounds(True)
+    
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
