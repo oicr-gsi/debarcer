@@ -990,7 +990,7 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # plot ctu/ptu ratio for each region
-    ax.scatter(PTU, CTU, edgecolor = 'black',clip_on=False, c = Sizes, cmap = cmap, marker='o', lw = 1, s = 160, alpha = 1)
+    ax.scatter(PTU, CTU, edgecolor = Sizes ,clip_on=False, c = Sizes, cmap = cmap, marker='o', lw = 1, s = 160, alpha = 0.5)
         
     # limit y axis to maximum value
     YMax = max(CTU)
