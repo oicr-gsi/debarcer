@@ -868,7 +868,7 @@ def PlotUmiCounts(DataFiles, Outputfile, Graph):
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # plot ctu/ptu ratio for each region
-    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 80, alpha = 1, clip_on=False)
+    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 100, alpha = 1, clip_on=False)
     
     # make a list of genomic regions 
     Chromos = []
@@ -926,7 +926,7 @@ def PlotUmiCounts(DataFiles, Outputfile, Graph):
     ax.spines["left"].set_visible(False)  
     # offset the spines
     for spine in ax.spines.values():
-        spine.set_position(('outward', 5))
+        spine.set_position(('outward', 7))
     
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
