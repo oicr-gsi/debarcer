@@ -299,33 +299,14 @@ def PlotCoverage(ConsFiles, DataFiles, Outputfile):
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv) and not empty
     '''
     
-    
     # get mean coverage per interval
     Coverage = GetSampleCoverage(ConsFiles)
-      
-    
-    print(Coverage)
-    
-    
-    
-    
     # get total parent umis for each interval
     Umis = GetSampleUmis(DataFiles)
-    
-    
-    print(Umis)
-    
-    
-    
-    
     # make sure that regions are defined for both coverage and umis
     # get a sorted list of positions
     Coordinates = SortPositions(list(set(Coverage.keys()).intersection(set(Umis.keys()))))
-    
-    
-    print(Coordinates)
-    
-    
+       
     # clear previous axes
     plt.clf()
     plt.gcf().set_size_inches(9, 6, forward=True)    
@@ -338,10 +319,7 @@ def PlotCoverage(ConsFiles, DataFiles, Outputfile):
         M[i] = Coverage[i][0]
     # create a sorted list with sem
     S = [Coverage[i][1] for i in Coordinates]
-    
-    print(S)
-    
-    
+       
     # plot data
     ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
     ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
@@ -1109,7 +1087,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     # loop over sorted regions
     for i in range(len(Coordinates)):
         # plot parent frequencies vs sorted number of children
-        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 70, alpha = 0.5, clip_on=False)
+        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = Color[i], facecolor = Color[i], marker='o', lw = 1, s = 70, alpha = 0.5, clip_on=False)
     
     # limit y axis to maximum value
     YMax = []
@@ -1132,11 +1110,6 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     # write title   
     ax.set_title('Parent Frequency vs Children UMIs', size = 14)
     
-    # add a light grey horizontal grid to the plot, semi-transparent, 
-    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-    # hide these grids behind plot objects
-    ax.set_axisbelow(True)
-    
     # write label for x axis
     children = sorted(Data[Coordinates[0]].keys()) 
     xPos = [i for i in range(len(children))]
@@ -1156,6 +1129,11 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     for loc, spine in ax.spines.items():
         spine.set_position(('outward', 5))
         spine.set_smart_bounds(True)
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
     
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
