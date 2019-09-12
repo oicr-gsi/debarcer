@@ -1037,15 +1037,13 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
     
-    # add discrete color bar for node degree
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    #cb = figure.colorbar(PTU+CTU, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+1)], use_gridspec=False)
+    # add colorbar
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("bottom", size="5%", pad=0.05)
+    #cb = figure.colorbar(Sizes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+1)], use_gridspec=False)
+    cb = figure.colorbar(Sizes, cax=cax, orientation = 'horizontal', use_gridspec=False)
     #cb = figure.colorbar(ax, orientation = 'vertical', use_gridspec=False)
     #cb = figure.colorbar()
-    #im = ax.imshow(Sizes)
-    cb = plt.colorbar(Sizes)
-    
     cb.set_label('Interval size', size=14, ha='center', color='black', labelpad=18)
     
     
