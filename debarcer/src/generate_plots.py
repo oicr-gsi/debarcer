@@ -1109,7 +1109,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     # loop over sorted regions
     for i in range(len(Coordinates)):
         # plot parent frequencies vs sorted number of children
-        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 60, alpha = 0.7)
+        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = 'black', facecolor = Color[i], marker='o', lw = 1, s = 70, alpha = 0.5, clip_on=False)
     
     # limit y axis to maximum value
     YMax = []
