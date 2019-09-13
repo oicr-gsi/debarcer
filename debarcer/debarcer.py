@@ -517,11 +517,6 @@ def generate_plots(args):
         region = region[:-5]
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
         
-        plt.clf(), plt.cla()
-        # plot network
-        Outputfile = os.path.join(FigDir, 'UMI_network_{0}.{1}'.format(region, args.extension))
-        PlotNetwork(filename, Outputfile)
-        
         # plot network and degree
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        

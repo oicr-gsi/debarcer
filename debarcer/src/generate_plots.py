@@ -1410,30 +1410,6 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     return ax
     
     
-def PlotNetwork(UmiFile, Outputfile):
-    '''
-    (str) -> None
-    
-    (str, str) -> None
-    
-    :param UmiFile: Path to json file with umi parent: children relationships
-    :param Outputfile: Name of output figure file
-    
-    Plot the entire network of umis parent-children relationships  
-    '''
-
-    # create an ax instance in a figure
-    # clear previous axes
-    plt.clf()
-    # create figure
-    figure = plt.figure(1, figsize = (9, 6))
-    # add an ax instance 
-    ax = CreateNetworkAx(1, 1, 1, figure, UmiFile)
-    plt.axis('off')
-    # save figure
-    figure.savefig(Outputfile, bbox_inches = 'tight')
-
-
 def PlotNetworkDegree(UmiFile, Outputfile):
     '''
     (str, str) -> None
