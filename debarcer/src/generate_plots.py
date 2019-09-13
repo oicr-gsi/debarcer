@@ -8,7 +8,7 @@ Created on Tue Jul 30 12:56:47 2019
 # import modules
 import os
 import matplotlib as mpl
-#mpl.use('Agg')
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
@@ -17,8 +17,8 @@ from matplotlib import rc
 
 import numpy as np
 from scipy import stats
-#from src.utilities import edit_distance, FormatRegion
-#from src.umi_error_correct import most_frequent
+from src.utilities import edit_distance, FormatRegion
+from src.umi_error_correct import most_frequent
 import networkx as nx
 import json
 import collections
