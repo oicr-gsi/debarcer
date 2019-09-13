@@ -1750,17 +1750,22 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     
     ax.hist(L, bins=20, facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
     
+    
+    
+    
+    #### continue here
+    
+    
+    
     # limit x axis and set x ticks
     XMax = max(L)
-    XMax = float(XMax + (XMax * 10 /100))
-    ax.set_xlim([0, XMax])    
+    #ax.set_xlim([0, XMax + 1])    
     step = SetUpTicks(XMax)
     
     print(XMax, step)
+       
     
-    
-    
-    ax.set_xticks([i for i in np.arange(0, XMax, step)])
+    ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
     
     
     
