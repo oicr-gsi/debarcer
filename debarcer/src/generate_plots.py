@@ -261,6 +261,11 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
                
         #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
         plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
+    
+        # offset x axis
+        for spine in ax.spines.values():
+            spine.set_position(('outward', 7))    
+    
     else:
         # write label for y axis
         ax.set_ylabel('Total umis per region', color = 'black',  size = 14, ha = 'center')
