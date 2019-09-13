@@ -1755,6 +1755,11 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     XMax = float(XMax + (XMax * 10 /100))
     ax.set_xlim([0, XMax])    
     step = SetUpTicks(XMax)
+    
+    print(XMax, step)
+    
+    
+    
     ax.set_xticks([i for i in np.arange(0, XMax, step)])
     
     
