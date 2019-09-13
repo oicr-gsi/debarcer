@@ -1759,7 +1759,7 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     
     # limit x axis and set x ticks
     XMax = max(L)
-    #ax.set_xlim([0, XMax + 1])    
+    ax.set_xlim([0, XMax + 1])    
     step = SetUpTicks(XMax)
     
     print(XMax, step)
