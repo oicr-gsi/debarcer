@@ -512,10 +512,23 @@ def generate_plots(args):
 
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
+        
+        
+        
+        print(filename)
+        
+        
         # get region from file name
         region = os.path.basename(filename)
         region = region[:-5]
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
+        
+        
+        
+        print(region)
+        
+        
+        
         
         plt.clf(), plt.cla()
         # plot network
