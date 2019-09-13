@@ -1751,6 +1751,9 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     ax.hist(L, bins=20, facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
     
     
+    a, b = plt.xticks()
+    print('ticks', a, b)
+    
     # edit x axis ticks   
     #plt.xticks([i for i in range(0, 20, 2)], [str(i) for i in range(0, 20, 2)], ha = 'center', rotation = 0, fontsize = 12)
        
