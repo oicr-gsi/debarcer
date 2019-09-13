@@ -1748,7 +1748,7 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     # plot distribution umi count
     #ax.hist(L, bins=range(20), facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
     
-    ax.hist(L, bins=range(20), facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
+    ax.hist(L, bins=20, facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
     
     
     # edit x axis ticks   
