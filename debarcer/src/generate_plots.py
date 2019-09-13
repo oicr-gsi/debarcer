@@ -1752,7 +1752,7 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     
     
     a, b = plt.xticks()
-    print('ticks', a, b)
+    print('ticks', a, list(b))
     
     # edit x axis ticks   
     #plt.xticks([i for i in range(0, 20, 2)], [str(i) for i in range(0, 20, 2)], ha = 'center', rotation = 0, fontsize = 12)
