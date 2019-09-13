@@ -522,15 +522,12 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile)
             
-        # plot frequency distributions of umi family size for each position
-        plt.clf(), plt.cla()
-        # count family size for each family and position  
-        umi_occurence = GetUmiFamilyCountFromGrouping(filename)
-        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}.{1}'.format(region, args.extension))
-        
-        print(region)
-        
-        PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'Read count', region)
+#        # plot frequency distributions of umi family size for each position
+#        plt.clf(), plt.cla()
+#        # count family size for each family and position  
+#        umi_occurence = GetUmiFamilyCountFromGrouping(filename)
+#        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}.{1}'.format(region, args.extension))
+#        PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'Read count', region)
                 
         # plot marginal distributions of UMI family size and read depth
         plt.clf(), plt.cla()
