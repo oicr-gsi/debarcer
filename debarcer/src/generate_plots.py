@@ -275,10 +275,10 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
      
-    if 'firstax' not in Options:
-        # offset x axis
-        for spine in ax.spines.values():
-            spine.set_position(('outward', 7))    
+#    if 'firstax' not in Options:
+#        # offset x axis
+#        for spine in ax.spines.values():
+#            spine.set_position(('outward', 7))    
     
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
