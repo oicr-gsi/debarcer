@@ -463,6 +463,19 @@ def generate_plots(args):
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
     
+    
+    
+    print(ConsFiles)
+    
+    print(DataFiles)
+    
+    
+    print(UmiFiles)
+    
+    
+    
+    
+    
     # check that paths to files are valid
     for i in ConsFiles + DataFiles + UmiFiles:
         if os.path.isfile(i) == False:
