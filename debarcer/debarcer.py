@@ -461,9 +461,9 @@ def generate_plots(args):
     # make a list of datafiles with umis
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv') and CheckFileContent(os.path.join(DataDir, i)) == True]
     # make a list of umi files
-    UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.umis']
+    UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.json']
     
-    
+      
     
     print(ConsFiles)
     
