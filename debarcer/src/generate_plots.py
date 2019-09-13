@@ -1591,13 +1591,8 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
                   space=0, ratio=3, marginal_kws={'bins':15, 'color':'#d9b3ff'}, annot_kws=dict(stat='r'),
                   s=35, linewidth=1).set_axis_labels('Read depth within group', 'Unique UMI seqs per group', size=14, color='black', ha='center')
     # use different color for y axis histogram
-    #plt.setp(ax.ax_marg_y.patches, color="#a64dff")
     plt.setp(ax.ax_marg_y.patches, color="#80d4ff")
     
-             
-             
-             
-             
     # axes can be accessed using ax_marg_x/y and ax_joint then passing matplotlib axes methods
     # limit y axis and set y ticks
     YMax = max(df['size'])
@@ -1613,7 +1608,6 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     step = SetUpTicks(XMax)
     ax.ax_joint.xaxis.set_ticks([i for i in np.arange(0, XMax, step)])
     
-      
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.ax_joint.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
@@ -1727,6 +1721,17 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
         
     Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
     '''
+    
+    
+    
+    c = sorted(list(set([L.count(i) for i in L])))
+    print(c)
+    
+    
+    
+    
+    
+    
     
     # clear previous axes
     plt.clf()
