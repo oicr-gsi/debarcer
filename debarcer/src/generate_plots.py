@@ -1639,76 +1639,6 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
 
 
 
-#def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
-#    '''
-#    (dict, str, str, str) -> None
-#    
-#    :param umi_occurence: Dictionary with umi occurence: counts pairs. values
-#    :param Outputfile: Name of output figure file
-#    :param YLabel: Label of the Y axis
-#    :param XLabel: Label of the X axis
-#        
-#    Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
-#    '''
-#    
-#    # plot umi frequency as a bar graph
-#    # make a sorted list of umi count
-#    counts = sorted(umi_occurence.keys())
-#    # make list of umi count tally sorted by umi count
-#    vals = [umi_occurence[i] for i in counts]
-#    
-#    # clear previous axes
-#    plt.clf()
-#    plt.gcf().set_size_inches(9, 6, forward=True)    
-#    # create figure
-#    figure = plt.figure(1, figsize = (9, 6))
-#    # add a plot to figure (N row, N column, plot N)
-#    ax = figure.add_subplot(1, 1, 1)
-#    
-#    # plot data
-#    plt.bar(counts, vals, width=0.8, color='pink', edgecolor=['lightgrey'] * len(counts), lw=1)
-#    
-#    # limit y axis and set up y axis ticks
-#    YMax = max(vals)
-#    YMax = float(YMax + (YMax * 10 /100))
-#    ax.set_ylim([0, YMax])    
-#    step = SetUpTicks(YMax)
-#    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-#        
-#    # set up y axis label and grid
-#    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
-#    ax.set_xlabel(XLabel, color = 'black',  size = 14, ha = 'center')
-#    
-#    # add a light grey horizontal grid to the plot, semi-transparent, 
-#    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-#    # hide these grids behind plot objects
-#    ax.set_axisbelow(True)
-#    
-#    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
-#    plt.xticks(counts, list(map(lambda x: str(x), counts)), ha = 'center', rotation = 0, fontsize = 12)
-#           
-#    # add space between axis and tick labels
-#    ax.yaxis.labelpad, ax.xaxis.labelpad = 18, 18
-#    
-#    # do not show lines around figure  
-#    ax.spines["top"].set_visible(False)    
-#    ax.spines["bottom"].set_visible(True)    
-#    ax.spines["right"].set_visible(False)    
-#    ax.spines["left"].set_visible(False)  
-#    # do not show ticks
-#    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-#                right=False, left=False, labelbottom=True, colors = 'black',
-#                labelsize = 12, direction = 'out')  
-#    # save figure to file    
-#    figure.savefig(Outputfile, bbox_inches = 'tight')
-    
-
-
-
-#################################
-
-
-
 def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     '''
     (dict, str, str, str) -> None
@@ -1722,21 +1652,6 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
     '''
     
-    c = {}
-    for i in L:
-        if i in c:
-            c[i] += 1
-        else:
-            c[i] = 1
-    z = [(i, c[i]) for i in sorted(list(c.keys()))]
-    print(z)
-    
-    
-    
-    
-    
-    
-    
     # clear previous axes
     plt.clf()
     plt.gcf().set_size_inches(9, 6, forward=True)    
@@ -1744,35 +1659,14 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     figure = plt.figure(1, figsize = (9, 6))
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
-    
-    # plot distribution umi count
-    #ax.hist(L, bins=range(20), facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
-    
+    # plot data using 20 bins
     ax.hist(L, bins=20, facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
-    
-    
-    
-    
-    #### continue here
-    
-    
-    
+      
     # limit x axis and set x ticks
     XMax = max(L)
     ax.set_xlim([0, XMax + 1])    
     step = SetUpTicks(XMax)
-    
-    print(XMax, step)
-       
-    
     ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
-    
-    
-    
-    
-    
-    # edit x axis ticks   
-    #plt.xticks([i for i in range(0, 20, 2)], [str(i) for i in range(0, 20, 2)], ha = 'center', rotation = 0, fontsize = 12)
        
     # add title        
     ax.set_title(Title, size = 14)
@@ -1802,9 +1696,6 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
 
-
-###############################
-   
 
 def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, **Options):
     
@@ -1884,13 +1775,6 @@ def PlotReadDepth(UmiFile, Outputfile):
     MostFrequent, Others = {}, {}
     for parent in All:
         L = [(int(i.split(':')[1]), All[parent][i]) for i in All[parent]] 
-           
-        
-        
-        for i in L:
-            assert type(i[0]) == int    
-        
-        
         L.sort()
         # identify pos with most abundant umi within given family <-- (pos, read_depth)
         most_abundant = most_frequent(L)
@@ -1911,13 +1795,6 @@ def PlotReadDepth(UmiFile, Outputfile):
     figure = plt.figure(1, figsize = (9, 6))
     # plot distribution of read depth for all positions and umi groups
     data1 = [list(All[i].values())[0] for i in All]
-    
-    
-    print('data1', sorted(list(set(data1))))
-    
-    
-    
-    
     
     ax1 = CreateAxHistReadDepth(3, 1, 1, figure, data1, '#7300e6', 'All', ylabel='Umi family count')    
     # plot distribution of most frequent read depth for umi groups
