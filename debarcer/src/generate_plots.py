@@ -220,16 +220,16 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         ax = Options['firstax'].twinx()
         ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = color, facecolor = color, marker='o', lw = 1, s = 90, alpha = 1)
     else:
-        color , edge='#f2e6ff', '#f2e6ff'
+        color =  '#f2e6ff'
         # add a plot coverage to figure (N row, N column, plot N)
         ax = figure.add_subplot(rows, columns, position)
         # plot data
         if 'errorbar' in Options:
             errorbar = Options['errorbar']
             ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, yerr=errorbar,
-                    color=color, edgecolor=[edge] * len(data), linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
+                    color=color, edgecolor=[color] * len(data), linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor=color, markeredgewidth=0.7))
         else:
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color=color, edgecolor=[edge] * len(data), linewidth=0.7)
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color=color, edgecolor=[color] * len(data), linewidth=0.7)
         
     # make a list of genomic regions 
     Chromos = []
