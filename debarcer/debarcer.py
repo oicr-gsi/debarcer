@@ -463,19 +463,6 @@ def generate_plots(args):
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.json']
     
-      
-    
-    print(ConsFiles)
-    
-    print(DataFiles)
-    
-    
-    print(UmiFiles)
-    
-    
-    
-    
-    
     # check that paths to files are valid
     for i in ConsFiles + DataFiles + UmiFiles:
         if os.path.isfile(i) == False:
@@ -525,23 +512,10 @@ def generate_plots(args):
 
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
-        
-        
-        
-        print(filename)
-        
-        
         # get region from file name
         region = os.path.basename(filename)
         region = region[:-5]
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
-        
-        
-        
-        print(region)
-        
-        
-        
         
         plt.clf(), plt.cla()
         # plot network
