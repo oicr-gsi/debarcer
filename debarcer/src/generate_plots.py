@@ -6,6 +6,7 @@ Created on Tue Jul 30 12:56:47 2019
 """
 
 # import modules
+import os
 import matplotlib as mpl
 #mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 from matplotlib import rc
 #rc('mathtext', default='regular')
-import os
+
 import numpy as np
 from scipy import stats
 #from src.utilities import edit_distance, FormatRegion
@@ -25,8 +26,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 from matplotlib.ticker import MaxNLocator
 import pandas as pd
 import seaborn as sns
-
-
 
 
 
@@ -824,11 +823,27 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     figure.savefig(Outputfile, bbox_inches = 'tight')
         
  
+def ComputeIntervalSize(Coordinates):
+    '''
+    (list) -> list
     
+    :param Coordinates: A list of genomic regions in the format chrN:posA-posB
+    
+    Returns a list of genomic interval size in bp
+    '''
+
+    # get the interval size for each region in sorted list of coordinates
+    Sizes = []
+    for i in range(len(Coordinates)):
+        interval = list(map(lambda x: float(x), Coordinates[i][Coordinates[i].index(':')+1:].split('-')))
+        Sizes.append(interval[1] - interval[0])
+    return Sizes      
+    
+   
 
 def PlotUmiCounts(DataFiles, Outputfile, Graph):
     '''
-    (list, str, str) -> None
+    (list, str, str, dict) -> None
     
     :param DataFiles: List of .csv data files generated after umi groouping 
     :param Outputfile: Name of the output figure file 
@@ -836,6 +851,7 @@ def PlotUmiCounts(DataFiles, Outputfile, Graph):
                   'ratio': children to parent umis ratio
                   'parents': total umi count
                   'children': children umi count 
+       
     Generates a plot with umi counts (children, parents or children to parents ratio)
     
     Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
@@ -870,9 +886,9 @@ def PlotUmiCounts(DataFiles, Outputfile, Graph):
     figure = plt.figure(1, figsize = (9, 6))
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
-    # plot ctu/ptu ratio for each region
-    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 100, alpha = 1, clip_on=False)
-    
+
+    # plot data for each region
+    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 130, alpha = 1, clip_on=False)
     # make a list of genomic regions 
     Chromos = []
     for i in Coordinates:
@@ -931,15 +947,16 @@ def PlotUmiCounts(DataFiles, Outputfile, Graph):
     for spine in ax.spines.values():
         spine.set_position(('outward', 7))
     
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
-    # do not show ticks
-    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelbottom=True, colors = 'black',
-                labelsize = 12, direction = 'out')  
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
@@ -972,11 +989,8 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     Coordinates = SortPositions(list(Data.keys()))
     
     # get the interval size for each region in sorted ist of coordinates
-    Sizes = []
-    for i in range(len(Coordinates)):
-        interval = list(map(lambda x: float(x), Coordinates[i][Coordinates[i].index(':')+1:].split('-')))
-        Sizes.append(interval[1] - interval[0])
-    
+    Sizes = ComputeIntervalSize(Coordinates)
+        
     # map colors to interval size          
     cmap = plt.get_cmap('Reds', max(Sizes))
         
@@ -1446,13 +1460,13 @@ def PlotNetworkDegree(UmiFile, Outputfile):
 
 
 
-def GetUmiFreqFromPreprocessing(Datafile):
+def GetUmiCountFromPreprocessing(Datafile):
     '''
-    (str) -> dict
+    (str) -> list
     
     :param Datafile: Path to file with UMI counts generated during pre-preprocessing
     
-    Returns a dictionary of umi occurence: counts
+    Returns a list of umi occurence: count of each umi sequeces
     '''
     
     # get the umi count from the data file
@@ -1466,15 +1480,8 @@ def GetUmiFreqFromPreprocessing(Datafile):
             L.append(count)
     infile.close()
     
-    # create a distribution of umi counts
-    D = {}
-    for i in L:
-        if i in D:
-            D[i] += 1
-        else:
-            D[i] = 1
-    return D
-
+    return L
+    
 
 def GetFamilyReadDepth(UmiFile):
     '''
@@ -1502,7 +1509,7 @@ def GetFamilyReadDepth(UmiFile):
     return D
 
 
-def GetUmiFamilyFreqFromGrouping(UmiFile):
+def GetUmiFamilyCountFromGrouping(UmiFile):
     '''
     (str) -> dict
     
@@ -1515,14 +1522,11 @@ def GetUmiFamilyFreqFromGrouping(UmiFile):
     D = GetFamilyReadDepth(UmiFile)
 
     # count the number of families with given coverage for each position
-    Counts = {}
+    Counts = []
     for parent in D:
         for pos in D[parent]:
             count = D[parent][pos]
-            if count in Counts:
-                Counts[count] += 1
-            else:
-                Counts[count] = 1
+            Counts.append(count)
     return Counts
 
 
@@ -1656,23 +1660,88 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
 
 
 
-def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
+#def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
+#    '''
+#    (dict, str, str, str) -> None
+#    
+#    :param umi_occurence: Dictionary with umi occurence: counts pairs. values
+#    :param Outputfile: Name of output figure file
+#    :param YLabel: Label of the Y axis
+#    :param XLabel: Label of the X axis
+#        
+#    Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
+#    '''
+#    
+#    # plot umi frequency as a bar graph
+#    # make a sorted list of umi count
+#    counts = sorted(umi_occurence.keys())
+#    # make list of umi count tally sorted by umi count
+#    vals = [umi_occurence[i] for i in counts]
+#    
+#    # clear previous axes
+#    plt.clf()
+#    plt.gcf().set_size_inches(9, 6, forward=True)    
+#    # create figure
+#    figure = plt.figure(1, figsize = (9, 6))
+#    # add a plot to figure (N row, N column, plot N)
+#    ax = figure.add_subplot(1, 1, 1)
+#    
+#    # plot data
+#    plt.bar(counts, vals, width=0.8, color='pink', edgecolor=['lightgrey'] * len(counts), lw=1)
+#    
+#    # limit y axis and set up y axis ticks
+#    YMax = max(vals)
+#    YMax = float(YMax + (YMax * 10 /100))
+#    ax.set_ylim([0, YMax])    
+#    step = SetUpTicks(YMax)
+#    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+#        
+#    # set up y axis label and grid
+#    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
+#    ax.set_xlabel(XLabel, color = 'black',  size = 14, ha = 'center')
+#    
+#    # add a light grey horizontal grid to the plot, semi-transparent, 
+#    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+#    # hide these grids behind plot objects
+#    ax.set_axisbelow(True)
+#    
+#    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
+#    plt.xticks(counts, list(map(lambda x: str(x), counts)), ha = 'center', rotation = 0, fontsize = 12)
+#           
+#    # add space between axis and tick labels
+#    ax.yaxis.labelpad, ax.xaxis.labelpad = 18, 18
+#    
+#    # do not show lines around figure  
+#    ax.spines["top"].set_visible(False)    
+#    ax.spines["bottom"].set_visible(True)    
+#    ax.spines["right"].set_visible(False)    
+#    ax.spines["left"].set_visible(False)  
+#    # do not show ticks
+#    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+#                right=False, left=False, labelbottom=True, colors = 'black',
+#                labelsize = 12, direction = 'out')  
+#    # save figure to file    
+#    figure.savefig(Outputfile, bbox_inches = 'tight')
+    
+
+
+
+#################################
+
+
+
+def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     '''
     (dict, str, str, str) -> None
     
-    :param umi_occurence: Dictionary with umi occurence: counts pairs. values
+    
+    :param L: List with umi counts
     :param Outputfile: Name of output figure file
     :param YLabel: Label of the Y axis
     :param XLabel: Label of the X axis
         
     Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
     '''
-    
-    # plot umi frequency as a bar graph
-    # make a sorted list of umi count
-    counts = sorted(umi_occurence.keys())
-    # make list of umi count tally sorted by umi count
-    vals = [umi_occurence[i] for i in counts]
     
     # clear previous axes
     plt.clf()
@@ -1682,15 +1751,14 @@ def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     
-    # plot data
-    plt.bar(counts, vals, width=0.8, color='pink', edgecolor=['lightgrey'] * len(counts), lw=1)
+    # plot distribution umi count
+    ax.hist(L, bins=range(20), facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
     
-    # limit y axis and set up y axis ticks
-    YMax = max(vals)
-    YMax = float(YMax + (YMax * 10 /100))
-    ax.set_ylim([0, YMax])    
-    step = SetUpTicks(YMax)
-    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+    # edit x axis ticks   
+    plt.xticks([i for i in range(0, 20, 2)], [str(i) for i in range(0, 20, 2)], ha = 'center', rotation = 0, fontsize = 12)
+       
+    # add title        
+    ax.set_title(Title, size = 14)
         
     # set up y axis label and grid
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
@@ -1701,9 +1769,6 @@ def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
-    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
-    plt.xticks(counts, list(map(lambda x: str(x), counts)), ha = 'center', rotation = 0, fontsize = 12)
-           
     # add space between axis and tick labels
     ax.yaxis.labelpad, ax.xaxis.labelpad = 18, 18
     
@@ -1719,7 +1784,10 @@ def PlotUMiFrequency(umi_occurence, Outputfile, YLabel, XLabel):
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
-    
+
+
+###############################
+   
 
 def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, **Options):
     

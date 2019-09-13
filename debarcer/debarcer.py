@@ -13,7 +13,7 @@ from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThr
  FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, PlotNetwork,\
- PlotNetworkDegree, PlotUMiFrequency, GetUmiFreqFromPreprocessing, GetUmiFamilyFreqFromGrouping, PlotFamSizeReadDepth, PlotReadDepth
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, GetUmiFamilyCountFromGrouping, PlotFamSizeReadDepth, PlotReadDepth
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -477,11 +477,11 @@ def generate_plots(args):
     
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
-    # get umi occurence counts
-    umi_occurence = GetUmiFreqFromPreprocessing(Inputfile)
+    # get umi occurence
+    umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
-    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI counts', 'Read depth')
-    
+    PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'UMI occurence', 'UMI distribution after pre-processing')
+        
     # plot coverage
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
@@ -507,39 +507,42 @@ def generate_plots(args):
 #        plt.clf(), plt.cla()
 #        PlotConsDepth(filename, Colors, Outputfile)
 #        
-#    # plot network and network degree for each umi file/region
-#    for filename in UmiFiles:
-#        # get region from file name
-#        region = os.path.basename(filename)
-#        region = region[:-5]
-#        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
-#        
-#        plt.clf(), plt.cla()
-#        # plot network
-#        Outputfile = os.path.join(FigDir, 'UMI_network_{0}.{1}'.format(region, args.extension))
-#        PlotNetwork(filename, Outputfile)
-#        
-#        # plot network and degree
-#        plt.clf(), plt.cla()
-#        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
-#        PlotNetworkDegree(filename, Outputfile)
-#            
-#        # plot frequency distributions of umi family size for each position
-#        plt.clf(), plt.cla()
-#        # count family size for each family and position  
-#        umi_occurence = GetUmiFamilyFreqFromGrouping(filename)
-#        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}.{1}'.format(region, args.extension))
-#        PlotUMiFrequency(umi_occurence, Outputfile)
-#            
-#        # plot marginal distributions of UMI family size and read depth
-#        plt.clf(), plt.cla()
-#        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
-#        PlotFamSizeReadDepth(filename, Outputfile)
-#        
-#        # plot distribution of read depth for each umi families
-#        plt.clf(), plt.cla()
-#        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
-#        PlotReadDepth(filename, Outputfile)
+
+
+
+    # plot network and network degree for each umi file/region
+    for filename in UmiFiles:
+        # get region from file name
+        region = os.path.basename(filename)
+        region = region[:-5]
+        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
+        
+        plt.clf(), plt.cla()
+        # plot network
+        Outputfile = os.path.join(FigDir, 'UMI_network_{0}.{1}'.format(region, args.extension))
+        PlotNetwork(filename, Outputfile)
+        
+        # plot network and degree
+        plt.clf(), plt.cla()
+        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
+        PlotNetworkDegree(filename, Outputfile)
+            
+        # plot frequency distributions of umi family size for each position
+        plt.clf(), plt.cla()
+        # count family size for each family and position  
+        umi_occurence = GetUmiFamilyCountFromGrouping(filename)
+        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}.{1}'.format(region, args.extension))
+        PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'Read count', region)
+                
+        # plot marginal distributions of UMI family size and read depth
+        plt.clf(), plt.cla()
+        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
+        PlotFamSizeReadDepth(filename, Outputfile)
+        
+        # plot distribution of read depth for each umi families
+        plt.clf(), plt.cla()
+        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
+        PlotReadDepth(filename, Outputfile)
     
 
     # plot children to parent umi count ratio
