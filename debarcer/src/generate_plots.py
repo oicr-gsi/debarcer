@@ -215,11 +215,12 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     
     # plot total umi and coverage in a single plot if firstax option is used
     if 'firstax' in Options:
+        color = 'grey'
         # plot umi count using axis of 1st graph
         ax = Options['firstax'].twinx()
-        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'lightgrey', facecolor = 'lightgrey', marker='o', lw = 1, s = 90, alpha = 1)
+        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = color, facecolor = color, marker='o', lw = 1, s = 90, alpha = 1)
     else:
-        color, edge='#f2e6ff', '#f2e6ff'
+        color , edge='#f2e6ff', '#f2e6ff'
         # add a plot coverage to figure (N row, N column, plot N)
         ax = figure.add_subplot(rows, columns, position)
         # plot data
