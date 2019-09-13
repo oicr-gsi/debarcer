@@ -1591,8 +1591,13 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
                   space=0, ratio=3, marginal_kws={'bins':15, 'color':'#d9b3ff'}, annot_kws=dict(stat='r'),
                   s=35, linewidth=1).set_axis_labels('Read depth within group', 'Unique UMI seqs per group', size=14, color='black', ha='center')
     # use different color for y axis histogram
-    plt.setp(ax.ax_marg_y.patches, color="#a64dff")
+    #plt.setp(ax.ax_marg_y.patches, color="#a64dff")
+    plt.setp(ax.ax_marg_y.patches, color="#b3e6ff")
     
+             
+             
+             
+             
     # axes can be accessed using ax_marg_x/y and ax_joint then passing matplotlib axes methods
     # limit y axis and set y ticks
     YMax = max(df['size'])
