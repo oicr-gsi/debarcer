@@ -257,8 +257,10 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
         plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
     
-        
-    
+        # add a light grey horizontal grid to the plot, semi-transparent, 
+        ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+        # hide these grids behind plot objects
+        ax.set_axisbelow(True)
     else:
         # write label for y axis
         ax.set_ylabel('Total umis per region', color = 'black',  size = 14, ha = 'center')
@@ -272,24 +274,16 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     ax.spines["bottom"].set_visible(True)    
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
-      
-    # offset x axis
-    for spine in ax.spines.values():
-        spine.set_position(('outward', 7))    
+     
+    if 'firstax' not in Options:
+        # offset x axis
+        for spine in ax.spines.values():
+            spine.set_position(('outward', 7))    
     
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelleft=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
-    
-    
-    # add a light grey horizontal grid to the plot, semi-transparent, 
-    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-    # hide these grids behind plot objects
-    ax.set_axisbelow(True)
-    
-    
-    
     
     # add legend
     legend_elements = [Line2D([0], [0], marker='s', markeredgecolor='black', markerfacecolor='white',
