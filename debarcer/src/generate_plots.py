@@ -1592,7 +1592,7 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
                   s=35, linewidth=1).set_axis_labels('Read depth within group', 'Unique UMI seqs per group', size=14, color='black', ha='center')
     # use different color for y axis histogram
     #plt.setp(ax.ax_marg_y.patches, color="#a64dff")
-    plt.setp(ax.ax_marg_y.patches, color="#b3e6ff")
+    plt.setp(ax.ax_marg_y.patches, color="#80d4ff")
     
              
              
