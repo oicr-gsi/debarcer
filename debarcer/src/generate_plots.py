@@ -251,11 +251,6 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         ax.set_ylabel('Mean coverage per region', color = 'black',  size = 14, ha = 'center')
         ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
     
-        # add a light grey horizontal grid to the plot, semi-transparent, 
-        ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-        # hide these grids behind plot objects
-        ax.set_axisbelow(True)
-    
         # write label for x axis
         xPos = [i for i in range(len(coordinates))]
                
@@ -282,12 +277,19 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     for spine in ax.spines.values():
         spine.set_position(('outward', 7))    
     
-    
-    
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelbottom=True, colors = 'black',
+                right=False, left=False, labelleft=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
+    
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    
+    
     
     # add legend
     legend_elements = [Line2D([0], [0], marker='s', markeredgecolor='black', markerfacecolor='white',
