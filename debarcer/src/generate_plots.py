@@ -1722,9 +1722,7 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
     '''
     
-    
-    
-    c = sorted(list(set([L.count(i) for i in L])))
+    c = sorted(list(set([L])))
     print(c)
     
     
