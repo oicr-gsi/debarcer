@@ -217,7 +217,7 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     if 'firstax' in Options:
         # plot umi count using axis of 1st graph
         ax = Options['firstax'].twinx()
-        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'black', facecolor = 'black', marker='o', lw = 1, s = 60, alpha = 1)
+        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = 'lightgrey', facecolor = 'lightgrey', marker='o', lw = 1, s = 80, alpha = 1)
     else:
         # add a plot coverage to figure (N row, N column, plot N)
         ax = figure.add_subplot(rows, columns, position)
@@ -225,9 +225,9 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         if 'errorbar' in Options:
             errorbar = Options['errorbar']
             ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, yerr=errorbar,
-                    color='white', edgecolor=['black'] * len(data), linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
+                    color='#d9b3ff', edgecolor=['#d9b3ff'] * len(data), linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor='black', markeredgewidth=0.7))
         else:
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color='white', edgecolor=['black'] * len(data), linewidth=0.7)
+            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color='#d9b3ff', edgecolor=['#d9b3ff'] * len(data), linewidth=0.7)
         
     # make a list of genomic regions 
     Chromos = []
