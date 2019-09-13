@@ -275,11 +275,6 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
      
-#    if 'firstax' not in Options:
-#        # offset x axis
-#        for spine in ax.spines.values():
-#            spine.set_position(('outward', 7))    
-    
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelleft=False, labelbottom=True, colors = 'black',
@@ -1593,7 +1588,7 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     
     # seaborn returns an ax object
     ax = sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
-                  space=0, ratio=3, marginal_kws={'bins':15}, annot_kws=dict(stat='r'),
+                  space=0, ratio=3, marginal_kws={'bins':15, 'color':'#d9b3ff'}, annot_kws=dict(stat='r'),
                   s=35, linewidth=1).set_axis_labels('Read depth within group', 'Unique UMI seqs per group', size=14, color='black', ha='center')
     
     # axes can be accessed using ax_marg_x/y and ax_joint then passing matplotlib axes methods
