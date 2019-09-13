@@ -1746,10 +1746,13 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
     ax = figure.add_subplot(1, 1, 1)
     
     # plot distribution umi count
+    #ax.hist(L, bins=range(20), facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
+    
     ax.hist(L, bins=range(20), facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
     
+    
     # edit x axis ticks   
-    plt.xticks([i for i in range(0, 20, 2)], [str(i) for i in range(0, 20, 2)], ha = 'center', rotation = 0, fontsize = 12)
+    #plt.xticks([i for i in range(0, 20, 2)], [str(i) for i in range(0, 20, 2)], ha = 'center', rotation = 0, fontsize = 12)
        
     # add title        
     ax.set_title(Title, size = 14)
@@ -1888,6 +1891,14 @@ def PlotReadDepth(UmiFile, Outputfile):
     figure = plt.figure(1, figsize = (9, 6))
     # plot distribution of read depth for all positions and umi groups
     data1 = [list(All[i].values())[0] for i in All]
+    
+    
+    print('data1', sorted(list(set(data1))))
+    
+    
+    
+    
+    
     ax1 = CreateAxHistReadDepth(3, 1, 1, figure, data1, '#7300e6', 'All', ylabel='Umi family count')    
     # plot distribution of most frequent read depth for umi groups
     data2 = [list(MostFrequent[i].values())[0] for i in MostFrequent]
