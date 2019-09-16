@@ -1323,21 +1323,25 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     nodelist = sorted(degree.keys())
     node_color = [degree[i] for i in nodelist]
     
+    
+    print(sorted(list(set(node_color))))
     # use reversed purple color map
     # limit color map to the highest degree
-    cmap=plt.get_cmap('Purples_r', max(node_color))
+    cmap=plt.get_cmap('Purples_r', max(node_color)+1)
     
     nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5,
                                    node_color=node_color, node_shape='o', alpha=0.3,
                                    linewidths=0, edgecolors='grey', ax=None,
                                    nodelist=nodelist, cmap=cmap)
+    nodes.set_clim(min(node_color), max(node_color)+1) 
 
     # add discrete color bar for node degree
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+1)], use_gridspec=False)
+    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+2)], use_gridspec=False)
+    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2)])
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
-        
+            
     return ax
 
 
