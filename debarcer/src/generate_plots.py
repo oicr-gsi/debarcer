@@ -395,10 +395,6 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax = figure.add_subplot(Rows, Columns, Position)
     # plot data  
     for i in range(len(FamSize)):
-        
-        print(FamSize[i])
-        
-        
         # get the positions corresponding to that family size
         pos = list(map(lambda x: int(x), list(Data[FamSize[i]].keys())))
         pos.sort()
