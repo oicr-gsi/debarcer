@@ -489,23 +489,23 @@ def generate_plots(args):
     plt.clf(), plt.cla()
     PlotCoverage(ConsFiles, DataFiles, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
             
-    # plot graphs for each consensus file
-    for filename in ConsFiles:
-        # plot mean family size for each consensus file/region
-        region = FormatRegion(filename).replace(':', '-')
-        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-        plt.clf(), plt.cla()
-        PlotMeanFamSize(filename, Colors[1:], Outputfile)
-            
-        # plot non-reference frequency
-        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
-        plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile)
-    
-        # plot raw and consensus depth
-        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
-        plt.clf(), plt.cla()
-        PlotConsDepth(filename, Colors, Outputfile)
+#    # plot graphs for each consensus file
+#    for filename in ConsFiles:
+#        # plot mean family size for each consensus file/region
+#        region = FormatRegion(filename).replace(':', '-')
+#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+#        plt.clf(), plt.cla()
+#        PlotMeanFamSize(filename, Colors[1:], Outputfile)
+#            
+#        # plot non-reference frequency
+#        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
+#        plt.clf(), plt.cla()
+#        PlotNonRefFreqData(filename, Colors, Outputfile)
+#    
+#        # plot raw and consensus depth
+#        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
+#        plt.clf(), plt.cla()
+#        PlotConsDepth(filename, Colors, Outputfile)
         
 
 
