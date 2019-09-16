@@ -8,7 +8,7 @@ Created on Tue Jul 30 12:56:47 2019
 # import modules
 import os
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
@@ -17,8 +17,8 @@ from matplotlib import rc
 
 import numpy as np
 from scipy import stats
-from src.utilities import edit_distance, FormatRegion
-from src.umi_error_correct import most_frequent
+#from src.utilities import edit_distance, FormatRegion
+#from src.umi_error_correct import most_frequent
 import networkx as nx
 import json
 import collections
@@ -1700,12 +1700,18 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title):
 def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, **Options):
     
     '''
+    (int, int, int, figure_object, list, str, str, dict) -> ax_object
     
     :param columns: Number of columns
     :param rows: Number of rows
     :param position: Ax position in figure
     :param figure: Figure object opened for writing
-    
+    :param data: Values to be plotted
+    :param Colors: String specifiying the bar colors
+    :param title: Title of the ax instance
+    :param Options: Optional parameters. Accepted keys:
+                    'ylabel': Label of y axis
+                    'text': Figure title, text above axes titles
     
     Return a ax object in figure
     '''
@@ -1713,8 +1719,28 @@ def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, 
     # create an ax instance in figure
     ax = figure.add_subplot(rows, columns, position)
     # plot distribution of read depth
-    ax.hist(data, bins=20, facecolor=Colors, lw=1, edgecolor='lightgrey', align='mid')
+    # retrieve the counts for each bin
+    counts, bins, patches = ax.hist(data, bins=20, facecolor=Colors, lw=1, edgecolor='lightgrey', align='mid')
     
+    # limit x and y axis and set ticks
+    if len(data) != 0:
+        XMax = max(data)
+        ax.set_xlim([0, XMax + 1])    
+        step = SetUpTicks(XMax)
+        ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
+
+        YMax = max(counts)
+        YMax = YMax + (10/100 * YMax)
+        ax.set_ylim([0, YMax + 1])    
+        step = SetUpTicks(YMax)
+        ax.set_yticks([i for i in np.arange(0, YMax + 1, step)])
+    else:
+        # don't show ticks and axis when no data
+        ax.set_xlim([0, 1])    
+        ax.set_xticks([i for i in np.arange(0, 0)])
+        ax.set_ylim([0, 1])    
+        ax.set_yticks([i for i in np.arange(0, 0)])
+
     # set up y axis label and grid
     if 'ylabel' in Options:
         ax.set_ylabel(Options['ylabel'], color = 'black',  size = 14, ha = 'center')
@@ -1727,7 +1753,7 @@ def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, 
 
     # add title        
     ax.set_title(title, size = 14)
-        
+
     # add text
     if 'text' in Options:
         # use figure coordinates instead of data coordinates 
@@ -1764,8 +1790,7 @@ def PlotReadDepth(UmiFile, Outputfile):
     
     # get read depth for each umi family and position {parent: position: read_depth}
     All = GetFamilyReadDepth(UmiFile)
-    
-    
+       
     region = os.path.basename(UmiFile)
     region = region[:-5]
     if '_' in region:
@@ -1787,7 +1812,7 @@ def PlotReadDepth(UmiFile, Outputfile):
                 if parent not in Others:
                     Others[parent] = {}
                 Others[parent][i[0]] = i[1]
-                
+    
     # clear previous axes
     plt.clf()
     plt.gcf().set_size_inches(9, 6, forward=True)    
