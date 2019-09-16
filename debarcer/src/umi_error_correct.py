@@ -131,7 +131,7 @@ def most_frequent(L):
 
 def find_group_families(contig, umi_families, pos_threshold, ignore_others):
     '''
-    (dict, int, bool) -> dict
+    (str, dict, int, bool) -> dict
     
     :param contig: Chromosome, eg chrN
     :param umi_families: A dictionary holding parent umi, their children and their count at positions where they are found
