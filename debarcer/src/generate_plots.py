@@ -1599,32 +1599,14 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     YMax = float(YMax + (YMax * 10 /100))
     ax.ax_joint.set_ylim([0, YMax])    
     step = SetUpTicks(YMax)
-    #ax.ax_joint.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-    
     ax.ax_joint.yaxis.set_ticks([i for i in np.arange(0, YMax + 1, step)])
-    
-    
-    
-    
-    
-    
     
     # limit x axis and set x ticks
     XMax = max(df['depth'])
     XMax = float(XMax + (XMax * 10 /100))
     ax.ax_joint.set_xlim([0, XMax])    
     step = SetUpTicks(XMax)
-    
-    
-    #ax.ax_joint.xaxis.set_ticks([i for i in np.arange(0, XMax, step)])
-    
     ax.ax_joint.xaxis.set_ticks([i for i in np.arange(0, XMax + 1, step)])
-    
-    
-    
-    
-    
-    
     
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.ax_joint.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
