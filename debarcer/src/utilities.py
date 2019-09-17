@@ -289,46 +289,38 @@ def FormatRegion(File):
     return region
 
 
-def GroupQCWriter(umi_families, Outputfile):
+def GroupQCWriter(umi_positions, Outputfile):
     '''
     (dict, str) ->  None
     
-    :param umi_families: A dictionary with umi information output from get_umi_families fucntion 
+    :param umi_positions: A dictionary with individual umi information (before grouping) output from get_umi_families function 
     :param Outputfile: Name of the output file
     
     Generates a table with information summarized from the umi data resulting from Grouping
     '''
     
-    # change dict to collect umi information per family, using parent as key
-    D = {}
-    for i in umi_families:
-        parent = umi_families[i]['parent']
-        if parent not in D:
-            D[parent] = []
-        D[parent].append({'umi':i, 'positions':umi_families[i]['positions']})
-
+    # umi_positions is a dict in the form {parent: {umi: {pos: count}}}
+    
     # write a summary file of UMI relationships
     newfile = open(Outputfile, 'w')
     newfile.write('\t'.join(['UMI', 'Type', 'Count', 'Parent', 'Distance', 'Position']) + '\n')
-    for seq in D:
-        for i in range(len(D[seq])):
-            umi = D[seq][i]['umi']
+    for parent in umi_positions:
+        for umi in umi_positions[parent]:
             # compute hamming distance between i and umi
-            distance = edit_distance(seq, umi)
+            distance = edit_distance(parent, umi)
             if distance == 0:
                 # umi is parent
                 umi_type = 'parent'
             else:
                 # umi type is children
                 umi_type = 'children'
-            # count occurence of umi
-            count = sum(list(D[seq][i]['positions'].values()))
+            # compute median of umi occurence
+            count = np.median([umi_positions[parent][umi][pos] for pos in umi_positions[parent][umi]]) 
             # position is the median of positions
-            position = np.median(list(map(lambda x: int(x), list(D[seq][i]['positions'].keys()))))
+            position = np.median(list(map(lambda x: int(x), list(umi_positions[parent][umi].keys()))))
             # write umi info to file       
-            newfile.write('\t'.join([umi, umi_type, str(count), seq, str(distance), str(position)]) + '\n')   
+            newfile.write('\t'.join([umi, umi_type, str(count), parent, str(distance), str(position)]) + '\n')   
     newfile.close()    
-
 
 
 def CreateDirTree(directory):
