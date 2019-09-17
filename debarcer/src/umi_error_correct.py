@@ -232,7 +232,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     for parent in umi_positions:
         for umi in umi_positions[parent]:
             for pos in umi_positions[parent][umi]:
-                if 'chr' not in pos:
+                if 'chr' not in str(pos):
                     newpos = contig + ':' + str(pos)
                     umi_positions[parent][umi][newpos] = umi_positions[parent][umi].pop(pos)
     
