@@ -228,12 +228,13 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     # get the positions and counts of umi families within each group (position is from the most abundant family)  
     umi_families = find_group_families(contig, umi_positions, pos_threshold, ignore_others)
     
-#    # add contig to positions in umi_positions dict
-#    for parent in umi_positions:
-#        for umi in umi_positions[parent]:
-#            for pos in umi_positions[parent][umi]:
-#                newpos = contig + ':' + str(pos)
-#                umi_positions[parent][umi][newpos] = umi_positions[parent][umi].pop(pos)
+    # add contig to positions in umi_positions dict
+    for parent in umi_positions:
+        for umi in umi_positions[parent]:
+            for pos in umi_positions[parent][umi]:
+                if 'chr' not in pos:
+                    newpos = contig + ':' + str(pos)
+                    umi_positions[parent][umi][newpos] = umi_positions[parent][umi].pop(pos)
     
     
     print(len(umi_positions))
