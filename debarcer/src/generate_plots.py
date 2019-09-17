@@ -1323,11 +1323,8 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     nodelist = sorted(degree.keys())
     node_color = [degree[i] for i in nodelist]
     
-    
-    print(sorted(list(set(node_color))))
-    # use reversed purple color map
     # limit color map to the highest degree
-    cmap=plt.get_cmap('Purples_r', max(node_color)+1)
+    cmap=plt.get_cmap('winter', max(node_color)+1)
     
     nodes = nx.draw_networkx_nodes(G, pos=Pos, with_labels=False, node_size=5,
                                    node_color=node_color, node_shape='o', alpha=0.3,
