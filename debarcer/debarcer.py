@@ -13,7 +13,8 @@ from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThr
  FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
- PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, GetUmiFamilyCountFromGrouping, PlotFamSizeReadDepth, PlotReadDepth
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, GetUmiFamilyCountFromGrouping, \
+ PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -467,6 +468,9 @@ def generate_plots(args):
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv') and CheckFileContent(os.path.join(DataDir, i)) == True]
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.json']
+    # make a list of files with individual umi information
+    UmiInfoFiles = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('Umis_') and i[-5:] == '.json' and 'before_grouping' in i]
+       
     
     # check that paths to files are valid
     for i in ConsFiles + DataFiles + UmiFiles:
@@ -485,7 +489,7 @@ def generate_plots(args):
     # get umi occurence
     umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
-    PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'UMI occurence', 'UMI distribution after pre-processing')
+    PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'UMI occurence', 'UMI distribution after pre-processing', False)
         
     # plot coverage
     # clear previous ax instances between plots
@@ -543,8 +547,21 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
         PlotReadDepth(filename, Outputfile)
-    
 
+
+
+    # plot umi frequency for individual umis before grouping
+    for filename in UmiInfoFiles:
+        region = os.path.basename(filename)
+        region = region[region.index('chr'): region.index('_before')].replace(':', '-')
+        # get parent+children and parent only counts
+        all_umis, parent_umis = GetIndividualUmiInfo(filename)
+        Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
+        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'Counts', 'UMI occurence', 'UMI distribution before grouping', True)
+        
+        
+        
+        
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
