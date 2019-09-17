@@ -172,6 +172,11 @@ def group_umis(args):
     Outputfile = os.path.join(outdir, 'Stats/UMI_relationships_{0}.txt'.format(region))
     GroupQCWriter(umi_positions, Outputfile)
     
+    # save information about individual UMIs as a json in Stats directory
+    umi_file = os.path.join(outdir, 'Stats/Umis_{}_before_grouping.json'.format(region))
+    with open(umi_file, 'w') as newfile:
+        json.dump(umi_positions, newfile, sort_keys = True, indent=4)
+    
     print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(os.path.join(outdir, 'Datafiles')))
     print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(os.path.join(outdir, 'Umifiles')))
     print(timestamp() + "UMI grouping complete. QC files written to {}.".format(os.path.join(outdir, 'Stats')))
