@@ -229,22 +229,26 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     umi_families = find_group_families(contig, umi_positions, pos_threshold, ignore_others)
     
     # add contig to positions in umi_positions dict
+    D = {}
     for parent in umi_positions:
         for umi in umi_positions[parent]:
             for pos in umi_positions[parent][umi]:
-                if 'chr' not in str(pos):
-                    newpos = contig + ':' + str(pos)
-                    umi_positions[parent][umi][newpos] = umi_positions[parent][umi].pop(pos)
+                if parent not in D:
+                    D[parent] = {}
+                if umi not in D[parent]:
+                    D[parent][umi] = {}
+                newpos = contig + ':' + str(pos)
+                D[parent][umi][newpos] = umi_positions[parent][umi][pos]
     
     
-    print(len(umi_positions))
-    a = list(umi_positions.keys())[0]
-    b= list(umi_positions[a].keys())[0]
-    c = list(umi_positions[a][b].keys())
+    print(len(umi_positions), len(D))
+    a = list(D.keys())[0]
+    b= list(D[a].keys())[0]
+    c = list(D[a][b].keys())
     print(a, b, c)    
-    print(umi_positions[a][b][c[0]])
+    print(D[a][b][c[0]])
     
-    return umi_families, umi_groups, umi_positions
+    return umi_families, umi_groups, D
 
 
 def umi_datafile(umi_groups):
