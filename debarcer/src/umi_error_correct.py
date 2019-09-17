@@ -235,6 +235,14 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
                 newpos = contig + ':' + str(pos)
                 umi_positions[parent][umi][newpos] = umi_positions[parent][umi].pop(pos)
     
+    
+    print(len(umi_positions))
+    a = list(umi_positions.keys())[0]
+    b= list(umi_positions[a].keys())[0]
+    c = list(umi_positions[a][b].keys())
+    print(a, b, c)    
+    print(umi_positions[a][b][c[0]])
+    
     return umi_families, umi_groups, umi_positions
 
 
