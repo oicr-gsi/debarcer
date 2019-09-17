@@ -316,10 +316,25 @@ def GroupQCWriter(umi_positions, Outputfile):
                 umi_type = 'children'
             # compute median of umi occurence
             count = np.median([umi_positions[parent][umi][pos] for pos in umi_positions[parent][umi]]) 
+            
+            
+            print([umi_positions[parent][umi][pos] for pos in umi_positions[parent][umi]])
+            print(count)
+            
+            
             # make a list of positions
             positions = list(umi_positions[parent][umi].keys())
+            
+            print('positions', positions)
+            
+            
+            
             # remove chromosome from positions
             positions = list(map(lambda x: x.split(':')[1], positions))
+            
+            print('positions', positions)
+            
+            
             # position is the median of positions
             position = np.median(list(map(lambda x: int(x), positions)))
             # write umi info to file       
