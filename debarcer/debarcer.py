@@ -13,7 +13,7 @@ from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThr
  FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
- PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, GetUmiFamilyCountFromGrouping, \
+ PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
  PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo
 
 import matplotlib.pyplot as plt
