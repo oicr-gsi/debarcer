@@ -152,7 +152,7 @@ def group_umis(args):
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     # keep the most abundant family within group and ignore others if args.ignore is True
-    umi_families, umi_groups = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore)
+    umi_families, umi_groups, umi_positions = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore)
     
     # get the number of parent umis, number of children and number of parent given a number of children
     filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
@@ -168,9 +168,9 @@ def group_umis(args):
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
     
-    # write a summary file of UMI relationships
+    # write a summary file of UMI relationships and count for each individual umi before grouping
     Outputfile = os.path.join(outdir, 'Stats/UMI_relationships_{0}.txt'.format(region))
-    GroupQCWriter(umi_families, Outputfile)
+    GroupQCWriter(umi_positions, Outputfile)
     
     print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(os.path.join(outdir, 'Datafiles')))
     print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(os.path.join(outdir, 'Umifiles')))

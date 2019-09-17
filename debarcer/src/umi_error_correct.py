@@ -199,7 +199,7 @@ def find_group_families(contig, umi_families, pos_threshold, ignore_others):
 def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore_others):
     """
     
-    (str, int, int, file, int, int) -> list
+    (str, int, int, file, int, int) -> tuple
     
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
@@ -209,7 +209,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     :param dist_threshold: The hamming distance threshold to connect parent and child umis     
     :param ignore_others: Ignore families distant from the most abundant family    
         
-    Returns a list of tuples (umi_group, pos) pairs representing error-corrected UMI families.
+    Returns a tuple of dictionaries with umi information before and after grouping
     """ 
     
     print("Counting UMIs...")
@@ -228,7 +228,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     # get the positions and counts of umi families within each group (position is from the most abundant family)  
     umi_families = find_group_families(contig, umi_positions, pos_threshold, ignore_others)
     
-    return umi_families, umi_groups
+    return umi_families, umi_groups, umi_positions
 
 
 def umi_datafile(umi_groups):
