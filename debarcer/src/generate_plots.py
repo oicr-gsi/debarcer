@@ -1651,24 +1651,22 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     plt.savefig(Outputfile, bbox_inches = 'tight')
 
 
-def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title, overlapping):
+def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     '''
     (list, str, str, str, bool) -> None
-    
-    
+        
     :param L: List with umi counts
     :param Outputfile: Name of output figure file
     :param YLabel: Label of the Y axis
     :param XLabel: Label of the X axis
-    :param overlapping: True or False for plotting overlapping histograms. 
+    :param overlapping: True or False for 2 distributions. 
                         If True, L is a 2-item list, each being a list of counts
-        
-    Plot an histogram of UMI occurence, the number of UMIs occuring 1, 2, .. N times   
+            
+    Plot an histogram of UMI occurence or density plots UMI occurence for multiple distributions
     '''
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)    
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
     # add a plot to figure (N row, N column, plot N)
@@ -1680,23 +1678,25 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title, overlapping):
         counts, bins, patches = ax.hist(L, bins=20, facecolor='pink', lw=1, edgecolor='lightgrey', align='mid')
         # get the maximum values for x and y
         XMax, YMax = max(L), max(counts)
-    elif overlapping == True:
-        # plot data for 2 histograms
-        c1, b1, p1 = ax.hist(L[0], bins=20, facecolor='#4B0082', lw=1, edgecolor='lightgrey', align='mid', alpha=0.5)
-        c2, b2, p2 = ax.hist(L[1], bins=20, facecolor='pink', lw=1, edgecolor='lightgrey', align='mid', alpha=0.5)
-        XMax = max(L[0] + L[1])
-        YMax = max(c1 + c2)
+        # limit y axis and set ticks
+        YMax = YMax + (10/100 * YMax)
+        ax.set_ylim([0, YMax + 1])    
+        step = SetUpTicks(YMax)
+        ax.set_yticks([i for i in np.arange(0, YMax + 1, step)])    
+        XLabel, YLabel = 'UMI occurence', 'Counts'
     
+    elif overlapping == True:
+        # plot density using seaborn
+        ax = sns.kdeplot(L[0], color = '#ff66ff', shade=True, alpha=0.5, ax=ax)
+        ax = sns.kdeplot(L[1], color = '#00cccc', shade=True, alpha =0.5, ax=ax)
+        XMax = max(L[0] + L[1])
+        XLabel, YLabel = 'UMI occurence', 'Density'
+        
     # limit x axis and set x ticks
     ax.set_xlim([0, XMax + 1])    
     step = SetUpTicks(XMax)
-    ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
+    ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
       
-    YMax = YMax + (10/100 * YMax)
-    ax.set_ylim([0, YMax + 1])    
-    step = SetUpTicks(YMax)
-    ax.set_yticks([i for i in np.arange(0, YMax + 1, step)])
-    
     # add title        
     ax.set_title(Title, size = 14)
         
@@ -1722,10 +1722,13 @@ def PlotUMiFrequency(L, Outputfile, YLabel, XLabel, Title, overlapping):
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
     
-    # add legend    
-    
-    
-    
+    # add legend
+    if overlapping==True:
+        legend_elements = []
+        legend_elements.append(Patch(facecolor='#ff66ff', edgecolor= '#ff66ff', label='parents + children', alpha=0.5))
+        legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='parents', alpha=0.5))
+        ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
+             
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
