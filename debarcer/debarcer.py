@@ -473,7 +473,7 @@ def generate_plots(args):
        
     
     # check that paths to files are valid
-    for i in ConsFiles + DataFiles + UmiFiles:
+    for i in ConsFiles + DataFiles + UmiFiles + UmiInfoFiles:
         if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid file path {0}'.format(i))
      
