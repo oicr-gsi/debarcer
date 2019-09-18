@@ -285,23 +285,3 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     print("Complete. Output written to {}.".format(outdir))
 
     return Correct, Incorrect, Total, UmiSequences
-
-
-if __name__ == '__main__':
-
-    # Argument parsing
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-r1', '--Read1', dest='read1', help='Path to first FASTQ file.', required=True)
-    parser.add_argument('-r2', '--Read2', dest='read2', help='Path to second FASTQ file, if applicable')
-    parser.add_argument('-r3', '--Read3', dest='read3', help='Path to third FASTQ file, if applicable')
-    parser.add_argument('-p',  '--Prepname', dest='prepname', choices=['HALOPLEX', 'SURESELECT', 'EPIC-DS', 'SIMSENSEQ-PE', 'SIMSENSEQ-SE'],
-                        help='Name of library prep to  use (defined in library_prep_types.ini)', required=True)
-    parser.add_argument('-pf', '--Prepfile', dest='prepfile', help='Path to the library_prep_types.ini file', required=True)
-    parser.add_argument('-o', '--OutDir', dest='outdir', help='Output directory where fastqs are written', required=True)
-    parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
-    
-    args = parser.parse_args()
-
-    # Preprocess (reheader fastq files)
-    reheader_fastqs(args.read1, args.outdir, args.prepname, args.prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
-    
