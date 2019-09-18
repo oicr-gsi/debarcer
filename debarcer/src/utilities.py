@@ -371,4 +371,37 @@ def CheckFileContent(File):
     else:
         return False
     
+
+def DropEmptyFiles(L):
+    '''
+    (list) -> list
     
+    :param L: List of files
+    
+    return a modified list in which empty files (files with header but missing data) are removed
+    '''
+    
+    # remove empty files
+    to_remove = []
+    for i in L:
+        if CheckFileContent(i) == False:
+            to_remove.append(i)
+            print('ERR: Missing data in {0}'.format(i))
+    for i in to_remove:
+        L.remove(i)
+    return L
+
+def CheckFilePath(L):
+    '''
+    (list) -> None
+    
+    :param L: List of files
+    
+    Raise a ValueError if any file in L doesn't have a valid path
+    '''
+    
+    # check that paths to files are valid
+    for i in L:
+        if os.path.isfile(i) == False:
+            raise ValueError('ERR: Invalid file path {0}'.format(i))
+

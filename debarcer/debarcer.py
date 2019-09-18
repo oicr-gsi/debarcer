@@ -10,7 +10,7 @@ from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
- FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent
+ FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent, DropEmptyFiles, CheckFilePath
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
  PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
@@ -216,7 +216,6 @@ def collapse(args):
             os.makedirs(outdir)
     
     # create subdirectoy structure
-    # create subdirectoy structure
     CreateDirTree(outdir)
 
     # get input bam from config or command
@@ -243,12 +242,6 @@ def collapse(args):
     print(timestamp() + "Generating consensus...")
 
 
-
-    print(umi_families)
-
-
-
-
     # get percent threshold 
     percent_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
     # get count threshold
@@ -260,26 +253,11 @@ def collapse(args):
     # get umi position threshold 
     pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     
-    
-    
-    for i in [percent_threshold, count_threshold, ref_threshold, all_threshold, pos_threshold]:
-        print(i)
-    
-    
-    
-    
-    
-    
-    
     # get reference
     reference = GetInputFiles(args.config, args.reference, 'reference_file')
     
     # get comma-separated list of minimum family sizes 
     fam_size = GetFamSize(args.config, args.famsize)
-    
-    
-    print(fam_size)
-    
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
@@ -463,20 +441,21 @@ def generate_plots(args):
         os.mkdir(FigDir)
         
     # make a list of consensus files that are not empty
-    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons' and CheckFileContent(os.path.join(ConsDir, i)) == True]
-    # make a list of datafiles with umis
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if (i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv') and CheckFileContent(os.path.join(DataDir, i)) == True]
+    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
+    # remove empty files in place and print a warning
+    DropEmptyFiles(ConsFiles)
+    # make a list of datafiles with umis that are not empty
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
+    # remove empty files in place and print a warning
+    DropEmptyFiles(DataFiles)
     # make a list of umi files
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.json']
     # make a list of files with individual umi information
     UmiInfoFiles = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('Umis_') and i[-5:] == '.json' and 'before_grouping' in i]
-       
     
-    # check that paths to files are valid
-    for i in ConsFiles + DataFiles + UmiFiles + UmiInfoFiles:
-        if os.path.isfile(i) == False:
-            raise ValueError('ERR: Invalid file path {0}'.format(i))
-     
+    # check that paths to files are valid. raise ValueError if file invalid
+    CheckFilePath(ConsFiles + DataFiles + UmiFiles + UmiInfoFiles)
+    
     # make a list of colors. each color is used for plotting data for a given family size
     Colors = ['black', '#4B0082', '#7B68EE', '#c3baf7', '#8A2BE2',
               '#b54dff', '#BA55D3', '#ce85e0', '#DDA0DD', '#f8ecf8',
@@ -486,8 +465,7 @@ def generate_plots(args):
     
     # plot proportions of correct and incorrect reads seen during pre-processing
     Inputfile = os.path.join(StatsDir, 'Read_Info.txt')
-    if os.path.isfile(Inputfile) == False:
-        raise ValueError('ERR: Invalid file path {0}'.format(Inputfile))
+    CheckFilePath([Inputfile])
     if CheckFileContent(Inputfile) == True:
         Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
         PlotIncorrectReads(Inputfile, Outputfile)
@@ -496,6 +474,7 @@ def generate_plots(args):
     
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
+    CheckFilePath([Inputfile])
     # get umi occurence
     umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
@@ -570,7 +549,10 @@ def generate_plots(args):
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'Counts', 'UMI occurence', 'UMI distribution before grouping', True)
         
         
-        
+    
+
+
+
         
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
