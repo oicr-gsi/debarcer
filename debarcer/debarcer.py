@@ -478,7 +478,7 @@ def generate_plots(args):
     # get umi occurence
     umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
-    PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'UMI occurence', 'UMI distribution after pre-processing', False)
+    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False)
         
     # plot coverage
     # clear previous ax instances between plots
@@ -520,13 +520,6 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile)
             
-#        # plot frequency distributions of umi family size for each position
-#        plt.clf(), plt.cla()
-#        # count family size for each family and position  
-#        umi_occurence = GetUmiFamilyCountFromGrouping(filename)
-#        Outputfile = os.path.join(FigDir, 'UMI_family_freq_distribution_{0}.{1}'.format(region, args.extension))
-#        PlotUMiFrequency(umi_occurence, Outputfile, 'Counts', 'Read count', region)
-                
         # plot marginal distributions of UMI family size and read depth
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
@@ -546,7 +539,7 @@ def generate_plots(args):
         # get parent+children and parent only counts
         all_umis, parent_umis = GetIndividualUmiInfo(filename)
         Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
-        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'Counts', 'UMI occurence', 'UMI distribution before grouping', True)
+        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
         
         
     
