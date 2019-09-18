@@ -1867,5 +1867,53 @@ def PlotReadDepth(UmiFile, Outputfile):
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
+
+
+def PlotIncorrectReads(ReadInfo, Outputfile):
+    '''
+    (str, str) -> None
+
+    :param ReadInfo: Path to the Read_Info.txt file generated during pre-processing
+    :param Outputfile: Path to the output figure file
     
+    Generate a donut graph with proportions of correct and incorrect reads found
+    during pre-processing
+    '''
+
+    infile = open(ReadInfo)
+    Header = infile.readline().rstrip().split()
+    line = infile.readline().rstrip()
+    total, correct, incorrect = list(map(lambda x: int(x), line.split()))
+    infile.close()
+    
+    size = [correct/total * 100, incorrect/total * 100]
+    s_correct, s_incorrect = format(correct, ','), format(incorrect, ',')
+    
+    # use MathText to highlight substring in bold
+    names = ["correct\n" + r"$\bf{" + str(s_correct) + "}$", "incorrect\n" + r"$\bf{" + str(s_incorrect) + "}$"] 
+    
+    # clear previous axes
+    plt.clf()
+    # create figure
+    figure = plt.figure(1, figsize = (7, 7))
+    
+    # create ax instance
+    ax = figure.add_subplot(1, 1, 1)
+    
+    # Create a circle for the center of the plot with radius 0.7
+    my_circle=plt.Circle( (0,0), 0.7, color='white')
+    
+    # plot data as pie chart
+    ax.pie(size, labels=names, colors=['#d9b3ff','#0073e6'],
+           textprops={'fontsize':22, 'fontweight':'normal'},
+           wedgeprops = { 'linewidth' : 7, 'edgecolor' : 'white' })
+    # add circle in the center of the pie to create a donut
+    p=plt.gcf()
+    p.gca().add_artist(my_circle)
+    
+    # Equal aspect ratio ensures that pie is drawn as a circle
+    ax.axis('equal')  
+    plt.tight_layout()
+
+    figure.savefig(Outputfile, bbox_inches = 'tight')
     

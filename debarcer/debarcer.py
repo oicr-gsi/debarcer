@@ -14,7 +14,8 @@ from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThr
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
  PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
- PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo
+ PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo, PlotIncorrectReads
+    
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -482,6 +483,16 @@ def generate_plots(args):
               '#066024', '#0ba83f', '#0ff05a', '#57f48c', '#9ff9bd',
               '#b35900', '#e67300', '#ff8c1a', '#ffa64d', '#ffbf80',
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
+    
+    # plot proportions of correct and incorrect reads seen during pre-processing
+    Inputfile = os.path.join(StatsDir, 'Read_Info.txt')
+    if os.path.isfile(Inputfile) == False:
+        raise ValueError('ERR: Invalid file path {0}'.format(Inputfile))
+    if CheckFileContent(Inputfile) == True:
+        Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
+        PlotIncorrectReads(Inputfile, Outputfile)
+    else:
+        print('ERR: Missing data in {0}'.format(Inputfile))
     
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
