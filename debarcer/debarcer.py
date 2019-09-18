@@ -87,7 +87,6 @@ def preprocess_reads(args):
     # write summary report
     Outpufile = os.path.join(outdir, 'Stats/Read_Info.txt')
     newfile = open(Outpufile, 'w')
-    newfile.write('# Read counts with correct/incorrect umi and spacer configuration\n')
     newfile.write('\t'.join(['Total', 'Correct', 'Incorrect']) + '\n')
     newfile.write('\t'.join(list(map(lambda x: str(x), [Total, Correct, Incorrect]))) + '\n')
     newfile.close()
