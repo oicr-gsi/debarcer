@@ -1911,6 +1911,9 @@ def PlotIncorrectReads(ReadInfo, Outputfile):
     p=plt.gcf()
     p.gca().add_artist(my_circle)
     
+    # add title
+    ax.set_title('Pre-processed reads', size=18, loc='center', ha='center')
+       
     # Equal aspect ratio ensures that pie is drawn as a circle
     ax.axis('equal')  
     plt.tight_layout()
