@@ -478,12 +478,14 @@ def generate_plots(args):
     # get umi occurence
     umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
-    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False)
-        
-    # plot coverage
+    
     # clear previous ax instances between plots
     # current matplotlib version reuses the earlier instance
     # in future version, a new instance will always be created and returned
+    plt.clf(), plt.cla()
+    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False)
+        
+    # plot coverage
     plt.clf(), plt.cla()
     PlotCoverage(ConsFiles, DataFiles, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
             
@@ -539,13 +541,9 @@ def generate_plots(args):
         # get parent+children and parent only counts
         all_umis, parent_umis = GetIndividualUmiInfo(filename)
         Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
+        plt.clf(), plt.cla()
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
         
-        
-    
-
-
-
         
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
