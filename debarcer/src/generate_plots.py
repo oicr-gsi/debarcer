@@ -1687,8 +1687,8 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     
     elif overlapping == True:
         # plot density using seaborn
-        ax = sns.kdeplot(L[0], color = '#ff66ff', shade=True, alpha=0.5, ax=ax)
-        ax = sns.kdeplot(L[1], color = '#00cccc', shade=True, alpha =0.5, ax=ax)
+        ax = sns.kdeplot(L[0], color = '#ff66ff', shade=True, alpha=0.35, ax=ax, lw=2)
+        ax = sns.kdeplot(L[1], color = '#00cccc', shade=True, alpha=0.35, ax=ax, lw=2)
         XMax = max(L[0] + L[1])
         XLabel, YLabel = 'UMI occurence', 'Density'
         
@@ -1725,8 +1725,8 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     # add legend
     if overlapping==True:
         legend_elements = []
-        legend_elements.append(Patch(facecolor='#ff66ff', edgecolor= '#ff66ff', label='parents + children', alpha=0.5))
-        legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='parents', alpha=0.5))
+        legend_elements.append(Patch(facecolor='#ff66ff', edgecolor= '#ff66ff', label='parents + children', alpha=0.35))
+        legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='parents', alpha=0.35))
         ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
              
     # save figure to file    
