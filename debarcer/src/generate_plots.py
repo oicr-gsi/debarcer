@@ -281,9 +281,9 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
                 labelsize = 12, direction = 'out')  
     
     # add legend
-    legend_elements = [Line2D([0], [0], marker='s', markeredgecolor='black', markerfacecolor='white',
+    legend_elements = [Line2D([0], [0], marker='s', markeredgecolor='#f2e6ff', markerfacecolor='#f2e6ff',
                        label='coverage', markersize=8, linestyle='None'),
-                       Line2D([0], [0], marker='o', markeredgecolor='black', markerfacecolor='black',
+                       Line2D([0], [0], marker='o', markeredgecolor='grey', markerfacecolor='grey',
                        label='umis', markersize=8, linestyle='None')]
     ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
     
