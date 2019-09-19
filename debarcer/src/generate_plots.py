@@ -313,7 +313,7 @@ def PlotCoverage(ConsFiles, DataFiles, Outputfile):
        
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)    
+    #plt.gcf().set_size_inches(9, 6, forward=True)    
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -472,7 +472,7 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(10, 7, forward=True)
+    #plt.gcf().set_size_inches(10, 7, forward=True)
     
     
     # create figure object + ax
@@ -631,7 +631,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(8, 10, forward=True)
+    #plt.gcf().set_size_inches(8, 10, forward=True)
         
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
@@ -811,7 +811,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(10, 7, forward=True)
+    #plt.gcf().set_size_inches(10, 7, forward=True)
         
     figure = plt.figure(1, figsize = (10, 7))
     # plot raw depth, family size = 0    
@@ -878,7 +878,7 @@ def PlotUmiCounts(DataFiles, Outputfile, Graph):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True) 
+    #plt.gcf().set_size_inches(9, 6, forward=True) 
         
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -998,7 +998,7 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)
+    #plt.gcf().set_size_inches(9, 6, forward=True)
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -1116,7 +1116,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(7, 4, forward=True)
+    #plt.gcf().set_size_inches(7, 4, forward=True)
        
     # create figure
     figure = plt.figure(1, figsize = (7, 4))
@@ -1421,7 +1421,7 @@ def PlotNetworkDegree(UmiFile, Outputfile):
 
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(9, 6, forward=True)    
+    #plt.gcf().set_size_inches(9, 6, forward=True)    
     
     # create figure
     figure = plt.figure(1, figsize = (9, 6))
@@ -1595,7 +1595,7 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(8, 8, forward=True)
+    #plt.gcf().set_size_inches(8, 8, forward=True)
     
     # seaborn returns an ax object
     ax = sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
@@ -1852,7 +1852,7 @@ def PlotReadDepth(UmiFile, Outputfile):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(13, 6, forward=True)    
+    #plt.gcf().set_size_inches(13, 6, forward=True)    
     # create figure
     figure = plt.figure(1, figsize = (13, 6))
     # plot distribution of read depth for all positions and umi groups
