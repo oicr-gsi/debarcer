@@ -38,24 +38,7 @@ class MyCustomRenderer(mistune.Renderer):
     
     
     
-def convert_html_to_pdf(source_html, output_filename):
-    # open output file for writing (truncated binary)
-    result_file = open(output_filename, "w+b")
 
-    # convert HTML to PDF
-    pisa_status = pisa.CreatePDF(
-            source_html,                # the HTML to convert
-            dest=result_file)           # file handle to recieve result
-
-    # close output file
-    result_file.close()                 # close output file
-
-    # return True on success and False on errors
-    return pisa_status.err    
-    
-    
-    
-    
     
     
     
@@ -72,6 +55,26 @@ def convert_html_to_pdf(source_html, output_filename):
             link = link.lstrip('/')
             link = 'https://example.com/' + link
         return "<a href='%s' title='%s'>%s</a>" % (link, title, content)
+
+
+
+
+def convert_html_to_pdf(source_html, output_filename):
+    # open output file for writing (truncated binary)
+    result_file = open(output_filename, "w+b")
+
+    # convert HTML to PDF
+    pisa_status = pisa.CreatePDF(
+            source_html,                # the HTML to convert
+            dest=result_file)           # file handle to recieve result
+
+    # close output file
+    result_file.close()                 # close output file
+
+    # return True on success and False on errors
+    return pisa_status.err  
+
+
 
 
 class MyCustomRenderer2(mistune.Renderer):
@@ -96,9 +99,13 @@ def GetExpectedFigure(FigDir, extension, expected_name):
     
 def ListAllRegions(directory, extension):
     '''
-
-
-
+    (str, str) -> list
+    
+    :param directory:
+    :param extension: Figure file extension (eg. png)
+    
+    Returns a list of regions extracted from all figure files located in Figures
+    subfolder of directory
     '''
 
     # make a list if figure files
@@ -116,15 +123,18 @@ def ListAllRegions(directory, extension):
 
 def ListExpectedFigures(directory, extension):
     '''
+    (str, str) -> dict
     
+    :param directory:
+    :param extension: Figure file extension (eg. png)
     
-    
+    Returns a dictionary with paths to all expected figure files
+    Path is the empty string if the expected figure is absent from subfolder Figures
     '''
     
     # make a list of figue files
     FigDir = os.path.join(directory, 'Figures')
           
-    
     # create a dict to store path to each expected figure (can be '')
     D = {}
     
@@ -153,13 +163,6 @@ def ListExpectedFigures(directory, extension):
             D[i][SN[j]] = GetExpectedFigure(FigDir, extension, SL[j].format(i))
         
     return D
-
-
-
-
-
-
-
 
 
 
@@ -204,6 +207,7 @@ def WriteReport(directory, extension, **Options):
     
     
     ## issues:
+    # use specific rendered for lines or blocks
     # center text and image
     # add empty paragraphs
     # add multiple images per line. can add dseveral image separated by empty string
