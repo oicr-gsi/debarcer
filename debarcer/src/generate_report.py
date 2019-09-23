@@ -8,55 +8,7 @@ Created on Thu Sep 19 12:05:32 2019
 import mistune
 import os
 import scipy.ndimage
-from xhtml2pdf import pisa 
-
-# using ipython and html to generate report 
-# https://plot.ly/python/v3/pdf-reports/
-
-
-class MyCustomRenderer(mistune.Renderer):
-    def header(self, text, level, raw=None):
-        return "<h%s class='my-cusom-header-cls'>%s</h%s>" % (level, text, level)
-#    def image(self, src, title, alt_text):
-#        return "<img src='%s' alt='%s' class='img-responsive'>" % (src, alt_text)
-#    
-    
-    
-    def image(self, src, title, text):
-        if src.startswith('javascript:'):
-            src = ''
-        text = mistune.escape(text, quote=True)
-        if title:
-            title = mistune.escape(title, quote=True)
-            html = '<img class="img-responsive center-block" src="%s" alt="%s" title="%s"' % (src, text, title)
-        else:
-            html = '<img class="img-responsive center-block" src="%s" alt="%s"' % (src, text)
-        if self.options.get('use_xhtml'):
-            return '%s />' % html
-        return '%s>' % html
-
-    
-    
-    
-
-    
-    
-    
-    
-    
-    def link(self, link, title, content):
-        if link.lower().startswith('http://'):
-            link = 'https://' + link[len('http://'):]
-        elif link.lower().startswith('https://'):
-            pass # we do not need any processing here
-        else:
-            # so it is a relative link.
-            # We can add a domain in front of it.
-            link = link.lstrip('/')
-            link = 'https://example.com/' + link
-        return "<a href='%s' title='%s'>%s</a>" % (link, title, content)
-
-
+#from xhtml2pdf import pisa 
 
 
 def convert_html_to_pdf(source_html, output_filename):
@@ -84,9 +36,14 @@ class MyCustomRenderer2(mistune.Renderer):
 
 def GetExpectedFigure(FigDir, extension, expected_name):
     '''
+    (str, str, str) --> str
     
+    :param FigDir: Directory Figures in which figures are located
+    :param extension: Extension of the figure files
+    :param expected_name: Name of the figure file
     
-    
+    Return the full path of the figure expected_name + extension in directory Figures
+    or the empty string if file doesn't exist
     '''
     
     
@@ -189,12 +146,128 @@ def AddImage(FigPaths, Report, keys, scale, legends, altfig, figcounter):
 
 
 
+class HeaderRenderer(mistune.Renderer):
+    def header(self, text, level, raw=None):
+        level, text =  self.options.get('level'), self.options.get('text')
+        return '<{0} style="text-align: center">{1}</{0}>'.format(level, text)
+                    
+
+
+def AddTitle(L, N, color, font_family, sample):
+    '''
+    (list, int, str, str, str) -> None
+    
+    :param L: List with report strings
+    :param N: Number of empty lines following title    
+    :param color: Color of the title text
+    :param font_family: Comma-separated text fonts
+    :param sample: Sample name to appear in title
+    
+    Add title to list L
+    '''
+    
+    # add title
+    L.append('<font size=7><p style="text-align: center; color: {0}; font-family: {1}; font-weight:bold">Report for {2} - debarcer</p></font>'.format(color, font_family, sample))
+    # add empty lines  
+    L.append('<pre> </pre>' * N)
+    
+
+
+def AddHeader(L, N, color, num, font_family, text):
+    '''
+    
+    
+    '''
+    
+    L.append('<font size=6><p style="text-align: left; color: {0}; font-family: {1};">{2}. {3}</p></font>'.format(color, font_family, num, text))
+    #L.append('## {0}. {1}').format(num, text)     
+    L.append('<pre> </pre>' * N)   
 
 
 
 
+def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
+    '''
+    (list, str, str, dict, int)- > int
+    
+    :param L: List with report strings
+    :param font_family: Comma-separated text fonts
+    :param extension: Extension of the figure files
+    :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    :param figcounter: Figure number
+    :param N: Number of empty lines following title
+    
+    Add figures and legends to list L or a warning if figures don't exist
+    and return the number of next figure
+    '''
+    
+    
+    # keys to access figure files         
+    keys = ['reads', 'preprocessing']
+    # scaling factor for resizing figures
+    scale = [0.65, 0.7]
+    # legends of the 2 files resulting from pre-proccessing QC
+    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration',
+               '**Figure {0}**. Frequency distribution of umis with correct configurarion']
+    # alternate names on html page
+    altfig = ['processed reads', 'umi frequency']
+       
+    # map expected files to key
+    d = {'reads':'Proportion_correct_reads.{0}'.format(extension), 'preprocessing': 'UMI_occurence_preprocessing.{0}'.format(extension)}
+    # add a warning if both expected files are missing
+    if FigPaths['reads'] == '' or FigPaths['preprocessing'] == '':
+        missing = '<br>'.join([d[i] for i in d if FigPaths[i] == ''])
+        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
+        L.append('<pre> </pre>')
+    
+    # add figures inline 
+    images = ''    
+    fignum = {}
+    
+    for i in range(len(keys)):
+        if FigPaths[keys[i]] != '':
+            # get original size 
+            height, width, channels = scipy.ndimage.imread(FigPaths[keys[i]]).shape
+            # rescale
+            height, width = list(map(lambda x: x * scale[i], [height, width]))
+            # add image and legend
+            if i == 0:
+                images += '<img style="padding-right: 30px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
+            else:
+                images += '<img style="padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
+            #update figure counter
+            fignum[keys[i]] = figcounter
+            figcounter += 1
+    L.append(images)
+    
+    # add legends
+    legends = ''
+    for i in range(len(keys)):
+        if FigPaths[keys[i]] != '':
+            if i == 0:
+                legends += '<span style="padding-right: 20px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Number of reads with correct and incorrect umi-spacer configuration </span>'.format(font_family,fignum[keys[i]])
+            else:
+                legends += '<span style="padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Frequency distribution of umis with correct configurarion </span>'.format(font_family, fignum[keys[i]])
+            #update figure counter
+            figcounter += 1
+    L.append(legends)
+    
+    # append empty line
+    L.append('<pre> </pre>' * N)
+    
+    return figcounter
+    
 
-
+def AddSpacerLine(L):
+    '''
+    
+    
+    '''
+    # add 1 empty line before and after spacer
+    L.append('<pre> </pre>')
+    # add spacer line
+    L.append('****')
+    L.append('<pre> </pre>')
     
 
 def WriteReport(directory, extension, **Options):
@@ -204,87 +277,40 @@ def WriteReport(directory, extension, **Options):
     
     '''
     
-    
-    
-    ## issues:
-    # use specific rendered for lines or blocks
-    # center text and image
-    # add empty paragraphs
-    # add multiple images per line. can add dseveral image separated by empty string
-    # but string cannot start with white space
-#    truc = ''
-#    
-#    for i in range(len(keys)):
-#        if FigPaths[keys[i]] != '':
-#            # get original size 
-#            height, width, channels = scipy.ndimage.imread(FigPaths[keys[i]]).shape
-#            # rescale
-#            height, width = list(map(lambda x: x * scale[i], [height, width]))
-#            if i == 0:
-#                truc = truc + '<img src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
-#            else:
-#                truc = truc + '     ' + '<img src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
-#            figcounter += 1 
-#    L.append(truc)    
-#    
-    
-    
-    keys = ['reads',  'preprocessing', 'coverage', 'ratio', 'total', 'children', 'interval', 'freq']
-    region_keys = ['network', 'marginal', 'depth', 'before_grouping', 'famsize', 'reffreq', 'raw']
-    
-    
-      
+    # set up font family <- string with multiple values. browser will use values from left to right if not defined  
+    font_family = 'Arial, Verdana, sans-serif'
     
     
     
-    
-    
-    
-    
-    
-    
-    # set up counter for figure files
-    figcounter = 1
-    
-    
-    
-    # get the path of all expected figures (can be '')
-    FigPaths = ListExpectedFigures(directory, extension)
-    
-    #renderer = mistune.Renderer(escape=True, hard_wrap=True)
-    #renderer = mistune.Renderer()
     renderer = MyCustomRenderer2()
     markdown = mistune.Markdown(renderer=renderer)
     
+    # set up counter for figure files
+    figcounter = 1
+        
+    # get the path of all expected figures (can be '')
+    FigPaths = ListExpectedFigures(directory, extension)
+       
     # can't use multi-lines string for some unknown reasons. use list to store lines of report
     L = []
     
-    # add level 1 title
-    # get sample name from directory or options
+    ## Title section
     if 'sample' in Options:
         sample = Options['sample']
     else:
-        sample = os.path.basename(directory)
-    L.append('# **debarcer Report - {0}**'.format(sample))
-                 
-    # add level 2 title
-    L.append('## 1. Pre-processing')     
-     
-    # keys to access figure files         
-    keys = ['reads', 'preprocessing']
-    # scaling factor
-    scale = [0.65, 0.7]
-    # legends of the 2 files resulting from pre-proccessing QC
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion']
-    # alternate names on html page
-    altfig = ['processed reads', 'umi frequency']
-    # add images and legends  
-    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
+        sample = os.path.basename(directory) 
+    AddTitle(L, 3, 'black', font_family, sample)
     
+    ## Pre-processing section
+    AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing')
+    # add figures from pre-processing, update figure counter 
+    figcounter = AddPreprocessingFigs(L, font_family, 'png', FigPaths, figcounter, 1)
+    # add spacer line
+    AddSpacerLine(L)
     
-    # add level 2 title
-    L.append('## 2. Umi distribution before family grouping')     
+    ## Pre-grouping section
+    AddHeader(L, 1, 'black', 2, font_family, 'Umi distribution before family grouping')
+         
     
     keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
     scale = [0.65]
@@ -297,75 +323,92 @@ def WriteReport(directory, extension, **Options):
     
     
     L.append('****')     
-    
-    
-    
-    
-    # add level 2 title
-    L.append('## 3. Umi Grouping')     
-    
-    # keys to access figure files         
-    keys = ['total', 'children', 'ratio', 'interval', 'freq']
-    # scaling factor
-    scale = [0.63, 0.63, 0.63, 0.68, 0.8] 
-    # legends of the 4 files resulting from grouping QC
-    legends = ['**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion']
-    # alternate names on html page
-    altfig = ['total umis', 'children umis', 'ratio', 'interval size', 'frequency']
-    
-    # add images and legends
-    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
-    
-    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
-    scale = [0.65, 0.85, 0.65]
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
-    # alternate names on html page
-    altfig = ['network', 'marginal', 'depth']
-    for i in range(len(keys)):
-        L, figcounter = AddImage(FigPaths[keys[i]], L, ['network', 'marginal', 'depth'], scale, legends, altfig, figcounter)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    # add level 2 title
-    L.append('## 4. Umi family Collapsing')
-    
-    # keys to access figure files         
-    keys = ['coverage']
-    # scaling factor
-    scale = [0.7]
-    # legends of the 4 files resulting from grouping QC
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration']
-    # asternate names on html page
-    altfig = ['coverage']
-        
-    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
-    
-    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
-    scale = [0.65, 0.85, 0.65]
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
-    # alternate names on html page
-    altfig = ['famsize', 'reffreq', 'raw']
-    for i in range(len(keys)):
-        L, figcounter = AddImage(FigPaths[keys[i]], L, ['famsize', 'reffreq', 'raw'], scale, legends, altfig, figcounter)
-    
+
+
+
+
+
+
+
+#    
+#    
+#    
+#    
+#    # add level 2 title
+#    L.append('## 3. Umi Grouping')     
+#    
+#    # keys to access figure files         
+#    keys = ['total', 'children', 'ratio', 'interval', 'freq']
+#    # scaling factor
+#    scale = [0.63, 0.63, 0.63, 0.68, 0.8] 
+#    # legends of the 4 files resulting from grouping QC
+#    legends = ['**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion']
+#    # alternate names on html page
+#    altfig = ['total umis', 'children umis', 'ratio', 'interval size', 'frequency']
+#    
+#    # add images and legends
+#    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
+#    
+#    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
+#    scale = [0.65, 0.85, 0.65]
+#    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
+#    # alternate names on html page
+#    altfig = ['network', 'marginal', 'depth']
+#    for i in range(len(keys)):
+#        L, figcounter = AddImage(FigPaths[keys[i]], L, ['network', 'marginal', 'depth'], scale, legends, altfig, figcounter)
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    
+#    # add level 2 title
+#    L.append('## 4. Umi family Collapsing')
+#    
+#    # keys to access figure files         
+#    keys = ['coverage']
+#    # scaling factor
+#    scale = [0.7]
+#    # legends of the 4 files resulting from grouping QC
+#    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration']
+#    # asternate names on html page
+#    altfig = ['coverage']
+#        
+#    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
+#    
+#    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
+#    scale = [0.65, 0.85, 0.65]
+#    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
+#    # alternate names on html page
+#    altfig = ['famsize', 'reffreq', 'raw']
+#    for i in range(len(keys)):
+#        L, figcounter = AddImage(FigPaths[keys[i]], L, ['famsize', 'reffreq', 'raw'], scale, legends, altfig, figcounter)
+
+
+
+
+
+
+ 
     # create report string
     S = ''.join([markdown(i) for i in L])
      
+    
+   
+    
+    
     newfile = open('index.html', 'w')
     newfile.write(S)
     newfile.close()
@@ -376,4 +419,4 @@ def WriteReport(directory, extension, **Options):
 S = WriteReport('./', 'png', sample = 'sample1')  
 
 
-convert_html_to_pdf(S, 'report.pdf')
+#convert_html_to_pdf(S, 'report.pdf')
