@@ -11,6 +11,15 @@ import scipy.ndimage
 #from xhtml2pdf import pisa 
 
 
+
+#https://www.w3schools.com/tags/tag_p.asp
+# https://www.w3schools.com/css/css_howto.asp
+#https://www.w3schools.com/css/css_display_visibility.asp
+#https://www.w3schools.com/css/css_syntax.asp
+
+
+
+
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)
     result_file = open(output_filename, "w+b")
