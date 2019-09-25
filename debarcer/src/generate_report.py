@@ -341,12 +341,12 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         L.append('<pre> </pre>')
     
     # define scaling factor and set alternate figure name
-    scale, altfig = 0.65, 'before grouping'
+    scale, altfig = 0.6, 'before grouping'
     
     # make pairs of non-empty figure pairs
     Files = [FigPaths[keys[i]]['before_grouping'] for i in range(len(keys)) if FigPaths[keys[i]]['before_grouping'] != '']
     # group files by 2 
-    Files = list(map(lambda x: list(x), list(grouper(Files, 3))))
+    Files = list(map(lambda x: list(x), list(grouper(Files, 2))))
     for i in range(len(Files)):
         if None in Files[i]:
             Files[i].pop(Files[i].index(None))
@@ -366,9 +366,9 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
             height, width = list(map(lambda x: x * scale, [height, width]))
             # add image and legend
             if j == 0:
-                images += '<img style="padding-right: 30px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
+                images += '<img style="padding-right: 30px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
             else:
-                images += '<img style="padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
+                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
             #update figure counter
             fignum[region] = figcounter
             figcounter += 1
@@ -377,9 +377,9 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         legends = ''
         for j in range(len(regions)):
             if j == 0:
-                legends += '<span style="padding-right: 100px; padding-left:50px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
+                legends += '<span style="padding-right: 180px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
             else:
-                legends += '<span style="padding-left:50px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
+                legends += '<span style="padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
             #update figure counter
             #figcounter += 1
         L.append(legends)
@@ -391,66 +391,65 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         
 
 
-
-
-
-
-def AddGrouping(L, font_family, extension, FigPaths, figcounter):
+def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
+    '''
+    (list, str, str, dict, int)- > int
+    
+    :param L: List with report strings
+    :param font_family: Comma-separated text fonts
+    :param extension: Extension of the figure files
+    :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    :param figcounter: Figure number
+    :param N: Number of empty lines following last legend
+    
+    Add figures and legends to list L or a warning if figures don't exist
+    and return the number of next figure
     '''
     
-    
-    '''
-
-
     # add description of the figures
     style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
     padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
-    L.append('<p style="{0}">Density plots showing the frequency distribution of\
-             umi sequences<br>(ie. the number of times a given umi sequence is observed)</p>'.format(style))
+    L.append('<p style="{0}">Number of parent and children umis following family grouping for each genomic interval</p>'.format(style))
     L.append('<pre> </pre>')
+
+    # 1. add figures of umi counts across regions
 
     # keys to access figures in this order
     keys = ['total', 'children', 'ratio', 'interval', 'freq']
-    # map keys to expected file names
-    mapfiles = {'total':'Total_Umis.', 'children':'Children_Umis.', 'ratio':'Child_Parent_Umis_Ratio.',
-         'interval': 'PTU_vs_CTU.', 'freq': 'Children_vs_ParentFreq.'}
-    # map keys to legends
-    maplegends = {'total':'**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               'children':'**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               'ratio':'**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               'interval': '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               'freq': '**Figure {0}**. Frequency distribution of umis with correct configurarion'}
+    # map keys to expected file names, legends, scaling factors and alternate figure names
+    Maps = {'total':['Total_Umis.', 'Umi counts per genomic interval', 0.6, 'total umis'],
+            'children':['Children_Umis.', 'Count of children umis per interval', 0.6, 'children umis'],
+            'ratio':['Child_Parent_Umis_Ratio.', 'Child to parent umi ratios per interval', 0.6, 'ratio'],
+            'interval':['PTU_vs_CTU.', 'Relationship between parent and children umi counts with interval sizes', 0.7, 'interval size'],
+            'freq':['Children_vs_ParentFreq.', 'Frequency of parent umis with a given number of children for each interval', 0.8, 'frequency']}
     
     # add warning for missing files
-    missing = '<br>'.join([mapfiles[i] for i in mapfiles if FigPaths[i] == '']).format(extension)
+    missing = '<br>'.join([Maps[i][0] for i in Maps if FigPaths[i] == '']).format(extension)
     if len(missing) != 0:
         L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
         L.append('<pre> </pre>')
 
-    # scaling factor
-    scale = {'total':0.63, 'children':0.63, 'ratio':0.63, 'interval':0.68, 'freq':0.8} 
-    # alternate names on html page
-    altfig = ['total umis', 'children umis', 'ratio', 'interval size', 'frequency']
-    
-    
-    # 
-    
-    
-    
-    # make pairs of non-empty figure pairs
-    legends = [maplegends[keys[i]] for i in range(len(keys)) if FigPaths[keys[i]] != '']
-    legends = list(map(lambda x: list(x), list(grouper(legends, 3))))
-    
-    ### continue here
-    
-    
+    # make groups of non-empty figure pairs
+    group_fig = 2
+    Lgds = [Maps[keys[i]][1] for i in range(len(keys)) if FigPaths[keys[i]] != '']
     Files = [FigPaths[keys[i]] for i in range(len(keys)) if FigPaths[keys[i]] != '']
-    # group files by 2 
-    Files = list(map(lambda x: list(x), list(grouper(Files, 3))))
+    ScalingFactors = [Maps[keys[i]][2] for i in range(len(keys)) if FigPaths[keys[i]] != '']
+    AltNames = [Maps[keys[i]][3] for i in range(len(keys)) if FigPaths[keys[i]] != '']
+    # group files, legends and scaling factors
+    Lgds = list(map(lambda x: list(x), list(grouper(Lgds, group_fig))))
+    Files = list(map(lambda x: list(x), list(grouper(Files, group_fig))))
+    ScalingFactors = list(map(lambda x: list(x), list(grouper(ScalingFactors, group_fig))))
+    AltNames = list(map(lambda x: list(x), list(grouper(AltNames, group_fig))))
     for i in range(len(Files)):
         if None in Files[i]:
             Files[i].pop(Files[i].index(None))
-    
+        if None in Lgds[i]:
+            Lgds[i].pop(Lgds[i].index(None))
+        if None in ScalingFactors[i]:
+            ScalingFactors[i].pop(ScalingFactors[i].index(None))
+        if None in AltNames[i]:
+            AltNames[i].pop(AltNames[i].index(None))
+        
     # add images and legends for valid files    
     for i in range(len(Files)):
         # store images and figure number for given region
@@ -458,51 +457,111 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter):
         for j in range(len(Files[i])):
             # get original size and resize by scaling factor
             height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
-            height, width = list(map(lambda x: x * scale, [height, width]))
+            height, width = list(map(lambda x: x * ScalingFactors[i][j], [height, width]))
             # add images
             if j == 0:
-                images += '<img style="padding-right: 30px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
+                images += '<img style="padding-right: 30px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
             else:
-                images += '<img style="padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
+                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
             #update figure counter
             fignum.append(figcounter)
             figcounter += 1
         L.append(images)
         # add legends
         legends = ''
-        for j in range(len(figcounter)):
+        for j in range(len(Lgds[i])):
+            
+            print(j)
+            
+            
             if j == 0:
-                legends += '<span style="padding-right: 100px; padding-left:50px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[j], regions[j])
+                legends += '<span style="padding-right: 190px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,fignum[j], Lgds[i][j])
             else:
-                legends += '<span style="padding-left:50px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[j], regions[j])
+                legends += '<span style="padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family, fignum[j], Lgds[i][j])
         L.append(legends)
     
         # append empty line
         L.append('<pre> </pre>' * N)
 
 
+    # 2. Add figures specific to each region
 
-
-
-
-
-
-
-
-    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
-    scale = [0.65, 0.85, 0.65]
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
-    # alternate names on html page
-    altfig = ['network', 'marginal', 'depth']
-    for i in range(len(keys)):
-        L, figcounter = AddImage(FigPaths[keys[i]], L, ['network', 'marginal', 'depth'], scale, legends, altfig, figcounter)
-
-
-
-
-
-
+    # make a sorted list of regions for 'grouoing' figures
+    regions = sorted([i for i in FigPaths.keys() if 'chr' in i])
     
+    # add warning for missing files
+    # keys to access figures in this order
+    keys = ['network', 'marginal', 'depth']
+    # map keys to expected file names, legends, scaling factors and alternate figure names
+    Maps = {'network':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.5, 'network'],
+            'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Relationship between read depth and umis per group', 0.6, 'marginal'],
+            'depth':['Read_depth_per_umi_family_{0}.', 'Read depth within group', 0.5, 'read depth']}
+    missing = '<br>'.join([Maps[i][0].format(i, extension) for i in regions for j in Maps if FigPaths[i][j] == ''])
+    if len(missing) != 0:
+        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
+        L.append('<pre> </pre>')
+    
+    # make groups of non-empty figure pairs
+    # keep groups of files together per region
+    Files, Lgds, ScalingFactors, AltNames, Intervals = [], [], [], [], []
+    for i in regions:
+        f, l, s, a = [], [], [], []
+        for j in keys:
+            if FigPaths[i][j] != '':
+                l.append(Maps[j][1])
+                f.append(FigPaths[i][j])
+                s.append(Maps[j][2])
+                a.append(Maps[j][3])
+        if len(f) != 0:
+            Files.append(f)
+            Lgds.append(l)
+            ScalingFactors.append(s)
+            AltNames.append(a)
+            Intervals.append(i)
+       
+    # add images and legends for valid files    
+    for i in range(len(Files)):
+        # store images and figure number for given region
+        images, fignum = '', []    
+        for j in range(len(Files[i])):
+            # get original size and resize by scaling factor
+            height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
+            height, width = list(map(lambda x: x * ScalingFactors[i][j], [height, width]))
+            # add images
+            if j == 0:
+                images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+            else:
+                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+            #update figure counter
+            fignum.append(figcounter)
+            figcounter += 1
+        L.append(images)
+        # add legends
+        legends = ''
+        for j in range(len(Lgds[i])):
+            if j == 0:
+                padding_right,padding_left = 100, 10
+            elif j == 1:
+                padding_right, padding_left = 100, 10
+            else:
+                padding_right, padding_left = 0, 10
+            legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], Lgds[i][j])
+        L.append(legends)
+        # append empty line
+        L.append('<pre> </pre>' * N)
+        L.append()
+
+
+
+        ### add text for region
+        ### continue here
+        
+        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))
+
+
+
+
+
     return figcounter
 
 
@@ -561,41 +620,42 @@ def WriteReport(directory, extension, **Options):
     ## Pre-grouping section
     AddHeader(L, 1, 'black', 2, font_family, 'Umi distribution before family grouping')
     # add figures from pre-grouping QC, update figure counter     
-    AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, 1)
+    figcounter = AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, 1)
     # add spacer line
     AddSpacerLine(L)
          
     ## Grouping section
     AddHeader(L, 1, 'black', 3, font_family, 'Umi Grouping')
-    
+    # add figures from Grouping section and update figure counter
+    figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1)
 
-    
-    # add level 2 title
-    L.append('## 3. Umi Grouping')     
-    
-    # keys to access figure files         
-    keys = ['total', 'children', 'ratio', 'interval', 'freq']
-    # scaling factor
-    scale = [0.63, 0.63, 0.63, 0.68, 0.8] 
-    # legends of the 4 files resulting from grouping QC
-    legends = ['**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
-               '**Figure {0}**. Frequency distribution of umis with correct configurarion']
-    # alternate names on html page
-    altfig = ['total umis', 'children umis', 'ratio', 'interval size', 'frequency']
-    
-    # add images and legends
-    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
-    
-    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
-    scale = [0.65, 0.85, 0.65]
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
-    # alternate names on html page
-    altfig = ['network', 'marginal', 'depth']
-    for i in range(len(keys)):
-        L, figcounter = AddImage(FigPaths[keys[i]], L, ['network', 'marginal', 'depth'], scale, legends, altfig, figcounter)
+
+
+     
+#    
+#    # keys to access figure files         
+#    keys = ['total', 'children', 'ratio', 'interval', 'freq']
+#    # scaling factor
+#    scale = [0.63, 0.63, 0.63, 0.68, 0.8] 
+#    # legends of the 4 files resulting from grouping QC
+#    legends = ['**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion',
+#               '**Figure {0}**. Frequency distribution of umis with correct configurarion']
+#    # alternate names on html page
+#    altfig = ['total umis', 'children umis', 'ratio', 'interval size', 'frequency']
+#    
+#    # add images and legends
+#    L, figcounter = AddImage(FigPaths, L, keys, scale, legends, altfig, figcounter)
+#    
+#    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
+#    scale = [0.65, 0.85, 0.65]
+#    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
+#    # alternate names on html page
+#    altfig = ['network', 'marginal', 'depth']
+#    for i in range(len(keys)):
+#        L, figcounter = AddImage(FigPaths[keys[i]], L, ['network', 'marginal', 'depth'], scale, legends, altfig, figcounter)
 
         
         
