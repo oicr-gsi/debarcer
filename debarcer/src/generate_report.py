@@ -10,16 +10,8 @@ import mistune
 import os
 import scipy.ndimage
 from itertools import zip_longest
+import base64
 #from xhtml2pdf import pisa 
-
-
-
-#https://www.w3schools.com/tags/tag_p.asp
-# https://www.w3schools.com/css/css_howto.asp
-#https://www.w3schools.com/css/css_display_visibility.asp
-#https://www.w3schools.com/css/css_syntax.asp
-
-
 
 
 def convert_html_to_pdf(source_html, output_filename):
@@ -36,13 +28,6 @@ def convert_html_to_pdf(source_html, output_filename):
 
     # return True on success and False on errors
     return pisa_status.err  
-
-
-
-
-class MyCustomRenderer2(mistune.Renderer):
-    pass
-
 
 
 def GetExpectedFigure(FigDir, extension, expected_name):
@@ -131,29 +116,6 @@ def ListExpectedFigures(directory, extension):
             D[i][SN[j]] = GetExpectedFigure(FigDir, extension, SL[j].format(i))
         
     return D
-
-
-
-def AddImage(FigPaths, Report, keys, scale, legends, altfig, figcounter):
-    '''
-    
-    
-    '''
-
-    for i in range(len(keys)):
-        if FigPaths[keys[i]] != '':
-            # get original size 
-            height, width, channels = scipy.ndimage.imread(FigPaths[keys[i]]).shape
-            # rescale
-            height, width = list(map(lambda x: x * scale[i], [height, width]))
-            # add image and legend
-            Report.append('<img src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height))
-            Report.append(legends[i].format(figcounter))
-            #update figure counter
-            figcounter += 1
-    
-    return Report, figcounter
-
 
 
 def AddTitle(L, N, color, font_family, sample):
@@ -305,7 +267,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
     scale = [0.65, 0.7]
     # alternate names on html page
     altfig = ['processed reads', 'umi frequency']
-       
+    
     # map expected files to key
     d = {'reads':'Proportion_correct_reads.{0}'.format(extension), 'preprocessing': 'UMI_occurence_preprocessing.{0}'.format(extension)}
     # add a warning if both expected files are missing
@@ -364,9 +326,12 @@ def AddSpacerLine(L):
     L.append('<pre> </pre>')
 
 
-
-
 def grouper(iterable, n, fillvalue=None):
+    '''
+    (iterable, int, NoneType) -> iterable
+        
+    Return an iterable of 2 item tuples, with None if length of iterable is odd 
+    '''
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
@@ -595,7 +560,7 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         L.append('<pre> </pre>')
         L.append('<ul><li color:black><p style="color:black; display:list-item;\
                  list-style-type:square; text-align: left; font-family: Arial,\
-                 sans-serif; font-weight=normal;">Interval {0}</p></li></ul>'.format(Intervals[i]))
+                 sans-serif; font-weight=normal;"><b>Interval {0}</b></p></li></ul>'.format(Intervals[i]))
         # store images and figure number for given region
         images, fignum = '', []    
         for j in range(len(Files[i])):
@@ -628,7 +593,7 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     return figcounter
 
 
-def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N):
+def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     '''
     (list, str, str, dict, int)- > int
     
@@ -646,12 +611,15 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N):
     # make a sorted list of regions for 'grouoing' figures
     regions = sorted([i for i in FigPaths.keys() if 'chr' in i])
     # keys to access figures in this order
-    keys = ['famsize', 'reffreq', 'raw']
-    Maps = {'famsize':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.65, 'family size'],
+    keys = ['famsize', 'raw', 'reffreq']
+    Maps = {'famsize':['UMI_network_degree_{0}.{1}', 'Mean family size', 0.7, 'family size'],
             'reffreq':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.85, 'non-reference frequency'],
-            'raw':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.65, 'raw read depth']}
+            'raw':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.6, 'raw read depth']}
     
-    intro = ['Degree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
+    # Add figures specific to each region
+    subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots')
+        
+    intro = ['MeanDegree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
              Network shows the<br> interaction among umi nodes colored by degree (right panel)',
              'Marginal plots show the relationship between read depth and umis per group',
              'Read depth distribution at positions of highest and lower abundance, shown<br>as proportion of the read depth within family group']
@@ -668,75 +636,87 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N):
         L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
         L.append('<pre> </pre>')
     
-    # make groups of non-empty figure pairs
-    # keep groups of files together per region
-    Files, Lgds, ScalingFactors, AltNames, Intervals = [], [], [], [], []
-    for i in regions:
-        f, l, s, a = [], [], [], []
-        for j in keys:
-            if FigPaths[i][j] != '':
-                l.append(Maps[j][1])
-                f.append(FigPaths[i][j])
-                s.append(Maps[j][2])
-                a.append(Maps[j][3])
-        if len(f) != 0:
-            Files.append(f)
-            Lgds.append(l)
-            ScalingFactors.append(s)
-            AltNames.append(a)
-            Intervals.append(i)
-       
-    # add images and legends for valid files    
-    for i in range(len(Files)):
-        # add sentence about the genomic interval
-        L.append('<pre> </pre>')
-        L.append('<ul><li color:black><p style="color:black; display:list-item;\
-                 list-style-type:square; text-align: left; font-family: Arial,\
-                 sans-serif; font-weight=normal;">Interval {0}</p></li></ul>'.format(Intervals[i]))
-        # store images and figure number for given region
-        images, fignum = '', []    
-        for j in range(len(Files[i])):
-            # get original size and resize by scaling factor
-            height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
-            height, width = list(map(lambda x: x * ScalingFactors[i][j], [height, width]))
-            # add images
-            if j == 0:
-                images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
-            else:
-                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
-            #update figure counter
-            fignum.append(figcounter)
-            figcounter += 1
-        L.append(images)
-        # add legends
-        legends = ''
-        for j in range(len(Lgds[i])):
-            if j == 0:
-                padding_right,padding_left = 210, 10
-            elif j == 1:
-                padding_right, padding_left = 180, 10
-            else:
-                padding_right, padding_left = 0, 10
-            legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], Lgds[i][j])
-        L.append(legends)
-        # append empty line
-        L.append('<pre> </pre>')
-
+    ## add famsize and raw inline and reffreq as separate line
+    for i in range(len(regions)):
+        # check if some files are present
+        if len([FigPaths[regions[i]][keys[j]] for j in range(len(keys)) if FigPaths[regions[i]][keys[j]] != '']) != 0:
+            # write interval
+            L.append('<pre> </pre>')
+            L.append('<ul><li color:black><p style="color:black; display:list-item;\
+                     list-style-type:square; text-align: left; font-family: Arial,\
+                     sans-serif; font-weight=normal;"><b>Interval {0}</b></p></li></ul>'.format(regions[i]))    
+            # add famsize and raw figures if they exist
+            f, l, s, a = [], [], [], []
+            images, fignum = '', []    
+            for j in range(len(keys)-1):
+                if FigPaths[regions[i]][keys[j]] != '':
+                    l.append(Maps[keys[j]][1])
+                    f.append(FigPaths[regions[i]][keys[j]])
+                    s.append(Maps[keys[j]][2])
+                    a.append(Maps[keys[j]][3])
+            if len(f) != 0:
+                #L.append('<pre> </pre>')
+                for j in range(len(f)):
+                    # get original size and resize by scaling factor
+                    height, width, channels = scipy.ndimage.imread(f[j]).shape
+                    height, width = list(map(lambda x: x * s[j], [height, width]))
+                    # add images
+                    if j == 0:
+                        images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(f[j], a[j], width, height)
+                    else:
+                        images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(f[j], a[j], width, height)
+                    #update figure counter
+                    fignum.append(figcounter)
+                    figcounter += 1
+                L.append(images)
+                # add legends
+                legends = ''
+                for j in range(len(l)):
+                    if j == 0:
+                        padding_right,padding_left = 210, 10
+                    else:
+                        padding_right, padding_left = 180, 10
+                    legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
+                L.append(legends)
+                # append empty line
+                L.append('<pre> </pre>')
+            # add reffreq if it exists
+            if FigPaths[regions[i]][keys[-1]] != '':
+                #L.append('<pre> </pre>')
+                # get original size and resize by scaling factor
+                height, width, channels = scipy.ndimage.imread(FigPaths[regions[i]][keys[-1]]).shape
+                height, width = list(map(lambda x: x * Maps[keys[-1]][2], [height, width]))
+                # add images
+                images = '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][3], width, height)
+                L.append(images)
+                # add legends
+                legends = '<span style="padding-right: 0px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,figcounter, Maps[keys[-1]][1])
+                L.append(legends)
+                # append empty line
+                L.append('<pre> </pre>')
+                # update figure counter
+                figcounter += 1
+                
     return figcounter
 
 
 def WriteReport(directory, extension, Outputfile, **Options):
     '''
+    (str, str, str, dict) -> None
     
-    
-    
+    :param directory: Directory with subfolders including Figures 
+    :param extension: Extension of the figure files
+    :param Outputfile: Name of the html report
+    :param Options: Optional parameters. Accepted values: 'sample'
+        
+    Write an html report of debarcer analysis for a given sample
     '''
     
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
         
-    renderer = MyCustomRenderer2()
-    markdown = mistune.Markdown(renderer=renderer)
+    # use default markdown renderer    
+    markdown = mistune.Markdown()
     
     # set up counter for figure files
     figcounter = 1
@@ -788,8 +768,22 @@ def WriteReport(directory, extension, Outputfile, **Options):
     ## Collapsing section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi family Collapsing')
     # add figures from Collapsing section and update figure counter
-    figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1)
+    figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
 
+
+
+#    #https://stackoverflow.com/questions/28459661/how-to-resize-an-image-an-cut-the-excess-area-of-it-in-python
+#    ## note. convert to base64 to embed images into html
+#    with open(FigPaths['reads'], "rb") as image_file:
+#        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+#    # get original size 
+#    height, width, channels = scipy.ndimage.imread(FigPaths['reads']).shape
+#    height, width = list(map(lambda x: x * 0.6, [height, width]))
+#    L.append('<img style="padding-right: 100px; padding-left:100px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_string, 'resized_64', width, height))
+#    L.append('<pre> </pre>' * 5)
+#    L.append('<img style="padding-right: 100px; padding-left:100px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" />'.format(encoded_string, 'not_resized_64'))
+
+    
     # create report string
     S = ''.join([markdown(i) for i in L])
      
