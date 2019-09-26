@@ -204,23 +204,42 @@ def AddInfo(directory, L, N, color, font_family):
 
 def AddHeader(L, N, color, num, font_family, text):
     '''
-    (list, str, str, str, str) -> None
+    (list, int, str, str, str, str) -> int
     
     :param L: List with report strings
     :param N: Number of empty lines following header
+    :param num: Header number
     :param color: Color of the text
     :param font_family: Comma-separated text fonts
     :param text: Text of the header
     
-    Add header to list. Modify list in place
+    Add header to list. Modify list in place. And return the header number 
     '''
     
-    L.append('<font size=6><p style="text-align: left; color: {0}; font-family: {1};">{2}. {3}</p></font>'.format(color, font_family, num, text))
+    L.append('<font size=6><p style="text-align: left; color: {0}; font-weight: bold; font-family: {1};">{2}. {3}</p></font>'.format(color, font_family, num, text))
     #L.append('## {0}. {1}').format(num, text)     
     L.append('<pre> </pre>' * N)   
+    return num
 
-
-
+def AddSubheader(L, N, color, num1, num2, font_family, text):
+    '''
+    (list, int, str, str, str, str) -> int
+    
+    :param L: List with report strings
+    :param N: Number of empty lines following header
+    :param color: Color of the text
+    :param num1: Header number
+    :param num2: Sub-header number
+    :param font_family: Comma-separated text fonts
+    :param text: Text of the header
+    
+    Add header to list. Modify list in place. And return the sub-header number
+    '''
+    
+    L.append('<font size=4><p style="text-align: left; color: {0}; font-weight: bold; font-family: {1};">{2}.{3} {4}</p></font>'.format(color, font_family, num1, num2, text))
+    #L.append('## {0}. {1}').format(num, text)     
+    L.append('<pre> </pre>' * N)   
+    return num2
 
 def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
     '''
@@ -391,7 +410,7 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         
 
 
-def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
+def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     '''
     (list, str, str, dict, int)- > int
     
@@ -401,15 +420,20 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
+    :param num: Number of the header of the Grouping section
     
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
     '''
     
+    # add sub-header
+    subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'QC plots across regions')
+            
     # add description of the figures
     style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
     padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
-    L.append('<p style="{0}">Number of parent and children umis following family grouping for each genomic interval</p>'.format(style))
+    L.append('<p style="text-align: left; font-family:{0}; font-size:16px">Number of parent and children umis\
+             following family grouping for each genomic interval</p>'.format(font_family))
     L.append('<pre> </pre>')
 
     # 1. add figures of umi counts across regions
@@ -470,21 +494,26 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
         # add legends
         legends = ''
         for j in range(len(Lgds[i])):
-            
-            print(j)
-            
-            
             if j == 0:
                 legends += '<span style="padding-right: 190px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,fignum[j], Lgds[i][j])
             else:
                 legends += '<span style="padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family, fignum[j], Lgds[i][j])
         L.append(legends)
-    
         # append empty line
-        L.append('<pre> </pre>' * N)
-
-
+        L.append('<pre> </pre>')
+    
     # 2. Add figures specific to each region
+    subnum = AddSubheader(L, 1, 'black', num, subnum + 1, font_family, 'Region-specific QC plots')
+
+    intro = ['Degree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
+             Network shows the<br> interaction among umi nodes colored by degree (right panel)',
+             'Marginal plots show the relationship between read depth and umis per group',
+             'Read depth distribution at positions of highest and lower abundance, shown<br>as proportion of the read depth within family group']
+    for i in intro:
+        L.append('<ul><li color:black><span style="list-type-position:outside;\
+                 list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
+                 padding-left:12px; font-family:{0}; font-size:16px">{1}</span></li></ul>'.format(font_family, i))
+    L.append('<pre> </pre>')
 
     # make a sorted list of regions for 'grouoing' figures
     regions = sorted([i for i in FigPaths.keys() if 'chr' in i])
@@ -494,9 +523,9 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
     keys = ['network', 'marginal', 'depth']
     # map keys to expected file names, legends, scaling factors and alternate figure names
     Maps = {'network':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.5, 'network'],
-            'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Relationship between read depth and umis per group', 0.6, 'marginal'],
-            'depth':['Read_depth_per_umi_family_{0}.', 'Read depth within group', 0.5, 'read depth']}
-    missing = '<br>'.join([Maps[i][0].format(i, extension) for i in regions for j in Maps if FigPaths[i][j] == ''])
+            'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.6, 'marginal'],
+            'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.5, 'read depth']}
+    missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
     if len(missing) != 0:
         L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
         L.append('<pre> </pre>')
@@ -521,6 +550,11 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
        
     # add images and legends for valid files    
     for i in range(len(Files)):
+        # add sentence about the genomic interval
+        L.append('<pre> </pre>')
+        L.append('<ul><li color:black><p style="color:black; display:list-item;\
+                 list-style-type:square; text-align: left; font-family: Arial,\
+                 sans-serif; font-weight=normal;">Interval {0}</p></li></ul>'.format(Intervals[i]))
         # store images and figure number for given region
         images, fignum = '', []    
         for j in range(len(Files[i])):
@@ -540,40 +574,17 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N):
         legends = ''
         for j in range(len(Lgds[i])):
             if j == 0:
-                padding_right,padding_left = 100, 10
+                padding_right,padding_left = 210, 10
             elif j == 1:
-                padding_right, padding_left = 100, 10
+                padding_right, padding_left = 180, 10
             else:
                 padding_right, padding_left = 0, 10
             legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], Lgds[i][j])
         L.append(legends)
         # append empty line
-        L.append('<pre> </pre>' * N)
-        L.append()
-
-
-
-        ### add text for region
-        ### continue here
-        
-        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))
-
-
-
-
+        L.append('<pre> </pre>')
 
     return figcounter
-
-
-
-
-
-
-
-
-
-
-
 
 
 def WriteReport(directory, extension, **Options):
@@ -611,24 +622,26 @@ def WriteReport(directory, extension, **Options):
     AddInfo(directory, L, 2, 'black', font_family)
         
     ## Pre-processing section
-    AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing')
+    headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing')
     # add figures from pre-processing, update figure counter 
     figcounter = AddPreprocessingFigs(L, font_family, 'png', FigPaths, figcounter, 1)
     # add spacer line
     AddSpacerLine(L)
     
     ## Pre-grouping section
-    AddHeader(L, 1, 'black', 2, font_family, 'Umi distribution before family grouping')
+    headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi distribution before family grouping')
     # add figures from pre-grouping QC, update figure counter     
     figcounter = AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, 1)
     # add spacer line
     AddSpacerLine(L)
          
     ## Grouping section
-    AddHeader(L, 1, 'black', 3, font_family, 'Umi Grouping')
+    headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi Grouping')
     # add figures from Grouping section and update figure counter
-    figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1)
-
+    figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1, headernum)
+    # add spacer line
+    AddSpacerLine(L)
+    
 
 
      
