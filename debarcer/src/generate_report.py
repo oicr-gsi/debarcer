@@ -283,7 +283,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
             height, width = list(map(lambda x: x * scale[i], [height, width]))
             # add image and legend
             if i == 0:
-                images += '<img style="padding-right: 30px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
+                images += '<img style="padding-right: 100px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
             else:
                 images += '<img style="padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
             #update figure counter
@@ -296,7 +296,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
     for i in range(len(keys)):
         if FigPaths[keys[i]] != '':
             if i == 0:
-                legends += '<span style="padding-right: 20px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Number of reads with correct and incorrect umi-spacer configuration </span>'.format(font_family,fignum[keys[i]])
+                legends += '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Number of reads with correct and incorrect umi-spacer configuration </span>'.format(font_family,fignum[keys[i]])
             else:
                 legends += '<span style="padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Frequency distribution of umis with correct configurarion </span>'.format(font_family, fignum[keys[i]])
     L.append(legends)
@@ -396,9 +396,9 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         legends = ''
         for j in range(len(regions)):
             if j == 0:
-                legends += '<span style="padding-right: 180px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
+                legends += '<span style="padding-right: 180px; padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
             else:
-                legends += '<span style="padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
+                legends += '<span style="padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
             #update figure counter
             #figcounter += 1
         L.append(legends)
@@ -430,8 +430,6 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'QC plots across regions')
             
     # add description of the figures
-    style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
-    padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
     L.append('<p style="text-align: left; font-family:{0}; font-size:16px">Number of parent and children umis\
              following family grouping for each genomic interval</p>'.format(font_family))
     L.append('<pre> </pre>')
