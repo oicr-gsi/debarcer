@@ -628,7 +628,104 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     return figcounter
 
 
-def WriteReport(directory, extension, **Options):
+def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N):
+    '''
+    (list, str, str, dict, int)- > int
+    
+    :param L: List with report strings
+    :param font_family: Comma-separated text fonts
+    :param extension: Extension of the figure files
+    :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    :param figcounter: Figure number
+    :param N: Number of empty lines following last legend
+        
+    Add figures and legends to list L or a warning if figures don't exist
+    and return the number of next figure
+    '''
+    
+    # make a sorted list of regions for 'grouoing' figures
+    regions = sorted([i for i in FigPaths.keys() if 'chr' in i])
+    # keys to access figures in this order
+    keys = ['famsize', 'reffreq', 'raw']
+    Maps = {'famsize':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.65, 'family size'],
+            'reffreq':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.85, 'non-reference frequency'],
+            'raw':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.65, 'raw read depth']}
+    
+    intro = ['Degree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
+             Network shows the<br> interaction among umi nodes colored by degree (right panel)',
+             'Marginal plots show the relationship between read depth and umis per group',
+             'Read depth distribution at positions of highest and lower abundance, shown<br>as proportion of the read depth within family group']
+    for i in intro:
+        L.append('<ul><li color:black><span style="list-type-position:outside;\
+                 list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
+                 padding-left:12px; font-family:{0}; font-size:16px">{1}</span></li></ul>'.format(font_family, i))
+    L.append('<pre> </pre>')
+    
+    # add warning for missing files
+    # map keys to expected file names, legends, scaling factors and alternate figure names
+    missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
+    if len(missing) != 0:
+        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
+        L.append('<pre> </pre>')
+    
+    # make groups of non-empty figure pairs
+    # keep groups of files together per region
+    Files, Lgds, ScalingFactors, AltNames, Intervals = [], [], [], [], []
+    for i in regions:
+        f, l, s, a = [], [], [], []
+        for j in keys:
+            if FigPaths[i][j] != '':
+                l.append(Maps[j][1])
+                f.append(FigPaths[i][j])
+                s.append(Maps[j][2])
+                a.append(Maps[j][3])
+        if len(f) != 0:
+            Files.append(f)
+            Lgds.append(l)
+            ScalingFactors.append(s)
+            AltNames.append(a)
+            Intervals.append(i)
+       
+    # add images and legends for valid files    
+    for i in range(len(Files)):
+        # add sentence about the genomic interval
+        L.append('<pre> </pre>')
+        L.append('<ul><li color:black><p style="color:black; display:list-item;\
+                 list-style-type:square; text-align: left; font-family: Arial,\
+                 sans-serif; font-weight=normal;">Interval {0}</p></li></ul>'.format(Intervals[i]))
+        # store images and figure number for given region
+        images, fignum = '', []    
+        for j in range(len(Files[i])):
+            # get original size and resize by scaling factor
+            height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
+            height, width = list(map(lambda x: x * ScalingFactors[i][j], [height, width]))
+            # add images
+            if j == 0:
+                images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+            else:
+                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+            #update figure counter
+            fignum.append(figcounter)
+            figcounter += 1
+        L.append(images)
+        # add legends
+        legends = ''
+        for j in range(len(Lgds[i])):
+            if j == 0:
+                padding_right,padding_left = 210, 10
+            elif j == 1:
+                padding_right, padding_left = 180, 10
+            else:
+                padding_right, padding_left = 0, 10
+            legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], Lgds[i][j])
+        L.append(legends)
+        # append empty line
+        L.append('<pre> </pre>')
+
+    return figcounter
+
+
+def WriteReport(directory, extension, Outputfile, **Options):
     '''
     
     
@@ -688,43 +785,22 @@ def WriteReport(directory, extension, **Options):
     # add spacer line
     AddSpacerLine(L)
     
-      
-    
-    
+    ## Collapsing section
+    headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi family Collapsing')
+    # add figures from Collapsing section and update figure counter
+    figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1)
 
-    # add level 2 title
-    L.append('## 4. Umi family Collapsing')
-    
-        
-    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
-    scale = [0.65, 0.85, 0.65]
-    legends = ['**Figure {0}**. Number of reads with correct and incorrect umi-spacer configuration'] * 3
-    # alternate names on html page
-    altfig = ['famsize', 'reffreq', 'raw']
-    for i in range(len(keys)):
-        L, figcounter = AddImage(FigPaths[keys[i]], L, ['famsize', 'reffreq', 'raw'], scale, legends, altfig, figcounter)
-
-
-
-
-
-
- 
     # create report string
     S = ''.join([markdown(i) for i in L])
      
-    
-   
-    
-    
-    newfile = open('index.html', 'w')
+    newfile = open(Outputfile, 'w')
     newfile.write(S)
     newfile.close()
     
     return S
 
 
-S = WriteReport('./', 'png', sample = 'sample1')  
+S = WriteReport('./', 'png', 'report.html', sample = 'sample1')  
 
 
 #convert_html_to_pdf(S, 'report.pdf')
