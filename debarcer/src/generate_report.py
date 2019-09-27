@@ -11,8 +11,9 @@ import os
 import scipy.ndimage
 from itertools import zip_longest
 import base64
+import matplotlib
 #from xhtml2pdf import pisa 
-
+from PIL import Image
 
 def ResizeFifure(filename, scaling_factor):
     '''
@@ -24,7 +25,11 @@ def ResizeFifure(filename, scaling_factor):
     Return new file size with same proportions as a tuple of height and width
     '''
     # extract the original figure size
-    height, width, channels = scipy.ndimage.imread(filename).shape
+    height, width, channels = matplotlib.pyplot.imread(filename).shape
+    # alternately use PIL.Image
+    #im = Image.open(filename)
+    #width, height = im.size
+    
     # resize while keeping proportions between height and width
     height, width = list(map(lambda x: x * scaling_factor, [height, width]))
     return height, width        
