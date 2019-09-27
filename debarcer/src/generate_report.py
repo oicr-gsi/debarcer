@@ -14,6 +14,21 @@ import base64
 #from xhtml2pdf import pisa 
 
 
+def ResizeFifure(filename, scaling_factor):
+    '''
+    (str, float) -> (int, int)
+    
+    :param filename: Path to figure file
+    :param scaling_factor: The factor applied to resize figure 
+    
+    Return new file size with same proportions as a tuple of height and width
+    '''
+    # extract the original figure size
+    height, width, channels = scipy.ndimage.imread(filename).shape
+    # resize while keeping proportions between height and width
+    height, width = list(map(lambda x: x * scaling_factor, [height, width]))
+    return height, width        
+
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)
     result_file = open(output_filename, "w+b")
@@ -229,10 +244,8 @@ def AddCoverageFig(L, font_family, extension, FigPaths, figcounter, N):
         L.append('<pre> </pre>')
     
     if FigPaths['coverage'] != '':
-        # get original size 
-        height, width, channels = scipy.ndimage.imread(FigPaths['coverage']).shape
-        # rescale
-        height, width = list(map(lambda x: x * scale, [height, width]))
+        # resize figure
+        height, width = ResizeFifure(FigPaths['coverage'], scale)
         # add image and legend
         images = '<img style="padding-right:0px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths['coverage'], 'coverage', width, height)
         L.append(images)
@@ -282,10 +295,8 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
     
     for i in range(len(keys)):
         if FigPaths[keys[i]] != '':
-            # get original size 
-            height, width, channels = scipy.ndimage.imread(FigPaths[keys[i]]).shape
-            # rescale
-            height, width = list(map(lambda x: x * scale[i], [height, width]))
+            # resize image
+            height, width = ResizeFifure(FigPaths[keys[i]], scale[i])
             # add image and legend
             if i == 0:
                 images += '<img style="padding-right: 100px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
@@ -388,9 +399,8 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
             region = os.path.basename(Files[i][j])
             region = region[region.index('_chr')+ 1: region.rindex('.')]
             regions.append(region)
-            # get original size and resize by scaling factor
-            height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
-            height, width = list(map(lambda x: x * scale, [height, width]))
+            # resize image
+            height, width = ResizeFifure(Files[i][j], scale)
             # add image and legend
             if j == 0:
                 images += '<img style="padding-right: 30px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
@@ -485,9 +495,8 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         # store images and figure number for given region
         images, fignum = '', []    
         for j in range(len(Files[i])):
-            # get original size and resize by scaling factor
-            height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
-            height, width = list(map(lambda x: x * ScalingFactors[i][j], [height, width]))
+            # resize image
+            height, width = ResizeFifure(Files[i][j], ScalingFactors[i][j])
             # add images
             if j == 0:
                 images += '<img style="padding-right: 30px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
@@ -564,9 +573,8 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         # store images and figure number for given region
         images, fignum = '', []    
         for j in range(len(Files[i])):
-            # get original size and resize by scaling factor
-            height, width, channels = scipy.ndimage.imread(Files[i][j]).shape
-            height, width = list(map(lambda x: x * ScalingFactors[i][j], [height, width]))
+            # resize image
+            height, width = ResizeFifure(Files[i][j], ScalingFactors[i][j])
             # add images
             if j == 0:
                 images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
@@ -657,9 +665,8 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
             if len(f) != 0:
                 #L.append('<pre> </pre>')
                 for j in range(len(f)):
-                    # get original size and resize by scaling factor
-                    height, width, channels = scipy.ndimage.imread(f[j]).shape
-                    height, width = list(map(lambda x: x * s[j], [height, width]))
+                    # resize image
+                    height, width = ResizeFifure(f[j], s[j])
                     # add images
                     if j == 0:
                         images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(f[j], a[j], width, height)
@@ -683,9 +690,8 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
             # add reffreq if it exists
             if FigPaths[regions[i]][keys[-1]] != '':
                 #L.append('<pre> </pre>')
-                # get original size and resize by scaling factor
-                height, width, channels = scipy.ndimage.imread(FigPaths[regions[i]][keys[-1]]).shape
-                height, width = list(map(lambda x: x * Maps[keys[-1]][2], [height, width]))
+                # resize image
+                height, width = ResizeFifure(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][2])
                 # add images
                 images = '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][3], width, height)
                 L.append(images)
