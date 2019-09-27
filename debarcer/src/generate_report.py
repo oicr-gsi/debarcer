@@ -651,10 +651,14 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     # Add figures specific to each region
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots')
         
-    intro = ['MeanDegree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
-             Network shows the<br> interaction among umi nodes colored by degree (right panel)',
-             'Marginal plots show the relationship between read depth and umis per group',
-             'Read depth distribution at positions of highest and lower abundance, shown<br>as proportion of the read depth within family group']
+    intro = ['Average umi family size across a given genomic interval<br>for various minimum size thresholds',
+             'Read depth without and with umi collapsing for various<br>minimum family size thresholds',
+             'Frequency of alternative variants without and with collapsing<br>on various minimum umi family size thresholds']
+    
+      
+    
+    
+    
     for i in intro:
         L.append('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
