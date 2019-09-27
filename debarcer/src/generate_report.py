@@ -29,6 +29,20 @@ def ResizeFifure(filename, scaling_factor):
     height, width = list(map(lambda x: x * scaling_factor, [height, width]))
     return height, width        
 
+
+def EncodeImage(filename):
+    '''
+    (str)- > str
+    
+    Return a string representing the encoding of image filename in base64
+    '''
+    
+    # encode image in base64
+    with open(filename, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    return encoded_string
+    
+
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)
     result_file = open(output_filename, "w+b")
@@ -246,8 +260,10 @@ def AddCoverageFig(L, font_family, extension, FigPaths, figcounter, N):
     if FigPaths['coverage'] != '':
         # resize figure
         height, width = ResizeFifure(FigPaths['coverage'], scale)
+        # encode base64 image
+        encoded_fig = EncodeImage(FigPaths['coverage'])
         # add image and legend
-        images = '<img style="padding-right:0px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths['coverage'], 'coverage', width, height)
+        images = '<img style="padding-right:0px; padding-left:30px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, 'coverage', width, height)
         L.append(images)
         # add legend
         legends = '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Average read depth and umi counts per genomic interval</span>'.format(font_family, figcounter)
@@ -297,16 +313,18 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
         if FigPaths[keys[i]] != '':
             # resize image
             height, width = ResizeFifure(FigPaths[keys[i]], scale[i])
-            # add image and legend
+            # encode base64 image
+            encoded_fig = EncodeImage(FigPaths[keys[i]])
+        # add image and legend
             if i == 0:
-                images += '<img style="padding-right: 100px; padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
+                images += '<img style="padding-right: 100px; padding-left:30px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig[i], width, height)
             else:
-                images += '<img style="padding-left:30px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[keys[i]], altfig[i], width, height)
+                images += '<img style="padding-left:30px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig[i], width, height)
             #update figure counter
             fignum[keys[i]] = figcounter
             figcounter += 1
     L.append(images)
-    
+       
     # add legends
     legends = ''
     for i in range(len(keys)):
@@ -401,11 +419,13 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
             regions.append(region)
             # resize image
             height, width = ResizeFifure(Files[i][j], scale)
+            # encode base64 image
+            encoded_fig = EncodeImage(Files[i][j])
             # add image and legend
             if j == 0:
-                images += '<img style="padding-right: 30px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
+                images += '<img style="padding-right: 30px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
             else:
-                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], altfig, width, height)
+                images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
             #update figure counter
             fignum[region] = figcounter
             figcounter += 1
@@ -497,11 +517,13 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         for j in range(len(Files[i])):
             # resize image
             height, width = ResizeFifure(Files[i][j], ScalingFactors[i][j])
+            # encode base64 image
+            encoded_fig = EncodeImage(Files[i][j])
             # add images
             if j == 0:
-                images += '<img style="padding-right: 30px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+                images += '<img style="padding-right: 30px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
             else:
-                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+                images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
             #update figure counter
             fignum.append(figcounter)
             figcounter += 1
@@ -575,11 +597,13 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         for j in range(len(Files[i])):
             # resize image
             height, width = ResizeFifure(Files[i][j], ScalingFactors[i][j])
+            # encode base64 image
+            encoded_fig = EncodeImage(Files[i][j])
             # add images
             if j == 0:
-                images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+                images += '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
             else:
-                images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(Files[i][j], AltNames[i][j], width, height)
+                images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
             #update figure counter
             fignum.append(figcounter)
             figcounter += 1
@@ -667,11 +691,13 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
                 for j in range(len(f)):
                     # resize image
                     height, width = ResizeFifure(f[j], s[j])
+                    # encode base64 image
+                    encoded_fig = EncodeImage(f[j])
                     # add images
                     if j == 0:
-                        images += '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(f[j], a[j], width, height)
+                        images += '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, a[j], width, height)
                     else:
-                        images += '<img style="padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(f[j], a[j], width, height)
+                        images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, a[j], width, height)
                     #update figure counter
                     fignum.append(figcounter)
                     figcounter += 1
@@ -692,8 +718,10 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
                 #L.append('<pre> </pre>')
                 # resize image
                 height, width = ResizeFifure(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][2])
+                # encode base64 image
+                encoded_fig = EncodeImage(FigPaths[regions[i]][keys[-1]])
                 # add images
-                images = '<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][3], width, height)
+                images = '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, Maps[keys[-1]][3], width, height)
                 L.append(images)
                 # add legends
                 legends = '<span style="padding-right: 0px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,figcounter, Maps[keys[-1]][1])
