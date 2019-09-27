@@ -771,10 +771,14 @@ def WriteReport(directory, extension, Outputfile, **Options):
     L = []
     
     ## Title section
+    ## get sample name
     if 'sample' in Options:
         sample = Options['sample']
     else:
+        sample = ''
+    if sample == '':
         sample = os.path.basename(directory) 
+        
     AddTitle(L, 3, 'black', font_family, sample)
     
     ## Add debarcer info and time stamp
@@ -823,7 +827,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
     return S
 
 
-S = WriteReport('./', 'png', 'report.html', sample = 'sample1')  
+#S = WriteReport('./', 'png', 'report.html', sample = 'sample1')  
 
 
 #convert_html_to_pdf(S, 'report.pdf')
