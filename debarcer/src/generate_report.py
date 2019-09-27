@@ -645,8 +645,8 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     # keys to access figures in this order
     keys = ['famsize', 'raw', 'reffreq']
     Maps = {'famsize':['UMI_network_degree_{0}.{1}', 'Mean family size', 0.7, 'family size'],
-            'reffreq':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.85, 'non-reference frequency'],
-            'raw':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.6, 'raw read depth']}
+            'reffreq':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Frequency of alternative variants', 0.85, 'alternative variants'],
+            'raw':['Read_depth_per_umi_family_{0}.{1}', 'Raw and consensus depth', 0.6, 'read depth']}
     
     # Add figures specific to each region
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots')
@@ -706,9 +706,9 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
                 legends = ''
                 for j in range(len(l)):
                     if j == 0:
-                        padding_right,padding_left = 210, 10
+                        padding_right,padding_left = 440, 10
                     else:
-                        padding_right, padding_left = 180, 10
+                        padding_right, padding_left = 0, 10
                     legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
                 L.append(legends)
                 # append empty line
@@ -804,20 +804,6 @@ def WriteReport(directory, extension, Outputfile, **Options):
     # add figures from Collapsing section and update figure counter
     figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
 
-
-
-#    #https://stackoverflow.com/questions/28459661/how-to-resize-an-image-an-cut-the-excess-area-of-it-in-python
-#    ## note. convert to base64 to embed images into html
-#    with open(FigPaths['reads'], "rb") as image_file:
-#        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-#    # get original size 
-#    height, width, channels = scipy.ndimage.imread(FigPaths['reads']).shape
-#    height, width = list(map(lambda x: x * 0.6, [height, width]))
-#    L.append('<img style="padding-right: 100px; padding-left:100px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_string, 'resized_64', width, height))
-#    L.append('<pre> </pre>' * 5)
-#    L.append('<img style="padding-right: 100px; padding-left:100px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" />'.format(encoded_string, 'not_resized_64'))
-
-    
     # create report string
     S = ''.join([markdown(i) for i in L])
      
