@@ -15,7 +15,7 @@ from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
  PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
  PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo, PlotIncorrectReads
-    
+from src.generate_report import WriteReport    
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -565,6 +565,21 @@ def generate_plots(args):
     plt.clf(), plt.cla()
     PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
        
+
+def generate_report(args):
+    '''
+    (list) -> None
+    
+    :param directory: Directory with subfolders including Figures 
+    :param extension: Extension of the figure files
+    :param Outputfile: Name of the html report
+    :param Options: Optional parameters. Accepted values: 'sample'
+    
+    Write an html report of debarcer analysis for a given sample
+    '''
+    
+    WriteReport(args.directory, args.extension, args.outputfile, sample=args.sample)
+
     
        
 if __name__ == '__main__':
@@ -663,12 +678,20 @@ if __name__ == '__main__':
     m_parser.add_argument('-dt', '--DataType', dest='datatype', help='Type of files to be merged')
     m_parser.set_defaults(func=merge_files)
     
-    ##Generate graphs	
+    ## Generate graphs	
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
     plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
     plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
     plot_parser.set_defaults(func=generate_plots)
     
+    ## Generate report
+    report_parser = subparsers.add_parser('report', help="Generate report", add_help=True)
+    report_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories including Figures', required=True)
+    report_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
+    report_parser.add_argument('-o', '--Outputfile', dest='outputfile', help='Path to output report. Needs to include.html', required=True)
+    report_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name. Optional. Directory basename is sample name if not provided')
+    report_parser.set_defaults(func=generate_report)
+        
     args = parser.parse_args()
     try:
         args.func(args)
