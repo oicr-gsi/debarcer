@@ -151,10 +151,10 @@ def MergeDataFiles(DataDir):
 def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                 percentthreshold, distthreshold, postthreshold, refthreshold,
                 allthreshold, maxdepth, truncate, ignoreorphans, ignore, merge,
-                mydebarcer, mypython, mem, queue):
+                plot, report, extension, sample, mydebarcer, mypython, mem, queue):
     '''
     (str, str, str, str, str, int, float, int, int, float, float, int, bool,
-    bool, bool, bool, str, str, int, str) -> None
+    bool, bool, bool, bool, bool, str, str, str, str, int, str) -> None
     
     :param bamfile: Path to the bam file
     :param outdir: Directory where .umis, and datafiles are written
@@ -172,6 +172,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
     :param merge: Merge datafiles, consensus files and umi files if True
+    :param plot: Generate figure plots if True
+    :param report: Generate analysis report if True
+    :param extension: Figure file extension
+    :param sample: Sample name to appear in report. If empty str, outdir basename is used
     :param mydebarcer: Path to the debarcer script
     :param mypython: Path to python
     :param mem: Requested memory
@@ -239,6 +243,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         
 
     if merge  == True:
+        # make a list of merge job names
+        MergeJobNames = []        
         
         Regions = list(map(lambda x: x.replace(':', '-'), Regions))
         
@@ -251,8 +257,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
         newfile.close()
         jobname3 = 'MergeDataFiles_' + '_'.join(Regions)
+        MergeJobNames.append(jobname3)
         # run merge datafiles
-        
         subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
         
         # merge consensus files
@@ -261,6 +267,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
         newfile.close()
         jobname4 = 'MergeConsensusFiles_' + '_'.join(Regions)
+        MergeJobNames.append(jobname4)
         # run merge consensus files
         subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
         
@@ -270,6 +277,24 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
         newfile.close()
         jobname5 = 'MergeUmiFiles_' + '_'.join(Regions)
+        MergeJobNames.append(jobname5)
         # run merge umi files
         subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
         
+    if plot == True:
+        # generate plots and report if report is True
+        PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
+        PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
+        newfile = open(PlotScript, 'w')
+        newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report))
+        newfile.close()
+        jobname6 = 'Plot'
+        # run plot
+        if merge == True:
+            LastJob = MergeJobNames[-1]
+        else:
+            LastJob = ConsJobNames[-1]
+        subprocess.call(QsubCmd2.format(jobname6, LastJob, LogDir, queue, '20', PlotScript), shell=True)    
+        
+            
+            

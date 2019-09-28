@@ -370,12 +370,16 @@ def run_scripts(args):
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True'
     :param ignore: Keep the most abundant family and ignore families at other positions within each group. Default is False
     :param merge: Merge data, json and consensus files respectively into a 1 single file. Default is True
+    :param plot: Generate figure plots if True
+    :param report: Generate analysis report if True
+    :param extension: Figure file extension
+    :param sample: Sample name to appear in report. If empty str, outdir basename is used
     :param queue: SGE queue for submitting jobs. Default is default
     :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
     :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
     :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
        
-    Submits jobs to run Umi Grouping, Collapsing
+    Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
 
 
@@ -412,8 +416,8 @@ def run_scripts(args):
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 percent_threshold, dist_threshold, post_threshold, ref_threshold,
                 all_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
-                args.ignore, args.merge, args.mydebarcer, args.mypython, args.mem, args.queue)
-    
+                args.ignore, args.merge, args.plot, args.report, args.extension, args.sample,
+                args.mydebarcer, args.mypython, args.mem, args.queue)
     
 def generate_plots(args):
     '''
@@ -676,6 +680,10 @@ if __name__ == '__main__':
                           help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     r_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     r_parser.add_argument('-mg', '--Merge', dest='merge', action='store_false', help='Merge data, json and consensus files respectively into a 1 single file. Default is True')
+    r_parser.add_argument('-pl', '--Plot', dest='plot',  action='store_false', help='Generate figure plots. Default is True')
+    r_parser.add_argument('-rp', '--Report', dest='report', action='store_false', help='Generate report. Default is True')
+    r_parser.add_argument('-ex', '--Extension', dest='extension', choices=['png', 'jpeg', 'tiff', 'pdf'], default='png', help='Figure file extension. Default is png')
+    r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
     r_parser.add_argument('-q', '--Queue', dest='queue', default='default', help='SGE queue for submitting jobs. Default is default')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default='20', help='Requested memory for submitting jobs to SGE. Default is 20g')
     r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
