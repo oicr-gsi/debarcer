@@ -171,17 +171,47 @@ def AddTitle(L, N, color, font_family, sample):
     L.append('<pre> </pre>' * N)
     
 
-
-def AddInfo(directory, L, N, color, font_family):
+def CountMissingFiles(FigPaths):
     '''
-    (list, str, int, str, str) -> None
+    (dict) -> (int, int)
+
+    :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    
+    Return a tuple with count of valid and missing files
+    '''
+    
+    # count valid and missing files
+    missing, valid = 0, 0
+   
+    # make a list of non-region keys
+    for i in FigPaths:
+        if not i.startswith('chr'):
+            if os.path.isfile(FigPaths[i]) == True:
+                valid += 1
+            else:
+                missing +=1
+        else:
+            # make a list of non-regions keys
+            for j in FigPaths[i]:
+                if os.path.isfile(FigPaths[i][j]) == True:
+                    valid += 1
+                else:
+                    missing +=1
+    
+    return valid, missing
+
+
+def AddInfo(directory, L, N, color, font_family, FigPaths):
+    '''
+    (list, str, int, str, str, dict) -> None
     
     :param directory: Directory with subfolders including Figures 
     :param L: List with report strings
     :param N: Number of empty lines following header
     :param color: Color of the text
     :param font_family: Comma-separated text fonts
-        
+    :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+            
     Add information about debarcer, stime stamp and working directory to list.
     Modify list in place
     '''
@@ -192,7 +222,11 @@ def AddInfo(directory, L, N, color, font_family):
     version = '<b>debarcer version:</b> ' + 'xxx'
     # get the directory containing subdirs 
     directory = '<b>directory:</b> ' + directory
-    text = '<br>'.join([date, version, directory])
+    # count the number of valid and missing files
+    valid, missing = CountMissingFiles(FigPaths)
+    total = valid + missing
+    files = '<b>figures:</b> ' + '{0} / {1} missing images'.format(missing, total) 
+    text = '<br>'.join([date, version, directory, files])
     L.append('<pre><font size=3><p style="text-align: left; color: {0}; font-family: {1};">{2}</p></font></pre>'.format(color, font_family, text))
     #L.append('## {0}. {1}').format(num, text)     
     L.append('<pre> </pre>' * N)   
@@ -660,10 +694,6 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
              'Read depth without and with umi collapsing for various<br>minimum family size thresholds',
              'Frequency of alternative variants without and with collapsing<br>on various minimum umi family size thresholds']
     
-      
-    
-    
-    
     for i in intro:
         L.append('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
@@ -782,7 +812,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
     AddTitle(L, 3, 'black', font_family, sample)
     
     ## Add debarcer info and time stamp
-    AddInfo(directory, L, 2, 'black', font_family)
+    AddInfo(directory, L, 2, 'black', font_family, FigPaths)
     
     ## Pre-processing section
     headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing')
@@ -824,10 +854,10 @@ def WriteReport(directory, extension, Outputfile, **Options):
     newfile.write(S)
     newfile.close()
     
-    return S
+    
 
 
-#S = WriteReport('./', 'png', 'report.html', sample = 'sample1')  
+WriteReport('./', 'png', 'report.html', sample = 'sample1')  
 
 
 #convert_html_to_pdf(S, 'report.pdf')
