@@ -421,7 +421,8 @@ def generate_plots(args):
     
     :param directory: Directory with subdirectories ConsFiles and Datafiles 
     :param extension: Figure format. Accepted values: png, pdf, jpeg, tiff
-       
+    :param report: Boolean, generate a report if True
+    :param sample: Optional parameter, sample name to appear in report
     Generate plots in Figures directory
     '''
     
@@ -544,7 +545,6 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
         
-        
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
@@ -564,7 +564,16 @@ def generate_plots(args):
     # plot parent frequencies vs children UMI counts
     plt.clf(), plt.cla()
     PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
-       
+    
+    # check if reporting
+    if args.report == True:
+        # create subdirectory
+        ReportDir = os.path.join(args.directory, 'Report')
+        if os.path.isdir(ReportDir):
+            os.mkdir(ReportDir)
+        report = os.path.join(ReportDir, 'report.html')
+        WriteReport(args.directory, args.extension, report, sample=args.sample)
+
 
 def generate_report(args):
     '''
@@ -682,6 +691,8 @@ if __name__ == '__main__':
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
     plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
     plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
+    plot_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name to apear in the report is reporting flag activated. Optional')
+    plot_parser.add_argument('-r', '--Report', dest='report', choices=[False, True], type=bool, default=True, help='Generate a report if activated. Default is True')
     plot_parser.set_defaults(func=generate_plots)
     
     ## Generate report
