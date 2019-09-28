@@ -337,16 +337,15 @@ def CreateDirTree(directory):
         raise ValueError('not a valid directory {0}'.format(directory))
     
     # create subdirectoy structure
-    L = ['Umifiles', 'Datafiles', 'Stats', 'Consfiles', 'Qsubs', 'Figures', 'VCFfiles']
+    L = ['Umifiles', 'Datafiles', 'Stats', 'Consfiles', 'Qsubs', 'Figures', 'VCFfiles', 'Report']
     Tree = []
     for i in L:
         j = os.path.join(directory, i)
         if os.path.isdir(j) == False:
             os.makedirs(j)
         Tree.append(j)
-    # unpack variables
-    UmiDir, DataDir, StatsDir, ConsDir, QsubDir, FigDir, VCFDir = Tree 
     # create log directory    
+    QsubDir = Tree[4]
     LogDir = os.path.join(QsubDir, 'Logs')
     if os.path.isdir(LogDir) == False:
         os.makedirs(LogDir)
