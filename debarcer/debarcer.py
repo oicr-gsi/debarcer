@@ -533,8 +533,6 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
         PlotReadDepth(filename, Outputfile)
 
-
-
     # plot umi frequency for individual umis before grouping
     for filename in UmiInfoFiles:
         region = os.path.basename(filename)
@@ -569,9 +567,9 @@ def generate_plots(args):
     if args.report == True:
         # create subdirectory
         ReportDir = os.path.join(args.directory, 'Report')
-        if os.path.isdir(ReportDir):
+        if os.path.isdir(ReportDir) == False:
             os.mkdir(ReportDir)
-        report = os.path.join(ReportDir, 'report.html')
+        report = os.path.join(ReportDir, 'debarcer_report.html')
         WriteReport(args.directory, args.extension, report, sample=args.sample)
 
 
@@ -587,7 +585,12 @@ def generate_report(args):
     Write an html report of debarcer analysis for a given sample
     '''
     
-    WriteReport(args.directory, args.extension, args.outputfile, sample=args.sample)
+    # create subdirectory
+    ReportDir = os.path.join(args.directory, 'Report')
+    if os.path.isdir(ReportDir) == False:
+        os.mkdir(ReportDir)
+    report = os.path.join(ReportDir, 'debarcer_report.html')
+    WriteReport(args.directory, args.extension, report, sample=args.sample)
 
     
        
@@ -699,7 +702,6 @@ if __name__ == '__main__':
     report_parser = subparsers.add_parser('report', help="Generate report", add_help=True)
     report_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories including Figures', required=True)
     report_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
-    report_parser.add_argument('-o', '--Outputfile', dest='outputfile', help='Path to output report. Needs to include.html', required=True)
     report_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name. Optional. Directory basename is sample name if not provided')
     report_parser.set_defaults(func=generate_report)
         
