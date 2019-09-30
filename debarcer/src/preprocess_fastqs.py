@@ -146,7 +146,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     if 'prefix' in KeyWords:
         prefix = KeyWords['prefix']
         # extract prefix from r1_file if no value
-        if prefix == None:
+        if prefix in [None, '']:
             prefix = extract_prefix_from_filename(r1_file)
     else:
         # extract prefix from r1_file
