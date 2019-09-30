@@ -8,12 +8,11 @@ Created on Thu Sep 19 12:05:32 2019
 import time
 import mistune
 import os
-import scipy.ndimage
+#import scipy.ndimage
 from itertools import zip_longest
 import base64
 import matplotlib
-#from xhtml2pdf import pisa 
-from PIL import Image
+#from PIL import Image
 
 def ResizeFifure(filename, scaling_factor):
     '''
@@ -857,7 +856,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
     
 
 
-WriteReport('./', 'png', 'report.html', sample = 'sample1')  
+#WriteReport('./', 'png', 'report.html', sample = 'sample1')  
 
 
 #convert_html_to_pdf(S, 'report.pdf')
