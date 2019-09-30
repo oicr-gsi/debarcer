@@ -4,7 +4,7 @@ import os
 import datetime
 import json
 import time
-from src.preprocess_fastqs import reheader_fastqs
+from src.preprocess_fastqs import reheader_fastqs, check_library_prep
 from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import get_vcf_output
@@ -68,6 +68,9 @@ def preprocess_reads(args):
     # get input prep file from config or command
     prepfile = GetInputFiles(args.config, args.prepfile, 'prep_file')
     
+    # check library prep format
+    check_library_prep(args.prepname, prepfile)
+        
     # check that files are valid
     for i in [args.read1, args.read2, args.read3]:
         # check that argument (or file) is provided/exists 

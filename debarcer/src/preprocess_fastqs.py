@@ -19,6 +19,54 @@ def parse_prep(prepname, prepfile):
     return preps[prepname.upper()]
 
 
+def check_library_prep(prepname, prepfile):
+    '''
+    (str, file) --> None
+    :param prepname: Name of the library preparation
+    :param prepfile: Path to the library preparation ini file
+    
+    Check that library prep ini has valid values. Raise ValueError if not
+    '''
+    
+    L = parse_prep(prepname, prepfile)
+    D = {i:j for i, j in L.items()} 
+    
+    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq'}
+    missing = set(D.keys()).symmetric_difference(set(expected))
+    if len(missing) != 0:
+        raise ValueError('ERR: unexpected keys in librabry prep'.format(', '.join(missing)))
+    
+    if len(list(map(lambda x: x.strip(), D['umi_locs'].split(',')))) != len(list(map(lambda x: x.strip(), D['umi_lens'].split(',')))):
+        raise ValueError('ERR: umi_locs and umi_lens should be comma-separated lists of identical size')
+    
+    nucleotides = 'ACGTURYSWKMBDHVN'
+        
+    for i in D:
+        if i in ['input_reads', 'output_reads']:
+            try:
+                int(D[i])
+            except:
+                raise ValueError('ERR: value for {0} should be an integer'.format(i))
+        elif i in ['umi_locs', 'umi_lens']:
+            for j in list(map(lambda x: x.strip(), D[i].split(','))):
+                try:
+                    int(j)
+                except:
+                    raise ValueError('ERR: value for {0} should be a comma separated list of integers'.format(i))
+        elif i == 'spacer':
+            if D['spacer'].upper() == 'TRUE':
+                D['spacer'] = True
+            elif D['spacer'].upper() == 'FALSE':
+                D['spacer'] = False
+            else:
+                raise ValueError('ERR: value for {0} should be boolean'.format(i))
+            if D['spacer'] == True:
+                if D['spacer_seq'].lower() in ['none', '']:
+                    raise ValueError('ERR: spacer_seq if not defined')
+                non_valid = set(D['spacer_seq'].upper()).difference(set(nucleotides.upper()))    
+                if len(non_valid) != 0:
+                    raise ValueError('ERR: spacer sequence contains non valid nucleotides: {0}'.format(', '.join(non_valid)))
+                    
 def getread(fastq_file):
     """
     (file) -- > itertools.zip_longest
