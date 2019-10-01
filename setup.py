@@ -19,7 +19,7 @@ setup(
 	license = "MIT License",
 	keywords = "computational genomics",
 	url = "https://github.com/oicr-gsi/debarcer",
-	packages = ['debarcer', 'tests', 'debarcer.src','debarcer.utils'],
+	packages = ['debarcer', 'tests', 'debarcer.src'],
 	long_description = content,
 	classifiers = [
 	"Development Status :: 3 - Alpha",
@@ -34,6 +34,7 @@ setup(
 	"Operating System :: Unix",
 	"Operating System :: MacOS",
 	],
-	install_requires=['argparse', 'configparser', 'pysam', 'pandas'],
+	install_requires=['argparse', 'configparser', 'pysam', 'pandas',
+                   'matplotlib', 'numpy', 'scipy'],
 	python_requires='>=3.6',
 )
