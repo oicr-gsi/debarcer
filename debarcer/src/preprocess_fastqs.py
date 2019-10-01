@@ -210,12 +210,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     # get the length of the umis (1-100)
     umi_lens = [int(x.strip()) for x in prep['UMI_LENS'].split(',')]
     # specify if a spacer is used or not
-    spacer = prep['SPACER']
-    if spacer.upper() == 'TRUE':
-        spacer = True
-    elif spacer.upper() == 'FALSE':
-        spacer = False
-        
+    spacer = prep.getboolean('SPACER')
+            
     # get the spacer sequence and spacer length if exists 
     if spacer:
         spacer_seq = str(prep['SPACER_SEQ'])
