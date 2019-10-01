@@ -5,6 +5,7 @@ import json
 #from src.generate_vcf import get_vcf_output
 import subprocess
 from src.utilities import CheckRegionFormat
+import uuid
 
 
 def ExtractRegions(bedfile):
@@ -146,8 +147,23 @@ def MergeDataFiles(DataDir):
     for i in L:
         newfile.write('\t'.join(i[-1].split()) + '\n')
     newfile.close()
-    
 
+
+def name_job(prefix):
+    '''
+    (str) -> str
+    
+    :param prefix: Job description (eg UmiCollapse)
+    
+    Return a unique job name by appending a random string to prefix
+    '''
+   
+    # get a random string
+    UID = str(uuid.uuid4())
+    jobname = prefix + '_' + UID
+    return jobname    
+
+    
 def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                 percentthreshold, distthreshold, postthreshold, refthreshold,
                 allthreshold, maxdepth, truncate, ignoreorphans, ignore, merge,
@@ -202,9 +218,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     # extract regions from bedfile
     Regions = ExtractRegions(bedfile)
     
-    print('regions from bed', Regions)
-    
-
     # create a list of job names
     GroupJobNames, ConsJobNames = [], []
 
@@ -220,7 +233,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile = open(GroupScript, 'w')
         newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(distthreshold), str(postthreshold), ignore) + '\n')
         newfile.close()
-        jobname1 = 'UmiGroup_' + region.replace(':', '_').replace('-', '_')
+        # get a umique job name
+        jobname1 = name_job('UmiGroup')
         # run group umi for region
         subprocess.call(QsubCmd1.format(jobname1, LogDir, queue, str(mem), GroupScript), shell=True)      
         # record jobname
@@ -235,7 +249,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                                          str(refthreshold), str(allthreshold), str(postthreshold),
                                          str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
         newfile.close()
-        jobname2 = 'UmiCollapse_' + region.replace(':', '_').replace('-', '_')
+        # get a umique job name
+        jobname2 = name_job('UmiCollapse')
         # run collapse umi for region
         subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, queue, str(mem), CollapseScript), shell=True)      
         # record jobname2
@@ -256,7 +271,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile = open(MergeScript1, 'w')
         newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
         newfile.close()
-        jobname3 = 'MergeDataFiles_' + '_'.join(Regions)
+        jobname3 =  name_job('MergeDataFiles')
         MergeJobNames.append(jobname3)
         # run merge datafiles
         subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
@@ -266,7 +281,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile = open(MergeScript2, 'w')
         newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
         newfile.close()
-        jobname4 = 'MergeConsensusFiles_' + '_'.join(Regions)
+        jobname4 = name_job('MergeConsensusFiles')
         MergeJobNames.append(jobname4)
         # run merge consensus files
         subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
@@ -276,7 +291,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile = open(MergeScript3, 'w')
         newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
         newfile.close()
-        jobname5 = 'MergeUmiFiles_' + '_'.join(Regions)
+        jobname5 = name_job('MergeUmiFiles')
         MergeJobNames.append(jobname5)
         # run merge umi files
         subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
@@ -288,7 +303,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile = open(PlotScript, 'w')
         newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report))
         newfile.close()
-        jobname6 = 'Plot'
+        jobname6 = name_job('Plot')
         # run plot
         if merge == True:
             LastJob = MergeJobNames[-1]
