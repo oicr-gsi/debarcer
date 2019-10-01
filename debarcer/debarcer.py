@@ -509,6 +509,13 @@ def generate_plots(args):
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
 #        plt.clf(), plt.cla()
 #        PlotNonRefFreqData(filename, Colors, Outputfile)
+    
+    
+#         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
+#         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
+#         plt.clf(), plt.cla()
+#         PlotNonRefFreqData(ConsFile, Color, Outputfile, YLimit=20)
+        
 #    
 #        # plot raw and consensus depth
 #        Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    

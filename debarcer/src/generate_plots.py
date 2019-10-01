@@ -530,6 +530,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
                     'legend': Add legend (True) or not (False)
                     'fam_size': List of family sizes in consensus file
                     'Colors': List of colors, parallel to fam_size 
+                    'YLimit': Y axis limit, in variant frequency (0-100) 
                         
     Return a ax in figure
     '''
@@ -545,8 +546,15 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
     ax.bar([j for j in range(len(pos))], [Data[j] for j in pos], color=Color, edgecolor=Color, linewidth=0, alpha = 1)
     
     # limit y axis
-    YMax = [Data[i] for i in Data]
-    YMax = max(YMax)
+    if 'YLimit' in Options:
+        try:
+            YMax = float(Options['YLimit'])
+        except:
+            YMax = [Data[i] for i in Data]
+            YMax = max(YMax)
+    else:
+        YMax = [Data[i] for i in Data]
+        YMax = max(YMax)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
         
@@ -612,16 +620,26 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
     return ax
 
 
-def PlotNonRefFreqData(ConsFile, Color, Outputfile):
+def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     '''
     (str, list, str) -> None
     
     :param ConsFile: Path to the consensus file
     :param Color: List with colors for plotting
     :param Outputfile: Name of the output figure file
+    :param Options: Accepted keys are:
+                    'YLimit': Y axis limit, in variant frequency (0-100) 
            
     Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
+    
+    if 'YLimit' in Options:
+        try:
+            YLimit = float(Options['YLimit'])
+        except:
+            YLimit = ''
+    else:
+        YLimit = ''
     
     # extract region from consensus file
     region = FormatRegion(ConsFile)
@@ -650,13 +668,13 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile):
     
     for i in range(len(L)):
         if i == 0:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], legend=True, fam_size=FamSize, colors=Color)
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], legend=True, fam_size=FamSize, colors=Color, YLimit=YLimit)
         elif i == len(L) // 2:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], Ylabel='Non ref freq.')
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], Ylabel='Non ref freq.', YLimit=YLimit)
         elif i == len(L) - 1:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], XLabel= region)
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], XLabel= region, YLimit=YLimit)
         else:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i])
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], YLimit=YLimit)
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
