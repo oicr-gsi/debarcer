@@ -1752,7 +1752,7 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
 
 
 
-def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, **Options):
+def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title, **Options):
     
     '''
     (int, int, int, figure_object, list, str, str, dict) -> ax_object
@@ -1762,7 +1762,7 @@ def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, 
     :param position: Ax position in figure
     :param figure: Figure object opened for writing
     :param data: Values to be plotted
-    :param Colors: String specifiying the bar colors
+    :param color: Color of the density plot
     :param title: Title of the ax instance
     :param Options: Optional parameters. Accepted keys:
                     'ylabel': Label of y axis
@@ -1773,62 +1773,62 @@ def CreateAxHistReadDepth(columns, rows, position, figure, data, Colors, title, 
     
     # create an ax instance in figure
     ax = figure.add_subplot(rows, columns, position)
-    # plot distribution of read depth
-    # retrieve the counts for each bin
-    counts, bins, patches = ax.hist(data, bins=20, facecolor=Colors, lw=1, edgecolor='lightgrey', align='mid')
+    # plot density distribution of read depth
+    ax = sns.kdeplot(data[0], color = 'lightgrey', shade=True, alpha=0.8, ax=ax, lw=2)
+    if len(data[1]) != 0:
+        ax = sns.kdeplot(data[1], color = color, shade=True, alpha=0.8, ax=ax, lw=2)
     
-    # limit x and y axis and set ticks
-    if len(data) != 0:
-        XMax = max(data)
-        ax.set_xlim([0, XMax + 1])    
-        step = SetUpTicks(XMax)
-        ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
-
-        YMax = max(counts)
-        YMax = YMax + (10/100 * YMax)
-        ax.set_ylim([0, YMax + 1])    
-        step = SetUpTicks(YMax)
-        ax.set_yticks([i for i in np.arange(0, YMax + 1, step)])
-    else:
-        # don't show ticks and axis when no data
-        ax.set_xlim([0, 1])    
-        ax.set_xticks([i for i in np.arange(0, 0)])
-        ax.set_ylim([0, 1])    
-        ax.set_yticks([i for i in np.arange(0, 0)])
-
+    # add title        
+    ax.set_title(title, size = 14)
+        
     # set up y axis label and grid
     if 'ylabel' in Options:
-        ax.set_ylabel(Options['ylabel'], color = 'black',  size = 14, ha = 'center')
-    ax.set_xlabel('Read depth', color = 'black',  size = 14, ha = 'center')
-
+        YLabel = Options['ylabel']
+        ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
+        
+        # do not show lines around figure  
+        ax.spines["top"].set_visible(False)    
+        ax.spines["bottom"].set_visible(True)    
+        ax.spines["right"].set_visible(False)    
+        ax.spines["left"].set_visible(False)  
+        # do not show ticks
+        plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                    right=False, left=False, labelbottom=True, colors = 'black',
+                    labelsize = 12, direction = 'out')  
+    else:
+        # do not show lines around figure  
+        ax.spines["top"].set_visible(False)    
+        ax.spines["bottom"].set_visible(True)    
+        ax.spines["right"].set_visible(False)    
+        ax.spines["left"].set_visible(False)  
+        # do not show ticks
+        plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                    right=False, left=False, labelbottom=True, labelleft=False, colors = 'black',
+                    labelsize = 12, direction = 'out')
+    
+    XMax = max(data[0])
+    step = SetUpTicks(XMax)
+    ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
+    ax.set_xlabel('Read depth', color = 'black',  size = 14, ha = 'center')    
+        
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
-
-    # add title        
-    ax.set_title(title, size = 14)
-
-    # add text
-    if 'text' in Options:
-        # use figure coordinates instead of data coordinates 
-        plt.text(0.4, 1, Options['text'], transform=plt.gcf().transFigure, fontsize=14)
-         
+    
     # add space between axis and tick labels
-    ax.yaxis.labelpad = 18
-    ax.xaxis.labelpad = 18
+    ax.yaxis.labelpad, ax.xaxis.labelpad = 18, 18
     
-    # do not show lines around figure  
-    ax.spines["top"].set_visible(False)    
-    ax.spines["bottom"].set_visible(True)    
-    ax.spines["right"].set_visible(False)    
-    ax.spines["left"].set_visible(False)  
-       
-    # do not show ticks
-    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelbottom=True, colors = 'black',
-                labelsize = 12, direction = 'out')  
     
+    # add legend
+    if 'legend_colors' in Options:
+        legend_colors = Options['legend_colors']       
+        legend_elements = []
+        legend_elements.append(Patch(facecolor='lightgrey', edgecolor= 'lightgrey', label='all', alpha=0.8))
+        legend_elements.append(Patch(facecolor=legend_colors[0], edgecolor=legend_colors[0], label='highest', alpha=0.8))
+        legend_elements.append(Patch(facecolor=legend_colors[1], edgecolor=legend_colors[1], label='others', alpha=0.8))
+        ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
+           
     return ax
     
     
@@ -1839,8 +1839,8 @@ def PlotReadDepth(UmiFile, Outputfile):
     
     :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
     
-    Plot the distribution of read depth for all positions, the position with highest
-    and the lowest read depth within a given umi family 
+    Plot the distribution of read depth at positions og highest and lower umi abundance
+    as a proportion of all positions within a given umi family 
     '''
     
     # get read depth for each umi family and position {parent: position: read_depth}
@@ -1870,20 +1870,19 @@ def PlotReadDepth(UmiFile, Outputfile):
     
     # clear previous axes
     plt.clf()
-    #plt.gcf().set_size_inches(13, 6, forward=True)    
     # create figure
     figure = plt.figure(1, figsize = (13, 6))
-    # plot distribution of read depth for all positions and umi groups
+    # get read depth for all positions and umi groups
     data1 = [list(All[i].values())[0] for i in All]
-    
-    ax1 = CreateAxHistReadDepth(3, 1, 1, figure, data1, '#7300e6', 'All', ylabel='Umi family count')    
-    # plot distribution of most frequent read depth for umi groups
+    # get read depth for positions with highest umi abundance
     data2 = [list(MostFrequent[i].values())[0] for i in MostFrequent]
-    ax2 = CreateAxHistReadDepth(3, 1, 2, figure, data2, '#b366ff', 'Highest', text=region)    
-    # plot distribution of read depth for positions with lower read depth and umi groups
+    # get read depth for positions with lower umi abundance
     data3 = [list(Others[i].values())[0] for i in Others]
-    ax3 = CreateAxHistReadDepth(3, 1, 3, figure, data3, '#e6ccff', 'Others')    
     
+    # plot density of read depth and Umi family count
+    ax1 = CreateAxDensityReadDepth(2, 1, 1, figure, [data1, data2], '#00cccc', 'Highest', ylabel='Density')    
+    ax2 = CreateAxDensityReadDepth(2, 1, 2, figure, [data1, data3], '#ff66ff',  'Others', text='Read depth', legend_colors=['#00cccc', '#ff66ff'])    
+       
     # save figure to file  
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
