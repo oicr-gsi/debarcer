@@ -137,11 +137,11 @@ def ListExpectedFigures(directory, extension):
     regions = ListAllRegions(directory, extension)
     
     # map expected figs to names for all region
-    SN = ['network', 'marginal', 'depth', 'before_grouping', 'famsize', 'reffreq', 'raw']
+    SN = ['network', 'marginal', 'depth', 'before_grouping', 'famsize', 'reffreq', 'lowreffreq', 'raw']
     SL = ['UMI_network_degree_{0}.', 'UMI_size_depth_marginal_distribution_{0}.',
           'Read_depth_per_umi_family_{0}.', 'UMI_freq_distribution_{0}.',
-          'MeanFamilySize_{0}.', 'NonRefFreq_{0}.', 'RawConsensusDepth_{0}.']
-               
+          'MeanFamilySize_{0}.', 'NonRefFreq_{0}.', 'NonRefFreq_low_freq_{0}', 'RawConsensusDepth_{0}.']
+          
     for i in regions:
         if i not in D:
             D[i] = {}
