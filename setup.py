@@ -35,6 +35,6 @@ setup(
 	"Operating System :: MacOS",
 	],
 	install_requires=['argparse', 'configparser', 'pysam', 'pandas',
-                   'matplotlib', 'numpy', 'scipy'],
+                   'matplotlib', 'numpy', 'scipy', 'networkx'],
 	python_requires='>=3.6',
 )
