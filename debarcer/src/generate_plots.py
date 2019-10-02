@@ -1384,6 +1384,7 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     
     print(type(G))
     print(G.degree())
+    print(type(G.degree()))
     
     try:
         degree_sequence = sorted([d for n, d in G.degree()], reverse=True)
