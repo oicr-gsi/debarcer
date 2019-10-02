@@ -418,20 +418,16 @@ def CheckJob(JobName):
     '''
     
     # make a sorted list of accounting files with job info archives
-    result = subprocess.check_output('qstat -j {0} | grep job_name'.format(JobName), shell=True).decode('utf-8').rstrip()
-    
-    print(result)
-    
-    
-    
-    if 'job_name' in result:
-        result = result.split()
-        assert result[1].strip() == JobName
-        running = True
-    elif 'do not exist' in result:
-        result = result.split('\n')
-        assert result[1].strip() == JobName
+    try:
+        result = subprocess.check_output('qstat -j {0} | grep job_name'.format(JobName), shell=True).decode('utf-8').rstrip()
+        
+        print(result)
+        
+        if 'job_name' in result:
+            result = result.split()
+            assert result[1].strip() == JobName
+            running = True
+    except:
         running = False 
     return running
-
 
