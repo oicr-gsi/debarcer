@@ -4,7 +4,7 @@ import os
 import json
 #from src.generate_vcf import get_vcf_output
 import subprocess
-from src.utilities import CheckRegionFormat
+from src.utilities import CheckRegionFormat, CheckJob
 import uuid
 
 
@@ -266,50 +266,72 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # submit jobs to merge 
         MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
 
-        # merge datafiles
-        MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
-        newfile = open(MergeScript1, 'w')
-        newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
-        newfile.close()
-        jobname3 =  name_job('MergeDataFiles')
-        MergeJobNames.append(jobname3)
-        # run merge datafiles
-        subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
+        # check if Goup jobs are still running
+        running_group = [CheckJob(i) for i in GroupJobNames]
+        while True in running_group:
+            running_group = [CheckJob(i) for i in GroupJobNames]
+        if len(list(set(running_group))) == 1 and list(set(running_group))[0] == False:
+            # merge datafiles
+            MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
+            newfile = open(MergeScript1, 'w')
+            newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
+            newfile.close()
+            jobname3 =  name_job('MergeDataFiles')
+            MergeJobNames.append(jobname3)
+            # run merge datafiles
+            #subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname3, LogDir, queue, '20', MergeScript1), shell=True)    
+                
+            # merge umi files     
+            MergeScript3 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
+            newfile = open(MergeScript3, 'w')
+            newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
+            newfile.close()
+            jobname5 = name_job('MergeUmiFiles')
+            MergeJobNames.append(jobname5)
+            # run merge umi files
+            #subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
+            subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, '20', MergeScript3), shell=True)
+         
+        # check if collapse jobs are still running
+        running_collapse = [CheckJob(i) for i in ConsJobNames]
+        while True in running_collapse:
+            running_collapse = [CheckJob(i) for i in ConsJobNames]
+        if len(list(set(running_collapse))) == 1 and list(set(running_collapse))[0] == False:
+            # merge consensus files
+            MergeScript2 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
+            newfile = open(MergeScript2, 'w')
+            newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
+            newfile.close()
+            jobname4 = name_job('MergeConsensusFiles')
+            MergeJobNames.append(jobname4)
+            # run merge consensus files
+            #subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, '20', MergeScript2), shell=True)    
         
-        # merge consensus files
-        MergeScript2 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
-        newfile = open(MergeScript2, 'w')
-        newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
-        newfile.close()
-        jobname4 = name_job('MergeConsensusFiles')
-        MergeJobNames.append(jobname4)
-        # run merge consensus files
-        subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
-        
-        # merge umi files     
-        MergeScript3 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
-        newfile = open(MergeScript3, 'w')
-        newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
-        newfile.close()
-        jobname5 = name_job('MergeUmiFiles')
-        MergeJobNames.append(jobname5)
-        # run merge umi files
-        subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
         
     if plot == True:
-        # generate plots and report if report is True
-        PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
-        PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
-        newfile = open(PlotScript, 'w')
-        newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report))
-        newfile.close()
-        jobname6 = name_job('Plot')
-        # run plot
+        
         if merge == True:
-            LastJob = MergeJobNames[-1]
+            # wait until all merging is done before plotting
+            running = [CheckJob(i) for i in MergeJobNames]
+            while True in running:
+                running = [CheckJob(i) for i in MergeJobNames]
         else:
-            LastJob = ConsJobNames[-1]
-        subprocess.call(QsubCmd2.format(jobname6, LastJob, LogDir, queue, '20', PlotScript), shell=True)    
+            # wait until all grouping and collapsing is done before plotting
+            L = ConsJobNames + GroupJobNames
+            running = [CheckJob(i) for i in L]
+            while True in running:
+                running = [CheckJob(i) for i in L]
+        if len(list(set(running))) == 1 and list(set(running))[0] == False:
+            # generate plots and report if report is True
+            PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
+            PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
+            newfile = open(PlotScript, 'w')
+            newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report))
+            newfile.close()
+            jobname6 = name_job('Plot')
+            subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', PlotScript), shell=True)    
         
             
             

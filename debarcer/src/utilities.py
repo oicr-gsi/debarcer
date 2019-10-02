@@ -9,6 +9,7 @@ import configparser
 import os
 import itertools
 import numpy as np
+import subprocess
 
 def CheckRegionFormat(region):
     '''
@@ -404,3 +405,86 @@ def CheckFilePath(L):
         if os.path.isfile(i) == False:
             raise ValueError('ERR: Invalid file path {0}'.format(i))
 
+
+
+
+# use this function to check the job exit status
+def CheckJob(JobName):
+    '''
+    (str) -> str
+    
+    :param JobName: Name of a submitted job
+    
+    Return 
+    '''
+    
+    # make a sorted list of accounting files with job info archives
+    result = subprocess.check_output('qstat -j {0} | grep job_name'.format(JobName), shell=True).decode('utf-8').rstrip()
+    
+    if 'job_name' in result:
+        result = result.split()
+        assert result[1].strip() == JobName
+        running = True
+    elif 'do not exist' in result:
+        result = result.split('\n')
+        assert result[1].strip() == JobName
+        running = False 
+    return running
+
+
+# use this function to check the job exit status
+def GetJobExitStatus(JobName, Accoutingdir):
+    '''
+    (str) -> str
+    Take a job name and return the exit code of that job after it finished running
+    ('0' indicates a normal, error-free run and '1' or another value inicates an error)
+    '''
+    
+    # make a sorted list of accounting files with job info archives
+    Archives = subprocess.check_output('ls -lt /oicr/cluster/ogs2011.11/default/common/accounting*', shell=True).decode('utf-8').rstrip().split('\n')
+    # keep accounting files for the current year
+    Archives = [Archives[i].split()[-1] for i in range(len(Archives)) if ':' in Archives[i].split()[-2]]
+    
+    # loop over the most recent archives and stop when job is found    
+    for AccountingFile in Archives:
+        try:
+            i = subprocess.check_output('qacct -j {0} -f {1}'.format(JobName, AccountingFile), shell=True).decode('utf-8').rstrip().split('\n')
+        except:
+            i = ''
+        else:
+            if i != '':
+                break
+            
+    # create a dict with months
+    Months = {'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+               'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'}
+    
+    # check if accounting file with job has been found
+    if i == '':
+        # return error
+        return '1'        
+    else:
+        # record all exit status. the same job may have been run multiple times if re-encryption was needed
+        d = {}
+        for j in i:
+            if 'end_time' in j:
+                k = j.split()[2:]
+                if len(k) != 0:
+                    # convert date to epoch time
+                    date = '.'.join([k[1], Months[k[0]], k[-1]]) + ' ' + k[2] 
+                    p = '%d.%m.%Y %H:%M:%S'
+                    date = int(time.mktime(time.strptime(date, p)))
+                else:
+                    date = 0
+            elif 'exit_status' in j:
+                d[date] = j.split()[1]
+        # get the exit status of the most recent job    
+        EndJobs = list(d.keys())
+        EndJobs.sort()
+        if len(d) != 0:
+            # return exit code
+            return d[EndJobs[-1]]
+        else:
+            # return error
+            return '1'
+   
