@@ -256,11 +256,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # record jobname2
         ConsJobNames.append(jobname2)
         
-
+    
+    # make a list of merge job names
+    MergeJobNames = []        
     if merge  == True:
-        # make a list of merge job names
-        MergeJobNames = []        
-        
         Regions = list(map(lambda x: x.replace(':', '-'), Regions))
         
         # submit jobs to merge 
@@ -311,18 +310,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         
         
     if plot == True:
-        
-        if merge == True:
-            # wait until all merging is done before plotting
+        # make a list of jobs. wait until all jobs are done before plotting and reporting
+        L = ConsJobNames + GroupJobNames + MergeJobNames
+        running = [CheckJob(i) for i in L]
+        while True in running:
             running = [CheckJob(i) for i in MergeJobNames]
-            while True in running:
-                running = [CheckJob(i) for i in MergeJobNames]
-        else:
-            # wait until all grouping and collapsing is done before plotting
-            L = ConsJobNames + GroupJobNames
-            running = [CheckJob(i) for i in L]
-            while True in running:
-                running = [CheckJob(i) for i in L]
         if len(list(set(running))) == 1 and list(set(running))[0] == False:
             # generate plots and report if report is True
             PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
@@ -333,5 +325,4 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             jobname6 = name_job('Plot')
             subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', PlotScript), shell=True)    
         
-            
-            
+                   
