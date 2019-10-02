@@ -681,17 +681,19 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     # make a sorted list of regions for 'grouoing' figures
     regions = sorted([i for i in FigPaths.keys() if 'chr' in i])
     # keys to access figures in this order
-    keys = ['famsize', 'raw', 'reffreq']
-    Maps = {'famsize':['UMI_network_degree_{0}.{1}', 'Mean family size', 0.7, 'family size'],
-            'reffreq':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Frequency of alternative variants', 0.85, 'alternative variants'],
-            'raw':['Read_depth_per_umi_family_{0}.{1}', 'Raw and consensus depth', 0.6, 'read depth']}
+    keys = ['famsize', 'raw', 'reffreq', 'lowreffreq']
+    Maps = {'famsize':['MeanFamilySize_{0}.{1}', 'Mean family size', 0.7, 'family size'],
+            'reffreq':['NonRefFreq_{0}.{1}', 'Frequency of alternative variants', 0.85, 'alternative variants'],
+            'raw':['RawConsensusDepth_{0}.{1}', 'Raw and consensus depth', 0.6, 'read depth'],
+            'lowreffreq': ['NonRefFreq_low_freq_{0}.{1}', 'Low frequency alternative variants', 0.85, 'low frequency']}
     
     # Add figures specific to each region
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots')
         
     intro = ['Average umi family size across a given genomic interval<br>for various minimum size thresholds',
              'Read depth without and with umi collapsing for various<br>minimum family size thresholds',
-             'Frequency of alternative variants without and with collapsing<br>on various minimum umi family size thresholds']
+             'Frequency of alternative variants without and with collapsing<br>on various minimum umi family size thresholds',
+             'Focus on low frequency alternative variant']
     
     for i in intro:
         L.append('<ul><li color:black><span style="list-type-position:outside;\
@@ -706,7 +708,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
         L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
         L.append('<pre> </pre>')
     
-    ## add famsize and raw inline and reffreq as separate line
+    ## add famsize and raw inline and reffreq and lowreffreq as separate line
     for i in range(len(regions)):
         # check if some files are present
         if len([FigPaths[regions[i]][keys[j]] for j in range(len(keys)) if FigPaths[regions[i]][keys[j]] != '']) != 0:
@@ -718,7 +720,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
             # add famsize and raw figures if they exist
             f, l, s, a = [], [], [], []
             images, fignum = '', []    
-            for j in range(len(keys)-1):
+            for j in range(len(keys)-2):
                 if FigPaths[regions[i]][keys[j]] != '':
                     l.append(Maps[keys[j]][1])
                     f.append(FigPaths[regions[i]][keys[j]])
@@ -751,23 +753,64 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
                 L.append(legends)
                 # append empty line
                 L.append('<pre> </pre>')
-            # add reffreq if it exists
-            if FigPaths[regions[i]][keys[-1]] != '':
-                #L.append('<pre> </pre>')
-                # resize image
-                height, width = ResizeFifure(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][2])
-                # encode base64 image
-                encoded_fig = EncodeImage(FigPaths[regions[i]][keys[-1]])
-                # add images
-                images = '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, Maps[keys[-1]][3], width, height)
+            
+            
+            # add reffreq and lowreffreq if they exist
+            f, l, s, a = [], [], [], []
+            images, fignum = '', []   
+            for j in range(2, len(keys)):
+                if FigPaths[regions[i]][keys[j]] != '':
+                    l.append(Maps[keys[j]][1])
+                    f.append(FigPaths[regions[i]][keys[j]])
+                    s.append(Maps[keys[j]][2])
+                    a.append(Maps[keys[j]][3])
+            if len(f) != 0:
+                for j in range(len(f)):
+                    # resize image
+                    height, width = ResizeFifure(f[j], s[j])
+                    # encode base64 image
+                    encoded_fig = EncodeImage(f[j])
+                    # add images
+                    if j == 0:
+                        images += '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, a[j], width, height)
+                    else:
+                        images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, a[j], width, height)
+                    #update figure counter
+                    fignum.append(figcounter)
+                    figcounter += 1
                 L.append(images)
                 # add legends
-                legends = '<span style="padding-right: 0px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,figcounter, Maps[keys[-1]][1])
+                legends = ''
+                for j in range(len(l)):
+                    if j  == 0:
+                        padding_right,padding_left = 440, 10
+                    else:
+                        padding_right, padding_left = 0, 10
+                legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
                 L.append(legends)
                 # append empty line
                 L.append('<pre> </pre>')
-                # update figure counter
-                figcounter += 1
+              
+
+
+            
+#            # add reffreq if it exists
+#            if FigPaths[regions[i]][keys[-1]] != '':
+#                #L.append('<pre> </pre>')
+#                # resize image
+#                height, width = ResizeFifure(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][2])
+#                # encode base64 image
+#                encoded_fig = EncodeImage(FigPaths[regions[i]][keys[-1]])
+#                # add images
+#                images = '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, Maps[keys[-1]][3], width, height)
+#                L.append(images)
+#                # add legends
+#                legends = '<span style="padding-right: 0px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,figcounter, Maps[keys[-1]][1])
+#                L.append(legends)
+#                # append empty line
+#                L.append('<pre> </pre>')
+#                # update figure counter
+#                figcounter += 1
                 
     return figcounter
 
