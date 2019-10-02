@@ -1710,8 +1710,11 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
         XMax = max(L[0] + L[1])
         XLabel, YLabel = 'UMI occurence', 'Density'
         
-    # limit x axis and set x ticks
-    ax.set_xlim([0, XMax + 1])    
+    if overlapping == False:
+        # limit x axis and set x ticks
+        ax.set_xlim([0, XMax + 1])    
+    
+    # customize x ticks     
     step = SetUpTicks(XMax)
     ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
       
