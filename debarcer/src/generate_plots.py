@@ -1292,7 +1292,12 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     G = BuildNetwork(UmiFile)
     
     # convert the graph to a dict
-    d = dict(G.adjacency())
+    try:
+        d = dict(G.adjacency())
+    except:
+        d = dict(G.adjacency_iter())
+    
+    
     
     # get degree for all nodes
     degree = dict(G.degree())
@@ -1378,18 +1383,17 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     
     # build network
     G = BuildNetwork(UmiFile)
-    # get a dictionary of {umi seq: degree}
-    Degree = G.degree()
+    
     
     try:
-        degree_sequence = sorted([d for d in Degree.values()], reverse=True)
+        degree_sequence = sorted([d for d in G.degree().values()], reverse=True)
     except:
         print('err {0}'.format(UmiFile))
         
     
     
     # make a list of node degree
-    degree_sequence = sorted([d for d in Degree.values()], reverse=True)
+    degree_sequence = sorted([d for d in dict(G.degree()).values()], reverse=True)
     # count nodes with a given degree
     degree_count = collections.Counter(degree_sequence)
     # make parallel lists of degree and count sorted on degree
