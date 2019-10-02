@@ -1292,12 +1292,11 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     G = BuildNetwork(UmiFile)
     
     # convert the graph to a dict
+    # method differs based on networkx version
     try:
         d = dict(G.adjacency())
     except:
         d = dict(G.adjacency_iter())
-    
-    
     
     # get degree for all nodes
     degree = dict(G.degree())
@@ -1385,11 +1384,6 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     G = BuildNetwork(UmiFile)
     Degree = dict(G.degree())
     
-    try:
-        degree_sequence = sorted([d for d in Degree.values()], reverse=True)
-    except:
-        print('err {0}'.format(UmiFile))
-        
     # make a list of node degree
     degree_sequence = sorted([d for d in Degree.values()], reverse=True)
     # count nodes with a given degree
@@ -1434,7 +1428,6 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
-    
     return ax
     
     
