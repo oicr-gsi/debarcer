@@ -1379,6 +1379,19 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     # build network
     G = BuildNetwork(UmiFile)
     
+    
+    print(UmiFile)
+    
+    print(type(G))
+    print(G.degree())
+    
+    try:
+        degree_sequence = sorted([d for n, d in G.degree()], reverse=True)
+    except:
+        print('err {0}'.format(UmiFile))
+        
+    
+    
     # make a list of node degree
     degree_sequence = sorted([d for n, d in G.degree()], reverse=True)
     # count nodes with a given degree
