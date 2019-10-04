@@ -440,7 +440,7 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
     
     # define scaling factor and set alternate figure name
     #scale, altfig = 0.6, 'before grouping'
-    scale, altfig = 0.7, 'before grouping'
+    scale, altfig = 0.8, 'before grouping'
     
     
     
