@@ -439,11 +439,8 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         L.append('<pre> </pre>')
     
     # define scaling factor and set alternate figure name
-    #scale, altfig = 0.6, 'before grouping'
     scale, altfig = 0.8, 'before grouping'
-    
-    
-    
+        
     # make pairs of non-empty figure pairs
     Files = [FigPaths[keys[i]]['before_grouping'] for i in range(len(keys)) if FigPaths[keys[i]]['before_grouping'] != '']
     # group files by 2 
