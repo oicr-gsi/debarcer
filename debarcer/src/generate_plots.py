@@ -1712,10 +1712,8 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
         ax = sns.kdeplot(L[0], color = '#ff66ff', shade=True, alpha=0.35, ax=ax, lw=2)
         ax = sns.kdeplot(L[1], color = '#00cccc', shade=True, alpha=0.35, ax=ax, lw=2)
         XMax = max(L[0] + L[1])
-        
+        # start x axis at 0
         ax.set_xbound(lower=0)
-        
-        
         XLabel, YLabel = 'UMI occurence', 'Density'
         
     if overlapping == False:
@@ -1817,6 +1815,9 @@ def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title
                     right=False, left=False, labelbottom=True, labelleft=False, colors = 'black',
                     labelsize = 12, direction = 'out')
     
+    # start x axis at 0
+    ax.set_xbound(lower=0)
+    # set x ticks    
     XMax = max(data[0])
     step = SetUpTicks(XMax)
     ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
