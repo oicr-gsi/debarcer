@@ -600,16 +600,10 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     # keys to access figures in this order
     keys = ['network', 'marginal', 'depth']
     # map keys to expected file names, legends, scaling factors and alternate figure names
-#    Maps = {'network':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.5, 'network'],
-#            'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.6, 'marginal'],
-#            'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.5, 'read depth']}
-#    
-    
     Maps = {'network':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.6, 'network'],
             'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.7, 'marginal'],
             'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.6, 'read depth']}
-    
-    
+        
     
     missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
     if len(missing) != 0:
