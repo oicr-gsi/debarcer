@@ -529,8 +529,8 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     Maps = {'total':['Total_Umis.', 'Umi counts per genomic interval', 0.75, 'total umis'],
             'children':['Children_Umis.', 'Count of children umis per interval', 0.75, 'children umis'],
             'ratio':['Child_Parent_Umis_Ratio.', 'Child to parent umi ratios per interval', 0.75, 'ratio'],
-            'interval':['PTU_vs_CTU.', 'Relationship between parent and children umi counts with interval sizes', 0.8, 'interval size'],
-            'freq':['Children_vs_ParentFreq.', 'Frequency of parent umis with a given number of children for each interval', 0.8, 'frequency']}
+            'interval':['PTU_vs_CTU.', 'Relationship between parent and children umi counts with interval sizes', 0.85, 'interval size'],
+            'freq':['Children_vs_ParentFreq.', 'Frequency of parent umis with a given number of children for each interval', 0.85, 'frequency']}
     
     
     
