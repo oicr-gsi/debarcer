@@ -605,9 +605,9 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
 #            'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.5, 'read depth']}
 #    
     
-    Maps = {'network':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.5, 'network'],
-            'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.6, 'marginal'],
-            'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.5, 'read depth']}
+    Maps = {'network':['UMI_network_degree_{0}.{1}', 'Node degree distribution', 0.6, 'network'],
+            'marginal':['UMI_size_depth_marginal_distribution_{0}.{1}', 'Marginal plot', 0.7, 'marginal'],
+            'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.6, 'read depth']}
     
     
     
