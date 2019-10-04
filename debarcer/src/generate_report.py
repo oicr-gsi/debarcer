@@ -8,7 +8,7 @@ Created on Thu Sep 19 12:05:32 2019
 import time
 import mistune
 import os
-#import scipy.ndimage
+import scipy.ndimage
 from itertools import zip_longest
 import base64
 import matplotlib
@@ -24,7 +24,11 @@ def ResizeFifure(filename, scaling_factor):
     Return new file size with same proportions as a tuple of height and width
     '''
     # extract the original figure size
-    height, width, channels = matplotlib.pyplot.imread(filename).shape
+    #height, width, channels = matplotlib.pyplot.imread(filename).shape
+    height, width, channels = scipy.ndimage.imread(filename).shape
+    
+    
+    
     # alternately use PIL.Image
     #im = Image.open(filename)
     #width, height = im.size
@@ -435,7 +439,10 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
         L.append('<pre> </pre>')
     
     # define scaling factor and set alternate figure name
-    scale, altfig = 0.6, 'before grouping'
+    #scale, altfig = 0.6, 'before grouping'
+    scale, altfig = 0.7, 'before grouping'
+    
+    
     
     # make pairs of non-empty figure pairs
     Files = [FigPaths[keys[i]]['before_grouping'] for i in range(len(keys)) if FigPaths[keys[i]]['before_grouping'] != '']
