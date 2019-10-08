@@ -134,6 +134,14 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 
                                 # get reference and alternative bases  
                                 if not read.is_del and read.indel == 0:
+                                    
+                                    try:
+                                        ref_base = ref_seq[ref_pos]
+                                    except:
+                                        print('ref_pos', ref_pos)
+                                        print(ref_seq)
+                                    
+                                    
                                     ref_base = ref_seq[ref_pos]
                                     alt_base = read_data.query_sequence[read.query_position]
                                 elif read.indel > 0:
