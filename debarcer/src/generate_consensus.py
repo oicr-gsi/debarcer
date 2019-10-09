@@ -267,15 +267,24 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
-
-    print(list(consensus_seq[137781615].keys())[:10])
-    print(list(FamSize[137781615].keys())[:10])
+    a = {}
+    for pos in consensus_seq:
+        if pos not in a:
+            a[pos] = {}
+        for famkey in consensus_seq[pos]:
+            if famkey not in a[pos]:
+                a[pos][famkey] = {}
+            for i in consensus_seq[pos][famkey]:
+                a[pos][famkey]['_'.join(i)] = consensus_seq[pos][famkey][i]
+   
+    print(list(consensus_seq[137781615]['TGAGTAGTCGTG5']))
+    print(FamSize[137781615]['TGAGTAGTCGTG'])
 
 
     # save dicts for debugging
     debugdir = '/.mounts/labs/gsiprojects/genomics/CBALL/test_debarcer_rjdev/cball_new/debugging'
     newfile = open(os.path.join(debugdir, 'consensus_seq_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
-    json.dump(consensus_seq, newfile, sort_keys=True, indent=4)
+    json.dump(a, newfile, sort_keys=True, indent=4)
     newfile.close()
 
     newfile = open(os.path.join(debugdir, 'FaSize_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
