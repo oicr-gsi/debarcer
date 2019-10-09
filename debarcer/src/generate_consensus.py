@@ -267,6 +267,11 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
+
+    print(list(consensus_seq.keys())[:10])
+    print(list(FamSize.keys())[:10])
+
+
     # save dicts for debugging
     debugdir = '/.mounts/labs/gsiprojects/genomics/CBALL/test_debarcer_rjdev/cball_new/debugging'
     newfile = open(os.path.join(debugdir, 'consensus_seq_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
