@@ -99,9 +99,19 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             for read in pileupcolumn.pileups:
                 # get read information
                 read_data = read.alignment
+                
+                
+                
+                print(read_data)
+                
+                
                 read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                 # get all recorded umis
                 umis = read_name.split(":")[-1].split(';')
+                
+                print(umis)
+                
+                
                 for umi in umis:
                     # check that umi is recorded
                     if umi in umi_families:
@@ -109,6 +119,10 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         # make a list of (positions counts)
                         L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
                         closest, count, position_closest = find_closest(start_pos, L)
+                        
+                        print(closest, count, position_closest, closest <= pos_threshold)
+                        
+                        
                         # check if closest family is within the position threshold
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
