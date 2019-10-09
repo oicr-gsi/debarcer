@@ -277,10 +277,6 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             for i in consensus_seq[pos][famkey]:
                 a[pos][famkey]['_'.join(i)] = consensus_seq[pos][famkey][i]
    
-    print(list(consensus_seq[137781615]['TGAGTAGTCGTG5']))
-    print(FamSize[137781615]['TGAGTAGTCGTG'])
-
-
     # save dicts for debugging
     debugdir = '/.mounts/labs/gsiprojects/genomics/CBALL/test_debarcer_rjdev/cball_new/debugging'
     newfile = open(os.path.join(debugdir, 'consensus_seq_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
