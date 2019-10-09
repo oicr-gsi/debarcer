@@ -268,8 +268,8 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
 
-    print(list(consensus_seq.keys())[:10])
-    print(list(FamSize.keys())[:10])
+    print(list(consensus_seq[137781615].keys())[:10])
+    print(list(FamSize[137781615].keys())[:10])
 
 
     # save dicts for debugging
