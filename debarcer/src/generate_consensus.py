@@ -37,24 +37,24 @@ def find_closest(pos, L):
     between pos and i
     '''
     
-    # make a dict {distance: count}
+    # make a dict {distance: [(count, position)]}
     # with dist being the distance between pos and each positions
     D = {}
     for i in L:
         dist = abs(pos - i[0])
         if dist in D:
-            D[dist].append(i[1])
+            D[dist].append((i[1], i[0]))
         else:
-            D[dist] = [i[1]]
+            D[dist] = [(i[1], i[0])]
     # sort all counts from smallest to highest
     for i in D:
-        D[i].sort()
+        # sort on count
+        D[i].sort(key=lambda x: x[0])
     # make a sorted list of distances from smallest to highest
-    distances = [i for i in D]
-    distances.sort()
-    # get the (distance, count) for the smallest distance from pos
+    distances = sorted(D.keys())
+    # get the (distance, count, position) for the smallest distance from pos
     # retrieve the highest count if multiple counts recorded per distance
-    return (distances[0], D[distances[0]][-1])
+    return (distances[0], D[distances[0]][-1][0], D[distances[0]][-1][0])
 
 
 def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans):
@@ -108,7 +108,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         # find closest family from umi
                         # make a list of (positions counts)
                         L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
-                        closest, count = find_closest(start_pos, L)
+                        closest, count, position_closest = find_closest(start_pos, L)
                         # check if closest family is within the position threshold
                         if closest <= pos_threshold:
                             # found a umi family. check if family count is greater than family threshold
@@ -125,7 +125,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                 FamSize[pos][parent][closest] = count
                                 
                                 # use family key to count allele. collapsing is done within families. not per position
-                                family_key = parent + str(closest)
+                                family_key = parent + str(position_closest)
                                 
                                 ref_pos = pos - region_start
                     
