@@ -134,14 +134,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 
                                 # get reference and alternative bases  
                                 if not read.is_del and read.indel == 0:
-                                    
-                                    try:
-                                        ref_base = ref_seq[ref_pos]
-                                    except:
-                                        print('ref_pos', ref_pos)
-                                        print(ref_seq)
-                                    
-                                    
                                     ref_base = ref_seq[ref_pos]
                                     alt_base = read_data.query_sequence[read.query_position]
                                 elif read.indel > 0:
@@ -190,13 +182,6 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
-           
-            
-            
-            print('uncollapsed', pileupcolumn)
-            
-            
-            
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
@@ -282,7 +267,15 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
+    # save dicts for debugging
+    debugdir = '/.mounts/labs/gsiprojects/genomics/CBALL/test_debarcer_rjdev/cball_new/debugging'
+    newfile = open(os.path.join(debugdir, 'consensus_seq_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
+    json.dump(consensus_seq, newfile, sort_keys=True, indent=4)
+    newfile.close()
 
+    newfile = open(os.path.join(debugdir, 'FaSize_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
+    json.dump(FamSize, newfile, sort_keys=True, indent=4)
+    newfile.close()
 
 
     print('cons seq', len(consensus_seq))
