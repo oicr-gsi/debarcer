@@ -315,6 +315,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         while True in running:
             running = [CheckJob(i) for i in MergeJobNames]
         if len(list(set(running))) == 1 and list(set(running))[0] == False:
+            
+            print('plotting')
+            
+            
             # generate plots and report if report is True
             PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
             PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')

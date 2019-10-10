@@ -123,6 +123,11 @@ def group_umis(args):
     Groups by hamming distance and form families based on physical distances within groups
     '''
     
+    
+    print('group', 'ignore',  args.ignore, type(args.ignore))
+    
+    
+    
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
@@ -208,6 +213,16 @@ def collapse(args):
        
     Base collapses from given BAM and umi family file
     '''
+    
+    
+    
+    
+    print('collapse:' 'truncate', args.truncate, type(args.truncate), 'orphans', args.ignoreorphans, type(args.ignoreorphans))
+    
+    
+    
+    
+    
     
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
@@ -385,6 +400,12 @@ def run_scripts(args):
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
 
+    print('run', 'ignoreorphans', args.ignoreorphans, type(args.ignoreorphans))
+    print('run', 'ignore', args.ignore, type(args.ignore))
+    print('run', 'merge', args.merge, type(args.merge))
+    print('run', 'plot', args.plot, type(args.plot))
+    print('run', 'report', args.report, type(args.report))
+
 
     # get bam file from config or command
     bamfile = GetInputFiles(args.config, args.bamfile, 'bam_file')
@@ -432,6 +453,15 @@ def generate_plots(args):
     :param sample: Optional parameter, sample name to appear in report
     Generate plots in Figures directory
     '''
+    
+    
+    
+    print('plot:', args.report, type(args.report))
+    
+    
+    
+    
+    
     
     # get subdirectories
     L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
