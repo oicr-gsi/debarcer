@@ -281,15 +281,15 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             subprocess.call(QsubCmd1.format(jobname3, LogDir, queue, '20', MergeScript1), shell=True)    
                 
             # merge umi files     
-            MergeScript3 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
-            newfile = open(MergeScript3, 'w')
+            MergeScript2 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
+            newfile = open(MergeScript2, 'w')
             newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
             newfile.close()
-            jobname5 = name_job('MergeUmiFiles')
-            MergeJobNames.append(jobname5)
+            jobname4 = name_job('MergeUmiFiles')
+            MergeJobNames.append(jobname4)
             # run merge umi files
             #subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
-            subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, '20', MergeScript3), shell=True)
+            subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, '20', MergeScript2), shell=True)
          
         # check if collapse jobs are still running
         running_collapse = [CheckJob(i) for i in ConsJobNames]
@@ -297,15 +297,15 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             running_collapse = [CheckJob(i) for i in ConsJobNames]
         if len(list(set(running_collapse))) == 1 and list(set(running_collapse))[0] == False:
             # merge consensus files
-            MergeScript2 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
-            newfile = open(MergeScript2, 'w')
+            MergeScript3 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
+            newfile = open(MergeScript3, 'w')
             newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
             newfile.close()
-            jobname4 = name_job('MergeConsensusFiles')
-            MergeJobNames.append(jobname4)
+            jobname5 = name_job('MergeConsensusFiles')
+            MergeJobNames.append(jobname5)
             # run merge consensus files
             #subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
-            subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, '20', MergeScript2), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, '20', MergeScript3), shell=True)    
         
         
     if plot == True:
