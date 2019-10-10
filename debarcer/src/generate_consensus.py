@@ -54,7 +54,8 @@ def find_closest(pos, L):
     distances = sorted(D.keys())
     # get the (distance, count, position) for the smallest distance from pos
     # retrieve the highest count if multiple counts recorded per distance
-    return (distances[0], D[distances[0]][-1][0], D[distances[0]][-1][0])
+    smallest_dist = distances[0]
+    return (smallest_dist, D[smallest_dist][-1][0], D[smallest_dist][-1][1])
 
 
 def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans):
@@ -99,18 +100,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             for read in pileupcolumn.pileups:
                 # get read information
                 read_data = read.alignment
-                
-                
-                
-                print(read_data)
-                
-                
                 read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                 # get all recorded umis
                 umis = read_name.split(":")[-1].split(';')
-                
-                print(umis)
-                
                 
                 for umi in umis:
                     # check that umi is recorded
@@ -119,9 +111,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                         # make a list of (positions counts)
                         L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
                         closest, count, position_closest = find_closest(start_pos, L)
-                        
-                        print(closest, count, position_closest, closest <= pos_threshold)
-                        
                         
                         # check if closest family is within the position threshold
                         if closest <= pos_threshold:
