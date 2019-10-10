@@ -233,7 +233,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(distthreshold), str(postthreshold), ignore) + '\n')
         newfile.close()
         # get a umique job name
-        jobname1 = name_job('UmiGroup')
+        jobname1 = name_job('UmiGroup' + '_' + region.replace(':', '-'))
         # run group umi for region
         subprocess.call(QsubCmd1.format(jobname1, LogDir, queue, str(mem), GroupScript), shell=True)      
         # record jobname
@@ -249,7 +249,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                                          str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
         newfile.close()
         # get a umique job name
-        jobname2 = name_job('UmiCollapse')
+        jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))
         # run collapse umi for region
         subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, queue, str(mem), CollapseScript), shell=True)      
         # record jobname2
