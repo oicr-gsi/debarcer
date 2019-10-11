@@ -685,7 +685,7 @@ if __name__ == '__main__':
     c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
     c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=True, type=ConvertArgToBool, help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is True')
-    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=True, type=ConvertArgToBool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
+    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=False, type=ConvertArgToBool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -715,8 +715,8 @@ if __name__ == '__main__':
     r_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
                           help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is True')
-    r_parser.add_argument('-io', '--IgnoreOrphans', dest='ignoreorphans', action='store_false',
-                          help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
+    r_parser.add_argument('-io', '--IgnoreOrphans', dest='ignoreorphans', action='store_true',
+                          help='Ignore orphans (paired reads that are not in a proper pair). Default is False')
     r_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     r_parser.add_argument('-mg', '--Merge', dest='merge', action='store_false', help='Merge data, json and consensus files respectively into a 1 single file. Default is True')
     r_parser.add_argument('-pl', '--Plot', dest='plot',  action='store_false', help='Generate figure plots. Default is True')
