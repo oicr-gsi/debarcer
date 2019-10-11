@@ -407,8 +407,32 @@ def CheckFilePath(L):
 
 
 
-# use this function to check the job exit status
-def CheckJob(JobName):
+## use this function to check the job exit status
+#def CheckJob(JobName):
+#    '''
+#    (str) -> bool
+#    
+#    :param JobName: Name of a submitted job
+#    
+#    Return True if job is still running
+#    '''
+#    
+#    # make a sorted list of accounting files with job info archives
+#    try:
+#        result = subprocess.check_output('qstat -j {0} | grep job_name'.format(JobName), shell=True).decode('utf-8').rstrip()
+#        if 'job_name' in result:
+#            result = result.split()
+#            assert result[1].strip() == JobName
+#            running = True
+#        else:
+#            running = False
+#    except:
+#        running = False 
+#    return running
+
+
+
+def IsJobRunning(JobName):
     '''
     (str) -> bool
     
@@ -429,6 +453,50 @@ def CheckJob(JobName):
     except:
         running = False 
     return running
+
+
+
+    
+    
+
+
+
+def CheckJobs(JobNames):
+    '''
+    (list) -> list
+    
+    :param JobNames: List of submitted job names
+    
+    Return True if job is still running
+    '''
+    
+    # make a list of of jobnames that can be updated without chaning JobNames
+    jobs = [i for i in JobNames]
+    
+    while len(jobs) != 0:
+        
+        
+        print('jobs:', len(jobs))
+        
+        
+        to_remove = []
+        for i in range(len(jobs)):
+            running  = IsJobRunning(jobs[i])
+            if running == False:
+                to_remove.append(jobs[i])
+        for i in to_remove:
+            jobs.remove(i)
+    
+    return jobs
+
+
+
+
+
+
+
+
+
 
 
 def ConvertArgToBool(argument):

@@ -3,7 +3,7 @@ import os
 import json
 #from src.generate_vcf import get_vcf_output
 import subprocess
-from src.utilities import CheckRegionFormat, CheckJob
+from src.utilities import CheckRegionFormat, CheckJobs
 import uuid
 
 
@@ -316,15 +316,22 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     if plot == True:
         # make a list of jobs. wait until all jobs are done before plotting and reporting
         L = ConsJobNames + GroupJobNames + MergeJobNames
-        running = [CheckJob(i) for i in L]
-        while True in running:
-            running = [CheckJob(i) for i in L]
+#        running = [CheckJob(i) for i in L]
+#        while True in running:
+#            running = [CheckJob(i) for i in L]
+#        
+        
+        jobs = CheckJobs(L)
+        
+        
+        
         
         
         print('plot from run', plot)
-        print('plot from run', running)
+        #print('plot from run', running)
         
-        if len(list(set(running))) == 1 and list(set(running))[0] == False:
+        #if len(list(set(running))) == 1 and list(set(running))[0] == False:
+        if jobs:
             
             print('plotting')
             
