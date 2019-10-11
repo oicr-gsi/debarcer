@@ -430,3 +430,22 @@ def CheckJob(JobName):
         running = False 
     return running
 
+
+def ConvertArgToBool(argument):
+    '''
+    (str) -> bool
+    
+    "param argument: Argument of a parameter that should be a boolean
+    
+    Return the argument as a boolean 
+    '''
+    
+    if isinstance(argument, bool):
+       return argument
+    elif argument.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif argument.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise ValueError('ERR: {0} is expected to be a boolean'.format(argument))
+    
