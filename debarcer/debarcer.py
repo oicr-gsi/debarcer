@@ -125,6 +125,7 @@ def group_umis(args):
     
     
     print('group', 'ignore',  args.ignore, type(args.ignore))
+    print('group', 'ignore', 'bool', isinstance(args.ignore, bool), 'str', isinstance(args.ignore, str))
     
     
     
@@ -217,11 +218,14 @@ def collapse(args):
     
     
     
-    print('collapse:' 'truncate', args.truncate, type(args.truncate), 'orphans', args.ignoreorphans, type(args.ignoreorphans))
+    print('collapse:')
+    print('truncate', args.truncate, type(args.truncate))
+    print('collapse:', 'truncate', 'bool:', isinstance(args.truncate, bool), 'str',  isinstance(args.truncate, str)) 
+    print('collapse:', 'orphans', args.ignoreorphans, type(args.ignoreorphans))
+    print('collapse:', 'orphans', 'bool:', isinstance(args.ignoreorphans, bool), 'str',  isinstance(args.ignoreorphans, str)) 
     
     
-    
-    
+       
     
     
     # get output directory from the config or command. set to current dir if not provided
@@ -457,7 +461,7 @@ def generate_plots(args):
     
     
     print('plot:', args.report, type(args.report))
-    
+    print('plot', 'bool', isinstance(args.report, bool), 'str', isinstance(args.report, str))
     
     
     
