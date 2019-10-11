@@ -406,32 +406,6 @@ def CheckFilePath(L):
             raise ValueError('ERR: Invalid file path {0}'.format(i))
 
 
-
-## use this function to check the job exit status
-#def CheckJob(JobName):
-#    '''
-#    (str) -> bool
-#    
-#    :param JobName: Name of a submitted job
-#    
-#    Return True if job is still running
-#    '''
-#    
-#    # make a sorted list of accounting files with job info archives
-#    try:
-#        result = subprocess.check_output('qstat -j {0} | grep job_name'.format(JobName), shell=True).decode('utf-8').rstrip()
-#        if 'job_name' in result:
-#            result = result.split()
-#            assert result[1].strip() == JobName
-#            running = True
-#        else:
-#            running = False
-#    except:
-#        running = False 
-#    return running
-
-
-
 def IsJobRunning(JobName):
     '''
     (str) -> bool
@@ -455,30 +429,19 @@ def IsJobRunning(JobName):
     return running
 
 
-
-    
-    
-
-
-
 def CheckJobs(JobNames):
     '''
-    (list) -> list
+    (list) -> bool
     
     :param JobNames: List of submitted job names
     
-    Return True if job is still running
+    Return True if jobs are still running and False if all jobs are done
     '''
     
-    # make a list of of jobnames that can be updated without chaning JobNames
+    # make a list of of jobnames that can be updated without changing JobNames
     jobs = [i for i in JobNames]
-    
+    # remove job names from job to avoid repeating error messages when job doesn't exist anymore
     while len(jobs) != 0:
-        
-        
-        print('jobs:', len(jobs))
-        
-        
         to_remove = []
         for i in range(len(jobs)):
             running  = IsJobRunning(jobs[i])
@@ -486,18 +449,12 @@ def CheckJobs(JobNames):
                 to_remove.append(jobs[i])
         for i in to_remove:
             jobs.remove(i)
+    # check if all jobs are done
+    if len(jobs) == 0:
+        return False
+    else:
+        return True
     
-    return jobs
-
-
-
-
-
-
-
-
-
-
 
 def ConvertArgToBool(argument):
     '''

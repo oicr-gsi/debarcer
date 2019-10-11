@@ -265,15 +265,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
 
         # check if Goup jobs are still running
-        running_group = [CheckJob(i) for i in GroupJobNames]
-        while True in running_group:
-            running_group = [CheckJob(i) for i in GroupJobNames]
-        
-        print('merge from run', merge)
-        print('merge from run', running_group)
-        
-        
-        if len(list(set(running_group))) == 1 and list(set(running_group))[0] == False:
+        running_group = CheckJobs(GroupJobNames)
+        if running_group == False:
             # merge datafiles
             MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
             newfile = open(MergeScript1, 'w')
@@ -297,10 +290,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, '20', MergeScript2), shell=True)
          
         # check if collapse jobs are still running
-        running_collapse = [CheckJob(i) for i in ConsJobNames]
-        while True in running_collapse:
-            running_collapse = [CheckJob(i) for i in ConsJobNames]
-        if len(list(set(running_collapse))) == 1 and list(set(running_collapse))[0] == False:
+        running_collapse = CheckJobs(ConsJobNames)
+        if running_collapse == False:
             # merge consensus files
             MergeScript3 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
             newfile = open(MergeScript3, 'w')
@@ -312,30 +303,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             #subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
             subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, '20', MergeScript3), shell=True)    
         
-        
     if plot == True:
         # make a list of jobs. wait until all jobs are done before plotting and reporting
         L = ConsJobNames + GroupJobNames + MergeJobNames
-#        running = [CheckJob(i) for i in L]
-#        while True in running:
-#            running = [CheckJob(i) for i in L]
-#        
-        
-        jobs = CheckJobs(L)
-        
-        
-        
-        
-        
-        print('plot from run', plot)
-        #print('plot from run', running)
-        
-        #if len(list(set(running))) == 1 and list(set(running))[0] == False:
-        if jobs:
-            
-            print('plotting')
-            
-            
+        running_jobs = CheckJobs(L)
+        if running_jobs == False:
             # generate plots and report if report is True
             PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
             PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
@@ -344,5 +316,4 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             newfile.close()
             jobname6 = name_job('Plot')
             subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', PlotScript), shell=True)    
-        
-                   
+    
