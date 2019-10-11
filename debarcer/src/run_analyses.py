@@ -268,6 +268,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         running_group = [CheckJob(i) for i in GroupJobNames]
         while True in running_group:
             running_group = [CheckJob(i) for i in GroupJobNames]
+        
+        print('merge from run', merge)
+        print('merge from run', running_group)
+        
+        
         if len(list(set(running_group))) == 1 and list(set(running_group))[0] == False:
             # merge datafiles
             MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
@@ -313,7 +318,12 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         L = ConsJobNames + GroupJobNames + MergeJobNames
         running = [CheckJob(i) for i in L]
         while True in running:
-            running = [CheckJob(i) for i in MergeJobNames]
+            running = [CheckJob(i) for i in L]
+        
+        
+        print('plot from run', plot)
+        print('plot from run', running)
+        
         if len(list(set(running))) == 1 and list(set(running))[0] == False:
             
             print('plotting')
