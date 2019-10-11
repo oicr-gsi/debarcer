@@ -629,6 +629,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     :param Outputfile: Name of the output figure file
     :param Options: Accepted keys are:
                     'YLimit': Y axis limit, in variant frequency (0-100) 
+                    'title': Title of the plot
            
     Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
@@ -675,6 +676,12 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], XLabel= region, YLimit=YLimit)
         else:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], YLimit=YLimit)
+    
+    # add title if option activated
+    if 'title' in Options:
+        title = Options['title']
+        ax.set_title(title, size=18, loc='center', ha='center')
+    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
