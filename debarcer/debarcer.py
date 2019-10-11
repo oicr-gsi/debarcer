@@ -569,7 +569,7 @@ def generate_plots(args):
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=20)
+        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=10)
         
         
         print('PlotConsDepth')
