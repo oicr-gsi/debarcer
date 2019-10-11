@@ -670,6 +670,10 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     for i in range(len(L)):
         if i == 0:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], legend=True, fam_size=FamSize, colors=Color, YLimit=YLimit)
+            # add title if option activated
+            if 'title' in Options:
+                title = Options['title']
+                ax.set_title(title, size=18, loc='center', ha='center')
         elif i == len(L) // 2:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], Ylabel='Non ref freq.', YLimit=YLimit)
         elif i == len(L) - 1:
@@ -677,10 +681,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
         else:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], YLimit=YLimit)
     
-    # add title if option activated
-    if 'title' in Options:
-        title = Options['title']
-        ax.set_title(title, size=18, loc='center', ha='center')
+    
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
