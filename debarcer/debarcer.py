@@ -510,6 +510,11 @@ def generate_plots(args):
     CheckFilePath([Inputfile])
     if CheckFileContent(Inputfile) == True:
         Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
+        
+        
+        print('PlotIncorrectReads')
+        
+        
         PlotIncorrectReads(Inputfile, Outputfile)
     else:
         print('ERR: Missing data in {0}'.format(Inputfile))
@@ -525,29 +530,51 @@ def generate_plots(args):
     # current matplotlib version reuses the earlier instance
     # in future version, a new instance will always be created and returned
     plt.clf(), plt.cla()
+    
+    print('PlotUMiFrequency')
+    
     PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False)
         
     # plot coverage
     plt.clf(), plt.cla()
+    
+    print('PlotCoverage')
+    
     PlotCoverage(ConsFiles, DataFiles, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
             
     # plot graphs for each consensus file
     for filename in ConsFiles:
+        
+        print('PlotMeanFamSize')
+        
         # plot mean family size for each consensus file/region
         region = FormatRegion(filename).replace(':', '-')
         Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         PlotMeanFamSize(filename, Colors[1:], Outputfile)
             
+        print('PlotNonRefFreqData')
+        
+        
+        
         # plot non-reference frequency
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile)
     
+    
+        print('PlotNonRefFreqData LOW')
+    
+    
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=20)
+        
+        
+        print('PlotConsDepth')
+        
+        
         
         # plot raw and consensus depth
         Outputfile = 'RawConsensusDepth_{0}.{1}'.format(region, args.extension)    
@@ -561,15 +588,26 @@ def generate_plots(args):
         region = region[:-5]
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
         
+        
+        print('PlotNetworkDegree')
+        
+        
         # plot network and degree
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile)
             
+        
+        print('PlotFamSizeReadDepth')
+        
+        
         # plot marginal distributions of UMI family size and read depth
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
         PlotFamSizeReadDepth(filename, Outputfile)
+        
+        print('PlotReadDepth')
+        
         
         # plot distribution of read depth for each umi families
         plt.clf(), plt.cla()
@@ -578,29 +616,56 @@ def generate_plots(args):
 
     # plot umi frequency for individual umis before grouping
     for filename in UmiInfoFiles:
+        
+        print('PlotUMiFrequency')
+        
         region = os.path.basename(filename)
         region = region[region.index('chr'): region.index('_before')].replace(':', '-')
         # get parent+children and parent only counts
         all_umis, parent_umis = GetIndividualUmiInfo(filename)
         Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
         plt.clf(), plt.cla()
-        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
         
+        
+        
+        
+        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
+    
+
+    print('PlotUmiCounts')
+    
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
         
+    
+    print('PlotUmiCounts')
+    
+    
     # plot total umi counts
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
+    
+    
+    print('PlotUmiCounts')
+    
     
     # plot children umi counts
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
     
+    
+    print('PlotParentsToChildrenCounts')
+    
+    
     # plot children vs parent umis for each interval
     plt.clf(), plt.cla()
     PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
+
+
+    print('PlotParentFreq')
+
+
 
     # plot parent frequencies vs children UMI counts
     plt.clf(), plt.cla()
@@ -608,6 +673,9 @@ def generate_plots(args):
     
     # check if reporting
     if args.report == True:
+
+        print('make report')
+
         # create subdirectory
         ReportDir = os.path.join(args.directory, 'Report')
         if os.path.isdir(ReportDir) == False:
