@@ -616,7 +616,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, **Options):
             legend_elements = []
             for i in range(len(FamSize)):
                 legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Colors[i]))
-            ax.legend(handles=legend_elements, frameon=False, ncol=6, bbox_to_anchor=(0.7, 1.6))
+            ax.legend(handles=legend_elements, frameon=False, ncol=len(FamSize), bbox_to_anchor=(0.7, 1.6))
     return ax
 
 
