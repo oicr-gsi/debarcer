@@ -791,7 +791,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
                         padding_right,padding_left = 440, 10
                     else:
                         padding_right, padding_left = 0, 10
-                legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
+                    legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
                 L.append(legends)
                 # append empty line
                 L.append('<pre> </pre>')
