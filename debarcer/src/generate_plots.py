@@ -527,9 +527,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     :param Options: Accepted keys are:
                     'YLabel': Label of the Y axis
                     'XLabel': Label of the X axis
-                    'legend': Add legend (True) or not (False)
-                    'fam_size': List of family sizes in consensus file
-                    'Colors': List of colors, parallel to fam_size 
                     'YLimit': Y axis limit, in variant frequency (0-100) 
                     'title': Title of the subplot
                         
@@ -613,24 +610,8 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     # add legend
     legend_elements = []
     legend_elements.append(Line2D([0], [0], marker='s', label=str(fam_size), linestyle='None', color = Color))
-    #ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(0.3, 1))
     ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='upper right')
           
-#    # add title if option activated
-#    if 'title' in Options:
-#        title = Options['title']
-#        ax.set_title(title, size=18, loc='center', ha='center')
-#    
-    
-#    if 'legend' in Options:
-#        if Options['legend'] == True:
-#            FamSize = Options['fam_size']
-#            Colors = Options['colors']
-#            # add legend
-#            legend_elements = []
-#            for i in range(len(FamSize)):
-#                legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Colors[i]))
-#            ax.legend(handles=legend_elements, frameon=False, ncol=len(FamSize), bbox_to_anchor=(0.3, 1.6))
     return ax
 
 
@@ -683,23 +664,17 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     
     for i in range(len(L)):
         if i == 0:
-            #ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], legend=True, fam_size=FamSize, colors=Color, YLimit=YLimit)
-            
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
-            
-            
-            # add title if option activated
+            # add title
             if 'title' in Options:
                 title = Options['title']
-                ax.set_title(title, size=14, loc='center', ha='center')
+                ax.set_title(title, size=12, loc='center', ha='center')
         elif i == len(L) // 2:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], Ylabel='Non ref freq.', YLimit=YLimit)
         elif i == len(L) - 1:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
-    
-    
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
