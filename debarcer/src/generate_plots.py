@@ -531,6 +531,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
                     'fam_size': List of family sizes in consensus file
                     'Colors': List of colors, parallel to fam_size 
                     'YLimit': Y axis limit, in variant frequency (0-100) 
+                    'title': Title of the subplot
                         
     Return a ax in figure
     '''
@@ -613,8 +614,13 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     legend_elements = []
     legend_elements.append(Line2D([0], [0], marker='s', label=str(fam_size), linestyle='None', color = Color))
     ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(0.3, 1))
-        
+      
     
+#    # add title if option activated
+#    if 'title' in Options:
+#        title = Options['title']
+#        ax.set_title(title, size=18, loc='center', ha='center')
+#    
     
 #    if 'legend' in Options:
 #        if Options['legend'] == True:
@@ -625,7 +631,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
 #            for i in range(len(FamSize)):
 #                legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Colors[i]))
 #            ax.legend(handles=legend_elements, frameon=False, ncol=len(FamSize), bbox_to_anchor=(0.3, 1.6))
-#    return ax
+    return ax
 
 
 def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
