@@ -648,7 +648,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     #plt.gcf().set_size_inches(8, 10, forward=True)
         
     # create figure
-    figure = plt.figure(1, figsize = (10, 18))
+    figure = plt.figure(1, figsize = (18, 12))
     
     # make a sorted list of family sizes
     FamSize = list(Data.keys())
