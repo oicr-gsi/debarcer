@@ -647,7 +647,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     plt.clf()
            
     # create figure
-    figure = plt.figure(1, figsize = (18, 12))
+    figure = plt.figure(1, figsize = (8, 10))
     
     # make a sorted list of family sizes
     FamSize = list(Data.keys())
