@@ -645,8 +645,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     
     # clear previous axes
     plt.clf()
-    plt.gcf().set_size_inches(18, 12, forward=True)
-        
+           
     # create figure
     figure = plt.figure(1, figsize = (18, 12))
     
