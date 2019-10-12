@@ -598,7 +598,8 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
                     labelsize = 12, direction = 'out')  
 
         # write ticks for x axis
-        xtickspos = [i for i in range(0, len(pos), 20)]
+        step = SetUpTicks(max(pos))
+        xtickspos = [i for i in range(0, len(pos), step)]
         xticks = [pos[i] for i in xtickspos]
         plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     else:
