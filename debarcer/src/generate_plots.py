@@ -613,9 +613,9 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     # add legend
     legend_elements = []
     legend_elements.append(Line2D([0], [0], marker='s', label=str(fam_size), linestyle='None', color = Color))
-    ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(0.3, 1))
-      
-    
+    #ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(0.3, 1))
+    ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='upper right')
+          
 #    # add title if option activated
 #    if 'title' in Options:
 #        title = Options['title']
