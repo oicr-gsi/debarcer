@@ -435,7 +435,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
         # get the reference
         ref_base = ref_seq[base_pos-region_start]
         # loop over fam size
-        for f_size in cons_data:
+        for f_size in sorted(cons_data.keys()):
             # check if position recorded for given fam size
             if base_pos in cons_data[f_size]:
                 # get ref, stats and consensus info
