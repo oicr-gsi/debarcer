@@ -603,7 +603,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         
         #step = SetUpTicks(max(list(map(lambda x: int(x), pos))))
         xtickspos = [i for i in range(0, len(pos), step)]
-        xticks = [pos[i] for i in xtickspos]
+        xticks = [pos[i] for i in range(0, len(xtickspos), 4)]
         plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     else:
         # do not show ticks
