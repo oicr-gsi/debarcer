@@ -669,13 +669,19 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
             if 'title' in Options:
                 title = Options['title']
                 ax.set_title(title, size=12, loc='center', ha='center')
+            # add legend
+            if 'legend' in Options:
+                legend_elements = []
+                for i in range(len(L)):
+                    legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Color[i]))
+                ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)    
         elif i == len(L) // 2:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], Ylabel='Non ref freq.', YLimit=YLimit)
         elif i == len(L) - 1:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
-    
+
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
