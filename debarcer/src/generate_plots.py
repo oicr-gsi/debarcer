@@ -448,7 +448,7 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     # loop over family sizes
     for i in range(len(FamSize)):
         legend_elements.append(Line2D([0], [0], marker='', label=str(FamSize[i]), linestyle='-', color = Color[i]))
-    ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1, 1), loc='upper left', borderaxespad=0.)
+    ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1.05, 0.95), loc='upper left', borderaxespad=0.)
     return ax
 
 
@@ -798,7 +798,7 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
             legend_elements = []
             for i in range(len(FamSize)):
                 legend_elements.append(Line2D([0], [0], marker='', label=str(FamSize[i]), linestyle='-', color = Colors[i]))
-            ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1, 1), loc='upper left', borderaxespad=0.)
+            ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1.05, 0.95), loc='upper left', borderaxespad=0.)
        
     return ax
 
@@ -835,8 +835,8 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
         
     figure = plt.figure(1, figsize = (10, 7))
     # plot raw depth, family size = 0    
-    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth')
-    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region, legend=True, fam_size=FamSize, colors=Color)
+    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
+    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region)
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
         
