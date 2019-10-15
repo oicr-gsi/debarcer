@@ -690,7 +690,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     Maps = {'famsize':['MeanFamilySize_{0}.{1}', 'Mean family size', 0.7, 'family size'],
             'reffreq':['NonRefFreq_{0}.{1}', 'Frequency of alternative variants', 0.85, 'alternative variants'],
             'raw':['RawConsensusDepth_{0}.{1}', 'Raw and consensus depth', 0.6, 'read depth'],
-            'lowreffreq': ['NonRefFreq_low_freq_{0}.{1}', 'Low frequency alternative variants', 0.85, 'low frequency']}
+            'lowreffreq': ['NonRefFreq_low_freq_{0}.{1}', 'Frequency alternative variants (Y axis cut)', 0.85, 'low frequency']}
     
     # Add figures specific to each region
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots')

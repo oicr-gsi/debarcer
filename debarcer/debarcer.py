@@ -570,7 +570,7 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         freqlimit = 10
-        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=freqlimit, title='cropping frequencies at {0}%'.format(freqlimit))
+        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=freqlimit, title='Y axis cut at {0}%'.format(freqlimit))
         
         
         print('PlotConsDepth')
