@@ -639,7 +639,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     Data = ExtractNonRefFreq(ConsFile)
     
     # clear previous axes
-    #plt.clf()
+    plt.clf(), plt.cla()
            
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
