@@ -637,10 +637,6 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
        
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
-    
-    # clear previous axes
-    plt.clf(), plt.cla()
-           
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
     #figure = plt.gcf()
@@ -683,7 +679,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    plt.clf()
 
 
 #### plot raw and consensus depth ####
