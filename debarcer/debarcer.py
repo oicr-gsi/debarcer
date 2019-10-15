@@ -561,7 +561,7 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         #plt.clf(), plt.cla()
         
-        plt.clf()
+        #plt.clf()
         
         
         
@@ -584,7 +584,7 @@ def generate_plots(args):
         
         # plot raw and consensus depth
         Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
-        plt.clf(), plt.cla()
+        #plt.clf(), plt.cla()
         PlotConsDepth(filename, Colors, Outputfile)
         
     # plot network and network degree for each umi file/region
