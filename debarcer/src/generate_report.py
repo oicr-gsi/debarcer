@@ -796,27 +796,6 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
                 # append empty line
                 L.append('<pre> </pre>')
               
-
-
-            
-#            # add reffreq if it exists
-#            if FigPaths[regions[i]][keys[-1]] != '':
-#                #L.append('<pre> </pre>')
-#                # resize image
-#                height, width = ResizeFifure(FigPaths[regions[i]][keys[-1]], Maps[keys[-1]][2])
-#                # encode base64 image
-#                encoded_fig = EncodeImage(FigPaths[regions[i]][keys[-1]])
-#                # add images
-#                images = '<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, Maps[keys[-1]][3], width, height)
-#                L.append(images)
-#                # add legends
-#                legends = '<span style="padding-right: 0px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,figcounter, Maps[keys[-1]][1])
-#                L.append(legends)
-#                # append empty line
-#                L.append('<pre> </pre>')
-#                # update figure counter
-#                figcounter += 1
-                
     return figcounter
 
 
