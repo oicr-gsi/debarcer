@@ -607,12 +607,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
                     right=False, left=False, labelbottom=False, colors = 'black',
                     labelsize = 12, direction = 'out')  
-    
-    # add legend
-    legend_elements = []
-    legend_elements.append(Line2D([0], [0], marker='s', label=str(fam_size), linestyle='None', color = Color))
-    ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='upper right')
-          
     return ax
 
 
