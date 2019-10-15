@@ -598,7 +598,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
                     labelsize = 12, direction = 'out')  
         # write ticks for x axis
         step = SetUpTicks(len(pos)) * 2
-        print(pos, step)
         xtickspos = [i for i in range(0, len(pos), step)]
         xticks = [pos[i] for i in range(0, len(xtickspos))]
         
@@ -640,10 +639,15 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     Data = ExtractNonRefFreq(ConsFile)
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
            
     # create figure
     figure = plt.figure(1, figsize = (8, 10))
+    #figure = plt.gcf()
+    #figure.set_size_inches(8, 10)
+    #figure = plt.figure(1, figsize = (4, 20))
+    
+    
     
     # make a sorted list of family sizes
     FamSize = list(Data.keys())
