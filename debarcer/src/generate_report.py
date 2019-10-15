@@ -510,7 +510,7 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'QC plots across regions')
             
     # add description of the figures
-    L.append('<p style="text-align: left; font-family:{0}; font-size:16px">Number of parent and children umis\
+    L.append('<p style="text-align: left; font-family:{0}; font-size:18px">Number of parent and children umis\
              following family grouping for each genomic interval</p>'.format(font_family))
     L.append('<pre> </pre>')
 
@@ -703,7 +703,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     for i in intro:
         L.append('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
-                 padding-left:12px; font-family:{0}; font-size:16px">{1}</span></li></ul>'.format(font_family, i))
+                 padding-left:12px; font-family:{0}; font-size:18px">{1}</span></li></ul>'.format(font_family, i))
     L.append('<pre> </pre>')
     
     # add warning for missing files
