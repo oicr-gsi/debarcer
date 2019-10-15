@@ -679,7 +679,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    plt.clf()
+    plt.close()
 
 
 #### plot raw and consensus depth ####
