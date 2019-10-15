@@ -590,7 +590,7 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     for i in intro:
         L.append('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
-                 padding-left:12px; font-family:{0}; font-size:16px">{1}</span></li></ul>'.format(font_family, i))
+                 padding-left:12px; font-family:{0}; font-size:18px">{1}</span></li></ul>'.format(font_family, i))
     L.append('<pre> </pre>')
 
     # make a sorted list of regions for 'grouoing' figures
