@@ -448,7 +448,7 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     # loop over family sizes
     for i in range(len(FamSize)):
         legend_elements.append(Line2D([0], [0], marker='', label=str(FamSize[i]), linestyle='-', color = Color[i]))
-    ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1, 1), loc='upper left', borderaxespad=0.)
     return ax
 
 
@@ -798,7 +798,8 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
             legend_elements = []
             for i in range(len(FamSize)):
                 legend_elements.append(Line2D([0], [0], marker='', label=str(FamSize[i]), linestyle='-', color = Colors[i]))
-            ax.legend(handles=legend_elements, frameon=False, ncol=5, loc='lower center')
+            ax.legend(handles=legend_elements, frameon=False, bbox_to_anchor=(1, 1), loc='upper left', borderaxespad=0.)
+       
     return ax
 
 
