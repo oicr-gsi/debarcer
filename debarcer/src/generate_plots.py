@@ -1956,7 +1956,7 @@ def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title
     ax = figure.add_subplot(rows, columns, position)
     # plot density distribution of read depth
     ax.hist(data[0], bins=15, align='mid', color = 'lightgrey', alpha=0.5)
-    ax.hist(data[0], bins=15, align='mid', color = 'pink', alpha=0.5)
+    ax.hist(data[1], bins=15, align='mid', color = 'pink', alpha=0.5)
     
     # add title        
     ax.set_title(title, size = 14)
