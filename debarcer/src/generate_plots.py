@@ -666,7 +666,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     
     for i in range(len(L)):
         if i == 0:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLabel='Non-ref freq.', YLimit=YLimit)
             # add title
             if 'title' in Options:
                 title = Options['title']
