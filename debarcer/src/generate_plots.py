@@ -644,7 +644,12 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
-    plt.clf()
+    
+    
+    #plt.clf()
+    
+    
+    
     figure = plt.figure(1, figsize = (8, 10))
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
@@ -678,7 +683,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
                     legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Color[i]))
                 ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)    
         elif i == len(L) // 2:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLabel='Frequency of non-reference alleles', YLimit=YLimit)
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLabel='Non-ref. frequency', YLimit=YLimit)
         elif i == len(L) - 1:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
