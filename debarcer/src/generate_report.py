@@ -879,7 +879,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
 
 
 
-    L.append('<img style="padding-right: 10px; padding-left:10px" src="data:image/svg;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format('svg_tooltip.svg', 'test', 10, 10))
+    L.append('<img style="padding-right: 10px; padding-left:10px" src="data:image/svg;base64,{0}" alt="{1}" title="{1}"/>'.format('svg_tooltip.svg', 'test'))
 
 
     
