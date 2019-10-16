@@ -432,17 +432,23 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
         
-    # do not show ticks
-    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelbottom=True, colors = 'black',
-                labelsize = 12, direction = 'out')  
-
     # write ticks for y and x axis
-    xtickspos = [i for i in range(0, len(positions), 20)]
+    #xtickspos = [i for i in range(0, len(positions), 20)]
+    #xticks = [positions[i] for i in xtickspos]
+    #plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
+    
+    # set up x axis
+    step = SetUpTicks(len(positions)) * 2
+    xtickspos = [i for i in range(0, len(positions), step)]
     xticks = [positions[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
-    
+        
+    # do not show y ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+      
     # add legend
     legend_elements = []
     # loop over family sizes
@@ -780,10 +786,6 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     step = SetUpTicks(len(pos)) * 2
     xtickspos = [i for i in range(0, len(pos), step)]
     xticks = [pos[i] for i in xtickspos]
-    
-    print(step, xtickspos, xticks)
-    
-    
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     if 'XLabel' in Options:
         # show ticks
