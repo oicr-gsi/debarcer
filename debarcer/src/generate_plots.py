@@ -696,7 +696,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
                 ylabel = Options['ylabel']
                 # axes coordinates are 0,0 is bottom left and 1,1 is upper right
                 ax.text(-0.1, 0.5, ylabel, horizontalalignment='right',
-                        verticalalignment='center', rotation='vertical', transform=ax.transAxes)
+                        verticalalignment='center', rotation='vertical', transform=ax.transAxes, fontsize=12)
         elif i == len(L) - 1:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
