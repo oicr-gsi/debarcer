@@ -692,7 +692,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
             right = left + width
             top = bottom + height
             # axes coordinates are 0,0 is bottom left and 1,1 is upper right
-            ax.text(-0.5, 0.5*(bottom+top), 'right center', horizontalalignment='right',
+            ax.text(-0.1, 0.5*(bottom+top), 'right center', horizontalalignment='right',
                     verticalalignment='center', rotation='vertical', transform=ax.transAxes)
         
         elif i == len(L) - 1:
