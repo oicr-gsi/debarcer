@@ -1849,7 +1849,7 @@ def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     #          bbox_to_anchor=(1.05, 0.95), loc='upper left', borderaxespad=0.)
     
     ax.legend(handles=legend_elements, frameon=False, ncol=2, prop={'size': 12}, 
-              bbox_to_anchor=(0.5, 1.05), loc='upper left', borderaxespad=0.)
+              bbox_to_anchor=(0.4, 1.1), loc='upper left', borderaxespad=0.)
     
     
     return ax
