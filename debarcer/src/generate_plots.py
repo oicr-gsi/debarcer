@@ -613,6 +613,19 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
                     right=False, left=False, labelbottom=False, colors = 'black',
                     labelsize = 12, direction = 'out')  
+    
+    
+    
+#    if 'ylabel' in Options:
+#        # build a rectangle in axes coords
+#        left, width = .25, .5
+#        bottom, height = .25, .5
+#        right = left + width
+#        top = bottom + height
+#        # axes coordinates are 0,0 is bottom left and 1,1 is upper right
+#        ax.text(-0.1, 0.5*(bottom+top), 'right center', horizontalalignment='right',
+#                verticalalignment='center', rotation='vertical', transform=ax.transAxes)
+      
     return ax
 
 
@@ -685,16 +698,17 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
         elif i == len(L) // 2:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
         
-        
-            # build a rectangle in axes coords
-            left, width = .25, .5
-            bottom, height = .25, .5
-            right = left + width
-            top = bottom + height
-            # axes coordinates are 0,0 is bottom left and 1,1 is upper right
-            ax.text(-0.1, 0.5*(bottom+top), 'right center', horizontalalignment='right',
-                    verticalalignment='center', rotation='vertical', transform=ax.transAxes)
-        
+            if 'ylabel' in Options:
+                ylabel = Options['ylabel']
+                # build a rectangle in axes coords
+                left, width = .25, .5
+                bottom, height = .25, .5
+                right = left + width
+                top = bottom + height
+                # axes coordinates are 0,0 is bottom left and 1,1 is upper right
+                ax.text(-0.1, 0.5*(bottom+top), ylabel, horizontalalignment='right',
+                        verticalalignment='center', rotation='vertical', transform=ax.transAxes)
+#        
         elif i == len(L) - 1:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
