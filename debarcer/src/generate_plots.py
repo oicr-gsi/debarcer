@@ -1933,37 +1933,27 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
 ############################
 
 
-def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title, YLabel, **Options):
+def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     
     '''
-    (int, int, int, figure_object, list, str, str, dict) -> ax_object
+    (int, int, int, figure_object, list, str) -> ax_object
     
     :param columns: Number of columns
     :param rows: Number of rows
     :param position: Ax position in figure
     :param figure: Figure object opened for writing
     :param data: Values to be plotted
-    :param color: Color of the density plot
-    :param title: Title of the ax instance
-    :param Options: Optional parameters. Accepted keys:
-                    'ylabel': Label of y axis
-                    'text': Figure title, text above axes titles
-    
+    :param YLabel: Y axis label
+        
     Return a ax object in figure
     '''
     
     # create an ax instance in figure
     ax = figure.add_subplot(rows, columns, position)
     # plot density distribution of read depth
-    n, b, p = ax.hist(data[0], bins=15, align='mid', color = 'lightgrey', alpha=0.5)
-    ax.hist(data[1], bins=b, align='mid', color = 'pink', alpha=0.5)
+    n1, b1, p1 = ax.hist(data[0], bins=15, align='mid', color = '#00cccc', alpha=0.5)
+    n2, b2, p2 = ax.hist(data[1], bins=b1, align='mid', color = '#ff66ff', alpha=0.5)
     
-    # add title        
-    ax.set_title(title, size = 14)
-        
-    # set up y axis label and grid
-    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
-        
     # do not show lines around figure  
     ax.spines["top"].set_visible(False)    
     ax.spines["bottom"].set_visible(True)    
@@ -1974,14 +1964,18 @@ def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title
                     right=False, left=False, labelbottom=True, colors = 'black',
                     labelsize = 12, direction = 'out')  
     
-    # start x axis at 0
-    ax.set_xbound(lower=0)
     # set x ticks    
     XMax = max(data[0] + data[1])
     step = SetUpTicks(XMax)
     ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
     ax.set_xlabel('Read depth', color = 'black',  size = 14, ha = 'center')    
-        
+    
+    YMax = max(n1 + n2)
+    step = SetUpTicks(YMax)
+    ax.set_yticks([i for i in np.arange(0, YMax + step, step)])
+    # set up y axis label and grid
+    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
+    
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
@@ -1990,11 +1984,10 @@ def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title
     # add space between axis and tick labels
     ax.yaxis.labelpad, ax.xaxis.labelpad = 18, 18
     
-    
     # add legend
     legend_elements = []
-    legend_elements.append(Patch(facecolor='lightgrey', edgecolor= 'lightgrey', label='highest', alpha=0.8))
-    legend_elements.append(Patch(facecolor='pink', edgecolor='pink', label='others', alpha=0.8))
+    legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='highest', alpha=1))
+    legend_elements.append(Patch(facecolor='#ff66ff', edgecolor='#ff66ff', label='others', alpha=1))
     ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
            
     return ax
@@ -2047,50 +2040,11 @@ def PlotReadDepth(UmiFile, Outputfile):
     # get read depth for positions with lower umi abundance
     data3 = [list(Others[i].values())[0] for i in Others]
     
-    # plot density of read depth and Umi family count
-    ax = CreateAxDensityReadDepth(1, 1, 1, figure, [data2, data3], '#00cccc', 'Highest', 'ylabel')    
+    # plot histograms of read depth and Umi family count
+    ax = CreateAxReadDepth(1, 1, 1, figure, [data2, data3], 'Umi families')    
            
     # save figure to file  
-    plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ######################################
