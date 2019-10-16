@@ -12,7 +12,7 @@ import scipy.ndimage
 from itertools import zip_longest
 import base64
 import matplotlib
-#from PIL import Image
+
 
 def ResizeFifure(filename, scaling_factor):
     '''
@@ -873,20 +873,6 @@ def WriteReport(directory, extension, Outputfile, **Options):
     # add figures from Collapsing section and update figure counter
     figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
 
-
-
-
-
-
-
-    #L.append('<img style="padding-right: 10px; padding-left:10px" src="data:image/svg;base64,{0}" alt="{1}" title="{1}"/>'.format('svg_tooltip.svg', 'test'))
-
-    #L.append('<img style="padding-right: 10px; padding-left:10px" src="{0}" alt="{1}" title="{1}"/>'.format('svg_tooltip.svg', 'test'))
-
-    L.append('<img src="svg_tooltip.svg" onerror="this.onerror=null; this.src="svg_tooltip.png">')
-
-
-
     # create report string
     S = ''.join([markdown(i) for i in L])
      
@@ -894,10 +880,3 @@ def WriteReport(directory, extension, Outputfile, **Options):
     newfile.write(S)
     newfile.close()
     
-    
-
-
-#WriteReport('./', 'png', 'report.html', sample = 'sample1')  
-
-
-#convert_html_to_pdf(S, 'report.pdf')
