@@ -678,7 +678,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
                     legend_elements.append(Line2D([0], [0], marker='s', label=str(FamSize[i]), linestyle='None', color = Color[i]))
                 ax.legend(handles=legend_elements, frameon=False, ncol=1, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)    
         elif i == len(L) // 2:
-            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLabel='Non-ref. freq', YLimit=YLimit)
+            ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], Ylabel='Non-ref. freq', YLimit=YLimit)
         elif i == len(L) - 1:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
