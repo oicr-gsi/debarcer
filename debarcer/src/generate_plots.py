@@ -1993,9 +1993,8 @@ def CreateAxDensityReadDepth(columns, rows, position, figure, data, color, title
     
     # add legend
     legend_elements = []
-    legend_elements.append(Patch(facecolor='lightgrey', edgecolor= 'lightgrey', label='all', alpha=0.8))
-    legend_elements.append(Patch(facecolor=legend_colors[0], edgecolor=legend_colors[0], label='highest', alpha=0.8))
-    legend_elements.append(Patch(facecolor=legend_colors[1], edgecolor=legend_colors[1], label='others', alpha=0.8))
+    legend_elements.append(Patch(facecolor='lightgrey', edgecolor= 'lightgrey', label='highest', alpha=0.8))
+    legend_elements.append(Patch(facecolor='pink', edgecolor='pink', label='others', alpha=0.8))
     ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
            
     return ax
