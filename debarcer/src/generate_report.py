@@ -873,6 +873,19 @@ def WriteReport(directory, extension, Outputfile, **Options):
     # add figures from Collapsing section and update figure counter
     figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
 
+
+
+
+
+
+
+    L.append('<img style="padding-right: 10px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format('svg_tooltip.svg', 'test', 10, 10))
+
+
+    
+
+
+
     # create report string
     S = ''.join([markdown(i) for i in L])
      
