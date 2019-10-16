@@ -1824,7 +1824,7 @@ def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     # set x ticks    
     XMax = max(data[0] + data[1])
     step = SetUpTicks(XMax)
-    ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
+    ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
     ax.set_xlabel('Read depth', color = 'black',  size = 14, ha = 'center')    
     
     YMax = max(n1 + n2)
@@ -1845,13 +1845,8 @@ def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     legend_elements = []
     legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='highest', alpha=1))
     legend_elements.append(Patch(facecolor='#ff66ff', edgecolor='#ff66ff', label='others', alpha=1))
-    #ax.legend(handles=legend_elements, frameon=False, ncol=1, prop={'size': 12}, 
-    #          bbox_to_anchor=(1.05, 0.95), loc='upper left', borderaxespad=0.)
-    
     ax.legend(handles=legend_elements, frameon=False, ncol=2, prop={'size': 12}, 
               bbox_to_anchor=(0.4, 1.1), loc='upper left', borderaxespad=0.)
-    
-    
     return ax
     
     
