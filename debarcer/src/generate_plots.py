@@ -1967,12 +1967,12 @@ def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     # set x ticks    
     XMax = max(data[0] + data[1])
     step = SetUpTicks(XMax)
-    ax.set_xticks([i for i in np.arange(0, XMax + step, step)])
+    ax.set_xticks([i for i in np.arange(0, XMax + 1, step)])
     ax.set_xlabel('Read depth', color = 'black',  size = 14, ha = 'center')    
     
     YMax = max(n1 + n2)
     step = SetUpTicks(YMax)
-    ax.set_yticks([i for i in np.arange(0, YMax + step, step)])
+    ax.set_yticks([i for i in np.arange(0, YMax + 1, step)])
     # set up y axis label and grid
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     
