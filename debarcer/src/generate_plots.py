@@ -780,6 +780,10 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     step = SetUpTicks(len(pos)) * 2
     xtickspos = [i for i in range(0, len(pos), step)]
     xticks = [pos[i] for i in xtickspos]
+    
+    print(step, xtickspos, xticks)
+    
+    
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     if 'XLabel' in Options:
         # show ticks
