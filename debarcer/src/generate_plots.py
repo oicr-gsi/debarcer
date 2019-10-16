@@ -644,12 +644,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
-    
-    
-    #plt.clf()
-    
-    
-    
+    plt.clf()
     figure = plt.figure(1, figsize = (8, 10))
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
