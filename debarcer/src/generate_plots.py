@@ -591,36 +591,18 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
     
-
-    
-
-
-
-
+    # set up x axis
+    step = SetUpTicks(len(pos)) * 2
+    xtickspos = [i for i in range(0, len(pos), step)]
+    xticks = [pos[i] for i in xtickspos]
+    plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
     if 'XLabel' in Options:
-        # do not show ticks
+        # show ticks
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
                     right=False, left=False, labelbottom=True, colors = 'black',
                     labelsize = 12, direction = 'out')  
-        # write ticks for x axis
-        step = SetUpTicks(len(pos)) * 2
-        xtickspos = [i for i in range(0, len(pos), step)]
-        xticks = [pos[i] for i in xtickspos]
-        
-        plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     else:
-        
-        
-        # write ticks for x axis
-        step = SetUpTicks(len(pos)) * 2
-        xtickspos = [i for i in range(0, len(pos), step)]
-        xticks = [pos[i] for i in xtickspos]
-        plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
-        
-        
-        
-        
         # do not show ticks
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
                     right=False, left=False, labelbottom=False, colors = 'black',
