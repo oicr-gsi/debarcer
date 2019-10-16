@@ -560,7 +560,7 @@ def generate_plots(args):
         # plot non-reference frequency
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile)
+        PlotNonRefFreqData(filename, Colors, Outputfile, ylabel='right center')
     
     
         print('PlotNonRefFreqData LOW')
