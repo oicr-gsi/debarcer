@@ -13,7 +13,7 @@ from itertools import zip_longest
 import base64
 import matplotlib
 import pygal
-import PIL
+from PIL import Image
 
 
 def ResizeFifure(filename, scaling_factor):
@@ -890,9 +890,12 @@ def WriteReport(directory, extension, Outputfile, **Options):
 
     dot_chart.render_to_file('/u/rjovelin/test_chart.svg')    
     
+    # alternately use PIL.Image
+    im = Image.open('/u/rjovelin/test_chart.svg')
+    width, height = im.size
     
-    
-    height, width = ResizeFifure('/u/rjovelin/test_chart.svg', 0.7)
+    height = height * 0.7
+    width = width * 0.7 
     source_image = EncodeImage('/u/rjovelin/test_chart.svg')
       
     
