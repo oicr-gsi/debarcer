@@ -889,7 +889,8 @@ def WriteReport(directory, extension, Outputfile, **Options):
     
 
     L2 = [markdown(i) for i in L]
-    L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
+    #L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
+    L2.append('<embed type="image/svg+xml" src= {0} />'.format(source_image))
     
     # create report string
     #S = ''.join([markdown(i) for i in L])
