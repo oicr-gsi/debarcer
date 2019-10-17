@@ -896,6 +896,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
      
     S = ''.join(L2)
     
+    print(S)
     
     
     newfile = open(Outputfile, 'w')
