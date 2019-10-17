@@ -355,21 +355,14 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     Return a ax object in figure
     '''
     
-    
-    # sort data according to coverage
-    
-    
-    
-    
-    
     # plot total umi and coverage in a single plot if firstax option is used
     if 'firstax' in Options:
-        color = 'grey'
+        color = '#00cccc'
         # plot umi count using axis of 1st graph
         ax = Options['firstax'].twinx()
         ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = color, facecolor = color, marker='o', lw = 1, s = 90, alpha = 0.7)
     else:
-        color =  '#f2e6ff'
+        color = '#ff66ff'
         # add a plot coverage to figure (N row, N column, plot N)
         ax = figure.add_subplot(rows, columns, position)
         # plot data
@@ -425,9 +418,9 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
                 labelsize = 12, direction = 'out')  
     
     # add legend
-    legend_elements = [Line2D([0], [0], marker='o', markeredgecolor='#f2e6ff', markerfacecolor='#f2e6ff',
+    legend_elements = [Line2D([0], [0], marker='o', markeredgecolor='#ff66ff', markerfacecolor='#ff66ff',
                        label='coverage', markersize=8, linestyle='None'),
-                       Line2D([0], [0], marker='o', markeredgecolor='grey', markerfacecolor='grey',
+                       Line2D([0], [0], marker='o', markeredgecolor='#00cccc', markerfacecolor='#00cccc',
                        label='umis', markersize=8, linestyle='None')]
     ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
     
