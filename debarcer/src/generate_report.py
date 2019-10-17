@@ -885,26 +885,17 @@ def WriteReport(directory, extension, Outputfile, **Options):
     dot_chart.add('Opera', [3472, 2933, 4203, 5229, 5810, 1828, 9013, 4669])
     dot_chart.add('IE', [43, 41, 59, 79, 144, 136, 34, 102])
     #dot_chart.render()
-    #source_image = dot_chart.render_data_uri()
+    source_image = dot_chart.render_data_uri()
     # Return `data:image/svg+xml;charset=utf-8;base64,...`
 
-    dot_chart.render_to_file('/u/rjovelin/test_chart.svg')    
-    
-    # alternately use PIL.Image
-    im = Image.open('/u/rjovelin/test_chart.svg')
-    width, height = im.size
-    
-    height = height * 0.7
-    width = width * 0.7 
-    source_image = EncodeImage('/u/rjovelin/test_chart.svg')
-      
+       
     
     
 
     L2 = [markdown(i) for i in L]
     #L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
     
-    L2.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_image, width, height))
+    L2.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_image, 4, 3))
     
     
        
