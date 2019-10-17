@@ -5,7 +5,7 @@ import argparse
 import operator
 import json
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds
-
+import yaml
 
 def get_ref_seq(contig, region_start, region_end, reference):
     '''
@@ -169,7 +169,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
 
 def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans):
     '''
-    (str, str, int, int, str, str, int, bool, bool) -> dict
+    (str, str, int, int, str, str, int, bool, bool) -> (dict, float)
     
     :param ref_seq: Sequence of the reference corresponding to the given region
     :param contig: Chromosome name, eg. chrN
@@ -180,11 +180,16 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
-    Returns a nested dictionary representing counts of each base at each base position.
+    Returns a tuple with a nested dictionary representing counts of each base at each base position,
+    and the average read depth for the given region
     '''
 
     uncollapsed_seq = {}
 
+
+    # make a list to store number of reads 
+    covArray = []
+    
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans):
@@ -192,6 +197,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
             pos = int(pileupcolumn.reference_pos) 
+
+            # record number of read in pileup
+            covArray.append(pileupcolumn.nsegments)
+
             assert pos != region_end  
             # loop over reads in pileup column
             for read in pileupcolumn.pileups:
@@ -222,7 +231,14 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         uncollapsed_seq[pos][allele] = 1
                     else:
                         uncollapsed_seq[pos][allele] += 1
-    return uncollapsed_seq
+    
+    # compute coverage
+    try:
+        coverage = sum(covArray) / len(covArray)
+    except:
+        coverage = 0
+    
+    return uncollapsed_seq, coverage
 
 
 def get_fam_size(FamSize, position):
@@ -357,7 +373,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
 
 def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans):
     '''
-    (str, str, int, int, str, int, bool, bool) -> dict
+    (str, str, int, int, str, int, bool, bool) -> (dict, float)
     
     :param ref_seq: Sequence of the reference corresponding to the given region
     :param contig: Chromosome name, eg. chrN
@@ -368,13 +384,12 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
-    Generates uncollapsed consensus data for the genomic region
+    Returns a dictionary with uncollapsed consensus data for the genomic region,
+    and the average read depth per position for the region
     '''
     
     # get uncolapased seq info {pos: {(ref, atl): count}}
-    uncollapsed_seq = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-    
-    
+    uncollapsed_seq, coverage = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     
     print(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans)
     
@@ -406,7 +421,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
             stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
             
             cons_data[base_pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
-    return cons_data
+    return cons_data, coverage
 
 
 def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold):
@@ -522,13 +537,17 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
         
         # check if 0 is passed as fam_size argument
         if f_size == 0:
-            # compute consensus for uncollapsed data
-            cons_data[f_size] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+            # compute consensus for uncollapsed data, and get coverage
+            cons_data[f_size], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
         else:
             cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-    # compute consensus for uncollapsed data if not in fam_size argument
+    # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
-        cons_data[0] = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+        cons_data[0], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+
+
+
+
 
 
 
@@ -541,5 +560,12 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     # write output consensus file
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold)
+    # save coverage to a yaml in outdir/Stats    
+    StatsDir = os.path.join(outdir, 'Stats')
+    if os.path.isdir(StatsDir) == False:
+        os.mkdir(StatsDir)
+    covdata = {'contig' + ':' + str(region_start+1) + '-' + str(region_end): str(coverage)}
+    with open(os.path.join(StatsDir, 'CoverageStats.yml'), 'a') as newfile:
+        yaml.dump(covdata, newfile, default_flow_style=False)
     
-
+    
