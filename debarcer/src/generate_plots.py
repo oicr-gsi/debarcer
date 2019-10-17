@@ -355,6 +355,13 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     Return a ax object in figure
     '''
     
+    
+    # sort data according to coverage
+    
+    
+    
+    
+    
     # plot total umi and coverage in a single plot if firstax option is used
     if 'firstax' in Options:
         color = 'grey'
@@ -461,6 +468,10 @@ def PlotCoverage(ConsFiles, DataFiles, Outputfile):
     # create a sorted list with sem
     S = [Coverage[i][1] for i in Coordinates]
        
+    # sort umis count and coverage according to coverage
+    L = sorted([(M[i], i) for i in M])
+    Coordinates = [i[1] for i in L]
+    
     # plot data
     ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
     ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
