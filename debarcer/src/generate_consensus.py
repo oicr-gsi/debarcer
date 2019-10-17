@@ -186,7 +186,6 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
 
     uncollapsed_seq = {}
 
-
     # make a list to store number of reads 
     covArray = []
     
@@ -198,39 +197,42 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
             # not only contained within region
             pos = int(pileupcolumn.reference_pos) 
 
-            # record number of read in pileup
-            covArray.append(pileupcolumn.nsegments)
+            # restict pileup columns to genomic region
+            if region_start <= pos < region_end:
 
-            assert pos != region_end  
-            # loop over reads in pileup column
-            for read in pileupcolumn.pileups:
-                # read.indel is indel length of next position 
-                # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                # record number of read in pileup
+                covArray.append(pileupcolumn.nsegments)
+
+                assert pos != region_end  
+                # loop over reads in pileup column
+                for read in pileupcolumn.pileups:
+                    # read.indel is indel length of next position 
+                    # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
                 
-                # get reference and alternative bases
-                if not read.is_del and read.indel == 0:
-                    ref_base = ref_seq[pos - region_start]
-                    alt_base = read.alignment.query_sequence[read.query_position]
-                elif read.indel > 0:
-                    # Next position is an insert (current base is ref)
-                    ref_base = ref_seq[pos - region_start]
-                    alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
-                elif read.indel < 0:
-                    # Next position is a deletion (current base + next bases are ref)
-                    ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
-                    alt_base = read.alignment.query_sequence[read.query_position]
+                    # get reference and alternative bases
+                    if not read.is_del and read.indel == 0:
+                        ref_base = ref_seq[pos - region_start]
+                        alt_base = read.alignment.query_sequence[read.query_position]
+                    elif read.indel > 0:
+                        # Next position is an insert (current base is ref)
+                        ref_base = ref_seq[pos - region_start]
+                        alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                    elif read.indel < 0:
+                        # Next position is a deletion (current base + next bases are ref)
+                        ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
+                        alt_base = read.alignment.query_sequence[read.query_position]
                 
-                # query position is None if is_del or is_refskip is set
-                if not read.is_del and not read.is_refskip:
-                    # add base info
-                    allele = (ref_base, alt_base)
-                    # count the number of reads supporting this allele
-                    if pos not in uncollapsed_seq:
-                        uncollapsed_seq[pos] = {}
-                    if allele not in uncollapsed_seq[pos]:
-                        uncollapsed_seq[pos][allele] = 1
-                    else:
-                        uncollapsed_seq[pos][allele] += 1
+                    # query position is None if is_del or is_refskip is set
+                    if not read.is_del and not read.is_refskip:
+                        # add base info
+                        allele = (ref_base, alt_base)
+                        # count the number of reads supporting this allele
+                        if pos not in uncollapsed_seq:
+                            uncollapsed_seq[pos] = {}
+                        if allele not in uncollapsed_seq[pos]:
+                            uncollapsed_seq[pos][allele] = 1
+                        else:
+                            uncollapsed_seq[pos][allele] += 1
     
     # compute coverage
     try:
