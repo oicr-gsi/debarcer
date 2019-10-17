@@ -892,7 +892,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
     L2 = [markdown(i) for i in L]
     #L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
     
-    L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_image, 800, 800))
+    L2.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_image, 800, 800))
     
     
        
@@ -900,9 +900,9 @@ def WriteReport(directory, extension, Outputfile, **Options):
     #L2.append('<embed type="image/svg+xml" src= {0} />'.format(source_image))
     
     # create report string
-    S = ''.join([markdown(i) for i in L])
+    #S = ''.join([markdown(i) for i in L])
      
-    #S = ''.join(L2)
+    S = ''.join(L2)
     
       
     
