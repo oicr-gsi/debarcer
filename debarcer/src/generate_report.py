@@ -890,7 +890,7 @@ def WriteReport(directory, extension, Outputfile, **Options):
     dot_chart.render_to_file('/u/rjovelin/test_chart.svg')
        
     source_image = EncodeImage('/u/rjovelin/test_chart.svg')
-       
+    print(source_image) 
 
     L2 = [markdown(i) for i in L]
     #L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
