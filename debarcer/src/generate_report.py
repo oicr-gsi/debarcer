@@ -12,7 +12,7 @@ import scipy.ndimage
 from itertools import zip_longest
 import base64
 import matplotlib
-
+import pygal
 
 def ResizeFifure(filename, scaling_factor):
     '''
