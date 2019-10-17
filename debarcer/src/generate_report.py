@@ -886,15 +886,18 @@ def WriteReport(directory, extension, Outputfile, **Options):
     source_image = dot_chart.render_data_uri()
     # Return `data:image/svg+xml;charset=utf-8;base64,...`
 
-    L.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
     
 
-
-
-
+    L2 = [markdown(i) for i in L]
+    L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
+    
     # create report string
-    S = ''.join([markdown(i) for i in L])
+    #S = ''.join([markdown(i) for i in L])
      
+    S = ''.join(L2)
+    
+    
+    
     newfile = open(Outputfile, 'w')
     newfile.write(S)
     newfile.close()
