@@ -398,19 +398,10 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
         ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
         # hide these grids behind plot objects
         ax.set_axisbelow(True)
-    
-        # do not show ticks
-        plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelleft=False, labelbottom=False, colors = 'black',
-                labelsize = 12, direction = 'out') 
-    
     else:
         # write label for y axis
         ax.set_ylabel('Total umis per region', color = 'black',  size = 14, ha = 'center')
-        # do not show ticks
-        plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelleft=False, labelbottom=False, colors = 'black',
-                labelsize = 12, direction = 'out') 
+         
         
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
@@ -421,7 +412,14 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     ax.spines["bottom"].set_visible(True)    
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
-     
+    # offset the spines
+    for spine in ax.spines.values():
+        spine.set_position(('outward', 7))
+    
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+            right=False, left=False, labelleft=False, labelbottom=False, colors = 'black',
+            labelsize = 12, direction = 'out')
     
     # add legend
     legend_elements = [Line2D([0], [0], marker='o', markeredgecolor='#ff66ff', markerfacecolor='#ff66ff',
@@ -429,10 +427,6 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
                        Line2D([0], [0], marker='o', markeredgecolor='#00cccc', markerfacecolor='#00cccc',
                        label='umis', markersize=8, linestyle='None')]
     ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
-    
-     
-    
-    
     
     return ax
 
