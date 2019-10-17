@@ -412,10 +412,6 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
      
-    # do not show ticks
-    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelleft=False, labelbottom=True, colors = 'black',
-                labelsize = 12, direction = 'out')  
     
     # add legend
     legend_elements = [Line2D([0], [0], marker='o', markeredgecolor='#ff66ff', markerfacecolor='#ff66ff',
@@ -423,6 +419,13 @@ def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Optio
                        Line2D([0], [0], marker='o', markeredgecolor='#00cccc', markerfacecolor='#00cccc',
                        label='umis', markersize=8, linestyle='None')]
     ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
+    
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelleft=False, labelbottom=False, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    
+    
     
     return ax
 
