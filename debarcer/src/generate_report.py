@@ -873,6 +873,25 @@ def WriteReport(directory, extension, Outputfile, **Options):
     # add figures from Collapsing section and update figure counter
     figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
 
+
+
+    dot_chart = pygal.Dot(x_label_rotation=30)
+    dot_chart.title = 'V8 benchmark results'
+    dot_chart.x_labels = ['Richards', 'DeltaBlue', 'Crypto', 'RayTrace', 'EarleyBoyer', 'RegExp', 'Splay', 'NavierStokes']
+    dot_chart.add('Chrome', [6395, 8212, 7520, 7218, 12464, 1660, 2123, 8607])
+    dot_chart.add('Firefox', [7473, 8099, 11700, 2651, 6361, 1044, 3797, 9450])
+    dot_chart.add('Opera', [3472, 2933, 4203, 5229, 5810, 1828, 9013, 4669])
+    dot_chart.add('IE', [43, 41, 59, 79, 144, 136, 34, 102])
+    #dot_chart.render()
+    source_image = dot_chart.render_data_uri()
+    # Return `data:image/svg+xml;charset=utf-8;base64,...`
+
+    L.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
+    
+
+
+
+
     # create report string
     S = ''.join([markdown(i) for i in L])
      
