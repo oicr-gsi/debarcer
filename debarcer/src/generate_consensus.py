@@ -240,7 +240,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     except:
         coverage = 0
     
-    return uncollapsed_seq, coverage
+    return uncollapsed_seq, round(coverage, 2)
 
 
 def get_fam_size(FamSize, position):
