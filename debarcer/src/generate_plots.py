@@ -16,8 +16,8 @@ from matplotlib import rc
 #rc('mathtext', default='regular')
 import numpy as np
 from scipy import stats
-#from src.utilities import edit_distance, FormatRegion
-#from src.umi_error_correct import most_frequent
+from src.utilities import edit_distance, FormatRegion
+from src.umi_error_correct import most_frequent
 import networkx as nx
 import json
 import collections
@@ -391,7 +391,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                 if ptu != 0:
                     data[region] = ctu/ptu
                 Ytitle = 'Child:Parent Ratio'
-                Title = "Interval vs. Children to Parent UMIs"
+                Title = "Children to Parent UMIs"
             elif datatype == 'umis':
                 # get total parent umis for each region
                 data[region] = ptu
