@@ -811,6 +811,10 @@ if __name__ == '__main__':
                           help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
     r_parser.add_argument('-db', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',
                           help='Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py')
+    r_parser.add_argument('-mv', '--MinCov', dest='mincov', type=float, default=1000, help='Minimum coverage value. Values below are plotted in red')
+    r_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.5, help='Minimum children to parent umi ratio. Values below are plotted in red')
+    r_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=float, default=1000, help='Minimum umi count. Values below are plotted in red')
+    r_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=float, default=500, help='Minimum children umi count. Values below are plotted in red')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 
@@ -836,6 +840,10 @@ if __name__ == '__main__':
     report_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories including Figures', required=True)
     report_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
     report_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name. Optional. Directory basename is sample name if not provided')
+    report_parser.add_argument('-mv', '--MinCov', dest='mincov', type=float, default=1000, help='Minimum coverage value. Values below are plotted in red')
+    report_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.5, help='Minimum children to parent umi ratio. Values below are plotted in red')
+    report_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=float, default=1000, help='Minimum umi count. Values below are plotted in red')
+    report_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=float, default=500, help='Minimum children umi count. Values below are plotted in red')
     report_parser.set_defaults(func=generate_report)
         
     args = parser.parse_args()
