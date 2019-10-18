@@ -566,7 +566,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     StatsDir = os.path.join(outdir, 'Stats')
     if os.path.isdir(StatsDir) == False:
         os.mkdir(StatsDir)
-    covdata = {'contig' + ':' + str(region_start+1) + '-' + str(region_end): str(coverage)}
+    covdata = {'contig' + ':' + str(region_start+1) + '-' + str(region_end): coverage}
     with open(os.path.join(StatsDir, 'CoverageStats.yml'), 'a') as newfile:
         yaml.dump(covdata, newfile, default_flow_style=False)
     
