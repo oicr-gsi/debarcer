@@ -14,7 +14,8 @@ from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThr
 from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
  PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
  PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
- PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo, PlotIncorrectReads
+ PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo, PlotIncorrectReads, \
+ PlotDataPerRegion
 from src.generate_report import WriteReport    
 
 import matplotlib.pyplot as plt
@@ -494,6 +495,9 @@ def generate_plots(args):
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.json']
     # make a list of files with individual umi information
     UmiInfoFiles = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('Umis_') and i[-5:] == '.json' and 'before_grouping' in i]
+
+    # get the file with coverage stats
+    CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
     
     # check that paths to files are valid. raise ValueError if file invalid
     CheckFilePath(ConsFiles + DataFiles + UmiFiles + UmiInfoFiles)
@@ -541,7 +545,9 @@ def generate_plots(args):
     print('PlotCoverage')
     
     PlotCoverage(ConsFiles, DataFiles, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
-            
+    
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
+
     # plot graphs for each consensus file
     for filename in ConsFiles:
         
@@ -639,6 +645,8 @@ def generate_plots(args):
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
         
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
+
     
     print('PlotUmiCounts')
     
@@ -647,6 +655,8 @@ def generate_plots(args):
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
     
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
+
     
     print('PlotUmiCounts')
     
@@ -654,6 +664,9 @@ def generate_plots(args):
     # plot children umi counts
     plt.clf(), plt.cla()
     PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
+    
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
+
     
     
     print('PlotParentsToChildrenCounts')
@@ -812,6 +825,10 @@ if __name__ == '__main__':
     plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
     plot_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name to apear in the report is reporting flag activated. Optional')
     plot_parser.add_argument('-r', '--Report', dest='report', choices=[False, True], type=ConvertArgToBool, default=True, help='Generate a report if activated. Default is True')
+    plot_parser.add_argument('-mv', '--MinCov', dest='mincov', type=float, default=1000, help='Minimum coverage value. Values below are plotted in red')
+    plot_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.5, help='Minimum children to parent umi ratio. Values below are plotted in red')
+    plot_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=float, default=1000, help='Minimum umi count. Values below are plotted in red')
+    plot_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=float, default=500, help='Minimum children umi count. Values below are plotted in red')
     plot_parser.set_defaults(func=generate_plots)
     
     ## Generate report
