@@ -1031,123 +1031,123 @@ def ComputeIntervalSize(Coordinates):
     
    
 
-#def PlotUmiCounts(DataFiles, Outputfile, Graph):
-#    '''
-#    (list, str, str, dict) -> None
-#    
-#    :param DataFiles: List of .csv data files generated after umi groouping 
-#    :param Outputfile: Name of the output figure file 
-#    :param Graph: Type of data to plot. Accepted values:
-#                  'ratio': children to parent umis ratio
-#                  'parents': total umi count
-#                  'children': children umi count 
-#       
-#    Generates a plot with umi counts (children, parents or children to parents ratio)
-#    
-#    Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
-#    '''
-#    
-#    # extract umi counts for each region
-#    L = [ExtractUmiCounts(i) for i in DataFiles]
-#     
-#    Data = {}
-#    for d in L:
-#        region = list(d.keys())[0]
-#        ptu, ctu = d[region]['PTU'], d[region]['CTU']
-#        if Graph == 'ratio':
-#            # compute child/parent umi ratios for each region        
-#            if ptu != 0:
-#                Data[region] = ctu/ptu
-#        elif Graph == 'parents':
-#            # plot total parent umis
-#            Data[region] = ptu
-#        elif Graph == 'children':
-#            # plot children umis
-#            Data[region] = ctu
-#        
-#    # get a sorted list of positions
-#    Coordinates = SortPositions(list(Data.keys()))
-#    
-#    # clear previous axes
-#    plt.clf()
-#    #plt.gcf().set_size_inches(9, 6, forward=True) 
-#        
-#    # create figure
-#    figure = plt.figure(1, figsize = (9, 6))
-#    # add a plot coverage to figure (N row, N column, plot N)
-#    ax = figure.add_subplot(1, 1, 1)
-#
-#    # plot data for each region
-#    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 130, alpha = 1, clip_on=False)
-#    # make a list of genomic regions 
-#    Chromos = []
-#    for i in Coordinates:
-#        i = i.split(':')
-#        Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
-#    
-#    # limit y axis to maximum value
-#    YMax = [Data[i] for i in Data]
-#    YMax = max(YMax)
-#    # add 10% to max value
-#    YMax = YMax + (YMax * 10/100)
-#    ax.set_ylim([0, YMax])
-#    
-#    # set Y axis ticks
-#    if Graph == 'ratio':
-#        step = round(YMax/10, 2)    
-#        # set y ticks    
-#        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-#    elif Graph == 'parents' or Graph == 'children':
-#        # set y ticks    
-#        step = SetUpTicks(YMax)
-#        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-#                
-#    # set title and Y axis label
-#    if Graph == 'ratio':
-#        YLabel = 'Child:Parent Ratio'
-#        Title = "Interval vs. Children to Parent UMIs"
-#    elif Graph == 'parents':
-#        YLabel = 'Number of parent UMIs'
-#        Title = "Total UMI counts"
-#    elif Graph == 'children':
-#        YLabel = 'Number of children UMIs'
-#        Title = "Children UMI counts"
-#        
-#    # write label for y axis
-#    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
-#    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
-#        
-#    # write title   
-#    ax.set_title(Title, size = 14)
-#    
-#    # write label for x axis
-#    xPos = [i for i in range(len(Coordinates))]
-#    plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
-#               
-#    # add space between axis and tick labels
-#    ax.yaxis.labelpad = 18
-#    ax.xaxis.labelpad = 18
-#    
-#    # do not show lines around figure  
-#    ax.spines["top"].set_visible(False)    
-#    ax.spines["bottom"].set_visible(True)    
-#    ax.spines["right"].set_visible(False)    
-#    ax.spines["left"].set_visible(False)  
-#    # offset the spines
-#    for spine in ax.spines.values():
-#        spine.set_position(('outward', 7))
-#    
-#    # do not show ticks
-#    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-#                right=False, left=False, labelbottom=True, colors = 'black',
-#                labelsize = 12, direction = 'out')  
-#    
-#    # add a light grey horizontal grid to the plot, semi-transparent, 
-#    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-#    # hide these grids behind plot objects
-#    ax.set_axisbelow(True)
-#    
-#    figure.savefig(Outputfile, bbox_inches = 'tight')
+def PlotUmiCounts(DataFiles, Outputfile, Graph):
+    '''
+    (list, str, str, dict) -> None
+    
+    :param DataFiles: List of .csv data files generated after umi groouping 
+    :param Outputfile: Name of the output figure file 
+    :param Graph: Type of data to plot. Accepted values:
+                  'ratio': children to parent umis ratio
+                  'parents': total umi count
+                  'children': children umi count 
+       
+    Generates a plot with umi counts (children, parents or children to parents ratio)
+    
+    Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
+    '''
+    
+    # extract umi counts for each region
+    L = [ExtractUmiCounts(i) for i in DataFiles]
+     
+    Data = {}
+    for d in L:
+        region = list(d.keys())[0]
+        ptu, ctu = d[region]['PTU'], d[region]['CTU']
+        if Graph == 'ratio':
+            # compute child/parent umi ratios for each region        
+            if ptu != 0:
+                Data[region] = ctu/ptu
+        elif Graph == 'parents':
+            # plot total parent umis
+            Data[region] = ptu
+        elif Graph == 'children':
+            # plot children umis
+            Data[region] = ctu
+        
+    # get a sorted list of positions
+    Coordinates = SortPositions(list(Data.keys()))
+    
+    # clear previous axes
+    plt.clf()
+    #plt.gcf().set_size_inches(9, 6, forward=True) 
+        
+    # create figure
+    figure = plt.figure(1, figsize = (9, 6))
+    # add a plot coverage to figure (N row, N column, plot N)
+    ax = figure.add_subplot(1, 1, 1)
+
+    # plot data for each region
+    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 130, alpha = 1, clip_on=False)
+    # make a list of genomic regions 
+    Chromos = []
+    for i in Coordinates:
+        i = i.split(':')
+        Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
+    
+    # limit y axis to maximum value
+    YMax = [Data[i] for i in Data]
+    YMax = max(YMax)
+    # add 10% to max value
+    YMax = YMax + (YMax * 10/100)
+    ax.set_ylim([0, YMax])
+    
+    # set Y axis ticks
+    if Graph == 'ratio':
+        step = round(YMax/10, 2)    
+        # set y ticks    
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+    elif Graph == 'parents' or Graph == 'children':
+        # set y ticks    
+        step = SetUpTicks(YMax)
+        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
+                
+    # set title and Y axis label
+    if Graph == 'ratio':
+        YLabel = 'Child:Parent Ratio'
+        Title = "Interval vs. Children to Parent UMIs"
+    elif Graph == 'parents':
+        YLabel = 'Number of parent UMIs'
+        Title = "Total UMI counts"
+    elif Graph == 'children':
+        YLabel = 'Number of children UMIs'
+        Title = "Children UMI counts"
+        
+    # write label for y axis
+    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
+    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
+        
+    # write title   
+    ax.set_title(Title, size = 14)
+    
+    # write label for x axis
+    xPos = [i for i in range(len(Coordinates))]
+    plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
+               
+    # add space between axis and tick labels
+    ax.yaxis.labelpad = 18
+    ax.xaxis.labelpad = 18
+    
+    # do not show lines around figure  
+    ax.spines["top"].set_visible(False)    
+    ax.spines["bottom"].set_visible(True)    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["left"].set_visible(False)  
+    # offset the spines
+    for spine in ax.spines.values():
+        spine.set_position(('outward', 7))
+    
+    # do not show ticks
+    plt.tick_params(axis='both', which='both', bottom=True, top=False,
+                right=False, left=False, labelbottom=True, colors = 'black',
+                labelsize = 12, direction = 'out')  
+    
+    # add a light grey horizontal grid to the plot, semi-transparent, 
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
+    # hide these grids behind plot objects
+    ax.set_axisbelow(True)
+    
+    figure.savefig(Outputfile, bbox_inches = 'tight')
 
 
 
