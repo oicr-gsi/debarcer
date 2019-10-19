@@ -404,7 +404,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                 Title = "Children UMIs"
      
     # sort coordinates according to data values
-    L = sorted([(data[i], i) for i in data])
+    L = list(reversed(sorted([(data[i], i) for i in data])))
     Coordinates = [i[1] for i in L]
     dataVals = [data[i] for i in Coordinates]
         
