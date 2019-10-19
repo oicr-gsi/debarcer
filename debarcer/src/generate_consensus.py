@@ -240,6 +240,9 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     except:
         coverage = 0
     
+    print('coverage', coverage)
+    
+    
     return uncollapsed_seq, round(coverage, 2)
 
 
@@ -513,7 +516,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     
-    Generates consensus output file
+    Generates consensus output file and yaml file with coverage for each region
     '''
     
     # get minimum umi family sizes
