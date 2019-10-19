@@ -11,9 +11,10 @@ import os
 import scipy.ndimage
 from itertools import zip_longest
 import base64
-import matplotlib
+import matplotlib.pyplot as plt
 import pygal
 from PIL import Image
+from src.generate_plots import PlotDataPerRegion
 
 
 def ResizeFifure(filename, scaling_factor):
@@ -277,7 +278,7 @@ def AddSubheader(L, N, color, num1, num2, font_family, text):
     return num2
 
 
-def AddCoverageFig(L, font_family, extension, FigPaths, figcounter, N):
+def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPaths, figcounter, N):
     '''
     (list, str, str, dict, int)- > int
     
@@ -316,6 +317,13 @@ def AddCoverageFig(L, font_family, extension, FigPaths, figcounter, N):
         figcounter += 1
     # append empty line
     L.append('<pre> </pre>' * N)
+    
+    
+    # add coverage fig
+    source_fig = PlotDataPerRegion(CovStats, DataFiles, mincov=mincov, datatype='coverage')
+    L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
+    
+    
     return figcounter
 
 
@@ -801,7 +809,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     return figcounter
 
 
-def WriteReport(directory, extension, Outputfile, **Options):
+def WriteReport(directory, extension, Outputfile, mincov, **Options):
     '''
     (str, str, str, dict) -> None
     
@@ -812,6 +820,24 @@ def WriteReport(directory, extension, Outputfile, **Options):
         
     Write an html report of debarcer analysis for a given sample
     '''
+    
+    # get subdirectories
+    L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles', 'Figures']
+    T = [os.path.join(directory, i) for i in L]
+    for i in T:
+        if os.path.isdir(i) == False:
+            raise ValueError('ERR: Expecting directory {0}'.format(i))
+    # unpack directories
+    ConsDir, UmiDir, StatsDir, DataDir, FigDir =  T 
+    # make a list of datafiles with umis that are not empty
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
+#    # remove empty files in place and print a warning
+#    DropEmptyFiles(DataFiles)
+    # get the file with coverage stats
+    CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
+    
+    # check that paths to files are valid. raise ValueError if file invalid
+    #CheckFilePath(DataFiles + [CovStats])
     
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
@@ -852,9 +878,25 @@ def WriteReport(directory, extension, Outputfile, **Options):
     ## Coverage section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Coverage')
     # add figures from pre-processing, update figure counter 
-    figcounter = AddCoverageFig(L, font_family, 'png', FigPaths, figcounter, 1) 
+    figcounter = AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, 'png', FigPaths, figcounter, 1) 
+    
     # add spacer line
     AddSpacerLine(L)
+    
+    
+    ########
+    
+    
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
+
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
+
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
+
+    
+    
+    ###########
+    
     
     ## Pre-grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi distribution before family grouping')
