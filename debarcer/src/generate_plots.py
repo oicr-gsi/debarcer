@@ -436,14 +436,11 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                          label_font_size=12,
                          base_style=DefaultStyle)
     # set number of columns for legend
-    if 'minval' in Options:
-        if minval > 0:
-            ncol=2
-        else:
-            ncol=1
+    if len(low_data) != 0:
+        ncol=2
     else:
         ncol=1
-    
+        
     # use scatter plot
     xy_chart = pygal.XY(stroke=False, show_legend=True,
                         human_readable=True, fill=False,
@@ -458,10 +455,15 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                         legend_at_bottom=True,
                         legend_at_bottom_columns=ncol,
                         title=Title)
-    if 'minval' in Options:
-        xy_chart.add({'title':'High'.format(minval), 'color':'blue'}, high_data)
+    
+    if len(low_data) != 0:
         xy_chart.add({'title':'Low (< {0})'.format(minval), 'color':'red'}, low_data)
-    else:
+    if len(high_data) != 0:
+        if len(low_data) == 0:
+            xy_chart.add({'title':'Read depth'.format(minval), 'color':'blue'}, high_data)
+        else:
+            xy_chart.add({'title':'High'.format(minval), 'color':'blue'}, high_data)
+    if len(all_data) != 0:
         xy_chart.add({'title':'Read depth', 'color':'blue'}, all_data)
     
     # save as svg by default if outputfile provided
