@@ -695,7 +695,7 @@ def generate_plots(args):
         if os.path.isdir(ReportDir) == False:
             os.mkdir(ReportDir)
         report = os.path.join(ReportDir, 'debarcer_report.html')
-        WriteReport(args.directory, args.extension, report, sample=args.sample)
+        WriteReport(args.directory, args.extension, report, args.mincov, sample=args.sample)
 
 
 def generate_report(args):
