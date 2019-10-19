@@ -569,17 +569,17 @@ def generate_plots(args):
         PlotNonRefFreqData(filename, Colors, Outputfile, ylabel='Non-reference allele frequency')
     
     
-        print('PlotNonRefFreqData LOW')
-    
-    
-        # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
-        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
-        plt.clf(), plt.cla()
-        freqlimit = 10
-        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=freqlimit, title='Y axis cut at {0}%'.format(freqlimit), legend='legend')
+#        print('PlotNonRefFreqData LOW')
+#    
+#    
+#        # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
+#        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
+#        plt.clf(), plt.cla()
+#        freqlimit = 10
+#        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=freqlimit, title='Y axis cut at {0}%'.format(freqlimit), legend='legend')
         
         
-        print('PlotConsDepth')
+#        print('PlotConsDepth')
         
         
         
