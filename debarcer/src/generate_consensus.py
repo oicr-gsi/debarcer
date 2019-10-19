@@ -240,9 +240,6 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     except:
         coverage = 0
     
-    print('coverage', coverage)
-    
-    
     return uncollapsed_seq, round(coverage, 2)
 
 
@@ -570,6 +567,9 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     if os.path.isdir(StatsDir) == False:
         os.mkdir(StatsDir)
     covdata = {'contig' + ':' + str(region_start+1) + '-' + str(region_end): coverage}
+    print('coverage', covdata)
+    
+    
     with open(os.path.join(StatsDir, 'CoverageStats.yml'), 'a') as newfile:
         yaml.dump(covdata, newfile, default_flow_style=False)
     
