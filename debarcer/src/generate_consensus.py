@@ -563,10 +563,10 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold)
     # save coverage to a yaml in outdir/Stats    
-    StatsDir = os.path.join(outdir, 'Stats')
+    StatsDir = os.path.join(os.path.dirname(outdir), 'Stats')
     if os.path.isdir(StatsDir) == False:
         os.mkdir(StatsDir)
-    covdata = {'contig' + ':' + str(region_start+1) + '-' + str(region_end): coverage}
+    covdata = {contig + ':' + str(region_start+1) + '-' + str(region_end): coverage}
     print('coverage', covdata)
     
     
