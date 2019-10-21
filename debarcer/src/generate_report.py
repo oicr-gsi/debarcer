@@ -298,7 +298,7 @@ def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPa
 
     # add coverage fig
     try:
-        source_fig = PlotDataPerRegion(CovStats, DataFiles, mincov=mincov, datatype='coverage')
+        source_fig = PlotDataPerRegion(CovStats, DataFiles, minval=mincov, datatype='coverage')
         # add figure
         L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
         # add legend
@@ -488,14 +488,19 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N,
         
 
 
-def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num, renderer):
+def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minratio,minumis,minchildren, figcounter, N, num, renderer):
     '''
-    (list, str, str, dict, int, int, int, mistune.Markdown)- > int
+    (list, str, str, dict, float, int, int,  int, int, int, mistune.Markdown)- > int
     
     :param L: List with report strings
     :param font_family: Comma-separated text fonts
     :param extension: Extension of the figure files
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    :param CovStats: yaml file with mean read depth per region
+    :param DataFiles:  List of .csv fles with umi counts
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
     :param num: Number of the header of the Grouping section
@@ -509,26 +514,78 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num, rendere
     subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'QC plots across regions', renderer)
             
     # add description of the figures
-    L.append('<p style="text-align: left; font-family:{0}; font-size:18px">Number of parent and children umis\
-             following family grouping for each genomic interval</p>'.format(font_family))
-    L.append('<pre> </pre>')
+    L.append(renderer('<p style="text-align: left; font-family:{0}; font-size:18px">Number of parent and children umis\
+             following family grouping for each genomic interval</p>'.format(font_family)))
+    L.append(renderer('<pre> </pre>'))
 
     # 1. add figures of umi counts across regions
 
     # keys to access figures in this order
-    keys = ['total', 'children', 'ratio', 'interval', 'freq']
-    Maps = {'total':['Total_Umis.', 'Umi counts per genomic interval', 0.75, 'total umis'],
-            'children':['Children_Umis.', 'Count of children umis per interval', 0.75, 'children umis'],
-            'ratio':['Child_Parent_Umis_Ratio.', 'Child to parent umi ratios per interval', 0.75, 'ratio'],
-            'interval':['PTU_vs_CTU.', 'Relationship between parent and children umi counts with interval sizes', 0.85, 'interval size'],
-            'freq':['Children_vs_ParentFreq.', 'Frequency of parent umis with a given number of children for each interval', 0.85, 'frequency']}
+    keys = ['interval', 'freq']
+    Maps = {'interval':['PTU_vs_CTU.{0}', 'Relationship between parent and children umi counts with interval sizes', 0.85, 'interval size'],
+            'freq':['Children_vs_ParentFreq.{0}', 'Frequency of parent umis with a given number of children for each interval', 0.85, 'frequency']}
     
     # add warning for missing files
-    missing = '<br>'.join([Maps[i][0] for i in Maps if FigPaths[i] == '']).format(extension)
+    missing = [Maps[i][0].format(extension) for i in Maps if FigPaths[i] == '']
+    svgfigs = ['Total_umis.svg', 'Children_Umis.svg', 'Child_Parent_Umis_Ratio.svg']
+    minvals = [minratio,minumis,minchildren]
+    datatypes = ['umis', 'children', 'ratio']
+    # check if missing svg
+    for i in range(len(svgfigs)):
+        try:
+            PlotDataPerRegion(CovStats, DataFiles, minval=minvals[i], datatype=datatypes[i])
+        except:
+            missing.append(svgfigs[i])
+    missing = '<br>'.join(missing)
     if len(missing) != 0:
-        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
-        L.append('<pre> </pre>')
+        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        L.append(renderer('<pre> </pre>'))
 
+
+
+   #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
+
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
+ 
+
+    # add svg figs
+    try:
+        source_fig = PlotDataPerRegion(CovStats, DataFiles, minval=minumis, datatype='umis')
+        # add figure
+        L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
+        # add legend
+        legends = '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Umi counts per genomic interval</span>'.format(font_family, figcounter)
+        L.append(renderer(legends))
+        # update figure counter
+        figcounter += 1
+    except:
+        source_fig = ''
+    
+    try:
+        source_fig = PlotDataPerRegion(CovStats, DataFiles, minval=minchildren, datatype='children')
+        # add figure
+        L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
+        # add legend
+        legends = '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Count of children umis per interval</span>'.format(font_family, figcounter)
+        L.append(renderer(legends))
+        # update figure counter
+        figcounter += 1
+    except:
+        source_fig = ''
+    
+    try:
+        source_fig = PlotDataPerRegion(CovStats, DataFiles, minval=minchildren, datatype='ratio')
+        # add figure
+        L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
+        # add legend
+        legends = '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Child to parent umi ratios per interval</span>'.format(font_family, figcounter)
+        L.append(renderer(legends))
+        # update figure counter
+        figcounter += 1
+    except:
+        source_fig = ''
+    
+    
     # make groups of non-empty figure pairs
     group_fig = 2
     Lgds = [Maps[keys[i]][1] for i in range(len(keys)) if FigPaths[keys[i]] != '']
