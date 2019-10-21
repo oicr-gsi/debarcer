@@ -968,7 +968,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     ## Collapsing section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi family Collapsing', renderer)
     # add figures from Collapsing section and update figure counter
-    figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
+    figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum, renderer)
 
     # create report string
     S = ''.join(L)
