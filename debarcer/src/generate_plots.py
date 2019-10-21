@@ -419,7 +419,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
             minval = 0
         for i in range(len(dataVals)):
             if datatype == 'ratio':
-                print(dataVals[i], minval, dataVals[i] < minval)
+                print(datatype, dataVals[i], minval, dataVals[i] < minval)
             if dataVals[i] < minval:
                 low_data.append({'value': (i, dataVals[i]), 'color':'red',
                                  'label':Coordinates[i]})
