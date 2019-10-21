@@ -445,8 +445,8 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
     # use scatter plot
     xy_chart = pygal.XY(stroke=False, show_legend=True,
                         human_readable=True, fill=False,
-                        show_x_labels=False, width=800,
-                        height=400, spacing=10, max_scale=10,
+                        show_x_labels=False,
+                        spacing=10, max_scale=10,
                         dots_size=5, truncate_legend=-1,
                         legend_box_size=18,
                         dynamic_print_values=True, style=custom_style,
@@ -457,6 +457,12 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                         legend_at_bottom_columns=ncol,
                         title=Title,
                         explicit_size=True)
+
+#                        width=800,
+#                        height=400,
+
+
+
     
     if len(low_data) != 0:
         xy_chart.add({'title':'Low (< {0})'.format(minval), 'color':'red'}, low_data)
