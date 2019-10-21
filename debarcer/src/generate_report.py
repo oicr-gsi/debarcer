@@ -961,7 +961,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     ## Grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi Grouping', renderer)
     # add figures from Grouping section and update figure counter
-    figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1, headernum, renderer)
+    figcounter = AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minratio,minumis,minchildren, figcounter, 1, headernum, renderer)
     # add spacer line
     AddSpacerLine(L, renderer)
     
