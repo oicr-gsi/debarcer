@@ -11,10 +11,8 @@ import os
 import scipy.ndimage
 from itertools import zip_longest
 import base64
-import matplotlib.pyplot as plt
-import pygal
 from src.generate_plots import PlotDataPerRegion
-
+from src.utilities import DropEmptyFiles, CheckFilePath
 
 def ResizeFifure(filename, scaling_factor):
     '''
@@ -870,13 +868,11 @@ def GetSampleName(directory, **Options):
     return sample
     
 
-def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, minratio,minumis,minchildren, renderer=mistune.Markdown(), **Options):
+def WriteReport(directory, extension, Outputfile, mincov, minratio, minumis, minchildren, renderer=mistune.Markdown(), **Options):
     '''
     (str, str, list, str, str, float, mistune.Markdown, dict) -> None
     
     :param directory: Directory with subfolders including Figures
-    :param CovStats: yaml file with mean read depth per region
-    :param DataFiles:  List of .csv fles with umi counts 
     :param extension: Extension of the figure files
     :param Outputfile: Name of the html report
     :param mincov: Minimum read depth to label regions
@@ -889,6 +885,23 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     Write an html report of debarcer analysis for a given sample
     '''
 
+    # get subdirectories
+    L = ['Stats', 'Datafiles', 'Figures']
+    T = [os.path.join(directory, i) for i in L]
+    for i in T:
+        if os.path.isdir(i) == False:
+            raise ValueError('ERR: Expecting directory {0}'.format(i))
+    # unpack directories
+    StatsDir, DataDir, FigDir =  T 
+    # make a list of datafiles with umis that are not empty and not merged
+    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
+    # remove empty files in place and print a warning
+    DropEmptyFiles(DataFiles)
+    # get the file with coverage stats
+    CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
+    # check that paths to files are valid. raise ValueError if file invalid
+    CheckFilePath(DataFiles + [CovStats])
+    
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
         
@@ -920,7 +933,6 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Coverage', renderer)
     # add figures from pre-processing, update figure counter 
     figcounter = AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, 'png', FigPaths, figcounter, 1, renderer) 
-    
     # add spacer line
     AddSpacerLine(L, renderer)
     
