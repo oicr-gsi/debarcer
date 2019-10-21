@@ -696,8 +696,8 @@ def generate_plots(args):
         if os.path.isdir(ReportDir) == False:
             os.mkdir(ReportDir)
         report = os.path.join(ReportDir, 'debarcer_report.html')
-        WriteReport(args.directory, args.extension, report, args.mincov, sample=args.sample)
-
+        WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
+            
 
 def generate_report(args):
     '''
@@ -711,30 +711,14 @@ def generate_report(args):
     Write an html report of debarcer analysis for a given sample
     '''
     
-    # get subdirectories
-    L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles', 'Figures']
-    T = [os.path.join(args.directory, i) for i in L]
-    for i in T:
-        if os.path.isdir(i) == False:
-            raise ValueError('ERR: Expecting directory {0}'.format(i))
-    # unpack directories
-    ConsDir, UmiDir, StatsDir, DataDir, FigDir =  T 
-    # make a list of datafiles with umis that are not empty and not merged
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
-    # remove empty files in place and print a warning
-    DropEmptyFiles(DataFiles)
-    # get the file with coverage stats
-    CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
-    # check that paths to files are valid. raise ValueError if file invalid
-    CheckFilePath(DataFiles + [CovStats])
-    
     # create subdirectory
     ReportDir = os.path.join(args.directory, 'Report')
     if os.path.isdir(ReportDir) == False:
         os.mkdir(ReportDir)
     report = os.path.join(ReportDir, 'debarcer_report.html')
-    WriteReport(args.directory, CovStats, DataFiles, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
+    WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
     
+
        
 if __name__ == '__main__':
         
