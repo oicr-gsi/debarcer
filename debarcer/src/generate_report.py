@@ -891,6 +891,15 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     Write an html report of debarcer analysis for a given sample
     '''
 
+
+    print('mincov', mincov, type(mincov))
+    print('minratio', minratio, type(minratio))
+    print('minumis', minumis, type(minumis))
+    print('minchildren', minchildren, type(minchildren))
+    
+
+
+
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
         
