@@ -733,7 +733,7 @@ def generate_report(args):
     if os.path.isdir(ReportDir) == False:
         os.mkdir(ReportDir)
     report = os.path.join(ReportDir, 'debarcer_report.html')
-    WriteReport(args.directory, CovStats, DataFiles, args.extension, report, args.mincov, renderer=mistune.Markdown(), sample=args.sample)
+    WriteReport(args.directory, CovStats, DataFiles, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
     
        
 if __name__ == '__main__':

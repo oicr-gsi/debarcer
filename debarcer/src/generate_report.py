@@ -108,10 +108,9 @@ def ListExpectedFigures(directory, extension):
     D = {}
     
     # map expected figures to figure names for aggregate figures across regions
-    N = ['reads', 'preprocessing', 'coverage', 'ratio', 'total', 'children',
-         'interval', 'freq']
-    L = ['Proportion_correct_reads.', 'UMI_occurence_preprocessing.', 'Coverage_Umi_Count.',
-         'Child_Parent_Umis_Ratio.', 'Total_Umis.', 'Children_Umis.', 'PTU_vs_CTU.', 'Children_vs_ParentFreq.']
+    N = ['reads', 'preprocessing', 'ratio', 'total', 'children', 'interval', 'freq']
+    L = ['Proportion_correct_reads.', 'UMI_occurence_preprocessing.', 'Child_Parent_Umis_Ratio.',
+         'Total_Umis.', 'Children_Umis.', 'PTU_vs_CTU.', 'Children_vs_ParentFreq.']
     
     for i in range(len(N)):
         D[N[i]] = GetExpectedFigure(FigDir, extension, L[i])
@@ -154,12 +153,18 @@ def AddTitle(L, N, color, font_family, sample, renderer):
     L.append(renderer('<pre> </pre>' * N))
     
 
-def CountMissingFiles(FigPaths):
+def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, minchildren):
     '''
     (dict) -> (int, int)
 
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
-    
+    :param CovStats: yaml file with mean read depth per region
+    :param DataFiles:  List of .csv fles with umi counts
+    :param mincov: Minimum read depth to label regions    
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
+        
     Return a tuple with count of valid and missing files
     '''
     
@@ -181,6 +186,15 @@ def CountMissingFiles(FigPaths):
                 else:
                     missing +=1
     
+    # count svg files
+    minvals = [mincov, minratio, minumis, minchildren]
+    datatypes = ['coverage', 'ratio', 'umis', 'children']
+    for i in range(len(minvals)):
+        try:
+            PlotDataPerRegion(CovStats, DataFiles, minvals[i], datatypes[i])
+        except:
+            missing += 1
+     
     return valid, missing
 
 
@@ -816,7 +830,7 @@ def GetSampleName(directory, **Options):
     return sample
     
 
-def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, renderer=mistune.Markdown(), **Options):
+def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, minratio,minumis,minchildren, renderer=mistune.Markdown(), **Options):
     '''
     (str, str, list, str, str, float, mistune.Markdown, dict) -> None
     
@@ -826,12 +840,15 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, r
     :param extension: Extension of the figure files
     :param Outputfile: Name of the html report
     :param mincov: Minimum read depth to label regions
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
     :param renderer: markdown renderer
     :param Options: Optional parameters. Accepted values: 'sample'
         
     Write an html report of debarcer analysis for a given sample
     '''
-    
+
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
         
