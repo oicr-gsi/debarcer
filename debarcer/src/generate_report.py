@@ -686,9 +686,9 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num, rendere
     return figcounter
 
 
-def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
+def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, renderer):
     '''
-    (list, str, str, dict, int)- > int
+    (list, str, str, dict, int, int, int, mistune.Markdown)- > int
     
     :param L: List with report strings
     :param font_family: Comma-separated text fonts
@@ -696,6 +696,8 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
+    :param renderer: markdown renderer
+    
         
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
