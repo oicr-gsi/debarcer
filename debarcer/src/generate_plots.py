@@ -455,16 +455,10 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                         include_x_axis=False,
                         legend_at_bottom=True,
                         legend_at_bottom_columns=ncol,
-                        title=Title)
-    
-    
-#                        explicit_size=True)
-
-#                        width=800,
-#                        height=400,
-
-
-
+                        title=Title,
+                        explicit_size=False,
+                        width=800,
+                        height=400)
     
     if len(low_data) != 0:
         xy_chart.add({'title':'Low (< {0})'.format(minval), 'color':'red'}, low_data)
