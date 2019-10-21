@@ -847,11 +847,11 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, r
     AddInfo(directory, L, 2, 'black', font_family, FigPaths, renderer)
     
     ## Pre-processing section
-    headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing')
+    headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing', renderer)
     # add figures from pre-processing, update figure counter 
     figcounter = AddPreprocessingFigs(L, font_family, 'png', FigPaths, figcounter, 1)
     # add spacer line
-    AddSpacerLine(L)
+    AddSpacerLine(L, renderer)
     
     ## Coverage section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Coverage')
@@ -859,7 +859,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, r
     figcounter = AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, 'png', FigPaths, figcounter, 1) 
     
     # add spacer line
-    AddSpacerLine(L)
+    AddSpacerLine(L, renderer)
     
     
     ########
@@ -881,14 +881,14 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, r
     # add figures from pre-grouping QC, update figure counter     
     figcounter = AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, 1)
     # add spacer line
-    AddSpacerLine(L)
+    AddSpacerLine(L, renderer)
          
     ## Grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi Grouping')
     # add figures from Grouping section and update figure counter
     figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1, headernum)
     # add spacer line
-    AddSpacerLine(L)
+    AddSpacerLine(L, renderer)
     
     ## Collapsing section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi family Collapsing')

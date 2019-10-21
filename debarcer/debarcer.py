@@ -5,8 +5,6 @@ import datetime
 import json
 import time
 import mistune
-import matplotlib.pyplot as plt
-import numpy as np
 from src.preprocess_fastqs import reheader_fastqs, check_library_prep
 from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
@@ -21,7 +19,8 @@ from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData
  PlotDataPerRegion
 from src.generate_report import WriteReport   
  
-
+import matplotlib.pyplot as plt
+import numpy as np
    
 
 """
