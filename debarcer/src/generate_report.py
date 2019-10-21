@@ -894,7 +894,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     ## Pre-grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi distribution before family grouping', renderer)
     # add figures from pre-grouping QC, update figure counter     
-    figcounter = AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, 1)
+    figcounter = AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, 1, renderer)
     # add spacer line
     AddSpacerLine(L, renderer)
          
