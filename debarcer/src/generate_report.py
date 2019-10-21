@@ -932,6 +932,9 @@ def WriteReport(directory, extension, Outputfile, mincov, **Options):
      
 
     L2 = [markdown(i) for i in L]
+    L2 = [i for i in L]
+    
+    
     #L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
     
     L2.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_image, 800, 800))
