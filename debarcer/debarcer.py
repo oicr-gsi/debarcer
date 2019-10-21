@@ -817,7 +817,7 @@ if __name__ == '__main__':
     r_parser.add_argument('-db', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',
                           help='Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py')
     r_parser.add_argument('-mv', '--MinCov', dest='mincov', type=float, default=1000, help='Minimum coverage value. Values below are plotted in red')
-    r_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.5, help='Minimum children to parent umi ratio. Values below are plotted in red')
+    r_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     r_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=float, default=1000, help='Minimum umi count. Values below are plotted in red')
     r_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=float, default=500, help='Minimum children umi count. Values below are plotted in red')
     r_parser.set_defaults(func=run_scripts)
@@ -835,7 +835,7 @@ if __name__ == '__main__':
     plot_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name to apear in the report is reporting flag activated. Optional')
     plot_parser.add_argument('-r', '--Report', dest='report', choices=[False, True], type=ConvertArgToBool, default=True, help='Generate a report if activated. Default is True')
     plot_parser.add_argument('-mv', '--MinCov', dest='mincov', type=float, default=1000, help='Minimum coverage value. Values below are plotted in red')
-    plot_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.5, help='Minimum children to parent umi ratio. Values below are plotted in red')
+    plot_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     plot_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=float, default=1000, help='Minimum umi count. Values below are plotted in red')
     plot_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=float, default=500, help='Minimum children umi count. Values below are plotted in red')
     plot_parser.set_defaults(func=generate_plots)
