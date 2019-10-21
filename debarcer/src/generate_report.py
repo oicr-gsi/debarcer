@@ -612,7 +612,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
             encoded_fig = EncodeImage(Files[i][j])
             # add images
             if j == 0:
-                images += '<img style="padding-right: 30px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
+                images += '<img style="padding-right: 100px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
             else:
                 images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, AltNames[i][j], width, height)
             #update figure counter
@@ -623,7 +623,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
         legends = ''
         for j in range(len(Lgds[i])):
             if j == 0:
-                legends += '<span style="padding-right: 190px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,fignum[j], Lgds[i][j])
+                legends += '<span style="padding-right: 100px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,fignum[j], Lgds[i][j])
             else:
                 legends += '<span style="padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family, fignum[j], Lgds[i][j])
         L.append(renderer(legends))
