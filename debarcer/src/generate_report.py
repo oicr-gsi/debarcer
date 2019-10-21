@@ -13,7 +13,6 @@ from itertools import zip_longest
 import base64
 import matplotlib.pyplot as plt
 import pygal
-from PIL import Image
 from src.generate_plots import PlotDataPerRegion
 
 
@@ -29,12 +28,6 @@ def ResizeFifure(filename, scaling_factor):
     # extract the original figure size
     #height, width, channels = matplotlib.pyplot.imread(filename).shape
     height, width, channels = scipy.ndimage.imread(filename).shape
-    
-    
-    
-    # alternately use PIL.Image
-    #im = Image.open(filename)
-    #width, height = im.size
     
     # resize while keeping proportions between height and width
     height, width = list(map(lambda x: x * scaling_factor, [height, width]))
@@ -54,22 +47,6 @@ def EncodeImage(filename):
     return encoded_string
     
 
-def convert_html_to_pdf(source_html, output_filename):
-    # open output file for writing (truncated binary)
-    result_file = open(output_filename, "w+b")
-
-    # convert HTML to PDF
-    pisa_status = pisa.CreatePDF(
-            source_html,                # the HTML to convert
-            dest=result_file)           # file handle to recieve result
-
-    # close output file
-    result_file.close()                 # close output file
-
-    # return True on success and False on errors
-    return pisa_status.err  
-
-
 def GetExpectedFigure(FigDir, extension, expected_name):
     '''
     (str, str, str) --> str
@@ -81,7 +58,6 @@ def GetExpectedFigure(FigDir, extension, expected_name):
     Return the full path of the figure expected_name + extension in directory Figures
     or the empty string if file doesn't exist
     '''
-    
     
     figpath = os.path.join(FigDir, expected_name + extension)
     if os.path.isfile(figpath) == True:
@@ -392,7 +368,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
     return figcounter
     
 
-def AddSpacerLine(L):
+def AddSpacerLine(L, renderer=mistune.Markdown()):
     '''
     (list) -> None
     
@@ -403,7 +379,7 @@ def AddSpacerLine(L):
     # add 1 empty line before and after spacer
     L.append('<pre> </pre>')
     # add spacer line
-    L.append('****')
+    L.append(renderer('****'))
     L.append('<pre> </pre>')
 
 
@@ -809,35 +785,20 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     return figcounter
 
 
-def WriteReport(directory, extension, Outputfile, mincov, **Options):
+def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, **Options):
     '''
-    (str, str, str, dict) -> None
+    (str, str, list, str, str, float, dict) -> None
     
-    :param directory: Directory with subfolders including Figures 
+    :param directory: Directory with subfolders including Figures
+    :param CovStats: yaml file with mean read depth per region
+    :param DataFiles:  List of .csv fles with umi counts 
     :param extension: Extension of the figure files
     :param Outputfile: Name of the html report
+    :param mincov: Minimum read depth to label regions
     :param Options: Optional parameters. Accepted values: 'sample'
         
     Write an html report of debarcer analysis for a given sample
     '''
-    
-    # get subdirectories
-    L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles', 'Figures']
-    T = [os.path.join(directory, i) for i in L]
-    for i in T:
-        if os.path.isdir(i) == False:
-            raise ValueError('ERR: Expecting directory {0}'.format(i))
-    # unpack directories
-    ConsDir, UmiDir, StatsDir, DataDir, FigDir =  T 
-    # make a list of datafiles with umis that are not empty
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
-#    # remove empty files in place and print a warning
-#    DropEmptyFiles(DataFiles)
-    # get the file with coverage stats
-    CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
-    
-    # check that paths to files are valid. raise ValueError if file invalid
-    #CheckFilePath(DataFiles + [CovStats])
     
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
@@ -917,40 +878,8 @@ def WriteReport(directory, extension, Outputfile, mincov, **Options):
     # add figures from Collapsing section and update figure counter
     figcounter = AddCollapsing(L, font_family, extension, FigPaths, figcounter, 1, headernum)
 
-
-
-    dot_chart = pygal.Dot(x_label_rotation=30)
-    dot_chart.title = 'V8 benchmark results'
-    #dot_chart.x_labels = ['Richards', 'DeltaBlue', 'Crypto', 'RayTrace', 'EarleyBoyer', 'RegExp', 'Splay', 'NavierStokes']
-    dot_chart.add('Chrome', [6395, 8212, 7520, 7218, 12464, 1660, 2123, 8607])
-    dot_chart.add('Firefox', [7473, 8099, 11700, 2651, 6361, 1044, 3797, 9450])
-    dot_chart.add('Opera', [3472, 2933, 4203, 5229, 5810, 1828, 9013, 4669])
-    dot_chart.add('IE', [43, 41, 59, 79, 144, 136, 34, 102])
-    #dot_chart.render()
-    source_image = dot_chart.render_data_uri()
-    # Return `data:image/svg+xml;charset=utf-8;base64,...`
-     
-
-    L2 = [markdown(i) for i in L]
-    L2 = [i for i in L]
-    
-    
-    #L2.append('<img style="padding-right: 10px; padding-left:10px" src={0}" alt="{1}"/>'.format(source_image, 'test'))
-    
-    L2.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_image, 800, 800))
-    
-    
-       
-    
-    #L2.append('<embed type="image/svg+xml" src= {0} />'.format(source_image))
-    
     # create report string
-    #S = ''.join([markdown(i) for i in L])
-     
-    S = ''.join(L2)
-    
-      
-    
+    S = ''.join(L)
     newfile = open(Outputfile, 'w')
     newfile.write(S)
     newfile.close()
