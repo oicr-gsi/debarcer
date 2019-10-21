@@ -488,9 +488,9 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N,
         
 
 
-def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
+def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num, renderer):
     '''
-    (list, str, str, dict, int)- > int
+    (list, str, str, dict, int, int, int, mistune.Markdown)- > int
     
     :param L: List with report strings
     :param font_family: Comma-separated text fonts
@@ -499,13 +499,14 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
     :param num: Number of the header of the Grouping section
-    
+    :param renderer: markdown renderer
+        
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
     '''
     
     # add sub-header
-    subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'QC plots across regions')
+    subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'QC plots across regions', renderer)
             
     # add description of the figures
     L.append('<p style="text-align: left; font-family:{0}; font-size:18px">Number of parent and children umis\
@@ -579,7 +580,7 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         L.append('<pre> </pre>')
     
     # 2. Add figures specific to each region
-    subnum = AddSubheader(L, 1, 'black', num, subnum + 1, font_family, 'Region-specific QC plots')
+    subnum = AddSubheader(L, 1, 'black', num, subnum + 1, font_family, 'Region-specific QC plots', renderer)
 
     intro = ['Degree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
              Network shows the<br> interaction among umi nodes colored by degree (right panel)',
@@ -710,7 +711,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
             'lowreffreq': ['NonRefFreq_low_freq_{0}.{1}', 'Frequency alternative variants (Y axis cut)', 0.85, 'low frequency']}
     
     # Add figures specific to each region
-    subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots')
+    subnum = AddSubheader(L, 1, 'black', num, 1, font_family, 'Region-specific QC plots', renderer)
         
     intro = ['Average umi family size across a given genomic interval<br>for various minimum size thresholds',
              'Read depth without and with umi collapsing for various<br>minimum family size thresholds',
@@ -901,7 +902,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     ## Grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi Grouping', renderer)
     # add figures from Grouping section and update figure counter
-    figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1, headernum)
+    figcounter = AddGrouping(L, font_family, extension, FigPaths, figcounter, 1, headernum, renderer)
     # add spacer line
     AddSpacerLine(L, renderer)
     
