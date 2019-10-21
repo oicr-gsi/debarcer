@@ -434,7 +434,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                          value_colors=('black',),
                          no_data_font_size=40, no_data_text='No result found',
                          label_font_size=12,
-                         background = 'white')
+                         background = 'grey')
 
 
                                          
