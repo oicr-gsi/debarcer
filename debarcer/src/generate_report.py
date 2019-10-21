@@ -638,10 +638,10 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
              'Marginal plots show the relationship between read depth and umis per group',
              'Read depth distribution at positions of highest and lower abundance, shown<br>as proportion of the read depth within family group']
     for i in intro:
-        L.append('<ul><li color:black><span style="list-type-position:outside;\
+        L.append(renderer('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
-                 padding-left:12px; font-family:{0}; font-size:18px">{1}</span></li></ul>'.format(font_family, i))
-    L.append('<pre> </pre>')
+                 padding-left:12px; font-family:{0}; font-size:18px">{1}</span></li></ul>'.format(font_family, i)))
+    L.append(renderer('<pre> </pre>'))
 
     # make a sorted list of regions for 'grouoing' figures
     regions = sorted([i for i in FigPaths.keys() if 'chr' in i])
@@ -657,8 +657,8 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
     
     missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
     if len(missing) != 0:
-        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
-        L.append('<pre> </pre>')
+        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)))
+        L.append(renderer('<pre> </pre>'))
     
     # make groups of non-empty figure pairs
     # keep groups of files together per region
@@ -700,7 +700,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
             #update figure counter
             fignum.append(figcounter)
             figcounter += 1
-        L.append(images)
+        L.append(renderer(images))
         # add legends
         legends = ''
         for j in range(len(Lgds[i])):
@@ -711,28 +711,9 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
             else:
                 padding_right, padding_left = 0, 10
             legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], Lgds[i][j])
-        L.append(legends)
+        L.append(renderer(legends))
         # append empty line
-        L.append('<pre> </pre>')
-
-
-
-
-
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
-
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
-
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
- 
-
-
-
-
-
-
-
-
+        L.append(renderer('<pre> </pre>'))
 
     return figcounter
 
