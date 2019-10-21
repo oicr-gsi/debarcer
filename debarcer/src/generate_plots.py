@@ -22,7 +22,6 @@ import networkx as nx
 import json
 import collections
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
-from matplotlib.ticker import MaxNLocator
 import pandas as pd
 import seaborn as sns
 import pygal
@@ -211,145 +210,6 @@ def SortPositions(L):
     return Positions                
              
              
-             
-def CreateCoverageAx(columns, rows, position, figure, data, coordinates, **Options):
-    '''
-    (int, int, int, figure_object, dict, list, str, str, dict) -> ax object
-    
-    :param columns: Number of columns
-    :param rows: Number of rows
-    :param position: Ax position in figure
-    :param figure: Figure object opened for writing
-    :param data: Dictionary of region: coverage or total umi key, value pairs
-    :param coordinates: List of genomic intervals chrN:A-B
-    :param Options: Accepted keys are:
-                    'firstax': add a 2nd plot sharing axes of the 1st plot
-                    'errorbar': error bars for the bar graph 
-           
-    Return a ax object in figure
-    '''
-    
-    # plot total umi and coverage in a single plot if firstax option is used
-    if 'firstax' in Options:
-        color = 'grey'
-        # plot umi count using axis of 1st graph
-        ax = Options['firstax'].twinx()
-        ax.scatter([i for i in range(len(coordinates))], [data[i] for i in coordinates], edgecolor = color, facecolor = color, marker='o', lw = 1, s = 90, alpha = 1)
-    else:
-        color =  '#f2e6ff'
-        # add a plot coverage to figure (N row, N column, plot N)
-        ax = figure.add_subplot(rows, columns, position)
-        # plot data
-        if 'errorbar' in Options:
-            errorbar = Options['errorbar']
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, yerr=errorbar,
-                    color=color, edgecolor=[color] * len(data), linewidth=0.7, error_kw=dict(elinewidth=0.7, ecolor=color, markeredgewidth=0.7))
-        else:
-            ax.bar([i for i in range(len(coordinates))], [data[i] for i in coordinates], width=0.4, color=color, edgecolor=[color] * len(data), linewidth=0.7)
-        
-    # make a list of genomic regions 
-    Chromos = []
-    for i in coordinates:
-        i = i.split(':')
-        Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
-    
-    # limit y axis
-    YMax = [data[i] for i in data]
-    YMax = max(YMax)
-    YMax = float(YMax + (YMax * 10 /100))
-    ax.set_ylim([0, YMax])    
-    step = SetUpTicks(YMax)
-    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-        
-    # set up y axis label and grid
-    if 'firstax' not in Options:
-        # write label for y axis
-        ax.set_ylabel('Mean coverage per region', color = 'black',  size = 14, ha = 'center')
-        ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
-    
-        # write label for x axis
-        xPos = [i for i in range(len(coordinates))]
-               
-        #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
-        plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
-    
-        # add a light grey horizontal grid to the plot, semi-transparent, 
-        ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-        # hide these grids behind plot objects
-        ax.set_axisbelow(True)
-    else:
-        # write label for y axis
-        ax.set_ylabel('Total umis per region', color = 'black',  size = 14, ha = 'center')
-        
-    # add space between axis and tick labels
-    ax.yaxis.labelpad = 18
-    ax.xaxis.labelpad = 18
-    
-    # do not show lines around figure  
-    ax.spines["top"].set_visible(False)    
-    ax.spines["bottom"].set_visible(True)    
-    ax.spines["right"].set_visible(False)    
-    ax.spines["left"].set_visible(False)  
-     
-    # do not show ticks
-    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelleft=False, labelbottom=True, colors = 'black',
-                labelsize = 12, direction = 'out')  
-    
-    # add legend
-    legend_elements = [Line2D([0], [0], marker='s', markeredgecolor='#f2e6ff', markerfacecolor='#f2e6ff',
-                       label='coverage', markersize=8, linestyle='None'),
-                       Line2D([0], [0], marker='o', markeredgecolor='grey', markerfacecolor='grey',
-                       label='umis', markersize=8, linestyle='None')]
-    ax.legend(handles=legend_elements, frameon=False, ncol = 2, bbox_to_anchor=(0.9, 1.08))
-    
-    return ax
-
-
-def PlotCoverage(ConsFiles, DataFiles, Outputfile):
-    '''
-    (list, list, dict) -> None
-    
-    :param ConsFiles: List of .cons consensus files generated after umi collpsing
-    :param DataFiles: List of .csv data files generated after umi grouping
-    :param Outputfile: Name of the output figure file 
-         
-    Generates a plot with mean coverage and total umis per interval
-    
-    Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv) and not empty
-    '''
-    
-    # get mean coverage per interval
-    Coverage = GetSampleCoverage(ConsFiles)
-    # get total parent umis for each interval
-    Umis = GetSampleUmis(DataFiles)
-    # make sure that regions are defined for both coverage and umis
-    # get a sorted list of positions
-    Coordinates = SortPositions(list(set(Coverage.keys()).intersection(set(Umis.keys()))))
-       
-    # clear previous axes
-    plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True)    
-    
-    # create figure
-    figure = plt.figure(1, figsize = (9, 6))
-    # create a dict with mean coverage
-    M = {}
-    for i in Coverage:
-        M[i] = Coverage[i][0]
-    # create a sorted list with sem
-    S = [Coverage[i][1] for i in Coordinates]
-       
-    # plot data
-    ax1 = CreateCoverageAx(1, 1, 1, figure, M, Coordinates, errorbar=S)
-    ax2 = CreateCoverageAx(1, 1, 1, figure, Umis, Coordinates, firstax=ax1)
-        
-    plt.tight_layout()
-    
-    figure.savefig(Outputfile, bbox_inches = 'tight')
-
-
-
 def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
     '''
     (str, list, dict) -> None or str
@@ -584,11 +444,6 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
         
-    # write ticks for y and x axis
-    #xtickspos = [i for i in range(0, len(positions), 20)]
-    #xticks = [positions[i] for i in xtickspos]
-    #plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
-    
     # set up x axis
     step = SetUpTicks(len(positions)) * 2
     xtickspos = [i for i in range(0, len(positions), step)]
@@ -610,7 +465,6 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     return ax
 
 
-# use this function to create a figure for each consensus file for a given sample
 def PlotMeanFamSize(ConsFile, Color, Outputfile):
     '''
     (str, list, str) -> None
@@ -766,18 +620,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
                     right=False, left=False, labelbottom=False, colors = 'black',
                     labelsize = 12, direction = 'out')  
     
-    
-    
-#    if 'ylabel' in Options:
-#        # build a rectangle in axes coords
-#        left, width = .25, .5
-#        bottom, height = .25, .5
-#        right = left + width
-#        top = bottom + height
-#        # axes coordinates are 0,0 is bottom left and 1,1 is upper right
-#        ax.text(-0.1, 0.5*(bottom+top), 'right center', horizontalalignment='right',
-#                verticalalignment='center', rotation='vertical', transform=ax.transAxes)
-      
     return ax
 
 
@@ -814,8 +656,6 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
     #figure = plt.figure(1, figsize = (4, 20))
-    
-    
     
     # make a sorted list of family sizes
     FamSize = list(Data.keys())
@@ -1037,127 +877,6 @@ def ComputeIntervalSize(Coordinates):
     return Sizes      
     
    
-
-def PlotUmiCounts(DataFiles, Outputfile, Graph):
-    '''
-    (list, str, str, dict) -> None
-    
-    :param DataFiles: List of .csv data files generated after umi groouping 
-    :param Outputfile: Name of the output figure file 
-    :param Graph: Type of data to plot. Accepted values:
-                  'ratio': children to parent umis ratio
-                  'parents': total umi count
-                  'children': children umi count 
-       
-    Generates a plot with umi counts (children, parents or children to parents ratio)
-    
-    Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
-    '''
-    
-    # extract umi counts for each region
-    L = [ExtractUmiCounts(i) for i in DataFiles]
-     
-    Data = {}
-    for d in L:
-        region = list(d.keys())[0]
-        ptu, ctu = d[region]['PTU'], d[region]['CTU']
-        if Graph == 'ratio':
-            # compute child/parent umi ratios for each region        
-            if ptu != 0:
-                Data[region] = ctu/ptu
-        elif Graph == 'parents':
-            # plot total parent umis
-            Data[region] = ptu
-        elif Graph == 'children':
-            # plot children umis
-            Data[region] = ctu
-        
-    # get a sorted list of positions
-    Coordinates = SortPositions(list(Data.keys()))
-    
-    # clear previous axes
-    plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True) 
-        
-    # create figure
-    figure = plt.figure(1, figsize = (9, 6))
-    # add a plot coverage to figure (N row, N column, plot N)
-    ax = figure.add_subplot(1, 1, 1)
-
-    # plot data for each region
-    ax.scatter([i for i in range(len(Coordinates))], [Data[i] for i in Coordinates], edgecolor = 'pink', facecolor = 'pink', marker='o', lw = 1, s = 130, alpha = 1, clip_on=False)
-    # make a list of genomic regions 
-    Chromos = []
-    for i in Coordinates:
-        i = i.split(':')
-        Chromos.append(i[0] + '\n' + i[1].split('-')[0] + '\n' + i[1].split('-')[1])
-    
-    # limit y axis to maximum value
-    YMax = [Data[i] for i in Data]
-    YMax = max(YMax)
-    # add 10% to max value
-    YMax = YMax + (YMax * 10/100)
-    ax.set_ylim([0, YMax])
-    
-    # set Y axis ticks
-    if Graph == 'ratio':
-        step = round(YMax/10, 2)    
-        # set y ticks    
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-    elif Graph == 'parents' or Graph == 'children':
-        # set y ticks    
-        step = SetUpTicks(YMax)
-        ax.yaxis.set_ticks([i for i in np.arange(0, YMax, step)])
-                
-    # set title and Y axis label
-    if Graph == 'ratio':
-        YLabel = 'Child:Parent Ratio'
-        Title = "Interval vs. Children to Parent UMIs"
-    elif Graph == 'parents':
-        YLabel = 'Number of parent UMIs'
-        Title = "Total UMI counts"
-    elif Graph == 'children':
-        YLabel = 'Number of children UMIs'
-        Title = "Children UMI counts"
-        
-    # write label for y axis
-    ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
-    ax.set_xlabel('Intervals', color = 'black',  size = 14, ha = 'center')
-        
-    # write title   
-    ax.set_title(Title, size = 14)
-    
-    # write label for x axis
-    xPos = [i for i in range(len(Coordinates))]
-    plt.xticks(xPos, Chromos, ha = 'center', rotation = 0, fontsize = 9)
-               
-    # add space between axis and tick labels
-    ax.yaxis.labelpad = 18
-    ax.xaxis.labelpad = 18
-    
-    # do not show lines around figure  
-    ax.spines["top"].set_visible(False)    
-    ax.spines["bottom"].set_visible(True)    
-    ax.spines["right"].set_visible(False)    
-    ax.spines["left"].set_visible(False)  
-    # offset the spines
-    for spine in ax.spines.values():
-        spine.set_position(('outward', 7))
-    
-    # do not show ticks
-    plt.tick_params(axis='both', which='both', bottom=True, top=False,
-                right=False, left=False, labelbottom=True, colors = 'black',
-                labelsize = 12, direction = 'out')  
-    
-    # add a light grey horizontal grid to the plot, semi-transparent, 
-    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
-    # hide these grids behind plot objects
-    ax.set_axisbelow(True)
-    
-    figure.savefig(Outputfile, bbox_inches = 'tight')
-
-
-
 def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     '''
     (list, str) -> None
