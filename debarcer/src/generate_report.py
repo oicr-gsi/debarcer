@@ -134,23 +134,24 @@ def ListExpectedFigures(directory, extension):
     return D
 
 
-def AddTitle(L, N, color, font_family, sample):
+def AddTitle(L, N, color, font_family, sample, renderer):
     '''
-    (list, int, str, str, str) -> None
+    (list, int, str, str, str, mistune.Markdown) -> None
     
     :param L: List with report strings
     :param N: Number of empty lines following title    
     :param color: Color of the title text
     :param font_family: Comma-separated text fonts
     :param sample: Sample name to appear in title
+    :param renderer: markdown renderer
     
     Add title to list L
     '''
     
     # add title
-    L.append('<font size=7><p style="text-align: center; color: {0}; font-family: {1}; font-weight:bold">Report for {2}</p></font>'.format(color, font_family, sample))
+    L.append(renderer('<font size=7><p style="text-align: center; color: {0}; font-family: {1}; font-weight:bold">Report for {2}</p></font>'.format(color, font_family, sample)))
     # add empty lines  
-    L.append('<pre> </pre>' * N)
+    L.append(renderer('<pre> </pre>' * N))
     
 
 def CountMissingFiles(FigPaths):
@@ -183,9 +184,9 @@ def CountMissingFiles(FigPaths):
     return valid, missing
 
 
-def AddInfo(directory, L, N, color, font_family, FigPaths):
+def AddInfo(directory, L, N, color, font_family, FigPaths, renderer):
     '''
-    (list, str, int, str, str, dict) -> None
+    (list, str, int, str, str, dict, mistune.Markdown) -> None
     
     :param directory: Directory with subfolders including Figures 
     :param L: List with report strings
@@ -193,7 +194,8 @@ def AddInfo(directory, L, N, color, font_family, FigPaths):
     :param color: Color of the text
     :param font_family: Comma-separated text fonts
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
-            
+    :param renderer: markdown renderer    
+        
     Add information about debarcer, stime stamp and working directory to list.
     Modify list in place
     '''
@@ -209,14 +211,13 @@ def AddInfo(directory, L, N, color, font_family, FigPaths):
     total = valid + missing
     files = '<b>figures:</b> ' + '{0} / {1} missing images'.format(missing, total) 
     text = '<br>'.join([date, version, directory, files])
-    L.append('<pre><font size=3><p style="text-align: left; color: {0}; font-family: {1};">{2}</p></font></pre>'.format(color, font_family, text))
-    #L.append('## {0}. {1}').format(num, text)     
-    L.append('<pre> </pre>' * N)   
+    L.append(renderer('<pre><font size=3><p style="text-align: left; color: {0}; font-family: {1};">{2}</p></font></pre>'.format(color, font_family, text)))
+    L.append(renderer('<pre> </pre>' * N))   
 
 
-def AddHeader(L, N, color, num, font_family, text):
+def AddHeader(L, N, color, num, font_family, text, renderer):
     '''
-    (list, int, str, str, str, str) -> int
+    (list, int, str, str, str, str, mistune.Markdown) -> int
     
     :param L: List with report strings
     :param N: Number of empty lines following header
@@ -224,6 +225,7 @@ def AddHeader(L, N, color, num, font_family, text):
     :param color: Color of the text
     :param font_family: Comma-separated text fonts
     :param text: Text of the header
+    :param renderer: markdown renderer
     
     Add header to list. Modify list in place. And return the header number 
     '''
@@ -303,9 +305,9 @@ def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPa
     return figcounter
 
 
-def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
+def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N, renderer):
     '''
-    (list, str, str, dict, int)- > int
+    (list, str, str, dict, int, mistune.Markdown)- > int
     
     :param L: List with report strings
     :param font_family: Comma-separated text fonts
@@ -313,6 +315,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
+    :param renderer: markdow renderer
     
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
@@ -361,18 +364,19 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N):
                 legends += '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Number of reads with correct and incorrect umi-spacer configuration </span>'.format(font_family,fignum[keys[i]])
             else:
                 legends += '<span style="padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Frequency distribution of umis with correct configurarion </span>'.format(font_family, fignum[keys[i]])
-    L.append(legends)
+    L.append(renderer(legends))
     
     # append empty line
-    L.append('<pre> </pre>' * N)
+    L.append(renderer('<pre> </pre>' * N))
     return figcounter
     
 
-def AddSpacerLine(L, renderer=mistune.Markdown()):
+def AddSpacerLine(L, renderer):
     '''
     (list) -> None
     
     :param L: List with report strings
+    :param renderer: markdown renderer
     
     Add a black line with empty space before and after 
     '''
@@ -785,9 +789,30 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num):
     return figcounter
 
 
-def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, **Options):
+
+def GetSampleName(directory, **Options):
     '''
-    (str, str, list, str, str, float, dict) -> None
+    (str, dict) -> str
+
+    :param directory: Directory with subfolders including Figures
+    :param Options: Optional parameters. Accepted values: 'sample'
+
+    Return the sample name, either from     
+    
+    '''
+    
+    if 'sample' in Options:
+        sample = Options['sample']
+    else:
+        sample = ''
+    if sample == '':
+        sample = os.path.basename(directory) 
+    return sample
+    
+
+def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, renderer=mistune.Markdown(), **Options):
+    '''
+    (str, str, list, str, str, float, mistune.Markdown, dict) -> None
     
     :param directory: Directory with subfolders including Figures
     :param CovStats: yaml file with mean read depth per region
@@ -795,6 +820,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, *
     :param extension: Extension of the figure files
     :param Outputfile: Name of the html report
     :param mincov: Minimum read depth to label regions
+    :param renderer: markdown renderer
     :param Options: Optional parameters. Accepted values: 'sample'
         
     Write an html report of debarcer analysis for a given sample
@@ -803,31 +829,22 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, *
     # set up font family <- string with multiple values. browser will use values from left to right if not defined  
     font_family = 'Arial, Verdana, sans-serif'
         
-    # use default markdown renderer    
-    markdown = mistune.Markdown()
-    
     # set up counter for figure files
     figcounter = 1
         
     # get the path of all expected figures (can be '')
     FigPaths = ListExpectedFigures(directory, extension)
        
-    # can't use multi-lines string for some unknown reasons. use list to store lines of report
+    # use list to store lines of report
     L = []
     
     ## Title section
     ## get sample name
-    if 'sample' in Options:
-        sample = Options['sample']
-    else:
-        sample = ''
-    if sample == '':
-        sample = os.path.basename(directory) 
-        
-    AddTitle(L, 3, 'black', font_family, sample)
+    sample = GetSampleName(directory, **Options)
+    AddTitle(L, 3, 'black', font_family, sample, renderer)
     
     ## Add debarcer info and time stamp
-    AddInfo(directory, L, 2, 'black', font_family, FigPaths)
+    AddInfo(directory, L, 2, 'black', font_family, FigPaths, renderer)
     
     ## Pre-processing section
     headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing')
