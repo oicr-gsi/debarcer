@@ -849,7 +849,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, r
     ## Pre-processing section
     headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing', renderer)
     # add figures from pre-processing, update figure counter 
-    figcounter = AddPreprocessingFigs(L, font_family, 'png', FigPaths, figcounter, 1)
+    figcounter = AddPreprocessingFigs(L, font_family, 'png', FigPaths, figcounter, 1, renderer)
     # add spacer line
     AddSpacerLine(L, renderer)
     
