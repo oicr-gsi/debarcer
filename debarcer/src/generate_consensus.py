@@ -96,9 +96,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             pos = int(pileupcolumn.reference_pos)  
             # restict pileup columns to genomic region
             if region_start <= pos < region_end:
-                
-                assert pos != region_end
-                
                 # loop over reads in pileup column
                 for read in pileupcolumn.pileups:
                     # get read information
@@ -291,33 +288,6 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
-    a = {}
-    for pos in consensus_seq:
-        if pos not in a:
-            a[pos] = {}
-        for famkey in consensus_seq[pos]:
-            if famkey not in a[pos]:
-                a[pos][famkey] = {}
-            for i in consensus_seq[pos][famkey]:
-                a[pos][famkey]['_'.join(i)] = consensus_seq[pos][famkey][i]
-   
-    # save dicts for debugging
-    debugdir = '/.mounts/labs/gsiprojects/genomics/CBALL/test_debarcer_rjdev/cball_new/debugging'
-    newfile = open(os.path.join(debugdir, 'consensus_seq_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
-    json.dump(a, newfile, sort_keys=True, indent=4)
-    newfile.close()
-
-    newfile = open(os.path.join(debugdir, 'FaSize_{0}_{1}.json'.format(fam_size, contig+ '_' + str(region_start) + '_' + str(region_end))), 'w')
-    json.dump(FamSize, newfile, sort_keys=True, indent=4)
-    newfile.close()
-
-
-    print('cons seq', len(consensus_seq))
-    print('fam size', len(FamSize))
-
-
-
-
     # create a dict to store consensus info
     cons_data = {}
 
@@ -365,10 +335,6 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
                     
             cons_data[base_pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
-    
-    print('cons data per base', len(cons_data))
-    
-    
     return cons_data
 
 
@@ -392,13 +358,6 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     
     # get uncolapased seq info {pos: {(ref, atl): count}}
     uncollapsed_seq, coverage = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
-    
-    print(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans)
-    
-    print('uncollapsed')
-    print(uncollapsed_seq)
-    
-    
     
     # create a dict to store consensus info
     cons_data = {}
@@ -519,11 +478,6 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     # get minimum umi family sizes
     family_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
 
-
-    print(family_sizes)
-
-
-
     # get reference sequence for the region 
     print("Getting reference sequence...")
     ref_seq = get_ref_seq(contig, region_start, region_end, reference)
@@ -532,11 +486,6 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     print("Building consensus data...")
     cons_data = {}
     for f_size in family_sizes:
-        
-        print(f_size, type(f_size))
-        
-        
-        
         # check if 0 is passed as fam_size argument
         if f_size == 0:
             # compute consensus for uncollapsed data, and get coverage
@@ -547,18 +496,6 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     if 0 not in family_sizes:
         cons_data[0], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
 
-
-
-
-
-
-
-    print('cons data', len(cons_data))
-    for i in cons_data:
-        print(i, len(cons_data[i]))
-
-
-
     # write output consensus file
     print("Writing output...")
     raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold)
@@ -567,9 +504,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     if os.path.isdir(StatsDir) == False:
         os.mkdir(StatsDir)
     covdata = {contig + ':' + str(region_start+1) + '-' + str(region_end): coverage}
-    print('coverage', covdata)
-    
-    
+        
     with open(os.path.join(StatsDir, 'CoverageStats.yml'), 'a') as newfile:
         yaml.dump(covdata, newfile, default_flow_style=False)
     
