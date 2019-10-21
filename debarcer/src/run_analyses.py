@@ -166,7 +166,8 @@ def name_job(prefix):
 def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
                 percentthreshold, distthreshold, postthreshold, refthreshold,
                 allthreshold, maxdepth, truncate, ignoreorphans, ignore, merge,
-                plot, report, extension, sample, mydebarcer, mypython, mem, queue):
+                plot, report, mincov, minratio, minumis, minchildren, extension,
+                sample, mydebarcer, mypython, mem, queue):
     '''
     (str, str, str, str, str, int, float, int, int, float, float, int, bool,
     bool, bool, bool, bool, bool, str, str, str, str, int, str) -> None
@@ -189,6 +190,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     :param merge: Merge datafiles, consensus files and umi files if True
     :param plot: Generate figure plots if True
     :param report: Generate analysis report if True
+    :param mincov: Minimum read depth to label regions
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
     :param extension: Figure file extension
     :param sample: Sample name to appear in report. If empty str, outdir basename is used
     :param mydebarcer: Path to the debarcer script
@@ -309,10 +314,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         running_jobs = CheckJobs(L)
         if running_jobs == False:
             # generate plots and report if report is True
-            PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5}'
+            PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5} -mv {0} -mr {7} -mu {8} -mc {9}'
             PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
             newfile = open(PlotScript, 'w')
-            newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report))
+            newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren))
             newfile.close()
             jobname6 = name_job('Plot')
             subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', PlotScript), shell=True)    
