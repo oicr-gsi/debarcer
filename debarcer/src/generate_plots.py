@@ -445,7 +445,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
     xy_chart = pygal.XY(stroke=False, show_legend=True,
                         human_readable=True, fill=False,
                         show_x_labels=False, width=800,
-                        height=400, spacing=10, max_scale=10,
+                        height=200, spacing=10, max_scale=10,
                         dots_size=5, truncate_legend=-1,
                         legend_box_size=18,
                         dynamic_print_values=True, style=custom_style,
