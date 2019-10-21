@@ -256,7 +256,7 @@ def AddSubheader(L, N, color, num1, num2, font_family, text):
     return num2
 
 
-def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPaths, figcounter, N):
+def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPaths, figcounter, N, renderer):
     '''
     (list, str, str, dict, int)- > int
     
@@ -266,41 +266,28 @@ def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPa
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
+    :param renderer: markdown renderer
     
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
     '''
 
-    # scaling factor
-    scale = 0.7
-
-    # add a warning if both expected files are missing
-    if FigPaths['coverage'] == '':
-        missing = 'Coverage_Umi_Count.{0}'.format(extension)
-        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
-        L.append('<pre> </pre>')
-    
-    if FigPaths['coverage'] != '':
-        # resize figure
-        height, width = ResizeFifure(FigPaths['coverage'], scale)
-        # encode base64 image
-        encoded_fig = EncodeImage(FigPaths['coverage'])
-        # add image and legend
-        images = '<img style="padding-right:0px; padding-left:30px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, 'coverage', width, height)
-        L.append(images)
+    # add coverage fig
+    try:
+        source_fig = PlotDataPerRegion(CovStats, DataFiles, mincov=mincov, datatype='coverage')
+        # add figure
+        L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
         # add legend
-        legends = '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Average read depth and umi counts per genomic interval</span>'.format(font_family, figcounter)
-        L.append(legends)
+        legends = '<span style="padding-right: 70px; padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Average read depth per genomic interval</span>'.format(font_family, figcounter)
+        L.append(renderer(legends))
         # update figure counter
         figcounter += 1
-    # append empty line
-    L.append('<pre> </pre>' * N)
-    
-    
-    # add coverage fig
-    source_fig = PlotDataPerRegion(CovStats, DataFiles, mincov=mincov, datatype='coverage')
-    L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
-    
+    except:
+        missing = 'Coverage_Umi_Count.svg'
+        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        L.append(renderer('<pre> </pre>'))
+    finally:
+        L.append(renderer('<pre> </pre>'))
     
     return figcounter
 
@@ -655,6 +642,25 @@ def AddGrouping(L, font_family, extension, FigPaths, figcounter, N, num):
         # append empty line
         L.append('<pre> </pre>')
 
+
+
+
+
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
+
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
+
+    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
+ 
+
+
+
+
+
+
+
+
+
     return figcounter
 
 
@@ -856,25 +862,10 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, r
     ## Coverage section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Coverage', renderer)
     # add figures from pre-processing, update figure counter 
-    figcounter = AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, 'png', FigPaths, figcounter, 1) 
+    figcounter = AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, 'png', FigPaths, figcounter, 1, renderer) 
     
     # add spacer line
     AddSpacerLine(L, renderer)
-    
-    
-    ########
-    
-    
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
-
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
-
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
-
-    
-    
-    ###########
-    
     
     ## Pre-grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi distribution before family grouping', renderer)
