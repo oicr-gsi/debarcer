@@ -14,6 +14,9 @@ import base64
 from src.generate_plots import PlotDataPerRegion
 from src.utilities import DropEmptyFiles, CheckFilePath
 
+
+
+
 def ResizeFifure(filename, scaling_factor):
     '''
     (str, float) -> (int, int)
@@ -634,7 +637,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
     intro = ['Degree distribution (left panel) shows the number of edges between umi nodes<br>defined by the hamming distance between umi sequences.\
              Network shows the<br> interaction among umi nodes colored by degree (right panel)',
              'Marginal plots show the relationship between read depth and umis per group',
-             'Read depth distribution at positions of highest and lower abundance, shown<br>as proportion of the read depth within family group']
+             'Read depth distribution at positions of highest and lower abundance']
     for i in intro:
         L.append(renderer('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
