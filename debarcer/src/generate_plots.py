@@ -434,7 +434,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                          value_colors=('black',),
                          no_data_font_size=40, no_data_text='No result found',
                          label_font_size=12,
-                         background = 'grey',
+                         background = 'white',
                          base_style=DefaultStyle)
     # set number of columns for legend
     if len(low_data) != 0:
@@ -452,7 +452,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                         dynamic_print_values=True, style=custom_style,
                         y_title=Ytitle,
                         x_title='Genomic intervals',
-                        include_x_axis=False,
+                        include_x_axis=True,
                         legend_at_bottom=True,
                         legend_at_bottom_columns=ncol,
                         title=Title,
