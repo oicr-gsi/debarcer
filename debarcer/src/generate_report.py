@@ -155,7 +155,7 @@ def AddTitle(L, N, color, font_family, sample, renderer):
 
 def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, minchildren):
     '''
-    (dict) -> (int, int)
+    (dict, str, list, float, float, int, int) -> (int, int)
 
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param CovStats: yaml file with mean read depth per region
@@ -194,6 +194,7 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
             PlotDataPerRegion(CovStats, DataFiles, minvals[i], datatypes[i])
         except:
             missing += 1
+            print(datatypes[i])
      
     return valid, missing
 
@@ -251,14 +252,13 @@ def AddHeader(L, N, color, num, font_family, text, renderer):
     Add header to list. Modify list in place. And return the header number 
     '''
     
-    L.append('<font size=6><p style="text-align: left; color: {0}; font-weight: bold; font-family: {1};">{2}. {3}</p></font>'.format(color, font_family, num, text))
-    #L.append('## {0}. {1}').format(num, text)     
-    L.append('<pre> </pre>' * N)   
+    L.append(renderer('<font size=6><p style="text-align: left; color: {0}; font-weight: bold; font-family: {1};">{2}. {3}</p></font>'.format(color, font_family, num, text)))
+    L.append(renderer('<pre> </pre>' * N))   
     return num
 
-def AddSubheader(L, N, color, num1, num2, font_family, text):
+def AddSubheader(L, N, color, num1, num2, font_family, text, renderer):
     '''
-    (list, int, str, str, str, str) -> int
+    (list, int, str, str, str, str, mistune.Markdown) -> int
     
     :param L: List with report strings
     :param N: Number of empty lines following header
@@ -267,22 +267,25 @@ def AddSubheader(L, N, color, num1, num2, font_family, text):
     :param num2: Sub-header number
     :param font_family: Comma-separated text fonts
     :param text: Text of the header
-    
+    :param renderer: markdown renderer
+        
     Add header to list. Modify list in place. And return the sub-header number
     '''
     
-    L.append('<font size=4><p style="text-align: left; color: {0}; font-weight: bold; font-family: {1};">{2}.{3} {4}</p></font>'.format(color, font_family, num1, num2, text))
-    #L.append('## {0}. {1}').format(num, text)     
-    L.append('<pre> </pre>' * N)   
+    L.append(renderer('<font size=4><p style="text-align: left; color: {0}; font-weight: bold; font-family: {1};">{2}.{3} {4}</p></font>'.format(color, font_family, num1, num2, text)))
+    L.append(renderer('<pre> </pre>' * N))   
     return num2
 
 
 def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPaths, figcounter, N, renderer):
     '''
-    (list, str, str, dict, int)- > int
+    (list, str, list, str, str, float, str, dict, int, int, mistune.Markdown)- > int
     
     :param L: List with report strings
+    :param CovStats: yaml file with mean read depth per region
+    :param DataFiles:  List of .csv fles with umi counts
     :param font_family: Comma-separated text fonts
+    :param mincov: Minimum read depth to label regions    
     :param extension: Extension of the figure files
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param figcounter: Figure number
@@ -306,7 +309,6 @@ def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPa
     except:
         missing = 'Coverage_Umi_Count.svg'
         L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
-        L.append(renderer('<pre> </pre>'))
     finally:
         L.append(renderer('<pre> </pre>'))
     
@@ -315,7 +317,7 @@ def AddCoverageFig(L, CovStats, DataFiles, font_family, mincov, extension, FigPa
 
 def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N, renderer):
     '''
-    (list, str, str, dict, int, mistune.Markdown)- > int
+    (list, str, str, dict, int, int, mistune.Markdown)- > int
     
     :param L: List with report strings
     :param font_family: Comma-separated text fonts
@@ -381,7 +383,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N, ren
 
 def AddSpacerLine(L, renderer):
     '''
-    (list) -> None
+    (list, mistune.Markdown) -> None
     
     :param L: List with report strings
     :param renderer: markdown renderer
@@ -405,9 +407,9 @@ def grouper(iterable, n, fillvalue=None):
     return zip_longest(*args, fillvalue=fillvalue)
 
 
-def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N):
+def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N, renderer):
     '''
-    (list, str, str, dict, int)- > int
+    (list, str, str, dict, int, int, mistune.Markdown)- > int
     
     :param L: List with report strings
     :param font_family: Comma-separated text fonts
@@ -415,6 +417,7 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
     :param figcounter: Figure number
     :param N: Number of empty lines following last legend
+    :param renderer: markdown renderer
     
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
@@ -423,9 +426,9 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
     # add description of the figures
     style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
     padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
-    L.append('<p style="{0}">Density plots showing the frequency distribution of\
-             umi sequences<br>(ie. the number of times a given umi sequence is observed)</p>'.format(style))
-    L.append('<pre> </pre>')
+    L.append(renderer('<p style="{0}">Density plots showing the frequency distribution of\
+             umi sequences<br>(ie. the number of times a given umi sequence is observed)</p>'.format(style)))
+    L.append(renderer('<pre> </pre>'))
     
     # make a sorted list of regions for 'before_grouping' figures
     keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
@@ -433,8 +436,8 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
     # add warning for missing files
     missing = '<br>'.join(['UMI_freq_distribution_{0}.{1}'.format(i, extension) for i in keys if FigPaths[i]['before_grouping'] == ''])
     if len(missing) != 0:
-        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
-        L.append('<pre> </pre>')
+        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        L.append(renderer('<pre> </pre>'))
     
     # define scaling factor and set alternate figure name
     scale, altfig = 0.8, 'before grouping'
@@ -477,10 +480,7 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N)
                 legends += '<span style="padding-right: 180px; padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
             else:
                 legends += '<span style="padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
-            #update figure counter
-            #figcounter += 1
-        L.append(legends)
-    
+        L.append(renderer(legends))
         # append empty line
         L.append('<pre> </pre>' * N)
     
