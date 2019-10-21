@@ -568,7 +568,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
         source_fig = ''
     
     try:
-        source_fig = PlotDataPerRegion(CovStats, DataFiles, minval=minchildren, datatype='ratio')
+        source_fig = PlotDataPerRegion(CovStats, DataFiles, minval=minratio, datatype='ratio')
         # add figure
         L.append('<embed type="image/svg+xml" src= {0} width="{1}" height="{2}" />'.format(source_fig, 800, 800))
         # add legend
