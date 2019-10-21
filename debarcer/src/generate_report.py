@@ -198,7 +198,7 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
     return valid, missing
 
 
-def AddInfo(directory, L, N, color, font_family, FigPaths, renderer):
+def AddInfo(directory, L, N, color, font_family, FigPaths, CovStats, DataFiles, mincov, minratio, minumis, minchildren, renderer):
     '''
     (list, str, int, str, str, dict, mistune.Markdown) -> None
     
@@ -208,6 +208,12 @@ def AddInfo(directory, L, N, color, font_family, FigPaths, renderer):
     :param color: Color of the text
     :param font_family: Comma-separated text fonts
     :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    :param CovStats: yaml file with mean read depth per region
+    :param DataFiles:  List of .csv fles with umi counts
+    :param mincov: Minimum read depth to label regions    
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
     :param renderer: markdown renderer    
         
     Add information about debarcer, stime stamp and working directory to list.
@@ -221,7 +227,8 @@ def AddInfo(directory, L, N, color, font_family, FigPaths, renderer):
     # get the directory containing subdirs 
     directory = '<b>directory:</b> ' + directory
     # count the number of valid and missing files
-    valid, missing = CountMissingFiles(FigPaths)
+    valid, missing = CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, minchildren)
+    
     total = valid + missing
     files = '<b>figures:</b> ' + '{0} / {1} missing images'.format(missing, total) 
     text = '<br>'.join([date, version, directory, files])
