@@ -700,7 +700,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
             #update figure counter
             fignum.append(figcounter)
             figcounter += 1
-        L.append(renderer(images))
+        L.append(images)
         # add legends
         legends = ''
         for j in range(len(Lgds[i])):
@@ -730,7 +730,6 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
     :param N: Number of empty lines following last legend
     :param renderer: markdown renderer
     
-        
     Add figures and legends to list L or a warning if figures don't exist
     and return the number of next figure
     '''
@@ -753,27 +752,27 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
              'Focus on low frequency alternative variant']
     
     for i in intro:
-        L.append('<ul><li color:black><span style="list-type-position:outside;\
+        L.append(renderer('<ul><li color:black><span style="list-type-position:outside;\
                  list-style-type:circle; display:list-item; text-align: left; padding-right: 10px;\
-                 padding-left:12px; font-family:{0}; font-size:18px">{1}</span></li></ul>'.format(font_family, i))
-    L.append('<pre> </pre>')
+                 padding-left:12px; font-family:{0}; font-size:18px">{1}</span></li></ul>'.format(font_family, i)))
+    L.append(renderer('<pre> </pre>'))
     
     # add warning for missing files
     # map keys to expected file names, legends, scaling factors and alternate figure names
     missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
     if len(missing) != 0:
-        L.append('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)) 
-        L.append('<pre> </pre>')
+        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        L.append(renderer('<pre> </pre>'))
     
     ## add famsize and raw inline and reffreq and lowreffreq as separate line
     for i in range(len(regions)):
         # check if some files are present
         if len([FigPaths[regions[i]][keys[j]] for j in range(len(keys)) if FigPaths[regions[i]][keys[j]] != '']) != 0:
             # write interval
-            L.append('<pre> </pre>')
-            L.append('<ul><li color:black><p style="color:black; display:list-item;\
+            L.append(renderer('<pre> </pre>'))
+            L.append(renderer('<ul><li color:black><p style="color:black; display:list-item;\
                      list-style-type:square; text-align: left; font-family: Arial,\
-                     sans-serif; font-weight=normal;"><b>Interval {0}</b></p></li></ul>'.format(regions[i]))    
+                     sans-serif; font-weight=normal;"><b>Interval {0}</b></p></li></ul>'.format(regions[i])))    
             # add famsize and raw figures if they exist
             f, l, s, a = [], [], [], []
             images, fignum = '', []    
@@ -807,9 +806,9 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
                     else:
                         padding_right, padding_left = 0, 10
                     legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
-                L.append(legends)
+                L.append(renderer(legends))
                 # append empty line
-                L.append('<pre> </pre>')
+                L.append(renderer('<pre> </pre>'))
             
             
             # add reffreq and lowreffreq if they exist
@@ -844,9 +843,9 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
                     else:
                         padding_right, padding_left = 0, 10
                     legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
-                L.append(legends)
+                L.append(renderer(legends))
                 # append empty line
-                L.append('<pre> </pre>')
+                L.append(renderer('<pre> </pre>'))
               
     return figcounter
 
