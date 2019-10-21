@@ -434,6 +434,10 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                          value_colors=('black',),
                          no_data_font_size=40, no_data_text='No result found',
                          label_font_size=12,
+                         
+                         plot_background=None,
+                         
+                         
                          base_style=DefaultStyle)
     # set number of columns for legend
     if len(low_data) != 0:
@@ -445,7 +449,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
     xy_chart = pygal.XY(stroke=False, show_legend=True,
                         human_readable=True, fill=False,
                         show_x_labels=False, width=800,
-                        height=200, spacing=10, max_scale=10,
+                        height=400, spacing=10, max_scale=10,
                         dots_size=5, truncate_legend=-1,
                         legend_box_size=18,
                         dynamic_print_values=True, style=custom_style,
