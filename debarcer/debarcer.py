@@ -446,9 +446,10 @@ def run_scripts(args):
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 percent_threshold, dist_threshold, post_threshold, ref_threshold,
                 all_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
-                args.ignore, args.merge, args.plot, args.report, args.extension, args.sample,
-                args.mydebarcer, args.mypython, args.mem, args.queue)
-    
+                args.ignore, args.merge, args.plot, args.report, args.mincov,
+                args.minratio, args.umis, args.minchildren, args.extension,
+                args.sample, args.mydebarcer, args.mypython, args.mem, args.queue)
+  
 def generate_plots(args):
     '''
     (list) -> None
@@ -457,17 +458,20 @@ def generate_plots(args):
     :param extension: Figure format. Accepted values: png, pdf, jpeg, tiff
     :param report: Boolean, generate a report if True
     :param sample: Optional parameter, sample name to appear in report
+    :param mincov: Minimum read depth to label regions
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
+    
     Generate plots in Figures directory
     '''
-    
     
     
     print('plot:', args.report, type(args.report))
     print('plot', 'bool', isinstance(args.report, bool), 'str', isinstance(args.report, str))
     
     
-    
-    
+       
     
     # get subdirectories
     L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
