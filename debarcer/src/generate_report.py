@@ -108,9 +108,9 @@ def ListExpectedFigures(directory, extension):
     D = {}
     
     # map expected figures to figure names for aggregate figures across regions
-    N = ['reads', 'preprocessing', 'ratio', 'total', 'children', 'interval', 'freq']
-    L = ['Proportion_correct_reads.', 'UMI_occurence_preprocessing.', 'Child_Parent_Umis_Ratio.',
-         'Total_Umis.', 'Children_Umis.', 'PTU_vs_CTU.', 'Children_vs_ParentFreq.']
+    N = ['reads', 'preprocessing', 'interval', 'freq']
+    L = ['Proportion_correct_reads.', 'UMI_occurence_preprocessing.',
+         'PTU_vs_CTU.', 'Children_vs_ParentFreq.']
     
     for i in range(len(N)):
         D[N[i]] = GetExpectedFigure(FigDir, extension, L[i])
@@ -191,7 +191,7 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
     datatypes = ['coverage', 'ratio', 'umis', 'children']
     for i in range(len(minvals)):
         try:
-            PlotDataPerRegion(CovStats, DataFiles, minvals[i], datatypes[i])
+            PlotDataPerRegion(CovStats, DataFiles, minval=minvals[i], datatype=datatypes[i])
         except:
             missing += 1
             print(datatypes[i])
@@ -482,7 +482,7 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N,
                 legends += '<span style="padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
         L.append(renderer(legends))
         # append empty line
-        L.append('<pre> </pre>' * N)
+        L.append(renderer('<pre> </pre>' * N))
     
     return figcounter
         
@@ -541,12 +541,6 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
         L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
         L.append(renderer('<pre> </pre>'))
 
-
-
-   #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
-
-    #PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
- 
 
     # add svg figs
     try:
@@ -632,9 +626,9 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
                 legends += '<span style="padding-right: 190px; padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family,fignum[j], Lgds[i][j])
             else:
                 legends += '<span style="padding-left:30px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. {2}</span>'.format(font_family, fignum[j], Lgds[i][j])
-        L.append(legends)
+        L.append(renderer(legends))
         # append empty line
-        L.append('<pre> </pre>')
+        L.append(renderer('<pre> </pre>'))
     
     # 2. Add figures specific to each region
     subnum = AddSubheader(L, 1, 'black', num, subnum + 1, font_family, 'Region-specific QC plots', renderer)
