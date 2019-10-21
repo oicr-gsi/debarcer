@@ -4,6 +4,9 @@ import os
 import datetime
 import json
 import time
+import mistune
+import matplotlib.pyplot as plt
+import numpy as np
 from src.preprocess_fastqs import reheader_fastqs, check_library_prep
 from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
@@ -16,10 +19,9 @@ from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData
  PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
  PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo, PlotIncorrectReads, \
  PlotDataPerRegion
-from src.generate_report import WriteReport    
+from src.generate_report import WriteReport   
+ 
 
-import matplotlib.pyplot as plt
-import numpy as np
    
 
 """
@@ -732,8 +734,8 @@ def generate_report(args):
     if os.path.isdir(ReportDir) == False:
         os.mkdir(ReportDir)
     report = os.path.join(ReportDir, 'debarcer_report.html')
-    WriteReport(args.directory, CovStats, DataFiles, args.extension, report, args.mincov, sample=args.sample)
-       
+    WriteReport(args.directory, CovStats, DataFiles, args.extension, report, args.mincov, renderer=mistune.Markdown(), sample=args.sample)
+    
        
 if __name__ == '__main__':
         
