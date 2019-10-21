@@ -194,8 +194,7 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
             PlotDataPerRegion(CovStats, DataFiles, minval=minvals[i], datatype=datatypes[i])
         except:
             missing += 1
-            print(datatypes[i])
-     
+         
     return valid, missing
 
 
