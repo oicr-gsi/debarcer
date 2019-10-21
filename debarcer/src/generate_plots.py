@@ -434,7 +434,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                          value_colors=('black',),
                          no_data_font_size=40, no_data_text='No result found',
                          label_font_size=12,
-                         background = 'white',
+                         background = 'grey',
                          base_style=DefaultStyle)
     # set number of columns for legend
     if len(low_data) != 0:
@@ -455,8 +455,10 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
                         include_x_axis=False,
                         legend_at_bottom=True,
                         legend_at_bottom_columns=ncol,
-                        title=Title,
-                        explicit_size=True)
+                        title=Title)
+    
+    
+#                        explicit_size=True)
 
 #                        width=800,
 #                        height=400,
