@@ -874,7 +874,7 @@ def WriteReport(directory, CovStats, DataFiles, extension, Outputfile, mincov, m
     AddTitle(L, 3, 'black', font_family, sample, renderer)
     
     ## Add debarcer info and time stamp
-    AddInfo(directory, L, 2, 'black', font_family, FigPaths, renderer)
+    AddInfo(directory, L, 2, 'black', font_family, FigPaths, CovStats, DataFiles, mincov, minratio, minumis, minchildren, renderer)
     
     ## Pre-processing section
     headernum = AddHeader(L, 1, 'black', 1, font_family, 'Pre-processing', renderer)
