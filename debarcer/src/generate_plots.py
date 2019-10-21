@@ -418,6 +418,7 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
         except:
             minval = 0
         for i in range(len(dataVals)):
+            print(dataVals[i] < minval)
             if dataVals[i] < minval:
                 low_data.append({'value': (i, dataVals[i]), 'color':'red',
                                  'label':Coordinates[i]})
