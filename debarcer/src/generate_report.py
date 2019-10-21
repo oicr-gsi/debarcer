@@ -190,6 +190,7 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
     for i in range(len(minvals)):
         try:
             PlotDataPerRegion(CovStats, DataFiles, minval=minvals[i], datatype=datatypes[i])
+            valid += 1
         except:
             missing += 1
          
