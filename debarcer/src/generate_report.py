@@ -528,7 +528,7 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
     # add warning for missing files
     missing = [Maps[i][0].format(extension) for i in Maps if FigPaths[i] == '']
     svgfigs = ['Total_umis.svg', 'Children_Umis.svg', 'Child_Parent_Umis_Ratio.svg']
-    minvals = [minratio,minumis,minchildren]
+    minvals = [minumis,minchildren, minratio]
     datatypes = ['umis', 'children', 'ratio']
     # check if missing svg
     for i in range(len(svgfigs)):
