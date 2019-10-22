@@ -12,11 +12,10 @@ from src.generate_vcf import get_vcf_output
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
  FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent, DropEmptyFiles, CheckFilePath, ConvertArgToBool
-from src.generate_plots import PlotCoverage, PlotMeanFamSize, PlotNonRefFreqData,\
- PlotConsDepth, PlotUmiCounts, PlotParentsToChildrenCounts, PlotParentFreq, \
- PlotNetworkDegree, PlotUMiFrequency, GetUmiCountFromPreprocessing, \
- PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo, PlotIncorrectReads, \
- PlotDataPerRegion
+from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
+ PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
+ GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
+ PlotIncorrectReads, PlotDataPerRegion
 from src.generate_report import WriteReport   
  
 import matplotlib.pyplot as plt
