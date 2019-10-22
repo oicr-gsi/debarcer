@@ -80,11 +80,15 @@ def is_overlapping(read_start, read_end, region_start, region_end):
     region_start and region_end
     '''
     
-    if region_start <= read_start < region_end and read_end <= region_end:
-        return True
-    else:
-        return False
-    
+    # read_pos is None if unmapped read or missing cigar
+    try:
+        if region_start <= read_start < region_end and read_end <= region_end:
+            overlap = True
+        else:
+            overlap = False
+    except:
+        overlap = False
+    return overlap
 
 
 def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate):
