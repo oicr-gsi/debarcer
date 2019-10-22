@@ -120,7 +120,8 @@ def group_umis(args):
     :param distthreshold: Hamming distance threshold for connecting parent-children umis
     :param postthreshold: Distance threshold in bp for defining families within groups
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
-    
+    :param truncate: Skip reads overlapping with the genomic interval if True. Default is False
+        
     Groups by hamming distance and form families based on physical distances within groups
     '''
     
@@ -163,7 +164,7 @@ def group_umis(args):
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     # keep the most abundant family within group and ignore others if args.ignore is True
-    umi_families, umi_groups, umi_positions = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore)
+    umi_families, umi_groups, umi_positions = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate)
     
     # get the number of parent umis, number of children and number of parent given a number of children
     filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
@@ -210,7 +211,7 @@ def collapse(args):
     :param allthreshold: Allele threshold
     :param postthreshold: Umi position threshold for grouping umis together
     :param maxdepth: Maximum read depth. Default is 1000000
-    :param truncate: Only consider pileup columns in given region. Default is True\
+    :param truncate: Only consider pileup columns in given region. Default is False
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
        
     Base collapses from given BAM and umi family file
@@ -389,7 +390,7 @@ def run_scripts(args):
     :param allthreshold: Allele threshold
     :param maxdepth: Maximum read depth. Default is 1000000
     :param truncate: If truncate is True and a region is given, only pileup columns
-                     in the exact region specificied are returned. Default is True
+                     in the exact region specificied are returned. Default is False
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True'
     :param ignore: Keep the most abundant family and ignore families at other positions within each group. Default is False
     :param merge: Merge data, json and consensus files respectively into a 1 single file. Default is True
@@ -752,6 +753,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
     g_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
     g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=ConvertArgToBool, default=False, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
+    g_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='Discard reads overlapping with the genomic region if True. Default is False')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command
@@ -769,8 +771,8 @@ if __name__ == '__main__':
     c_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
     c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
-    c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=True, type=ConvertArgToBool, help='If truncate is True and a region is given,\
-                          only pileup columns in the exact region specificied are returned. Default is True')
+    c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='If truncate is True and a region is given,\
+                          only pileup columns in the exact region specificied are returned. Default is False')
     c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=False, type=ConvertArgToBool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
     c_parser.set_defaults(func=collapse)
 
@@ -798,9 +800,9 @@ if __name__ == '__main__':
     r_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
     r_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     r_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
-    r_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_false',
+    r_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_true',
                           help='If truncate is True and a region is given,\
-                          only pileup columns in the exact region specificied are returned. Default is True')
+                          only pileup columns in the exact region specificied are returned. Default is False')
     r_parser.add_argument('-io', '--IgnoreOrphans', dest='ignoreorphans', action='store_true',
                           help='Ignore orphans (paired reads that are not in a proper pair). Default is False')
     r_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False')

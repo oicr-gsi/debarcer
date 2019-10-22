@@ -212,7 +212,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     DataDir = os.path.join(outdir, 'Datafiles')
 
     # set up group command
-    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7}'
+    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8}'
     # set up collapse cmd
     CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -rt {10} -at {11} -p {12} -m {13} -t {14} -i {15}'
     # set qsub command
@@ -235,7 +235,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # dump group cmd into a shell script  
         GroupScript = os.path.join(QsubDir, 'UmiGroup_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(GroupScript, 'w')
-        newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(distthreshold), str(postthreshold), ignore) + '\n')
+        newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(distthreshold), str(postthreshold), ignore, str(truncate)) + '\n')
         newfile.close()
         # get a umique job name
         jobname1 = name_job('UmiGroup' + '_' + region.replace(':', '-'))

@@ -67,15 +67,36 @@ def cluster_umis(umis, counts, dist_threshold):
 
 
 
-def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups):
+def is_overlapping(read_start, read_end, region_start, region_end):
+    '''
+    (int, int, int, int) -> bool
+    
+    :param read_start: read start position, 0-based half open
+    :param read_end: read end position. Points to one past the last aligned residue
+    :param region_start: Start index of the region, 0-based half opened
+    :param region_end: End index of the region, 0-based half opened
+    
+    Return True if the read is contained within the genomic interval specified by contig,
+    region_start and region_end
+    '''
+    
+    if region_start <= read_start < region_end and read_end <= region_end:
+        return True
+    else:
+        return False
+    
+
+
+def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate):
     """
-    (str, int, int, file, list) -> dict
+    (str, int, int, file, list, bool) -> dict
     
     :param contig: Chromosome, eg ChrN
     :param region_start: Start index of the region, 0-based half opened
     :param region_end: End index of the region, 0-based half opened
-    :bam_file: Bam file with umi in read names
-    :umi_groups: List with groups of umi sequences separated by given hamming distance
+    :param bam_file: Bam file with umi in read names
+    :param umi_groups: List with groups of umi sequences separated by given hamming distance
+    :param truncate: Skip reads overlapping with the genomic interval if True    
         
     Return a dictionary of dictionaries with parent umi and all children umis
     with their count at each position
@@ -94,21 +115,26 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
             umis = read.query_name.split(':')[-1].split(';')
             # get the start position 0-based
             pos = int(read.reference_start)
-            # for each umi sequence
-            for umi in umis:
-                # get the parent umi
-                parent = parent_umi[umi]
-                # initialize inner dict if parent not in umi_families
-                if parent not in D:
-                    D[parent] = {}
-                # check if umi is recorded for that group
-                if umi not in D[parent]:
-                    D[parent][umi] = {}
-                # check if position is recorded
-                if pos in D[parent][umi]:
-                    D[parent][umi][pos] += 1
-                else:
-                    D[parent][umi][pos] = 1
+            end = int(read.reference_end)
+            # skip reads overlapping with region if truncate is True
+            if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
+                continue
+            else:
+                # for each umi sequence
+                for umi in umis:
+                    # get the parent umi
+                    parent = parent_umi[umi]
+                    # initialize inner dict if parent not in umi_families
+                    if parent not in D:
+                        D[parent] = {}
+                    # check if umi is recorded for that group
+                    if umi not in D[parent]:
+                        D[parent][umi] = {}
+                    # check if position is recorded
+                    if pos in D[parent][umi]:
+                        D[parent][umi][pos] += 1
+                    else:
+                        D[parent][umi][pos] = 1
     return D
 
 
@@ -196,10 +222,10 @@ def find_group_families(contig, umi_families, pos_threshold, ignore_others):
     return C
 
 
-def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore_others):
+def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore_others, truncate):
     """
     
-    (str, int, int, file, int, int) -> tuple
+    (str, int, int, file, int, int, bool) -> tuple
     
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
@@ -207,7 +233,8 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     :param bam_file: Path to the bam file
     :param pos_threshold: Position threshold to group umis together 
     :param dist_threshold: The hamming distance threshold to connect parent and child umis     
-    :param ignore_others: Ignore families distant from the most abundant family    
+    :param ignore_others: Ignore families distant from the most abundant family
+    :param truncate: Skip reads overlapping with the genomic interval if True    
         
     Returns a tuple of dictionaries with umi information before and after grouping
     """ 
@@ -223,7 +250,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
         
     print("Grouping UMIs by position...")
     # record all umis per group and position
-    umi_positions = extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups)
+    umi_positions = extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate)
     
     # get the positions and counts of umi families within each group (position is from the most abundant family)  
     umi_families = find_group_families(contig, umi_positions, pos_threshold, ignore_others)
