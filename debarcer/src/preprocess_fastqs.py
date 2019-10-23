@@ -28,26 +28,35 @@ def check_library_prep(prepname, prepfile):
     Check that library prep ini has valid values. Raise ValueError if not
     '''
     
+    # get the parameters from the prep file for a given library prep
     L = parse_prep(prepname, prepfile)
     D = {i:j for i, j in L.items()} 
-    
-    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq'}
+    # check that all expected parameters are present
+    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq', 'umi_pos'}
     missing = set(D.keys()).symmetric_difference(set(expected))
     if len(missing) != 0:
         raise ValueError('ERR: unexpected keys in librabry prep'.format(', '.join(missing)))
+    # check that umi_locs, umi_lens and umi_pos have same length
+    a = list(map(lambda x: x.strip(), D['umi_locs'].split(',')))
+    b = list(map(lambda x: x.strip(), D['umi_lens'].split(',')))
+    c = list(map(lambda x: x.strip(), D['umi_pos'].split(',')))
     
-    if len(list(map(lambda x: x.strip(), D['umi_locs'].split(',')))) != len(list(map(lambda x: x.strip(), D['umi_lens'].split(',')))):
+    # if , not in umi_pos, the same umi_pos is propagated to all files having umis
+    if ',' not in D['umi_pos']:
+        c = c * len(a)
+    if len(a) != len(b) != len(c):
         raise ValueError('ERR: umi_locs and umi_lens should be comma-separated lists of identical size')
-    
+       
+    # accepted nucleotides in spacer sequences
     nucleotides = 'ACGTURYSWKMBDHVN'
-        
+    # check parameter format    
     for i in D:
         if i in ['input_reads', 'output_reads']:
             try:
                 int(D[i])
             except:
                 raise ValueError('ERR: value for {0} should be an integer'.format(i))
-        elif i in ['umi_locs', 'umi_lens']:
+        elif i in ['umi_locs', 'umi_lens', 'umi_pos']:
             for j in list(map(lambda x: x.strip(), D[i].split(','))):
                 try:
                     int(j)
@@ -66,7 +75,7 @@ def check_library_prep(prepname, prepfile):
                 non_valid = set(D['spacer_seq'].upper()).difference(set(nucleotides.upper()))    
                 if len(non_valid) != 0:
                     raise ValueError('ERR: spacer sequence contains non valid nucleotides: {0}'.format(', '.join(non_valid)))
-                    
+                
 def getread(fastq_file):
     """
     (file) -- > itertools.zip_longest
@@ -79,26 +88,31 @@ def getread(fastq_file):
     return zip_longest(*args, fillvalue=None)
 
 
-def extract_umis(reads, umi_locs, umi_lens):
+def extract_umis(reads, umi_locs, umi_lens, umi_pos):
     '''
-    (list, list, list) -> list
+    (list, list, list, list) -> list
     :param reads: A list of read sequences
     :param umi_locs: A list of 1-based indices indicating which read sequences have the umis.
      (eg umi_locs = [1]: umi is located in 1st read of reads, reads[0])
     :param umi_lens: A list with umi lengths for each location
+    :param umi_pos: A list of umi_positions (1-based) within reads
+    
     
     Returns a return a list of umi sequences
+    Pre-condition: umi_locs, umi_lens and umi_pos have same length
     '''
     
     # make a list with all umi sequences
     umis = []
     
 	 #Iterate through (umi_loc, umi_len) pairs in list of tuple pairs
-    for umi_loc, umi_len in zip(umi_locs, umi_lens):
+    for umi_loc, umi_len, pos in zip(umi_locs, umi_lens, umi_pos):
         # get the read with the umi convert 1-base to 0-base position
         read = reads[int(umi_loc) - 1]
+        # convert the left-most umi position to 0-based
+        pos = pos - 1
         # slice the read to extract the umi sequence
-        umis.append(read[0:int(umi_len)])
+        umis.append(read[pos: pos + int(umi_len)])
     return umis
 
 
@@ -207,8 +221,14 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     num_reads, actual_reads  = int(prep['INPUT_READS']), int(prep['OUTPUT_READS'])
     # get the indices of reads with  UMI (1-3)
     umi_locs = [int(x.strip()) for x in prep['UMI_LOCS'].split(',')]
-    # get the length of the umis (1-100)
+    # get the length of the umis (1-3)
     umi_lens = [int(x.strip()) for x in prep['UMI_LENS'].split(',')]
+    # get the positions of umis within reads
+    # if a single value is listed in the library_prep.ini, it will be propagated to all fastqs having umis
+    umi_pos = [int(x.strip()) for x in prep['UMI_POS'].split(',')]
+    if ',' not in prep['UMI_POS']:
+        umi_pos = umi_pos *  len(umi_lens)
+    
     # specify if a spacer is used or not
     spacer = prep.getboolean('SPACER')
             
@@ -284,7 +304,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         # extract umi sequences from reads
         # make a list of read sequences
         readseqs = [i[1] for i in reads]
-        umis = extract_umis(readseqs, umi_locs, umi_lens)
+        umis = extract_umis(readseqs, umi_locs, umi_lens, umi_pos)
         # skip reads with spacer in wrong position
         if spacer == True and correct_spacer(readseqs, umis, spacer_seq) == False:
             # count reads with incorrect umi/spacer configuration
