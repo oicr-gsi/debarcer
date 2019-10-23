@@ -41,7 +41,9 @@ def check_library_prep(prepname, prepfile):
     b = list(map(lambda x: x.strip(), D['umi_lens'].split(',')))
     c = list(map(lambda x: x.strip(), D['umi_pos'].split(',')))
     
-    # if , not in umi_pos, the same umi_pos is propagated to all files having umis
+    # if , not in umi_pos or umi_lens, the same values is propagated to all files having umis
+    if ',' not in D['umi_lens']:
+        b = b * len(a)
     if ',' not in D['umi_pos']:
         c = c * len(a)
     if len(a) != len(b) != len(c):
