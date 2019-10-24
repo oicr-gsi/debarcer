@@ -207,8 +207,6 @@ def collapse(args):
     :param famsize: Comma-separated list of minimum umi family size to collapase on
     :param countthreshold: Base count threshold in pileup column
     :param percentthreshold: Base percent threshold in pileup column
-    :param refthreshold: Reference threshold
-    :param allthreshold: Allele threshold
     :param postthreshold: Umi position threshold for grouping umis together
     :param maxdepth: Maximum read depth. Default is 1000000
     :param truncate: Only consider pileup columns in given region. Default is False
@@ -270,10 +268,6 @@ def collapse(args):
     percent_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
     # get count threshold
     count_threshold = GetThresholds(args.config, 'count_consensus_threshold', args.countthreshold)
-    # get reference threshold
-    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
-    # get allele threshold
-    all_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.allthreshold)
     # get umi position threshold 
     pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     
@@ -285,7 +279,7 @@ def collapse(args):
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
+    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, percent_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
  
     print(timestamp() + "Consensus generated. Consensus file written to {}.".format(ConsDir))
 
@@ -303,7 +297,7 @@ def VCF_converter(args):
     
     
     
-    Converts consensus files tino VCF format
+    Converts consensus files into VCF format
     '''
 
     # get output directory from the config or command. set to current dir if not provided
@@ -315,12 +309,28 @@ def VCF_converter(args):
         else:
             os.makedirs(outdir)
     
+    # get the subdirectory with consensus files
+    ConsDir = os.path.join(outdir, 'Consfiles')
+    # make a list of consensus files
+    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' in i]
+    # remove empty files in place and print a warning
+    DropEmptyFiles(ConsFiles)
+    # check that paths to files are valid. raise ValueError if file invalid
+    CheckFilePath(ConsFiles)
+    
     # create vcf dir
     VCFDir = os.path.join(outdir, 'VCFfiles')
     if os.path.isdir(VCFDir) == False:
         os.mkdir(VCFDir)
     
     # extract region from consensus file. merged: single or multiple chromos; not merged: single chromo
+    
+    
+    
+    # get reference threshold
+    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    # get allele threshold
+    all_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.allthreshold)
     
     
     
@@ -767,8 +777,6 @@ if __name__ == '__main__':
     c_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
     c_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', help='Base count threshold in pileup column')
     c_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', help='Base percent threshold in pileup column')
-    c_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
-    c_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
     c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
     c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='If truncate is True and a region is given,\
@@ -783,6 +791,8 @@ if __name__ == '__main__':
     v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
     v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
     v_parser.add_argument('-c', '--config', help='Path to your config file.')
+    v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
+    v_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
     v_parser.set_defaults(func=VCF_converter)
     
     ## Run scripts command 

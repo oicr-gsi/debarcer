@@ -385,7 +385,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     return cons_data, coverage
 
 
-def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold):
+def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir):
     '''
     (dict, str, str, int, int, str, num, num) -> None
     
@@ -394,10 +394,6 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
     :param outdir: Output directory
-    
-    :param ref_threshold: ??
-        
-    :param all_threshold: ??
     
     Writes a long-form consensus file for every event detected in the collapsed data
     '''
@@ -448,7 +444,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
             
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, ref_threshold, all_threshold, max_depth, truncate, ignore_orphans):
+def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, max_depth, truncate, ignore_orphans):
     '''
     (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool) -> None
     
@@ -466,8 +462,6 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     :param pos_threshold: Window size to group indivual umis into families within groups
     :param percent_threshold: Percent consensus threshold for alternative base within family 
     :param count_threshold: Count consensus threshold for alternative base within family
-    :param ref_threshold: ??
-    :param all_threshold: ??
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
@@ -498,7 +492,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
 
     # write output consensus file
     print("Writing output...")
-    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir, ref_threshold, all_threshold)
+    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir)
     # save coverage to a yaml in outdir/Stats    
     StatsDir = os.path.join(os.path.dirname(outdir), 'Stats')
     if os.path.isdir(StatsDir) == False:
