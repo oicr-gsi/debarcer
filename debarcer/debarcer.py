@@ -343,6 +343,9 @@ def VCF_converter(args):
     
     # get minimum umi family sizes
     family_sizes = list(map(lambda x: int(x.strip()), args.famsize.split(',')))
+    # generate vcf for famsize = 0. this is because 0 can be omitted during collapse
+    if 0 not in family_sizes:
+        family_sizes.append(0)
         
     print(timestamp() + "Generating VCFs...")
 
@@ -788,8 +791,8 @@ if __name__ == '__main__':
                           help='Maximum reference frequency to consider alternative variants\
                           (ie. position with ref freq <= ref_threshold is considered variable)')
     v_parser.add_argument('-at', '--AlternativeThreshold', dest='atlthreshold',
-                          help='Minimum number of reads to consider an alternative allele at a variable position\
-                          (ie. allele depth >= alt_threshold and ref freq <= ref_threshold: alternative allele)')
+                          help='Minimum allele frequency to consider an alternative allele at a variable position\
+                          (ie. allele freq >= alt_threshold and ref freq <= ref_threshold: alternative allele)')
     v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold',
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)Filter threshold')
