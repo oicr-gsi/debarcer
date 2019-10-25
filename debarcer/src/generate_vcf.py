@@ -86,6 +86,7 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
 
     # write VCF header 
     newfile.write('##fileformat=VCFv4.2\n')
+    newfile.write('##fileDate={0}\n'.format(time.strftime('%Y%m%d', time.localtime())))
     newfile.write('##reference={0}\n'.format(reference))
     newfile.write('##source=Debarcer v. {0}\n'.format(version))
     newfile.write('##f_size={0}\n'.format(famsize))
