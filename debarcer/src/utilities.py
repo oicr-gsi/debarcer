@@ -96,6 +96,9 @@ def GetThresholds(configfile, parameter, threshold):
                       'umi_edit_distance_threshold'
                       'percent_consensus_threshold'
                       'count_consensus_threshold'
+                      'percent_ref_threshold'
+                      'allele_threshold'
+                      'filter_threshold'
     :param threshold: Setting threshold passed from command    
     
     Return a setting threshold
@@ -105,11 +108,12 @@ def GetThresholds(configfile, parameter, threshold):
     if parameter in ['umi_family_pos_threshold', 'umi_edit_distance_threshold',
                      'percent_consensus_threshold', 'count_consensus_threshold']:
         Level = 'SETTINGS'
-    elif parameter in ['percent_ref_threshold', 'percent_allele_threshold']:
+    elif parameter in ['percent_ref_threshold', 'percent_allele_threshold', 'filter_threshold']:
         Level = 'REPORT'
         
     
-    if parameter in ['umi_family_pos_threshold', 'umi_edit_distance_threshold']:
+    if parameter in ['count_consensus_threshold', 'umi_family_pos_threshold',
+                     'umi_edit_distance_threshold', 'filter_threshold']:
         try:
             config = configparser.ConfigParser()
             config.read(configfile)
@@ -122,10 +126,10 @@ def GetThresholds(configfile, parameter, threshold):
                 # raise error and exit
                 raise ValueError('ERR: Missing setting threshold')
         finally:
-            # check that threshold is float
+            # check that threshold is int
             if type(ThresholdVal) != int:
                 raise ValueError('ERR: Setting threshold should be integer')
-    elif parameter in ['percent_consensus_threshold', 'count_consensus_threshold', 'percent_ref_threshold', 'percent_allele_threshold']:
+    elif parameter in ['percent_consensus_threshold', 'percent_ref_threshold', 'percent_allele_threshold']:
         try:
             config = configparser.ConfigParser()
             config.read(configfile)
