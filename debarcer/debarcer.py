@@ -8,7 +8,7 @@ import mistune
 from src.preprocess_fastqs import reheader_fastqs, check_library_prep
 from src.umi_error_correct import get_umi_families, umi_datafile
 from src.generate_consensus import generate_consensus_output
-from src.generate_vcf import get_vcf_output
+from src.generate_vcf import WriteVCF
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
  FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent, DropEmptyFiles, CheckFilePath, ConvertArgToBool
@@ -291,8 +291,16 @@ def VCF_converter(args):
     :param config: Path to the config file
     :param outdir: Output directory where subdirectories are created
     
-    
-    
+    param consfile: Path to the consensus file (merged or not)
+    :param outputfile: Path to the output VCF file
+    :param reference" Path to the reference genome 
+    :param famsize: Minimum umi family size to collapse umi
+    :param ref_threshold: Maximum reference frequency to consider alternative variants
+                          (ie. position with ref freq <= ref_threshold is considered variable)
+    :param alt_threshold: minimum number of reads to consider an alternative allele at a variable position
+                          (ie. allele depth >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
+    :param filter_threshold: minimum number of reads to pass alternative variants 
+                             (ie. filter = PASS if variant depth >= alt_threshold)
     
     
     
@@ -311,6 +319,9 @@ def VCF_converter(args):
     
     # get the subdirectory with consensus files
     ConsDir = os.path.join(outdir, 'Consfiles')
+    if os.path.isdir(ConsDir) == False:
+        raise ValueError('ERR: {0} is not a valid directory'.format(ConsDir))
+    
     # make a list of consensus files
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' in i]
     # remove empty files in place and print a warning
@@ -318,49 +329,32 @@ def VCF_converter(args):
     # check that paths to files are valid. raise ValueError if file invalid
     CheckFilePath(ConsFiles)
     
-    # create vcf dir
+    # create vcf dir if doesn't exist already
     VCFDir = os.path.join(outdir, 'VCFfiles')
     if os.path.isdir(VCFDir) == False:
         os.mkdir(VCFDir)
     
-    # extract region from consensus file. merged: single or multiple chromos; not merged: single chromo
-    
-    
-    
     # get reference threshold
     ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
     # get allele threshold
-    all_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.allthreshold)
+    alt_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.altthreshold)
+    # get filter threshold
+    filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
-    
-    
-    
-    
-    # check that region is properly formatted
-    region = args.region
-    CheckRegionFormat(region)
-    # get chromosome 
-    contig = region.split(":")[0]
-    # get 1-based inclusive region coordinates
-    region_start, region_end = int(region.split(":")[1].split("-")[0]), int(region.split(":")[1].split("-")[1])
-    # convert coordinates to 0-based half opened coordinates
-    region_start = region_start -1
+    # get minimum umi family sizes
+    family_sizes = list(map(lambda x: int(x.strip()), args.famsize.split(',')))
         
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     print(timestamp() + "Generating VCFs...")
 
-    get_vcf_output(args.consfile, region_start, region_end, outdir, args.config)
-    
-    print(timestamp() + "VCFs generated. VCF files written to {}.".format(outdir))
+    # loop over consensus files
+    for filename in ConsFiles:
+        # loop over family sizes
+        for family in family_sizes:
+            # write a VCF per family size and consensus file
+            outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '.vcf')
+            WriteVCF(filename, outputfile, args.reference, family, ref_threshold, alt_threshold, filter_threshold)
+
+    print(timestamp() + "VCFs generated. VCF files written to {0}.".format(VCFDir))
 
 
 def merge_files(args):
@@ -786,13 +780,19 @@ if __name__ == '__main__':
 
     ## Variant call command - requires cons file (can only run after collapse)
     v_parser = subparsers.add_parser('call', help="Convert consensus file into VCF format.")
-    v_parser.add_argument('-o', '--output_path', help='Path to writer output files to.', required=True)
-    v_parser.add_argument('-r', '--region', help='Region to analyze (string of the form chrX:posA-posB).', required=True)
-    v_parser.add_argument('-cf', '--cons_file', help='Path to your cons file.', required=True)
-    v_parser.add_argument('-f', '--f_sizes', help='Comma-separated list of family sizes to make VCF files for.', required=True)
-    v_parser.add_argument('-c', '--config', help='Path to your config file.')
-    v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', help='Reference threshold')
-    v_parser.add_argument('-at', '--AlleleThreshold', dest='allthreshold', help='Allele threshold')
+    v_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
+    v_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
+    v_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
+    v_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
+    v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold',
+                          help='Maximum reference frequency to consider alternative variants\
+                          (ie. position with ref freq <= ref_threshold is considered variable)')
+    v_parser.add_argument('-at', '--AlternativeThreshold', dest='atlthreshold',
+                          help='Minimum number of reads to consider an alternative allele at a variable position\
+                          (ie. allele depth >= alt_threshold and ref freq <= ref_threshold: alternative allele)')
+    v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold',
+                          help='Minimum number of reads to pass alternative variants\
+                          (ie. filter = PASS if variant depth >= alt_threshold)Filter threshold')
     v_parser.set_defaults(func=VCF_converter)
     
     ## Run scripts command 
