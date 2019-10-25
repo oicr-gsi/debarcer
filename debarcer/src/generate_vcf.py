@@ -6,8 +6,6 @@ Created on Fri Oct 25 14:25:48 2019
 """
 
 from src.generate_report import ExtractVersion
-import itertools
-import os
 import time
 
 
@@ -54,9 +52,9 @@ def GetConsData(consfile):
         
     
 
-def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_threshold):
+def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_threshold, filter_threshold):
     '''
-    (str, str, str, int, float, int) -> None
+    (str, str, str, int, float, int, int) -> None
     
     :param consfile: Path to the consensus file (merged or not)
     :param outputfile: Path to the output VCF file
@@ -64,9 +62,11 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     :param famsize: Minimum umi family size to collapse umi
     :param ref_threshold: Maximum reference frequency to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
-    :param alt_threshold: minimum number of reads to pass alternative variants 
-                          (ie. filter = PASS if variant depth >= alt_threshold)
-    
+    :param alt_threshold: minimum number of reads to consider an alternative allele at a variable position
+                          (ie. allele depth >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
+    :param filter_threshold: minimum number of reads to pass alternative variants 
+                             (ie. filter = PASS if variant depth >= alt_threshold)
+      
     Write a VCF from the consensus file
     '''
     
@@ -96,7 +96,7 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     newfile.write('##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n')
     newfile.write('##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n')
     newfile.write('##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n')
-    newfile.write('##FILTER=<ID=a10,Description=\"Alt allele depth below 10\">\n')
+    newfile.write('##FILTER=<ID=a{0},Description=\"Alt allele depth below {0}\">\n'.format(filter_threshold))
     newfile.write('##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n')
     newfile.write('##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n')
     newfile.write('##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n')
@@ -154,10 +154,10 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
                 alt_info = '{0}:{1}:{2}'.format(depth[ref], ','.join(alt_depth), ','.join(alt_freq))
                 
                 # get the filter value based on min_read_depth
-                if True in [depth[i] > 10 for i in alt_alleles]:
+                if True in [depth[i] >= filter_threshold for i in alt_alleles]:
                     filt = 'PASS' 
                 else:
-                    filt = 'a10'
+                    filt = 'a{0}'.format(filter_threshold)
             
                 newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info, fmt_str, alt_info]) + '\n')
             
