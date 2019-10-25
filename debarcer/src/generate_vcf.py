@@ -62,8 +62,8 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     :param famsize: Minimum umi family size to collapse umi
     :param ref_threshold: Maximum reference frequency to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
-    :param alt_threshold: minimum number of reads to consider an alternative allele at a variable position
-                          (ie. allele depth >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
+    :param alt_threshold: minimum allele frequency to consider an alternative allele at a variable position
+                          (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
     :param filter_threshold: minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
       
@@ -144,8 +144,8 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
                 # compute allele frequency for each allele
                 freq = {i: depth[i]/sum(depth.values()) for i in alleles}
                 
-                # make a list of alternative alleles with read depth >= alt_threshold
-                alt_alleles = [i for i in depth if i != ref and depth[i] >= alt_threshold]
+                # make a list of alternative alleles with frequency >= alt_threshold
+                alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
                 # make a list of read depth for alternative alleles passing alt_threshold
                 alt_depth = [str(depth[i]) for i in alt_alleles]
                 # make a list of frequencies for alternative alelles passing alt_threshold 
