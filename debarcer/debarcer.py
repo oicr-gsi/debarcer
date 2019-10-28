@@ -466,6 +466,7 @@ def generate_plots(args):
     (list) -> None
     
     :param directory: Directory with subdirectories ConsFiles and Datafiles 
+    :param config: Path to the config file
     :param extension: Figure format. Accepted values: png, pdf, jpeg, tiff
     :param report: Boolean, generate a report if True
     :param sample: Optional parameter, sample name to appear in report
@@ -473,16 +474,19 @@ def generate_plots(args):
     :param minratio: Minimum ratio to label regions    
     :param minumis: Minimum number of umis to label regions
     :param minchildren: Minimum number of umi children to label regions
-    
+    :param ref_threshold: Cut Y axis at 100 - ref_threshold
+        
     Generate plots in Figures directory
     '''
     
     
+    # get the reference threshold to consider variable positions
+    # cut Y axis at non-ref-freq
+    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    non_ref_freq = 100 - ref_threshold
+        
     print('plot:', args.report, type(args.report))
     print('plot', 'bool', isinstance(args.report, bool), 'str', isinstance(args.report, str))
-    
-    
-       
     
     # get subdirectories
     L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
@@ -591,8 +595,7 @@ def generate_plots(args):
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
-        freqlimit = 10
-        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=freqlimit, title='Y axis cut at {0}%'.format(freqlimit), legend='legend')
+        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
         
         
         print('PlotConsDepth')
@@ -850,6 +853,7 @@ if __name__ == '__main__':
     
     ## Generate graphs	
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
+    plot_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
     plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
     plot_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name to apear in the report is reporting flag activated. Optional')
@@ -858,6 +862,7 @@ if __name__ == '__main__':
     plot_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     plot_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=float, default=1000, help='Minimum umi count. Values below are plotted in red')
     plot_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=float, default=500, help='Minimum children umi count. Values below are plotted in red')
+    plot_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', default=95, type=float, help='Cut Y axis at non-ref frequency, the minimum frequency to consider a position variable')
     plot_parser.set_defaults(func=generate_plots)
     
     ## Generate report

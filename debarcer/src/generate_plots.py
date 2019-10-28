@@ -633,7 +633,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     :param Options: Accepted keys are:
                     'YLimit': Y axis limit, in variant frequency (0-100) 
                     'title': Title of the plot
-           
+                               
     Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
     
