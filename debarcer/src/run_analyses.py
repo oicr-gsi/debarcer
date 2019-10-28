@@ -1,7 +1,6 @@
 import operator
 import os
 import json
-#from src.generate_vcf import get_vcf_output
 import subprocess
 from src.utilities import CheckRegionFormat, CheckJobs
 import uuid
@@ -163,26 +162,33 @@ def name_job(prefix):
     return jobname    
 
     
-def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
-                percentthreshold, distthreshold, postthreshold, refthreshold,
-                allthreshold, maxdepth, truncate, ignoreorphans, ignore, merge,
-                plot, report, mincov, minratio, minumis, minchildren, extension,
+def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
+                consensus_threshold, dist_threshold, post_threshold, ref_threshold,
+                alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans, ignore, merge,
+                plot, report, call, mincov, minratio, minumis, minchildren, extension,
                 sample, mydebarcer, mypython, mem, queue):
     '''
-    (str, str, str, str, str, int, float, int, int, float, float, int, bool,
-    bool, bool, bool, bool, bool, str, str, str, str, int, str) -> None
+    (str, str, str, str, str, int, float, int, int, float, float, int, int, bool,
+    bool, bool, bool, bool, bool, bool,
+    
+    
+    str, str, str, str, int, str) -> None
     
     :param bamfile: Path to the bam file
     :param outdir: Directory where .umis, and datafiles are written
     :param reference: Path to the reference genome
     :param famsize: Comma-separated list of minimum umi family size to collapase on
     :param bedfile: Bed file with region coordinates. Chromsome must start with chr and positions are 1-based inclusive  
-    :param countthreshold: Base count threshold in pileup column
-    :param percentthreshold: Base percent threshold in pileup column
-    :param distthreshold: Hamming distance threshold for connecting parent-children umis
-    :param postthreshold: Distance threshold in bp for defining families within groups
-    :param refthreshold: Reference threshold
-    :param allthreshold: Allele threshold
+    :param count_threshold: Base count threshold in pileup column
+    :param consensus_threshold: Majority rule consensus threshold in pileup column
+    :param dist_threshold: Hamming distance threshold for connecting parent-children umis
+    :param post_threshold: Distance threshold in bp for defining families within groups
+    :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
+                          (ie. position with ref freq <= ref_threshold is considered variable)
+    :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
+                          (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
+    :param filter_threshold: Minimum number of reads to pass alternative variants 
+                             (ie. filter = PASS if variant depth >= alt_threshold)
     :param maxdepth: Maximum read depth. Default is 1000000
     :param truncate: Only consider pileup columns in given region. Default is True\
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
@@ -190,6 +196,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     :param merge: Merge datafiles, consensus files and umi files if True
     :param plot: Generate figure plots if True
     :param report: Generate analysis report if True
+    :param call: Convert consensus files to VCF if True
     :param mincov: Minimum read depth to label regions
     :param minratio: Minimum ratio to label regions    
     :param minumis: Minimum number of umis to label regions
@@ -215,6 +222,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
     GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8}'
     # set up collapse cmd
     CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -p {10} -m {11} -t {12} -i {13}'
+        
     # set qsub command
     QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -q {2} -l h_vmem={3}g \"bash {4}\"'
     QsubCmd2 = 'qsub -b y -cwd -N {0} -hold_jid {1} -o {2} -e {2} -q {3} -l h_vmem={4}g \"bash {5}\"'
@@ -235,7 +243,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         # dump group cmd into a shell script  
         GroupScript = os.path.join(QsubDir, 'UmiGroup_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(GroupScript, 'w')
-        newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(distthreshold), str(postthreshold), ignore, str(truncate)) + '\n')
+        newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(dist_threshold), str(post_threshold), ignore, str(truncate)) + '\n')
         newfile.close()
         # get a umique job name
         jobname1 = name_job('UmiGroup' + '_' + region.replace(':', '-'))
@@ -249,8 +257,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
         CollapseScript = os.path.join(QsubDir, 'UmiCollapse_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(CollapseScript, 'w')
         newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, reference, region, umifile,
-                                         str(famsize), str(countthreshold), str(percentthreshold),
-                                         str(postthreshold), str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
+                                         str(famsize), str(count_threshold), str(consensus_threshold),
+                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
         newfile.close()
         # get a umique job name
         jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))
@@ -307,9 +315,27 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             #subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
             subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, '20', MergeScript3), shell=True)    
         
+    # make a list of call jobs
+    CallJobs = [] 
+    if call == True:
+        # make a list of jobs, wait until all jobs are done before converting consensus files to VCF 
+        Z = GroupJobNames + MergeJobNames
+        running_groupmerge = CheckJobs(Z)  
+        if running_groupmerge == False:
+            # generate VCF from all consensus files 
+            # set up vcf command
+            VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -f \"{4}\" -rt {5} -at {6} -ft {7}'
+            CallScript = os.path.join(QsubDir, 'VarCall.sh')
+            newfile = open(CallScript, 'w')
+            newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, famsize, ref_threshold, alt_threshold, filter_threshold))
+            newfile.close()    
+            jobname6 = name_job('Call')
+            CallJobs.append(jobname6)
+            subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', CallScript), shell=True)    
+    
     if plot == True:
         # make a list of jobs. wait until all jobs are done before plotting and reporting
-        L = ConsJobNames + GroupJobNames + MergeJobNames
+        L = ConsJobNames + GroupJobNames + MergeJobNames + CallJobs
         running_jobs = CheckJobs(L)
         if running_jobs == False:
             # generate plots and report if report is True
@@ -318,6 +344,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, countthreshold,
             newfile = open(PlotScript, 'w')
             newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren))
             newfile.close()
-            jobname6 = name_job('Plot')
-            subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', PlotScript), shell=True)    
+            jobname7 = name_job('Plot')
+            subprocess.call(QsubCmd1.format(jobname7, LogDir, queue, '20', PlotScript), shell=True)    
     
