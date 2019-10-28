@@ -151,7 +151,7 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
                     # make a list of read depth for alternative alleles passing alt_threshold
                     alt_depth = [str(depth[i]) for i in alt_alleles]
                     # make a list of frequencies for alternative alelles passing alt_threshold 
-                    alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
+                    alt_freq = [str(round(freq[i], 6)) for i in alt_alleles]
                     # make a list with alternative alleles info
                     alt_info = '{0}:{1}:{2}'.format(depth[ref], ','.join(alt_depth), ','.join(alt_freq))
                 

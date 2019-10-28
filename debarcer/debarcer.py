@@ -302,9 +302,6 @@ def VCF_converter(args):
     :param filter_threshold: minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
     
-    
-    
-    
     Converts consensus files into VCF format
     '''
 
@@ -335,9 +332,9 @@ def VCF_converter(args):
         os.mkdir(VCFDir)
     
     # get reference threshold
-    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    ref_threshold = GetThresholds(args.config, 'ref_threshold', args.refthreshold)
     # get allele threshold
-    alt_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.altthreshold)
+    alt_threshold = GetThresholds(args.config, 'alt_threshold', args.altthreshold)
     # get filter threshold
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     

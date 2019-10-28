@@ -96,7 +96,7 @@ def GetThresholds(configfile, parameter, threshold):
                       'umi_edit_distance_threshold'
                       'percent_consensus_threshold'
                       'count_consensus_threshold'
-                      'percent_ref_threshold'
+                      'ref_threshold'
                       'allele_threshold'
                       'filter_threshold'
     :param threshold: Setting threshold passed from command    
@@ -108,7 +108,7 @@ def GetThresholds(configfile, parameter, threshold):
     if parameter in ['umi_family_pos_threshold', 'umi_edit_distance_threshold',
                      'percent_consensus_threshold', 'count_consensus_threshold']:
         Level = 'SETTINGS'
-    elif parameter in ['percent_ref_threshold', 'percent_allele_threshold', 'filter_threshold']:
+    elif parameter in ['ref_threshold', 'allele_threshold', 'filter_threshold']:
         Level = 'REPORT'
         
     
@@ -124,12 +124,12 @@ def GetThresholds(configfile, parameter, threshold):
                 ThresholdVal = int(threshold)
             except:
                 # raise error and exit
-                raise ValueError('ERR: Missing setting threshold')
+                raise ValueError('ERR: Missing {0}'.format(parameter))
         finally:
             # check that threshold is int
             if type(ThresholdVal) != int:
                 raise ValueError('ERR: Setting threshold should be integer')
-    elif parameter in ['percent_consensus_threshold', 'percent_ref_threshold', 'percent_allele_threshold']:
+    elif parameter in ['percent_consensus_threshold', 'ref_threshold', 'allele_threshold']:
         try:
             config = configparser.ConfigParser()
             config.read(configfile)
@@ -140,11 +140,15 @@ def GetThresholds(configfile, parameter, threshold):
                ThresholdVal = float(threshold)
             except:
                 # raise error and exit
-                raise ValueError('ERR: Missing setting threshold')
+                raise ValueError('ERR: Missing {0}'.format(parameter))
         finally:
             # check that threshold is float
             if type(ThresholdVal) != float:
-                raise ValueError('ERR: Setting threshold should be float')
+                raise ValueError('ERR: {0} should be float'.format(parameter))
+            # check that frequency is between 0 and 1
+            if not (0 <= ThresholdVal <= 1):
+                raise ValueError('ERR: frequency {0} should be between 0 and 1'.format(parameter))
+
     return ThresholdVal
 
 
