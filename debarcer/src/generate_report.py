@@ -13,7 +13,7 @@ from itertools import zip_longest
 import base64
 from src.generate_plots import PlotDataPerRegion
 from src.utilities import DropEmptyFiles, CheckFilePath
-from version import __version__
+from src.version import __version__
 
 
 # get the path to this file at import to find the setup.py file
