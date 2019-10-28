@@ -450,7 +450,7 @@ def run_scripts(args):
     post_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
     alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
-    filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filtthreshold)
+    filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
     # create shell scripts and run qsubs to Group and Collapse umis 
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
