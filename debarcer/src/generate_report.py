@@ -13,9 +13,14 @@ from itertools import zip_longest
 import base64
 from src.generate_plots import PlotDataPerRegion
 from src.utilities import DropEmptyFiles, CheckFilePath
+from version import __version__
+
 
 # get the path to this file at import to find the setup.py file
-ThisFile = __file__
+#ThisFile = __file__
+
+
+
 
 
 def ResizeFifure(filename, scaling_factor):
@@ -256,8 +261,11 @@ def AddInfo(directory, L, N, color, font_family, FigPaths, CovStats, DataFiles, 
     '''
     
     # extract debarcer version from setup.py
-    version = ExtractVersion()
+    #version = ExtractVersion()
         
+    version = __version__
+    
+    
     # get the date
     date = '<b>time stamp:</b> ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     # get debarcer version
