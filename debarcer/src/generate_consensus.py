@@ -261,7 +261,7 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth, truncate, ignore_orphans):
+def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans):
     '''
     (dict, int, str, str, int, int, str, int, int, int, int, bool, bool) -> dict
     
@@ -275,7 +275,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     :param region_end: End index of the region of interest. 0-based half opened
     :param bam_file: Path to the bam file
     :param pos_threshold: Window size to group indivual umis into families within groups
-    :param percent_threshold: Percent consensus threshold for alternative base within family 
+    :param consensus_threshold: Majority rule consensus threshold for alternative base within family 
     :param count_threshold: Count consensus threshold for alternative base within family
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
@@ -309,11 +309,11 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
                 cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
                 # compute allele frequency within umi family
                 cons_denom = sum(consensus_seq[base_pos][family].values())
-                cons_percent = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
+                cons_freq = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
                 # compute raw depth                
                 raw_depth += cons_denom
                 # check if allele frequencyand allele count > thresholds
-                if cons_percent >= percent_threshold and consensus_seq[base_pos][family][cons_allele] >= count_threshold:
+                if cons_freq >= consensus_threshold and consensus_seq[base_pos][family][cons_allele] >= count_threshold:
                     # count allele
                     if cons_allele in consensuses:
                         consensuses[cons_allele] += 1
@@ -444,7 +444,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
             
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, percent_threshold, count_threshold, max_depth, truncate, ignore_orphans):
+def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans):
     '''
     (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool) -> None
     
@@ -460,7 +460,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     :param outdir: Output directory
     :param fam_size: A comma-separated list of minimum umi family size
     :param pos_threshold: Window size to group indivual umis into families within groups
-    :param percent_threshold: Percent consensus threshold for alternative base within family 
+    :param consensus_threshold: Majority rule consensus threshold for alternative base within family 
     :param count_threshold: Count consensus threshold for alternative base within family
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
@@ -485,7 +485,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
             # compute consensus for uncollapsed data, and get coverage
             cons_data[f_size], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, percent_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
         cons_data[0], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
