@@ -60,9 +60,9 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     :param outputfile: Path to the output VCF file
     :param reference" Path to the reference genome 
     :param famsize: Minimum umi family size to collapse umi
-    :param ref_threshold: Maximum reference frequency to consider alternative variants
+    :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
-    :param alt_threshold: minimum allele frequency to consider an alternative allele at a variable position
+    :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
                           (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
     :param filter_threshold: minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
@@ -144,14 +144,14 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
                     # get the allele read depth
                     depth = {i:int(L[header.index(i)]) for i in alleles}
                     # compute allele frequency for each allele
-                    freq = {i: depth[i]/sum(depth.values()) for i in alleles}
+                    freq = {i: (depth[i]/sum(depth.values())) * 100 for i in alleles}
                 
                     # make a list of alternative alleles with frequency >= alt_threshold
                     alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
                     # make a list of read depth for alternative alleles passing alt_threshold
                     alt_depth = [str(depth[i]) for i in alt_alleles]
                     # make a list of frequencies for alternative alelles passing alt_threshold 
-                    alt_freq = [str(round(freq[i], 6)) for i in alt_alleles]
+                    alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
                     # make a list with alternative alleles info
                     alt_info = '{0}:{1}:{2}'.format(depth[ref], ','.join(alt_depth), ','.join(alt_freq))
                 

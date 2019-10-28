@@ -295,11 +295,11 @@ def VCF_converter(args):
     :param outputfile: Path to the output VCF file
     :param reference" Path to the reference genome 
     :param famsize: Minimum umi family size to collapse umi
-    :param ref_threshold: Maximum reference frequency to consider alternative variants
+    :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
-    :param alt_threshold: minimum number of reads to consider an alternative allele at a variable position
-                          (ie. allele depth >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
-    :param filter_threshold: minimum number of reads to pass alternative variants 
+    :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
+                          (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
+    :param filter_threshold: Minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
     
     Converts consensus files into VCF format

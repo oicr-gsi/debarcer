@@ -146,8 +146,8 @@ def GetThresholds(configfile, parameter, threshold):
             if type(ThresholdVal) != float:
                 raise ValueError('ERR: {0} should be float'.format(parameter))
             # check that frequency is between 0 and 1
-            if not (0 <= ThresholdVal <= 1):
-                raise ValueError('ERR: frequency {0} should be between 0 and 1'.format(parameter))
+            if not (0 <= ThresholdVal <= 100):
+                raise ValueError('ERR: frequency {0} should be between 0 and 100'.format(parameter))
 
     return ThresholdVal
 
