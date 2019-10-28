@@ -564,8 +564,6 @@ def generate_plots(args):
     
     print('PlotCoverage')
     
-    PlotCoverage(ConsFiles, DataFiles, os.path.join(FigDir, 'Coverage_Umi_Count.' + args.extension))
-    
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
 
     # plot graphs for each consensus file
@@ -662,8 +660,6 @@ def generate_plots(args):
     
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
-    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Child_Parent_Umis_Ratio.' + args.extension), 'ratio')    
-        
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
 
     
@@ -672,8 +668,6 @@ def generate_plots(args):
     
     # plot total umi counts
     plt.clf(), plt.cla()
-    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Total_Umis.' + args.extension), 'parents')
-    
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
 
     
@@ -682,8 +676,6 @@ def generate_plots(args):
     
     # plot children umi counts
     plt.clf(), plt.cla()
-    PlotUmiCounts(DataFiles, os.path.join(FigDir, 'Children_Umis.' + args.extension), 'children')
-    
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
 
     
