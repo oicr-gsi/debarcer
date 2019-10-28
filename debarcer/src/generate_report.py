@@ -921,6 +921,7 @@ def WriteReport(directory, extension, Outputfile, mincov, minratio, minumis, min
     (str, str, list, str, str, float, mistune.Markdown, dict) -> None
     
     :param directory: Directory with subfolders including Figures
+    :param figdir: Figures subdirectory in directory
     :param extension: Extension of the figure files
     :param Outputfile: Name of the html report
     :param mincov: Minimum read depth to label regions
@@ -934,19 +935,15 @@ def WriteReport(directory, extension, Outputfile, mincov, minratio, minumis, min
     '''
 
     # get subdirectories
-    L = ['Stats', 'Datafiles', 'Figures']
-    T = [os.path.join(directory, i) for i in L]
-    for i in T:
-        if os.path.isdir(i) == False:
-            raise ValueError('ERR: Expecting directory {0}'.format(i))
-    # unpack directories
-    StatsDir, DataDir, FigDir =  T 
+    datadir = os.path.join(directory, 'Datafile')
+    statsdir = os.path.join(directory, 'Stats')
+    
     # make a list of datafiles with umis that are not empty and not merged
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
+    DataFiles = [os.path.join(datadir, i) for i in os.listdir(datadir) if i.startswith('datafile') and 'chr' in i and i[-4:] == '.csv']
     # remove empty files in place and print a warning
     DropEmptyFiles(DataFiles)
     # get the file with coverage stats
-    CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
+    CovStats = os.path.join(statsdir, 'CoverageStats.yml')
     # check that paths to files are valid. raise ValueError if file invalid
     CheckFilePath(DataFiles + [CovStats])
     

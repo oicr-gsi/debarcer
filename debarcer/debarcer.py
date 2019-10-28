@@ -730,6 +730,13 @@ def generate_report(args):
     if os.path.isdir(ReportDir) == False:
         os.mkdir(ReportDir)
     report = os.path.join(ReportDir, 'debarcer_report.html')
+    
+    # check that subdirectories with required files exist
+    T = [os.path.join(args.directory, i) for i in ['Stats', 'Datafiles', 'Figures']]
+    for i in T:
+        if os.path.isdir(i) == False:
+            raise ValueError('ERR: Expecting directory {0}'.format(i))
+    
     WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
     
 
