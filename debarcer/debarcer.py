@@ -800,7 +800,7 @@ if __name__ == '__main__':
     v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold',
                           help='Maximum reference frequency to consider alternative variants\
                           (ie. position with ref freq <= ref_threshold is considered variable)')
-    v_parser.add_argument('-at', '--AlternativeThreshold', dest='atlthreshold',
+    v_parser.add_argument('-at', '--AlternativeThreshold', dest='altthreshold',
                           help='Minimum allele frequency to consider an alternative allele at a variable position\
                           (ie. allele freq >= alt_threshold and ref freq <= ref_threshold: alternative allele)')
     v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold',
