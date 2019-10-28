@@ -123,7 +123,7 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
             
             
             if end == None:
-                print(pos, read, end, read.query_alignment_length, read.query_length, read.reference_length)
+                print(pos, read, end, read.query_alignment_length, read.query_length, read.reference_length, read.cigarstring, read.cigartuples)
                 raise ValueError('end is None')
             else:
                 end = int(end)
