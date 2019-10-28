@@ -332,9 +332,9 @@ def VCF_converter(args):
         os.mkdir(VCFDir)
     
     # get reference threshold
-    ref_threshold = GetThresholds(args.config, 'ref_threshold', args.refthreshold)
+    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
     # get allele threshold
-    alt_threshold = GetThresholds(args.config, 'alt_threshold', args.altthreshold)
+    alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
     # get filter threshold
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
@@ -449,7 +449,7 @@ def run_scripts(args):
     dist_threshold = GetThresholds(args.config, 'umi_edit_distance_threshold', args.distthreshold)
     post_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
-    alt_threshold = GetThresholds(args.config, 'percent_allele_threshold', args.altthreshold)
+    alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filtthreshold)
     
     # create shell scripts and run qsubs to Group and Collapse umis 
