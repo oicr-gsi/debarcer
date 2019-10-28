@@ -405,6 +405,10 @@ def run_scripts(args):
     :param plot: Generate figure plots if True
     :param report: Generate analysis report if True
     :param call: Convert consensus files to VCF if True
+    :param mincov: Minimum read depth to label regions
+    :param minratio: Minimum ratio to label regions    
+    :param minumis: Minimum number of umis to label regions
+    :param minchildren: Minimum number of umi children to label regions
     :param extension: Figure file extension
     :param sample: Sample name to appear in report. If empty str, outdir basename is used
     :param queue: SGE queue for submitting jobs. Default is default
@@ -457,7 +461,7 @@ def run_scripts(args):
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.merge, args.plot, args.report, args.call, args.mincov,
-                args.minratio, args.umis, args.minchildren, args.extension,
+                args.minratio, args.minumis, args.minchildren, args.extension,
                 args.sample, args.mydebarcer, args.mypython, args.mem, args.queue)
     
     
