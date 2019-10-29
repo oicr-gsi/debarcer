@@ -669,7 +669,7 @@ def generate_plots(args):
     
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), mincov=args.minratio, datatype='ratio')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
 
     
     print('PlotUmiCounts')
@@ -677,7 +677,7 @@ def generate_plots(args):
     
     # plot total umi counts
     plt.clf(), plt.cla()
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), mincov=args.minumis, datatype='umis')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), minval=args.minumis, datatype='umis')
 
     
     print('PlotUmiCounts')
@@ -685,7 +685,7 @@ def generate_plots(args):
     
     # plot children umi counts
     plt.clf(), plt.cla()
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), mincov=args.minchildren, datatype='children')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), minval=args.minchildren, datatype='children')
 
     
     
