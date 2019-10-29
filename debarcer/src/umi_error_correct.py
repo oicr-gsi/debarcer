@@ -3,22 +3,26 @@ import src.umi_network_collapse as network
 
 def umi_count(contig, region_start, region_end, bam_file):
     '''
-    (str, int, int, file) -> dict
+    (str, int, int, file) -> (dict, dict)
     
     :param contig: Chromosome, eg chrN
     :param region_start: Start index of the region, 0-based half-opened
     :param region_end: End index of the region, 0-based half opened
     :bam_file: Bam file with umi in read names
     
-    Returns a dictionary of umi tally for each umi in a given region
+    Returns a tuple with a  dictionary of umi tally for each umi in a given region
+    and a dictionary with counts of unmapped and mapped reads in the region 
     '''
     
-    umi_counts = {}
-    
+    region = contig + ':' + str(region_start + 1) + '-' + str(region_end)
+    umi_counts, read_info = {}, {region: {'mapped': 0, 'unmapped': 0}}
+        
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
         for read in bam_reader.fetch(contig, region_start, region_end):
             # skip unmapped reads
             if read.is_unmapped == False:
+                # record mapped reads
+                read_info[region]['mapped'] += 1
                 # extract the umi sequence from read name
                 # umis <- list of umi sequences
                 umis = read.query_name.split(':')[-1].split(';')
@@ -27,7 +31,12 @@ def umi_count(contig, region_start, region_end, bam_file):
                         umi_counts[i] += 1
                     else:
                         umi_counts[i] = 1
-    return umi_counts
+            elif read.is_unmapped == True:
+                # record unmapped reads
+                read_info[region]['unmapped'] += 1
+                
+    
+    return (umi_counts, read_info)
 
 
 def map_umi_to_parent(umi_groups):
@@ -256,12 +265,14 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     :param ignore_others: Ignore families distant from the most abundant family
     :param truncate: Skip reads overlapping with the genomic interval if True    
         
-    Returns a tuple of dictionaries with umi information before and after grouping
+    Returns a tuple of dictionaries with umi information before and after grouping,
+    and counts of mapped and unmapped reads in the region
     """ 
     
     print("Counting UMIs...")
     # count umi sequences -> dict {umi_seq: count}
-    counts = umi_count(contig, region_start, region_end, bam_file)
+    # count mapped and unmapped reads
+    counts, mapped_reads = umi_count(contig, region_start, region_end, bam_file)
     umis = counts.keys()
     
     print("Clustering UMIs...")
@@ -287,7 +298,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
                 newpos = contig + ':' + str(pos)
                 D[parent][umi][newpos] = umi_positions[parent][umi][pos]
        
-    return umi_families, umi_groups, D
+    return umi_families, umi_groups, D, mapped_reads
 
 
 def umi_datafile(umi_groups):

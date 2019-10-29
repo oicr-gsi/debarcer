@@ -164,7 +164,7 @@ def group_umis(args):
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     # keep the most abundant family within group and ignore others if args.ignore is True
-    umi_families, umi_groups, umi_positions = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate)
+    umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate)
     
     # get the number of parent umis, number of children and number of parent given a number of children
     filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
@@ -176,7 +176,7 @@ def group_umis(args):
         newfile.write('\t'.join(info) + '\n')
     
     # save umi families as a json. positions in the json are 0-based half opened
-    umi_file = os.path.join(outdir, 'Umifiles/{}.json'.format(region))
+    umi_file = os.path.join(outdir, 'Umifiles/{0}.json'.format(region))
     with open(umi_file, 'w') as newfile:
         json.dump(umi_families, newfile, sort_keys = True, indent=4)
     
@@ -189,9 +189,14 @@ def group_umis(args):
     with open(umi_file, 'w') as newfile:
         json.dump(umi_positions, newfile, sort_keys = True, indent=4)
     
-    print(timestamp() + "UMI grouping complete. CSV files written to {}.".format(os.path.join(outdir, 'Datafiles')))
-    print(timestamp() + "UMI grouping complete. UMI files written to {}.".format(os.path.join(outdir, 'Umifiles')))
-    print(timestamp() + "UMI grouping complete. QC files written to {}.".format(os.path.join(outdir, 'Stats')))
+    # save counts of unmapped and mapped reads as a json in Stats directory
+    read_file = os.path.join(outdir, 'Stats/Mapped_read_counts_{}.json'.format(region))
+    with open(read_file, 'w') as newfile:
+        json.dump(mapped_reads, newfile, sort_keys = True, indent=4)
+        
+    print(timestamp() + "UMI grouping complete. CSV files written to {0}.".format(os.path.join(outdir, 'Datafiles')))
+    print(timestamp() + "UMI grouping complete. UMI files written to {0}.".format(os.path.join(outdir, 'Umifiles')))
+    print(timestamp() + "UMI grouping complete. QC files written to {0}.".format(os.path.join(outdir, 'Stats')))
 
 
 def collapse(args):
