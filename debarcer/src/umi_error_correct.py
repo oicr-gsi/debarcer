@@ -17,14 +17,16 @@ def umi_count(contig, region_start, region_end, bam_file):
     
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
         for read in bam_reader.fetch(contig, region_start, region_end):
-            # extract the umi sequence from read
-            # umi <- list of umi sequences
-            umis = read.query_name.split(':')[-1].split(';')
-            for i in umis:
-                if i in umi_counts:
-                    umi_counts[i] += 1
-                else:
-                    umi_counts[i] = 1
+            # skip unmapped reads
+            if read.is_unmapped == False:
+                # extract the umi sequence from read name
+                # umis <- list of umi sequences
+                umis = read.query_name.split(':')[-1].split(';')
+                for i in umis:
+                    if i in umi_counts:
+                        umi_counts[i] += 1
+                    else:
+                        umi_counts[i] = 1
     return umi_counts
 
 
@@ -115,11 +117,13 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
     # loop over aligned reads
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
         for read in bam_reader.fetch(contig, region_start, region_end):
-            # umi <- list of umi sequences
-            umis = read.query_name.split(':')[-1].split(';')
-            # get the start position 0-based
-            pos = int(read.reference_start)
-            end = read.reference_end
+            # skip unmapped reads
+            if read.is_unmapped == False:
+                # umi <- list of umi sequences
+                umis = read.query_name.split(':')[-1].split(';')
+                # get the start position 0-based
+                pos = int(read.reference_start)
+                end = read.reference_end
             
             
             if end == None:
@@ -132,25 +136,25 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
             
             
             
-            # skip reads overlapping with region if truncate is True
-            if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
-                continue
-            else:
-                # for each umi sequence
-                for umi in umis:
-                    # get the parent umi
-                    parent = parent_umi[umi]
-                    # initialize inner dict if parent not in umi_families
-                    if parent not in D:
-                        D[parent] = {}
-                    # check if umi is recorded for that group
-                    if umi not in D[parent]:
-                        D[parent][umi] = {}
-                    # check if position is recorded
-                    if pos in D[parent][umi]:
-                        D[parent][umi][pos] += 1
-                    else:
-                        D[parent][umi][pos] = 1
+                # skip reads overlapping with region if truncate is True
+                if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
+                    continue
+                else:
+                    # for each umi sequence
+                    for umi in umis:
+                        # get the parent umi
+                        parent = parent_umi[umi]
+                        # initialize inner dict if parent not in umi_families
+                        if parent not in D:
+                            D[parent] = {}
+                        # check if umi is recorded for that group
+                        if umi not in D[parent]:
+                            D[parent][umi] = {}
+                        # check if position is recorded
+                        if pos in D[parent][umi]:
+                            D[parent][umi][pos] += 1
+                        else:
+                            D[parent][umi][pos] = 1
     return D
 
 
