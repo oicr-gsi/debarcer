@@ -206,34 +206,34 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
     return valid, missing
 
 
-def ExtractVersion():
-    '''
-    () -> str
-    
-    Returns the debarcer version extracted from the setup.py file
-    '''
-    
-    # get the directory of this file
-    here = os.path.abspath(os.path.dirname(ThisFile))
-    # open setup file, exctract file content
-    assert os.path.isfile(os.path.abspath(os.path.join(here, '../../', 'setup.py'))) == True
-    with open(os.path.abspath(os.path.join(here, '../../', 'setup.py')), 'r') as infile:
-        content = infile.read()
-    content = content.split('\n')
-    
-    # set default version
-    version = 'unknown'
-    # find version
-    for i in content:
-        if i.startswith('version'):
-            version = i
-            break
-    if version != 'unknown':
-        try:
-            version = version.split('=')[1].strip().replace('"', '')
-        except:
-            version = 'unknown'
-    return version
+#def ExtractVersion():
+#    '''
+#    () -> str
+#    
+#    Returns the debarcer version extracted from the setup.py file
+#    '''
+#    
+#    # get the directory of this file
+#    here = os.path.abspath(os.path.dirname(ThisFile))
+#    # open setup file, exctract file content
+#    assert os.path.isfile(os.path.abspath(os.path.join(here, '../../', 'setup.py'))) == True
+#    with open(os.path.abspath(os.path.join(here, '../../', 'setup.py')), 'r') as infile:
+#        content = infile.read()
+#    content = content.split('\n')
+#    
+#    # set default version
+#    version = 'unknown'
+#    # find version
+#    for i in content:
+#        if i.startswith('version'):
+#            version = i
+#            break
+#    if version != 'unknown':
+#        try:
+#            version = version.split('=')[1].strip().replace('"', '')
+#        except:
+#            version = 'unknown'
+#    return version
     
     
 
