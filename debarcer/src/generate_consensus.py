@@ -98,76 +98,70 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             if region_start <= pos < region_end:
                 # loop over reads in pileup column
                 for read in pileupcolumn.pileups:
-                    
-                    
-                    assert read.is_unmapped == False
-                    
-                    
-                    # skip unmapped reads
-                    if read.is_unmapped == False:
-                        # get read information
-                        read_data = read.alignment
-                        read_name, start_pos = read_data.query_name, int(read_data.reference_start)
-                        # get all recorded umis
-                        umis = read_name.split(":")[-1].split(';')
+                    # pileupread obj: represention of an aligned read
+                    # get read information
+                    read_data = read.alignment
+                    read_name, start_pos = read_data.query_name, int(read_data.reference_start)
+                    # get all recorded umis
+                    umis = read_name.split(":")[-1].split(';')
                 
-                        for umi in umis:
-                            # check that umi is recorded
-                            if umi in umi_families:
-                                # find closest family from umi
-                                # make a list of (positions counts)
-                                L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
-                                closest, count, position_closest = find_closest(start_pos, L)
+                    for umi in umis:
+                        # check that umi is recorded
+                        if umi in umi_families:
+                            # find closest family from umi
+                            # make a list of (positions counts)
+                            L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                            closest, count, position_closest = find_closest(start_pos, L)
+                        
+                            # check if closest family is within the position threshold
+                            if closest <= pos_threshold:
+                                # found a umi family. check if family count is greater than family threshold
+                                if count >= fam_size:
+                                    # get the parent sequence                                
+                                    parent = umi_families[umi]['parent']
+                                                                
+                                    # keep track of family size used to derive alt
+                                    # for a given position , parent and read position
+                                    if pos not in FamSize:
+                                        FamSize[pos] = {}
+                                    if parent not in FamSize[pos]:
+                                        FamSize[pos][parent] = {}
+                                    FamSize[pos][parent][closest] = count
                             
-                                # check if closest family is within the position threshold
-                                if closest <= pos_threshold:
-                                    # found a umi family. check if family count is greater than family threshold
-                                    if count >= fam_size:
-                                        # get the parent sequence                                
-                                        parent = umi_families[umi]['parent']
-                                                                    
-                                        # keep track of family size used to derive alt
-                                        # for a given position , parent and read position
-                                        if pos not in FamSize:
-                                            FamSize[pos] = {}
-                                        if parent not in FamSize[pos]:
-                                            FamSize[pos][parent] = {}
-                                        FamSize[pos][parent][closest] = count
+                                    # use family key to count allele. collapsing is done within families. not per position
+                                    family_key = parent + str(position_closest)
                                 
-                                        # use family key to count allele. collapsing is done within families. not per position
-                                        family_key = parent + str(position_closest)
-                                    
-                                        ref_pos = pos - region_start
-                                     
-                                        # read.indel is indel length of next position 
-                                        # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                                    ref_pos = pos - region_start
+                                 
+                                    # read.indel is indel length of next position 
+                                    # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
                                                 
-                                        # get reference and alternative bases  
-                                        if not read.is_del and read.indel == 0:
-                                            ref_base = ref_seq[ref_pos]
-                                            alt_base = read_data.query_sequence[read.query_position]
-                                        elif read.indel > 0:
-                                            # Next position is an insert (current base is ref)
-                                            ref_base = ref_seq[ref_pos]
-                                            alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
-                                        elif read.indel < 0:
-                                            # Next position is a deletion (current base + next bases are ref)
-                                            ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
-                                            alt_base = read_data.query_sequence[read.query_position]
+                                    # get reference and alternative bases  
+                                    if not read.is_del and read.indel == 0:
+                                        ref_base = ref_seq[ref_pos]
+                                        alt_base = read_data.query_sequence[read.query_position]
+                                    elif read.indel > 0:
+                                        # Next position is an insert (current base is ref)
+                                        ref_base = ref_seq[ref_pos]
+                                        alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
+                                    elif read.indel < 0:
+                                        # Next position is a deletion (current base + next bases are ref)
+                                        ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
+                                        alt_base = read_data.query_sequence[read.query_position]
                                     
-                                        # query position is None if is_del or is_refskip is set
-                                        if not read.is_del and not read.is_refskip:
-                                            # add base info
-                                            allele = (ref_base, alt_base)
-                                            # count the number of reads supporting this allele
-                                            if pos not in consensus_seq:
-                                                consensus_seq[pos] = {}
-                                            if family_key not in consensus_seq[pos]:
-                                                consensus_seq[pos][family_key] = {}
-                                            if allele in consensus_seq[pos][family_key]:
-                                                consensus_seq[pos][family_key][allele] += 1
-                                            else:
-                                                consensus_seq[pos][family_key][allele] = 1
+                                    # query position is None if is_del or is_refskip is set
+                                    if not read.is_del and not read.is_refskip:
+                                        # add base info
+                                        allele = (ref_base, alt_base)
+                                        # count the number of reads supporting this allele
+                                        if pos not in consensus_seq:
+                                            consensus_seq[pos] = {}
+                                        if family_key not in consensus_seq[pos]:
+                                            consensus_seq[pos][family_key] = {}
+                                        if allele in consensus_seq[pos][family_key]:
+                                            consensus_seq[pos][family_key][allele] += 1
+                                        else:
+                                            consensus_seq[pos][family_key][allele] = 1
     return consensus_seq, FamSize
 
 
@@ -210,15 +204,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                 assert pos != region_end  
                 # loop over reads in pileup column
                 for read in pileupcolumn.pileups:
+                    # pileupread obj: represention of an aligned read
                     # read.indel is indel length of next position 
                     # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
-                
-                
-                    # check that reads are mapped
-                    assert read.is_unmapped == False
-                
-                
-                
+                    
                     # get reference and alternative bases
                     if not read.is_del and read.indel == 0:
                         ref_base = ref_seq[pos - region_start]
