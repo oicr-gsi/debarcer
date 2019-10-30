@@ -119,10 +119,12 @@ def ListExpectedFigures(directory, extension):
     regions = ListAllRegions(directory, extension)
     
     # map expected figs to names for all region
-    SN = ['network', 'marginal', 'depth', 'before_grouping', 'famsize', 'reffreq', 'lowreffreq', 'raw']
+    SN = ['network', 'marginal', 'depth', 'before_grouping', 'famsize', 'reffreq',
+          'lowreffreq', 'raw', 'mapping']
     SL = ['UMI_network_degree_{0}.', 'UMI_size_depth_marginal_distribution_{0}.',
           'Read_depth_per_umi_family_{0}.', 'UMI_freq_distribution_{0}.',
-          'MeanFamilySize_{0}.', 'NonRefFreq_{0}.', 'NonRefFreq_low_freq_{0}.', 'RawConsensusDepth_{0}.']
+          'MeanFamilySize_{0}.', 'NonRefFreq_{0}.', 'NonRefFreq_low_freq_{0}.',
+          'RawConsensusDepth_{0}.', 'Proportion_unmapped_reads_{0}.']
           
     for i in regions:
         if i not in D:
@@ -489,6 +491,86 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N,
     
     return figcounter
         
+
+
+def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
+    '''
+    (list, str, str, dict, int, int, mistune.Markdown)- > int
+    
+    :param L: List with report strings
+    :param font_family: Comma-separated text fonts
+    :param extension: Extension of the figure files
+    :param FigPaths: Dictionary with paths to all expected figures (can be empty str)
+    :param figcounter: Figure number
+    :param N: Number of empty lines following last legend
+    :param renderer: markdown renderer
+    
+    Add figures and legends to list L or a warning if figures don't exist
+    and return the number of next figure
+    '''
+    
+    # add description of the figures
+    style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
+    padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
+    L.append(renderer('<p style="{0}">Proportion of mapped and unmapped reads in genomic regions</p>'.format(style)))
+    L.append(renderer('<pre> </pre>'))
+    
+    # make a sorted list of regions for 'before_grouping' figures
+    keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
+    
+    # add warning for missing files
+    missing = '<br>'.join(['Proportion_unmapped_reads_{0}.{1}'.format(i, extension) for i in keys if FigPaths[i]['mapping'] == ''])
+    if len(missing) != 0:
+        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        L.append(renderer('<pre> </pre>'))
+    
+    # define scaling factor and set alternate figure name
+    scale, altfig = 0.8, 'mapping'
+        
+    # make pairs of non-empty figure pairs
+    Files = [FigPaths[keys[i]]['mapping'] for i in range(len(keys)) if FigPaths[keys[i]]['mapping'] != '']
+    # group files by 2 
+    Files = list(map(lambda x: list(x), list(grouper(Files, 2))))
+    for i in range(len(Files)):
+        if None in Files[i]:
+            Files[i].pop(Files[i].index(None))
+    
+    # add images and legends for valid files    
+    for i in range(len(Files)):
+        # map files to regions
+        regions = []
+        # store images and figure number for given region
+        images, fignum = '', {}    
+        for j in range(len(Files[i])):
+            region = os.path.basename(Files[i][j])
+            region = region[region.index('_chr')+ 1: region.rindex('.')]
+            regions.append(region)
+            # resize image
+            height, width = ResizeFifure(Files[i][j], scale)
+            # encode base64 image
+            encoded_fig = EncodeImage(Files[i][j])
+            # add image and legend
+            if j == 0:
+                images += '<img style="padding-right: 30px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
+            else:
+                images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
+            #update figure counter
+            fignum[region] = figcounter
+            figcounter += 1
+        L.append(images)
+        # add legends
+        legends = ''
+        for j in range(len(regions)):
+            if j == 0:
+                legends += '<span style="padding-right: 180px; padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
+            else:
+                legends += '<span style="padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
+        L.append(renderer(legends))
+        # append empty line
+        L.append(renderer('<pre> </pre>' * N))
+    
+    return figcounter
+    
 
 
 def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minratio,minumis,minchildren, figcounter, N, num, renderer):
@@ -939,6 +1021,11 @@ def WriteReport(directory, extension, Outputfile, mincov, minratio, minumis, min
     # add spacer line
     AddSpacerLine(L, renderer)
     
+    ## Add Mapping section
+    headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Mapping', renderer)
+    # add figures from mapping, update figure counter
+    figcounter = AddMapping(L, font_family, extension, FigPaths, figcounter, 1, renderer)
+
     ## Pre-grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi distribution before family grouping', renderer)
     # add figures from pre-grouping QC, update figure counter     
