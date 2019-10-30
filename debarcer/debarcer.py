@@ -664,7 +664,7 @@ def generate_plots(args):
     # plot proportion of mapped/unmapped reads
     for filename in MappingInfo:
         region = os.path.basename(filename)
-        region = region[region.rindex('_')+1:-5]
+        region = region[region.rindex('_')+1:-5].replace(':', '-')
         Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         
