@@ -16,13 +16,6 @@ from src.utilities import DropEmptyFiles, CheckFilePath
 from src.version import __version__
 
 
-# get the path to this file at import to find the setup.py file
-#ThisFile = __file__
-
-
-
-
-
 def ResizeFifure(filename, scaling_factor):
     '''
     (str, float) -> (int, int)
@@ -206,38 +199,6 @@ def CountMissingFiles(FigPaths, CovStats, DataFiles, mincov, minratio, minumis, 
     return valid, missing
 
 
-#def ExtractVersion():
-#    '''
-#    () -> str
-#    
-#    Returns the debarcer version extracted from the setup.py file
-#    '''
-#    
-#    # get the directory of this file
-#    here = os.path.abspath(os.path.dirname(ThisFile))
-#    # open setup file, exctract file content
-#    assert os.path.isfile(os.path.abspath(os.path.join(here, '../../', 'setup.py'))) == True
-#    with open(os.path.abspath(os.path.join(here, '../../', 'setup.py')), 'r') as infile:
-#        content = infile.read()
-#    content = content.split('\n')
-#    
-#    # set default version
-#    version = 'unknown'
-#    # find version
-#    for i in content:
-#        if i.startswith('version'):
-#            version = i
-#            break
-#    if version != 'unknown':
-#        try:
-#            version = version.split('=')[1].strip().replace('"', '')
-#        except:
-#            version = 'unknown'
-#    return version
-    
-    
-
-
 def AddInfo(directory, L, N, color, font_family, FigPaths, CovStats, DataFiles, mincov, minratio, minumis, minchildren, renderer):
     '''
     (list, str, int, str, str, dict, mistune.Markdown) -> None
@@ -260,12 +221,9 @@ def AddInfo(directory, L, N, color, font_family, FigPaths, CovStats, DataFiles, 
     Modify list in place
     '''
     
-    # extract debarcer version from setup.py
-    #version = ExtractVersion()
-        
+    # get debarcer version        
     version = __version__
-    
-    
+        
     # get the date
     date = '<b>time stamp:</b> ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     # get debarcer version

@@ -5,12 +5,8 @@ Created on Fri Oct 25 14:25:48 2019
 @author: RJovelin
 """
 
-#from src.generate_report import ExtractVersion
 import time
 from src.version import __version__
-
-# get the path to this file at import to find the setup.py file
-#ThisFile = __file__
 
 
 def GetConsData(consfile):
@@ -78,9 +74,7 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     header = infile.readline().rstrip().split('\t')
     infile.close()
 
-    # get debarcer version from setup.py
-    #version = ExtractVersion()
-
+    # get debarcer version
     version = __version__
 
     # open file for writing

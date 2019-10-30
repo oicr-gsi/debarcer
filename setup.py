@@ -1,17 +1,17 @@
 
 from setuptools import setup
+from debarcer.src.version import __version__
+
+
 
 # Utility function to read the README file.
 
 with open("README.rst") as infile:
     content = infile.read().rstrip()
 
-
-version = "2.0.3"
-
 setup(
 	name = "debarcer",
-	version = version,
+	version = __version__,
 	author = "Richard Jovelin",
 	author_email = "richard.jovelin@oicr.on.ca",
 	description = ("A package for de-barcoding and error correction of sequencing"
