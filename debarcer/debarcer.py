@@ -356,7 +356,7 @@ def VCF_converter(args):
         # loop over family sizes
         for family in family_sizes:
             # write a VCF per family size and consensus file
-            outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '.vcf')
+            outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + 'umifam_' + str(family) + '.vcf')
             WriteVCF(filename, outputfile, args.reference, family, ref_threshold, alt_threshold, filter_threshold)
 
     print(timestamp() + "VCFs generated. VCF files written to {0}.".format(VCFDir))
