@@ -132,18 +132,7 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
                 umis = read.query_name.split(':')[-1].split(';')
                 # get the start position 0-based
                 pos = int(read.reference_start)
-                end = read.reference_end
-            
-            
-                if end == None:
-                    print(read.is_unmapped, read.mate_is_unmapped, pos, read, end, read.query_alignment_length, read.query_length, read.reference_length, read.cigarstring, read.cigartuples)
-                    raise ValueError('end is None')
-                else:
-                    end = int(end)
-            
-            
-            
-            
+                end = int(read.reference_end)
             
                 # skip reads overlapping with region if truncate is True
                 if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
