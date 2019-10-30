@@ -1784,7 +1784,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     :param Outputfile: Path to the output figure file
     :param datatype: Step recording reads. Accepted values:
                      preprocessing: record incorrect/correct reads
-                     grouping: record unmapped/mapped reads
+                     mapping: record unmapped/mapped reads
         
     Generate a donut graph with proportions of correct/incorrect reads found
     during pre-processing or mapped/unmapped reads found during grouping
@@ -1798,13 +1798,13 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
         total, good, bad = data['Total'], data['Correct'], data['Incorrect']
         good_name, bad_name = 'correct', 'incorrect'
         Title = 'Pre-processed reads'
-    elif datatype == 'grouping':
+    elif datatype == 'mapping':
         region = list(data.keys())[0]
         good, bad = data[region]['mapped'], data[region]['unmapped']
         total = good + bad
         good_name, bad_name = 'mapped', 'unmapped'
         Title = 'Filtered reads'
-    size = [good/total * 100, good/total * 100]
+    size = [good/total * 100, bad/total * 100]
     s_good, s_bad = format(good, ','), format(bad, ',')
     
     # use MathText to highlight substring in bold
