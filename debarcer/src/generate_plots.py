@@ -1776,28 +1776,39 @@ def PlotReadDepth(UmiFile, Outputfile):
 
 
 
-def PlotIncorrectReads(ReadInfo, Outputfile):
+def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     '''
     (str, str) -> None
 
-    :param ReadInfo: Path to the Read_Info.txt file generated during pre-processing
+    :param ReadInfo: Path to json with info about reads generated during pre-processing or grouping
     :param Outputfile: Path to the output figure file
-    
-    Generate a donut graph with proportions of correct and incorrect reads found
-    during pre-processing
+    :param datatype: Step recording reads. Accepted values:
+                     preprocessing: record incorrect/correct reads
+                     grouping: record unmapped/mapped reads
+        
+    Generate a donut graph with proportions of correct/incorrect reads found
+    during pre-processing or mapped/unmapped reads found during grouping
     '''
 
     infile = open(ReadInfo)
-    Header = infile.readline().rstrip().split()
-    line = infile.readline().rstrip()
-    total, correct, incorrect = list(map(lambda x: int(x), line.split()))
+    data = json.load(infile)
     infile.close()
-    
-    size = [correct/total * 100, incorrect/total * 100]
-    s_correct, s_incorrect = format(correct, ','), format(incorrect, ',')
+
+    if datatype == 'preprocessing':
+        total, good, bad = data['Total'], data['Correct'], data['Incorrect']
+        good_name, bad_name = 'correct', 'incorrect'
+        Title = 'Pre-processed reads'
+    elif datatype == 'grouping':
+        region = list(data.keys())[0]
+        good, bad = data[region]['mapped'], data[region]['unmapped']
+        total = good + bad
+        good_name, bad_name = 'mapped', 'unmapped'
+        Title = 'Filtered reads'
+    size = [good/total * 100, good/total * 100]
+    s_good, s_bad = format(good, ','), format(bad, ',')
     
     # use MathText to highlight substring in bold
-    names = ["correct\n" + r"$\bf{" + str(s_correct) + "}$", "incorrect\n" + r"$\bf{" + str(s_incorrect) + "}$"] 
+    names = ["{0}\n".format(good_name) + r"$\bf{" + str(s_good) + "}$", "{0}\n".format(bad_name) + r"$\bf{" + str(s_bad) + "}$"] 
     
     # clear previous axes
     plt.clf()
@@ -1819,7 +1830,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile):
     p.gca().add_artist(my_circle)
     
     # add title
-    ax.set_title('Pre-processed reads', size=18, loc='center', ha='center')
+    ax.set_title(Title, size=18, loc='center', ha='center')
        
     # Equal aspect ratio ensures that pie is drawn as a circle
     ax.axis('equal')  

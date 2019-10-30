@@ -522,6 +522,8 @@ def generate_plots(args):
     UmiFiles = [os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i.startswith('chr') and i[-5:] == '.json']
     # make a list of files with individual umi information
     UmiInfoFiles = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('Umis_') and i[-5:] == '.json' and 'before_grouping' in i]
+    # make a list of json files with mapping reads information
+    MappingInfo = [os.path.join(StatsDir, i) for i in os.listdir(StatsDir) if i.startswith('Mapped') and i[-5:] == '.json']
 
     # get the file with coverage stats
     CovStats = os.path.join(StatsDir, 'CoverageStats.yml')
@@ -537,19 +539,14 @@ def generate_plots(args):
               '#b30000', '#e60000', '#ff1a1a', '#ff4d4d', '#ff8080']
     
     # plot proportions of correct and incorrect reads seen during pre-processing
-    Inputfile = os.path.join(StatsDir, 'Read_Info.txt')
+    Inputfile = os.path.join(StatsDir, 'Processing_Read_Info.json')
     CheckFilePath([Inputfile])
-    if CheckFileContent(Inputfile) == True:
-        Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
-        
-        
-        print('PlotIncorrectReads')
-        
-        
-        PlotIncorrectReads(Inputfile, Outputfile)
-    else:
-        print('ERR: Missing data in {0}'.format(Inputfile))
+    Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
     
+    print('PlotIncorrectReads')
+        
+    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing')
+        
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
     CheckFilePath([Inputfile])
@@ -661,6 +658,18 @@ def generate_plots(args):
         
         
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
+    
+    
+    
+    # plot proportion of mapped/unmapped reads
+    for filename in MappingInfo:
+        region = os.path.basename(filename)
+        region = region[region.rindex('_')+1:-5]
+        Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, args.extension))
+        plt.clf(), plt.cla()
+        
+        print('PlotIncorrectReads', 'mapping')
+        PlotIncorrectReads(filename, Outputfile, 'mapping')
     
 
     print('PlotUmiCounts')
