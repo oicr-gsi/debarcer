@@ -288,7 +288,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             MergeJobNames.append(jobname3)
             # run merge datafiles
             #subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
-            subprocess.call(QsubCmd1.format(jobname3, LogDir, queue, '20', MergeScript1), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname3, LogDir, queue, str(mem), MergeScript1), shell=True)    
                 
             # merge umi files     
             MergeScript2 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
@@ -299,7 +299,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             MergeJobNames.append(jobname4)
             # run merge umi files
             #subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
-            subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, '20', MergeScript2), shell=True)
+            subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, str(mem), MergeScript2), shell=True)
          
         # check if collapse jobs are still running
         running_collapse = CheckJobs(ConsJobNames)
@@ -313,7 +313,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             MergeJobNames.append(jobname5)
             # run merge consensus files
             #subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
-            subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, '20', MergeScript3), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, str(mem), MergeScript3), shell=True)    
         
     # make a list of call jobs
     CallJobs = [] 
@@ -331,7 +331,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             newfile.close()    
             jobname6 = name_job('Call')
             CallJobs.append(jobname6)
-            subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, '20', CallScript), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, str(mem), CallScript), shell=True)    
     
     if plot == True:
         # make a list of jobs. wait until all jobs are done before plotting and reporting
@@ -347,5 +347,5 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren, nonreffreq))
             newfile.close()
             jobname7 = name_job('Plot')
-            subprocess.call(QsubCmd1.format(jobname7, LogDir, queue, '20', PlotScript), shell=True)    
+            subprocess.call(QsubCmd1.format(jobname7, LogDir, queue, str(mem), PlotScript), shell=True)    
     
