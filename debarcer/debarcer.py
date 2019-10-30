@@ -714,15 +714,17 @@ def generate_plots(args):
     
     # check if reporting
     if args.report == True:
+        
+        if args.extension != 'pdf':
+        
+            print('make report')
 
-        print('make report')
-
-        # create subdirectory
-        ReportDir = os.path.join(args.directory, 'Report')
-        if os.path.isdir(ReportDir) == False:
-            os.mkdir(ReportDir)
-        report = os.path.join(ReportDir, 'debarcer_report.html')
-        WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
+            # create subdirectory
+            ReportDir = os.path.join(args.directory, 'Report')
+            if os.path.isdir(ReportDir) == False:
+                os.mkdir(ReportDir)
+            report = os.path.join(ReportDir, 'debarcer_report.html')
+            WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
             
 
 def generate_report(args):
@@ -867,7 +869,7 @@ if __name__ == '__main__':
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
     plot_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
-    plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
+    plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg'], help='Figure format. Does not generate a report if pdf, even with -r True', required=True)
     plot_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name to apear in the report is reporting flag activated. Optional')
     plot_parser.add_argument('-r', '--Report', dest='report', choices=[False, True], type=ConvertArgToBool, default=True, help='Generate a report if activated. Default is True')
     plot_parser.add_argument('-mv', '--MinCov', dest='mincov', type=int, default=1000, help='Minimum coverage value. Values below are plotted in red')
