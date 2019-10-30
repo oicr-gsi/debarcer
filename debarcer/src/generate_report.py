@@ -935,7 +935,7 @@ def WriteReport(directory, extension, Outputfile, mincov, minratio, minumis, min
     '''
 
     # get subdirectories
-    datadir = os.path.join(directory, 'Datafile')
+    datadir = os.path.join(directory, 'Datafiles')
     statsdir = os.path.join(directory, 'Stats')
     
     # make a list of datafiles with umis that are not empty and not merged
