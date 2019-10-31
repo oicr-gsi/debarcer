@@ -781,8 +781,8 @@ if __name__ == '__main__':
     g_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
     g_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file')
     g_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
-    g_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
-    g_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
+    g_parser.add_argument('-d', '--Distance', dest='distthreshold', type=int, help='Hamming distance threshold for connecting parent-children umis')
+    g_parser.add_argument('-p', '--Position', dest='postthreshold', type=int, help='Umi position threshold for grouping umis together')
     g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=ConvertArgToBool, default=False, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='Discard reads overlapping with the genomic region if True. Default is False')
     g_parser.set_defaults(func=group_umis)
@@ -796,13 +796,13 @@ if __name__ == '__main__':
     c_parser.add_argument('-r', '--Region', dest='region', help='Region coordinates to search for UMIs. chrN:posA-posB. posA and posB are 1-based included', required=True)
     c_parser.add_argument('-u', '--Umi', dest='umifile', help='Path to the .umis file', required=True)
     c_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
-    c_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', help='Base count threshold in pileup column')
-    c_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', help='Majority rule consensus threshold in pileup column')
-    c_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
+    c_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', type=int, help='Base count threshold in pileup column')
+    c_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', type=float, help='Majority rule consensus threshold in pileup column')
+    c_parser.add_argument('-p', '--Position', dest='postthreshold', type=int, help='Umi position threshold for grouping umis together')
     c_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
     c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is False')
-    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=False, type=ConvertArgToBool, help='Ignore orphans (paired reads that are not in a proper pair). Default is True')
+    c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=False, type=ConvertArgToBool, help='Ignore orphans (paired reads that are not in a proper pair). Default is False')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -811,13 +811,13 @@ if __name__ == '__main__':
     v_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     v_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
     v_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
-    v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold',
-                          help='Maximum reference frequency to consider alternative variants\
+    v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', default=95, type=float, 
+                          help='Maximum reference frequency to consider (%) alternative variants\
                           (ie. position with ref freq <= ref_threshold is considered variable)')
-    v_parser.add_argument('-at', '--AlternativeThreshold', dest='altthreshold',
-                          help='Minimum allele frequency to consider an alternative allele at a variable position\
+    v_parser.add_argument('-at', '--AlternativeThreshold', dest='altthreshold', type=float, default=2,
+                          help='Minimum allele frequency (%) to consider an alternative allele at a variable position\
                           (ie. allele freq >= alt_threshold and ref freq <= ref_threshold: alternative allele)')
-    v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold',
+    v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold', type=int, default=10,
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)Filter threshold')
     v_parser.set_defaults(func=VCF_converter)
@@ -830,14 +830,14 @@ if __name__ == '__main__':
     r_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
     r_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
     r_parser.add_argument('-bd', '--Bedfile', dest='bedfile', help='Path to the bed file', required=True)
-    r_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', help='Base count threshold in pileup column')
-    r_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', help='Base percent threshold in pileup column')
-    r_parser.add_argument('-p', '--Position', dest='postthreshold', help='Umi position threshold for grouping umis together')
-    r_parser.add_argument('-d', '--Distance', dest='distthreshold', help='Hamming distance threshold for connecting parent-children umis')
-    r_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', default=95, type=int, help='A position is considered variable of reference frequency is <= ref_threshold')
+    r_parser.add_argument('-ct', '--CountThreshold', dest='countthreshold', type=int, help='Base count threshold in pileup column')
+    r_parser.add_argument('-pt', '--PercentThreshold', dest='percentthreshold', type=float, help='Base percent threshold in pileup column')
+    r_parser.add_argument('-p', '--Position', dest='postthreshold', type=int, help='Umi position threshold for grouping umis together')
+    r_parser.add_argument('-d', '--Distance', dest='distthreshold', type=int, help='Hamming distance threshold for connecting parent-children umis')
+    r_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', default=95, type=float, help='A position is considered variable of reference frequency is <= ref_threshold')
     r_parser.add_argument('-at', '--AlternativeThreshold', dest='altthreshold', default=2, type=float, help='Variable position is labeled PASS if allele frequency >= alt_threshold')
     r_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold', default=10, type=int, help='Minimum number of reads to pass alternative variants')
-    r_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, help='Maximum read depth. Default is 1000000')
+    r_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
     r_parser.add_argument('-t', '--Truncate', dest='truncate', action='store_true', help='Only pileup columns in the exact region specificied are returned. Default is False, becomes True is used')
     r_parser.add_argument('-io', '--IgnoreOrphans', dest='ignoreorphans', action='store_true', help='Ignore orphans (paired reads that are not in a proper pair). Default is False, becomes True if used')
     r_parser.add_argument('-i', '--Ignore', dest='ignore', action='store_true', help='Keep the most abundant family and ignore families at other positions within each group. Default is False, becomes True if used')
@@ -845,7 +845,7 @@ if __name__ == '__main__':
     r_parser.add_argument('-pl', '--Plot', dest='plot',  action='store_false', help='Generate figure plots. Default is True, becomes False if used')
     r_parser.add_argument('-rp', '--Report', dest='report', action='store_false', help='Generate report. Default is True, becomes False if used')
     r_parser.add_argument('-cl', '--Call', dest='call', action='store_false', help='Convert consensus files to VCF format. Default is True, becomes False if used')
-    r_parser.add_argument('-ex', '--Extension', dest='extension', choices=['png', 'jpeg', 'tiff', 'pdf'], default='png', help='Figure file extension. Default is png')
+    r_parser.add_argument('-ex', '--Extension', dest='extension', choices=['png', 'jpeg', 'pdf'], default='png', help='Figure format. Does not generate a report if pdf, even with -r True. Default is png')
     r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
     r_parser.add_argument('-q', '--Queue', dest='queue', default='default', help='SGE queue for submitting jobs. Default is default')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default=20, type=int, help='Requested memory for submitting jobs to SGE. Default is 20g')
@@ -862,14 +862,14 @@ if __name__ == '__main__':
     ## Merge files command 
     m_parser = subparsers.add_parser('merge', help="Merge files from each region into a single file")
     m_parser.add_argument('-d', '--Directory', dest='directory', help='Directory containing files to be merged')
-    m_parser.add_argument('-dt', '--DataType', dest='datatype', help='Type of files to be merged')
+    m_parser.add_argument('-dt', '--DataType', dest='datatype', choices=['datafiles', 'consensusfiles', 'umifiles'], help='Type of files to be merged', required=True)
     m_parser.set_defaults(func=merge_files)
     
     ## Generate graphs	
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
     plot_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     plot_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories ConsFiles and Datafiles', required=True)
-    plot_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg'], help='Figure format. Does not generate a report if pdf, even with -r True', required=True)
+    plot_parser.add_argument('-e', '--Extension', dest='extension', default='png', choices=['pdf', 'png', 'jpeg'], help='Figure format. Does not generate a report if pdf, even with -r True. Default is png')
     plot_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name to apear in the report is reporting flag activated. Optional')
     plot_parser.add_argument('-r', '--Report', dest='report', choices=[False, True], type=ConvertArgToBool, default=True, help='Generate a report if activated. Default is True')
     plot_parser.add_argument('-mv', '--MinCov', dest='mincov', type=int, default=1000, help='Minimum coverage value. Values below are plotted in red')
@@ -882,7 +882,7 @@ if __name__ == '__main__':
     ## Generate report
     report_parser = subparsers.add_parser('report', help="Generate report", add_help=True)
     report_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories including Figures', required=True)
-    report_parser.add_argument('-e', '--Extension', dest='extension', choices=['pdf', 'png', 'jpeg', 'tiff'], help='Figure format', required=True)
+    report_parser.add_argument('-e', '--Extension', dest='extension', default='png', choices=['pdf', 'png', 'jpeg'], help='Figure format. Does not generate a report if pdf, even with -r True. Default is png')
     report_parser.add_argument('-s', '--Sample', dest='sample', help='Sample name. Optional. Directory basename is sample name if not provided')
     report_parser.add_argument('-mv', '--MinCov', dest='mincov', type=int, default=1000, help='Minimum coverage value. Values below are plotted in red')
     report_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
