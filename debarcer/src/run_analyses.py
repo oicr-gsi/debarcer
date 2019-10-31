@@ -45,26 +45,27 @@ def MergeUmiFiles(UmiDir):
     
     # make a list of umi files
     UmiFiles = [i for i in os.listdir(UmiDir) if i[-5:] == '.json']
+    # check that umifiles exist
+    if len(UmiFiles) != 0:
+        # create a dict to hold all umi data
+        D = {}
     
-    # create a dict to hold all umi data
-    D = {}
+        for i in UmiFiles:
+            # extract coordinates from file name
+            coord = i[:-5]
+            # get umi data as dict
+            umifile = os.path.join(UmiDir, i)    
+            infile = open(umifile)
+            data = json.load(infile)
+            infile.close()
+            # add data in dict
+            D[coord] = data
     
-    for i in UmiFiles:
-        # extract coordinates from file name
-        coord = i[:-5]
-        # get umi data as dict
-        umifile = os.path.join(UmiDir, i)    
-        infile = open(umifile)
-        data = json.load(infile)
-        infile.close()
-        # add data in dict
-        D[coord] = data
-    
-    # write merged umi file
-    MergedFile = os.path.join(UmiDir, 'Merged_UmiFile.json')
-    newfile = open(MergedFile, 'w')
-    json.dump(D, newfile, sort_keys = True, indent=4)
-    newfile.close()
+        # write merged umi file
+        MergedFile = os.path.join(UmiDir, 'Merged_UmiFile.json')
+        newfile = open(MergedFile, 'w')
+        json.dump(D, newfile, sort_keys = True, indent=4)
+        newfile.close()
        
 
 def MergeConsensusFiles(ConsDir):
@@ -78,35 +79,37 @@ def MergeConsensusFiles(ConsDir):
     
     # make a list of consensus files
     ConsFiles = [i for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')] 
-    # sort files
-    L = []
-    for i in ConsFiles:
-        # extract chromo and start from filename
-        chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
-        L.append((chromo, start, i))
-    # sort files on chromo and start
-    L.sort(key=operator.itemgetter(0, 1))
+    # check that consfiles exist
+    if len(ConsFiles) != 0:
+        # sort files
+        L = []
+        for i in ConsFiles:
+            # extract chromo and start from filename
+            chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+            L.append((chromo, start, i))
+        # sort files on chromo and start
+        L.sort(key=operator.itemgetter(0, 1))
     
-    # make a sorted list of full paths
-    S = [os.path.join(ConsDir, i[-1]) for i in L]
+        # make a sorted list of full paths
+        S = [os.path.join(ConsDir, i[-1]) for i in L]
     
-    # get Header
-    infile = open(S[0])
-    Header = infile.readline().rstrip().split()
-    infile.close()
-    
-    # write merged consensus file
-    MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
-    newfile = open(MergedFile, 'w')
-    newfile.write('\t'.join(Header) + '\n')
-    for i in S:
-        infile = open(i)
-        # skip header and grab all data
-        infile.readline()
-        data = infile.read().rstrip()
+        # get Header
+        infile = open(S[0])
+        Header = infile.readline().rstrip().split()
         infile.close()
-        newfile.write(data + '\n')
-    newfile.close()
+    
+        # write merged consensus file
+        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
+        newfile = open(MergedFile, 'w')
+        newfile.write('\t'.join(Header) + '\n')
+        for i in S:
+            infile = open(i)
+            # skip header and grab all data
+            infile.readline()
+            data = infile.read().rstrip()
+            infile.close()
+            newfile.write(data + '\n')
+        newfile.close()
     
     
 
@@ -121,30 +124,31 @@ def MergeDataFiles(DataDir):
     
     # make a list of datafiles
     DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile_') and i[-4:] == '.csv']
-    
-    Header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+    #check that datafiles exist
+    if len(DataFiles) != 0:
+        Header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
         
-    # read each datafile, store in a list
-    L = []
-    for filename in DataFiles:
-        infile = open(filename)
-        # skip header and grap data
-        infile.readline()
-        data = infile.read().rstrip()
-        infile.close()
-        # get chromosome and start and end positions
-        chromo, start = data.split()[0], int(data.split()[1])        
-        L.append((chromo, start, data))
-    # sort data on chromo and start
-    L.sort(key=operator.itemgetter(0, 1))
+        # read each datafile, store in a list
+        L = []
+        for filename in DataFiles:
+            infile = open(filename)
+            # skip header and grap data
+            infile.readline()
+            data = infile.read().rstrip()
+            infile.close()
+            # get chromosome and start and end positions
+            chromo, start = data.split()[0], int(data.split()[1])        
+            L.append((chromo, start, data))
+        # sort data on chromo and start
+        L.sort(key=operator.itemgetter(0, 1))
     
-    # write merged datafile
-    MergedFile = os.path.join(DataDir, 'Merged_DataFile.csv')
-    newfile = open(MergedFile, 'w')
-    newfile.write('\t'.join(Header) + '\n')
-    for i in L:
-        newfile.write('\t'.join(i[-1].split()) + '\n')
-    newfile.close()
+        # write merged datafile
+        MergedFile = os.path.join(DataDir, 'Merged_DataFile.csv')
+        newfile = open(MergedFile, 'w')
+        newfile.write('\t'.join(Header) + '\n')
+        for i in L:
+            newfile.write('\t'.join(i[-1].split()) + '\n')
+        newfile.close()
 
 
 def name_job(prefix):
