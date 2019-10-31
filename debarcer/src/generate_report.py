@@ -336,6 +336,12 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N, ren
     and return the number of next figure
     '''
     
+    # add description of the figures
+    style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
+    padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
+    L.append(renderer('<p style="{0}">Reads with incorrect umi configuration are discarded</p>'.format(style)))
+    L.append(renderer('<pre> </pre>'))
+    
     # keys to access figure files         
     keys = ['reads', 'preprocessing']
     # scaling factor for resizing figures
@@ -551,7 +557,7 @@ def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
             encoded_fig = EncodeImage(Files[i][j])
             # add image and legend
             if j == 0:
-                images += '<img style="padding-right: 30px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
+                images += '<img style="padding-right: 40px; padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
             else:
                 images += '<img style="padding-left:10px" src="data:image/png;base64,{0}" alt="{1}" title="{1}" width="{2}" height="{3}" />'.format(encoded_fig, altfig, width, height)
             #update figure counter
@@ -564,7 +570,7 @@ def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
             if j == 0:
                 legends += '<span style="padding-right: 180px; padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family,fignum[regions[j]], regions[j])
             else:
-                legends += '<span style="padding-left:20px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
+                legends += '<span style="padding-left:10px; font-family:{0}; font-size:16px"> <b>Figure {1}</b>. Interval {2} </span>'.format(font_family, fignum[regions[j]], regions[j])
         L.append(renderer(legends))
         # append empty line
         L.append(renderer('<pre> </pre>' * N))
@@ -887,7 +893,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
                 legends = ''
                 for j in range(len(l)):
                     if j == 0:
-                        padding_right,padding_left = 440, 10
+                        padding_right,padding_left = 410, 10
                     else:
                         padding_right, padding_left = 0, 10
                     legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
@@ -924,7 +930,7 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
                 legends = ''
                 for j in range(len(l)):
                     if j  == 0:
-                        padding_right,padding_left = 440, 10
+                        padding_right,padding_left = 410, 10
                     else:
                         padding_right, padding_left = 0, 10
                     legends += '<span style="padding-right: {0}px; padding-left:{1}px; font-family:{2}; font-size:16px"> <b>Figure {3}</b>. {4}</span>'.format(padding_right, padding_left, font_family,fignum[j], l[j])
