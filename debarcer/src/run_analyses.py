@@ -323,7 +323,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     CallJobs = [] 
     if call == True:
         # make a list of jobs, wait until all jobs are done before converting consensus files to VCF 
-        Z = GroupJobNames + MergeJobNames
+        Z = ConsJobNames + MergeJobNames
         running_groupmerge = CheckJobs(Z)  
         if running_groupmerge == False:
             # generate VCF from all consensus files 
