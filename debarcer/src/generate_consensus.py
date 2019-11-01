@@ -87,9 +87,16 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     # create a dict to store consensus seq info
     consensus_seq = {}
     
+    
+    myrefseq = get_ref_seq(contig, region_start, region_end, "/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/references/fasta/hg19_random.fa")
+
+    
+    
+    
+    
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper='samtools', fastafile="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/references/fasta/hg19_random.fa"):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper='samtools', fastafile=myrefseq):
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
@@ -187,9 +194,14 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     # make a list to store number of reads 
     covArray = []
     
+    
+    myrefseq = get_ref_seq(contig, region_start, region_end, "/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/references/fasta/hg19_random.fa")
+
+    
+    
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper='samtools', fastafile="/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/references/fasta/hg19_random.fa"):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper='samtools', fastafile=myrefseq):
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
