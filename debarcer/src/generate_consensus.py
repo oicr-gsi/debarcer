@@ -58,10 +58,10 @@ def find_closest(pos, L):
     return (smallest_dist, D[smallest_dist][-1][0], D[smallest_dist][-1][1])
 
 
-def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans):
+def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
     
-    (dict, int, str, str, int, int, str, int, int, bool, bool) -> (dict, dict)
+    (dict, int, str, str, int, int, str, int, int, bool, bool, str) -> (dict, dict)
     
     
     :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
@@ -75,11 +75,13 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
-    
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
+        
     Returns a tuple with a dictionary representing consensus info at each base position in the given region
     and a dictionary to keep track of family size for each position
     '''
-
 
     # create a dict to store umi family size at each position {position: {parent: {distance: count}}}
     FamSize = {}
@@ -87,16 +89,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     # create a dict to store consensus seq info
     consensus_seq = {}
     
-    
-    
-
-    fastafile = pysam.FastaFile("/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/references/fasta/hg19_random.fa")
-    
-    
-    
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper='nofilter', fastafile=fastafile):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper=stepper):
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
@@ -172,9 +167,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     return consensus_seq, FamSize
 
 
-def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans):
+def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, str, int, int, str, str, int, bool, bool) -> (dict, float)
+    (str, str, int, int, str, str, int, bool, bool, str) -> (dict, float)
     
     :param ref_seq: Sequence of the reference corresponding to the given region
     :param contig: Chromosome name, eg. chrN
@@ -184,6 +179,9 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
     
     Returns a tuple with a nested dictionary representing counts of each base at each base position,
     and the average read depth for the given region
@@ -194,11 +192,9 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     # make a list to store number of reads 
     covArray = []
     
-    fastafile = pysam.FastaFile("/oicr/data/genomes/homo_sapiens_mc/UCSC/hg19_random/Genomic/references/fasta/hg19_random.fa")
-       
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper='nofilter', fastafile=fastafile):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper):
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
@@ -272,9 +268,9 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans):
+def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (dict, int, str, str, int, int, str, int, int, int, int, bool, bool) -> dict
+    (dict, int, str, str, int, int, str, int, int, int, int, bool, bool, str) -> dict
     
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
@@ -291,13 +287,16 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
-    
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering    
+
     Generates consensus data for a given family size and genomic region
     '''
 
     # get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
     # get family size at each position 
-    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
     # create a dict to store consensus info
     cons_data = {}
@@ -350,7 +349,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
 
 
 
-def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans):
+def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper):
     '''
     (str, str, int, int, str, int, bool, bool) -> (dict, float)
     
@@ -362,13 +361,16 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
-    
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
+        
     Returns a dictionary with uncollapsed consensus data for the genomic region,
     and the average read depth per position for the region
     '''
     
     # get uncolapased seq info {pos: {(ref, atl): count}}
-    uncollapsed_seq, coverage = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+    uncollapsed_seq, coverage = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     
     # create a dict to store consensus info
     cons_data = {}
@@ -455,9 +457,9 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
             
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans):
+def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool) -> None
+    (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool, str) -> None
     
     
     :param reference: Path to the reference genome
@@ -476,6 +478,9 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
     
     Generates consensus output file and yaml file with coverage for each region
     '''
@@ -494,12 +499,12 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
         # check if 0 is passed as fam_size argument
         if f_size == 0:
             # compute consensus for uncollapsed data, and get coverage
-            cons_data[f_size], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+            cons_data[f_size], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
-        cons_data[0], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans)
+        cons_data[0], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
     # write output consensus file
     print("Writing output...")

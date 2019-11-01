@@ -168,15 +168,13 @@ def name_job(prefix):
     
 def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
-                alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans, ignore, merge,
-                plot, report, call, mincov, minratio, minumis, minchildren, extension,
+                alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans, ignore, stepper,
+                merge, plot, report, call, mincov, minratio, minumis, minchildren, extension,
                 sample, mydebarcer, mypython, mem, queue):
     '''
-    (str, str, str, str, str, int, float, int, int, float, float, int, int, bool,
-    bool, bool, bool, bool, bool, bool,
-    
-    
-    str, str, str, str, int, str) -> None
+    (str, str, str, str, str, int, float, int, int, float, float, int, int,
+    bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str,
+    str, str, str, int, str) -> None
     
     :param bamfile: Path to the bam file
     :param outdir: Directory where .umis, and datafiles are written
@@ -197,6 +195,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     :param truncate: Only consider pileup columns in given region. Default is True\
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
     :param merge: Merge datafiles, consensus files and umi files if True
     :param plot: Generate figure plots if True
     :param report: Generate analysis report if True
@@ -225,7 +226,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # set up group command
     GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8}'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -p {10} -m {11} -t {12} -i {13}'
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -p {10} -m {11} -t {12} -i {13} -stp {14}'
         
     # set qsub command
     QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -q {2} -l h_vmem={3}g \"bash {4}\"'
@@ -262,7 +263,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         newfile = open(CollapseScript, 'w')
         newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, reference, region, umifile,
                                          str(famsize), str(count_threshold), str(consensus_threshold),
-                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans)) +'\n') 
+                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper) +'\n') 
         newfile.close()
         # get a umique job name
         jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))

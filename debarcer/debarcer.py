@@ -214,7 +214,10 @@ def collapse(args):
     :param maxdepth: Maximum read depth. Default is 1000000
     :param truncate: Only consider pileup columns in given region. Default is False
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
-       
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
+        
     Base collapses from given BAM and umi family file
     '''
     
@@ -282,7 +285,7 @@ def collapse(args):
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans)
+    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
  
     print(timestamp() + "Consensus generated. Consensus file written to {}.".format(ConsDir))
 
@@ -404,6 +407,9 @@ def run_scripts(args):
                      in the exact region specificied are returned. Default is False
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True'
     :param ignore: Keep the most abundant family and ignore families at other positions within each group. Default is False
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering
     :param merge: Merge data, json and consensus files respectively into a 1 single file. Default is True
     :param plot: Generate figure plots if True
     :param report: Generate analysis report if True
@@ -803,6 +809,9 @@ if __name__ == '__main__':
     c_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='If truncate is True and a region is given,\
                           only pileup columns in the exact region specificied are returned. Default is False')
     c_parser.add_argument('-i', '--IgnoreOrphans', dest='ignoreorphans', choices=[True, False], default=False, type=ConvertArgToBool, help='Ignore orphans (paired reads that are not in a proper pair). Default is False')
+    c_parser.add_argument('-stp', '--Stepper', dest='stepper', choices=['all', 'nofilter'], default='nofilter',
+                          help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
+                          nofilter: uses every single read turning off any filtering')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -857,6 +866,9 @@ if __name__ == '__main__':
     r_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     r_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=int, default=1000, help='Minimum umi count. Values below are plotted in red')
     r_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=int, default=500, help='Minimum children umi count. Values below are plotted in red')
+    r_parser.add_argument('-stp', '--Stepper', dest='stepper', choices=['all', 'nofilter'], default='nofilter',
+                          help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
+                          nofilter: uses every single read turning off any filtering')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 
