@@ -89,7 +89,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper='nofilter'):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper='samtools'):
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
@@ -189,7 +189,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
-        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper='nofilter'):
+        for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper='samtools'):
             # get column position. by default consider only positions within region
             # however, number of reads in families consider reads overlapping with region
             # not only contained within region
