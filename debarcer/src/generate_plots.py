@@ -31,31 +31,31 @@ import yaml
 #import mpl_toolkits.axes_grid1.axes_size as Size
 
 
-from matplotlib.image import imread
-from tempfile import NamedTemporaryFile
-
-def GetSize(fig, dpi=100):
-    with NamedTemporaryFile(suffix='.png') as f:
-        fig.savefig(f.name, bbox_inches='tight', dpi=dpi)
-        height, width, _channels = imread(f.name).shape
-        return width / dpi, height / dpi
-
-def SetSize(fig, size, dpi=100, eps=1e-2, give_up=2, min_size_px=10):
-    target_width, target_height = size
-    set_width, set_height = target_width, target_height # reasonable starting point
-    deltas = [] # how far we have
-    while True:
-        fig.set_size_inches([set_width, set_height])
-        actual_width, actual_height = GetSize(fig, dpi=dpi)
-        set_width *= target_width / actual_width
-        set_height *= target_height / actual_height
-        deltas.append(abs(actual_width - target_width) + abs(actual_height - target_height))
-        if deltas[-1] < eps:
-            return True
-        if len(deltas) > give_up and sorted(deltas[-give_up:]) == deltas[-give_up:]:
-            return False
-        if set_width * dpi < min_size_px or set_height * dpi < min_size_px:
-            return False
+#from matplotlib.image import imread
+#from tempfile import NamedTemporaryFile
+#
+#def GetSize(fig, dpi=100):
+#    with NamedTemporaryFile(suffix='.png') as f:
+#        fig.savefig(f.name, bbox_inches='tight', dpi=dpi)
+#        height, width, _channels = imread(f.name).shape
+#        return width / dpi, height / dpi
+#
+#def SetSize(fig, size, dpi=100, eps=1e-2, give_up=2, min_size_px=10):
+#    target_width, target_height = size
+#    set_width, set_height = target_width, target_height # reasonable starting point
+#    deltas = [] # how far we have
+#    while True:
+#        fig.set_size_inches([set_width, set_height])
+#        actual_width, actual_height = GetSize(fig, dpi=dpi)
+#        set_width *= target_width / actual_width
+#        set_height *= target_height / actual_height
+#        deltas.append(abs(actual_width - target_width) + abs(actual_height - target_height))
+#        if deltas[-1] < eps:
+#            return True
+#        if len(deltas) > give_up and sorted(deltas[-give_up:]) == deltas[-give_up:]:
+#            return False
+#        if set_width * dpi < min_size_px or set_height * dpi < min_size_px:
+#            return False
 
 
 
@@ -687,11 +687,15 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
-    plt.clf()
+    
+    
+    #plt.clf()
+    
+    
     #figure = plt.figure(1, figsize = (W, H))
     
     figure = plt.figure()
-    figure = plt.gcf()
+    #figure = plt.gcf()
     figure.set_size_inches(8,10)
     
     #figure = plt.gcf()
@@ -734,18 +738,6 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], XLabel= region, YLimit=YLimit)
         else:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
-
-
-
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotNonRefFreqData', h, v, 'fig', 8, 10)
-    
-    try:
-        print(int(h), int(v))
-    except:
-        print(type(h), type(v))
-
-    #SetSize(figure, (8, 10))
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')

@@ -595,7 +595,11 @@ def generate_plots(args):
         # plot mean family size for each consensus file/region
         region = FormatRegion(filename).replace(':', '-')
         Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-        plt.clf(), plt.cla()
+        
+        
+        #plt.clf(), plt.cla()
+        
+        
         PlotMeanFamSize(filename, Colors[1:], Outputfile)
             
         print('PlotNonRefFreqData')
