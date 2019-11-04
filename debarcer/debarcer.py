@@ -552,7 +552,7 @@ def generate_plots(args):
     
     print('PlotIncorrectReads')
         
-    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 7, 7)
+    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 6, 6)
         
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
@@ -568,7 +568,7 @@ def generate_plots(args):
     
     print('PlotUMiFrequency')
     
-    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False, 9, 6)
+    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False, 8, 5)
     
     # plot coverage
     #plt.clf(), plt.cla()
@@ -590,7 +590,7 @@ def generate_plots(args):
         #plt.clf(), plt.cla()
         
         
-        PlotMeanFamSize(filename, Colors[1:], Outputfile, 10, 7)
+        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
         print('PlotNonRefFreqData')
         
@@ -617,7 +617,7 @@ def generate_plots(args):
         # plot raw and consensus depth
         Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
         #plt.clf(), plt.cla()
-        PlotConsDepth(filename, Colors, Outputfile, 10, 7)
+        PlotConsDepth(filename, Colors, Outputfile, 9, 6)
        
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
@@ -649,7 +649,7 @@ def generate_plots(args):
         # plot distribution of read depth for each umi families
         #plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
-        PlotReadDepth(filename, Outputfile, 13, 6)
+        PlotReadDepth(filename, Outputfile, 10, 6)
 
     # plot umi frequency for individual umis before grouping
     for filename in UmiInfoFiles:
