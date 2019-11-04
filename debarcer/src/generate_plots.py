@@ -691,7 +691,8 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     #figure = plt.figure(1, figsize = (W, H))
     
     figure = plt.figure()
-    
+    fig = plt.gcf()
+    fig.set_size_inches(8,10)
     
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
@@ -744,7 +745,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     except:
         print(type(h), type(v))
 
-    SetSize(figure, (8, 10))
+    #SetSize(figure, (8, 10))
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
