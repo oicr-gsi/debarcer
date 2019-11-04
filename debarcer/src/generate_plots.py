@@ -91,8 +91,6 @@ def SetUpTicks(AxisMax):
     return step
 
 
-#### functions for plotting coverage ####
-
 def GetCoverageRegions(CoverageStats):
     '''
     (str) -> dict
@@ -374,8 +372,6 @@ def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
         return xy_chart.render_data_uri()
 
     
-#### functions for plotting mean family size ####
-
 def ExtractFamSize(ConsensusFile):
     '''
     (file) -> dict
@@ -512,27 +508,31 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     Data = ExtractFamSize(ConsFile)
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
+    
     #plt.gcf().set_size_inches(10, 7, forward=True)
     
     
     # create figure object + ax
-    figure = plt.figure(1, figsize = (10, 7))
+    #figure = plt.figure(1, figsize = (10, 7))
+    figure = plt.figure()
+    
+    #figure.gcf()
+    #plt.gcf().set_size_inches(10, 7, forward=True)
+    
+    figure.set_size_inches(10, 7)
+    
+    
+    
     ax = CreateMeanFamAx(1, 1, 1, figure, Data, Color, 'Mean family size', region)
     
     
-    
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotMeanFamSize', h, v, 'fig', 10, 7)
-    
-    
+      
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
         
-
-#### plot non-reference frequency ####
 
 def ExtractNonRefFreq(ConsensusFile):
     '''
@@ -744,9 +744,6 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     
 
 
-#### plot raw and consensus depth ####
-
-
 def ExtractDepth(ConsensusFile):
     '''
     (file) -> dict
@@ -894,20 +891,16 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
         L.append(d)
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     #plt.gcf().set_size_inches(10, 7, forward=True)
         
-    figure = plt.figure(1, figsize = (10, 7))
+    #figure = plt.figure(1, figsize = (10, 7))
+    figure = plt.figure()
+    figure.set_size_inches(10, 7)
+    
     # plot raw depth, family size = 0    
     ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
     ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region)
-    
-    
-    
-    h1, v1 =  axes_size.AxesX(ax1), axes_size.AxesY(ax1)
-    h2, v2 =  axes_size.AxesX(ax2), axes_size.AxesY(ax2)
-    print('PlotConsDepth', 'h1', h1, 'v1', v1, 'h2', h2, 'v2', v2, 'fig', 10, 7)
-    
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
@@ -968,11 +961,20 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     PTU = [Data[i][1] for i in Coordinates]
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     #plt.gcf().set_size_inches(9, 6, forward=True)
     
     # create figure
-    figure = plt.figure(1, figsize = (9, 6))
+    #figure = plt.figure(1, figsize = (9, 6))
+    
+    
+    
+    figure = plt.figure()
+    figure.set_size_inches(9, 6)
+    
+    
+    
+    
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # plot ctu/ptu ratio for each region
@@ -1048,19 +1050,6 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
-    
-    
-    
-    
-    
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotParentsToChildrenCounts', h,  v, 'fig', 9, 6)
-    
-    
-    
-    
-    
-    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
     
@@ -1099,11 +1088,20 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     Coordinates = SortPositions(list(Data.keys()))
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     #plt.gcf().set_size_inches(7, 4, forward=True)
        
     # create figure
-    figure = plt.figure(1, figsize = (7, 4))
+    #figure = plt.figure(1, figsize = (7, 4))
+    
+    
+    figure = plt.figure()
+    figure.set_size_inches(7, 4)
+    
+    
+    
+    
+    
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # loop over sorted regions
@@ -1156,20 +1154,6 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
-    
-    
-    
-    
-    
-    
-    
-    
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotParentFreq', h,  v, 'fig', 7, 4)
-    
-    
-    
-    
     
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
@@ -1422,24 +1406,22 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     '''
 
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     #plt.gcf().set_size_inches(9, 6, forward=True)    
     
     # create figure
-    figure = plt.figure(1, figsize = (9, 6))
+    #figure = plt.figure(1, figsize = (9, 6))
+    
+    figure = plt.figure()
+    figure.set_size_inches(9, 6)
+    
+    
+    
+    
     # plot network degree
     ax1 = CreateDegreeAx(2, 1, 1, figure, UmiFile)
     # plot the network
     ax2 = CreateNetworkAx(2, 1, 2, figure, UmiFile)
-    
-    
-    
-    h1, v1 =  axes_size.AxesX(ax1), axes_size.AxesY(ax1)
-    h2, v2 =  axes_size.AxesX(ax2), axes_size.AxesY(ax2)
-    print('PlotNetworkDegree', 'h1', h1, 'v1', v1, 'h2', h2, 'v2', v2, 'fig', 9, 6)
-    
-    
-    
     
     # save figure    
     plt.tight_layout()
@@ -1606,7 +1588,7 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     df = S.join(R)    
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     #plt.gcf().set_size_inches(8, 8, forward=True)
     
     # seaborn returns an ax object
@@ -1660,14 +1642,6 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
                 right=False, left=True, labelleft=True, labeltop=False, labelbottom=False, colors = 'black',
                 labelsize = 12, direction = 'out')
 
-
-
-
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotFamSizeReadDepth', h, v)
-    
-
-
     plt.savefig(Outputfile, bbox_inches = 'tight')
 
 
@@ -1686,9 +1660,16 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     '''
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     # create figure
-    figure = plt.figure(1, figsize = (9, 6))
+    #figure = plt.figure(1, figsize = (9, 6))
+    
+    figure = plt.figure()
+    figure.set_size_inches(9, 6)
+    
+    
+    
+    
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     
@@ -1754,15 +1735,6 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
         legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='parents', alpha=0.35))
         ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
      
-
-
-
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotUMiFrequency', h, v, 'fig', 9, 6)
-
-
-
-        
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
@@ -1865,9 +1837,16 @@ def PlotReadDepth(UmiFile, Outputfile):
                 Others[parent][i[0]] = i[1]
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     # create figure
-    figure = plt.figure(1, figsize = (13, 6))
+    #figure = plt.figure(1, figsize = (13, 6))
+    
+    
+    figure = plt.figure()
+    figure.set_size_inches(13, 6)
+    
+    
+    
     # get read depth for all positions and umi groups
     data1 = [list(All[i].values())[0] for i in All]
     # get read depth for positions with highest umi abundance
@@ -1878,11 +1857,6 @@ def PlotReadDepth(UmiFile, Outputfile):
     # plot histograms of read depth and Umi family count
     ax = CreateAxReadDepth(1, 1, 1, figure, [data2, data3], 'Umi families')    
            
-    
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotReadDepth', h, v, 'fig', 13, 6)
-    
-    
     # save figure to file  
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
@@ -1923,9 +1897,13 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     names = ["{0}\n".format(good_name) + r"$\bf{" + str(s_good) + "}$", "{0}\n".format(bad_name) + r"$\bf{" + str(s_bad) + "}$"] 
     
     # clear previous axes
-    plt.clf()
+    #plt.clf()
     # create figure
-    figure = plt.figure(1, figsize = (7, 7))
+    #figure = plt.figure(1, figsize = (7, 7))
+    
+    
+    figure = plt.figure()
+    figure.set_size_inches(7, 7)
     
     # create ax instance
     ax = figure.add_subplot(1, 1, 1)
@@ -1946,12 +1924,6 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
        
     # Equal aspect ratio ensures that pie is drawn as a circle
     ax.axis('equal')  
-    
-    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
-    print('PlotIncorrectReads', h, v, 'fig', 7, 7)
-
-    
-    
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
