@@ -12,6 +12,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
+from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import numpy as np
 from scipy import stats
 from src.utilities import edit_distance, FormatRegion
