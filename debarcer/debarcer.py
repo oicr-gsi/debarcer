@@ -605,7 +605,7 @@ def generate_plots(args):
         # plot non-reference frequency
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile, ylabel='Non-reference allele frequency')
+        PlotNonRefFreqData(filename, Colors, Outputfile, 10, 8, ylabel='Non-reference allele frequency')
         height, width, channels = scipy.ndimage.imread(Outputfile).shape
         print(height, width)
     
@@ -616,7 +616,7 @@ def generate_plots(args):
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
+        PlotNonRefFreqData(filename, Colors, Outputfile, 10, 8, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
         
         height, width, channels = scipy.ndimage.imread(Outputfile).shape
         print(height, width)

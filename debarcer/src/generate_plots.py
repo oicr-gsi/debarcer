@@ -631,7 +631,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     return ax
 
 
-def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
+def PlotNonRefFreqData(ConsFile, Color, Outputfile, H, W, **Options):
     '''
     (str, list, str) -> None
     
@@ -660,7 +660,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
     plt.clf()
-    figure = plt.figure(1, figsize = (8, 10))
+    figure = plt.figure(1, figsize = (W, H))
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
     #figure = plt.figure(1, figsize = (4, 20))
