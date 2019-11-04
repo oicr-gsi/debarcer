@@ -720,7 +720,9 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
         L.append(renderer(legends))
         # append empty line
         L.append(renderer('<pre> </pre>'))
-    
+    # append empty line
+    L.append(renderer('<pre> </pre>'))
+        
     # 2. Add figures specific to each region
     subnum = AddSubheader(L, 1, 'black', num, subnum + 1, font_family, 'Region-specific QC plots', renderer)
 
