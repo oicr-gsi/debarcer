@@ -28,6 +28,7 @@ import pygal
 from pygal.style import DefaultStyle, Style
 import yaml
 
+#import mpl_toolkits.axes_grid1.axes_size as Size
 
 
 def SetUpTicks(AxisMax):
@@ -491,6 +492,13 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     figure = plt.figure(1, figsize = (10, 7))
     ax = CreateMeanFamAx(1, 1, 1, figure, Data, Color, 'Mean family size', region)
     
+    
+    
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotMeanFamSize', h, v, 'fig', 10, 7)
+    
+    
+    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
@@ -694,6 +702,14 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
         else:
             ax = CreateNonRefFreqAx(1, len(L), i+1, figure, L[i], Color[i], FamSize[i], YLimit=YLimit)
 
+
+
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotNonRefFreqData', h, v, 'fig', 8, 10)
+
+
+
+
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
@@ -856,6 +872,14 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     # plot raw depth, family size = 0    
     ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
     ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region)
+    
+    
+    
+    h1, v1 =  axes_size.AxesX(ax1), axes_size.AxesY(ax1)
+    h2, v2 =  axes_size.AxesX(ax2), axes_size.AxesY(ax2)
+    print('PlotConsDepth', 'h1', h1, 'v1', v1, 'h2', h2, 'v2', v2, 'fig', 10, 7)
+    
+    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
         
@@ -995,6 +1019,19 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
+    
+    
+    
+    
+    
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotParentsToChildrenCounts', h,  v, 'fig', 9, 6)
+    
+    
+    
+    
+    
+    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
     
@@ -1090,6 +1127,20 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
+    
+    
+    
+    
+    
+    
+    
+    
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotParentFreq', h,  v, 'fig', 7, 4)
+    
+    
+    
+    
     
     # do not show ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
@@ -1351,6 +1402,16 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     ax1 = CreateDegreeAx(2, 1, 1, figure, UmiFile)
     # plot the network
     ax2 = CreateNetworkAx(2, 1, 2, figure, UmiFile)
+    
+    
+    
+    h1, v1 =  axes_size.AxesX(ax1), axes_size.AxesY(ax1)
+    h2, v2 =  axes_size.AxesX(ax2), axes_size.AxesY(ax2)
+    print('PlotNetworkDegree', 'h1', h1, 'v1', v1, 'h2', h2, 'v2', v2, 'fig', 9, 6)
+    
+    
+    
+    
     # save figure    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
@@ -1570,6 +1631,14 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
                 right=False, left=True, labelleft=True, labeltop=False, labelbottom=False, colors = 'black',
                 labelsize = 12, direction = 'out')
 
+
+
+
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotFamSizeReadDepth', h, v)
+    
+
+
     plt.savefig(Outputfile, bbox_inches = 'tight')
 
 
@@ -1655,7 +1724,16 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
         legend_elements.append(Patch(facecolor='#ff66ff', edgecolor= '#ff66ff', label='parents + children', alpha=0.35))
         legend_elements.append(Patch(facecolor='#00cccc', edgecolor= '#00cccc', label='parents', alpha=0.35))
         ax.legend(handles=legend_elements, frameon=False, ncol=1, loc='best', prop={'size': 12})
-             
+     
+
+
+
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotUMiFrequency', h, v, 'fig', 9, 6)
+
+
+
+        
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
@@ -1771,6 +1849,11 @@ def PlotReadDepth(UmiFile, Outputfile):
     # plot histograms of read depth and Umi family count
     ax = CreateAxReadDepth(1, 1, 1, figure, [data2, data3], 'Umi families')    
            
+    
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotReadDepth', h, v, 'fig', 13, 6)
+    
+    
     # save figure to file  
     figure.savefig(Outputfile, bbox_inches = 'tight')
 
@@ -1834,7 +1917,13 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
        
     # Equal aspect ratio ensures that pie is drawn as a circle
     ax.axis('equal')  
-    plt.tight_layout()
+    
+    h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
+    print('PlotIncorrectReads', h, v, 'fig', 7, 7)
 
+    
+    
+    
+    plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     
