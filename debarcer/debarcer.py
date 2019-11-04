@@ -470,9 +470,9 @@ def run_scripts(args):
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
-                args.ignore, args.merge, args.plot, args.report, args.call, args.mincov,
-                args.minratio, args.minumis, args.minchildren, args.extension,
-                args.sample, args.mydebarcer, args.mypython, args.mem, args.queue)
+                args.ignore, args.stepper, args.merge, args.plot, args.report,
+                args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.queue)
     
     
 def generate_plots(args):
