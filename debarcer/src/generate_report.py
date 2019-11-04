@@ -531,7 +531,7 @@ def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
         L.append(renderer('<pre> </pre>'))
     
     # define scaling factor and set alternate figure name
-    scale, altfig = 0.5, 'mapping'
+    scale, altfig = 0.3, 'mapping'
         
     # make pairs of non-empty figure pairs
     Files = [FigPaths[keys[i]]['mapping'] for i in range(len(keys)) if FigPaths[keys[i]]['mapping'] != '']
