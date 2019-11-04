@@ -552,7 +552,7 @@ def generate_plots(args):
     
     print('PlotIncorrectReads')
         
-    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing')
+    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 5, 5)
         
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
@@ -568,7 +568,7 @@ def generate_plots(args):
     
     print('PlotUMiFrequency')
     
-    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False)
+    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False, 9, 6)
     
     # plot coverage
     #plt.clf(), plt.cla()
@@ -590,7 +590,7 @@ def generate_plots(args):
         #plt.clf(), plt.cla()
         
         
-        PlotMeanFamSize(filename, Colors[1:], Outputfile)
+        PlotMeanFamSize(filename, Colors[1:], Outputfile, 10, 7)
             
         print('PlotNonRefFreqData')
         
@@ -599,7 +599,7 @@ def generate_plots(args):
         # plot non-reference frequency
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         #plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile, ylabel='Non-reference allele frequency')
+        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
         
     
         print('PlotNonRefFreqData LOW')
@@ -608,7 +608,7 @@ def generate_plots(args):
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
         #plt.clf(), plt.cla()
-        PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
+        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
         
         print('PlotConsDepth')
         

@@ -487,13 +487,15 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     return ax
 
 
-def PlotMeanFamSize(ConsFile, Color, Outputfile):
+def PlotMeanFamSize(ConsFile, Color, Outputfile, W, H):
     '''
-    (str, list, str) -> None
+    (str, list, str, int, int) -> None
     
     :param ConsFile: Path to the consensus file
     :param Color: List with colors for plotting
     :param Outputfile: Name of the output figure file
+    :param W: Figure width in inches
+    :param H: Figure Height in inches
            
     Pre-condition: consensus file is not merged chrN:A-B.cons 
     '''
@@ -506,7 +508,7 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     
     # create figure object + ax
     figure = plt.figure()
-    figure.set_size_inches(10, 7)
+    figure.set_size_inches(W, H)
     ax = CreateMeanFamAx(1, 1, 1, figure, Data, Color, 'Mean family size', region)
        
     plt.tight_layout()
@@ -640,13 +642,15 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     return ax
 
 
-def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
+def PlotNonRefFreqData(ConsFile, Color, Outputfile, W, H, **Options):
     '''
-    (str, list, str) -> None
+    (str, list, str, int, int, dict) -> None
     
     :param ConsFile: Path to the consensus file
     :param Color: List with colors for plotting
     :param Outputfile: Name of the output figure file
+    :param W: Figure width in inches
+    :param H: Figure Height in inches
     :param Options: Accepted keys are:
                     'YLimit': Y axis limit, in variant frequency (0-100) 
                     'title': Title of the plot
@@ -669,7 +673,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(8,10)
+    figure.set_size_inches(W,H)
     
     # make a sorted list of family sizes
     FamSize = list(Data.keys())
@@ -832,14 +836,16 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     return ax
 
 
-def PlotConsDepth(ConsFile, Color, Outputfile):
+def PlotConsDepth(ConsFile, Color, Outputfile, W, H):
     '''
-    (str, list, str) -> None
+    (str, list, str, int, int) -> None
     
     :param ConsFile: Path to the consensus file
     :param Color: List with colors for plotting
     :param Outputfile: Name of the output figure file
-           
+    :param W: Figure width in inches
+    :param H: Figure Height in inches       
+    
     Pre-condition: consensus file is not merged chrN:A-B.cons and not empty
     '''
     
@@ -860,7 +866,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(10, 7)
+    figure.set_size_inches(W, H)
     
     # plot raw depth, family size = 0    
     ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
@@ -887,9 +893,9 @@ def ComputeIntervalSize(Coordinates):
     return Sizes      
     
    
-def PlotParentsToChildrenCounts(DataFiles, Outputfile):
+def PlotParentsToChildrenCounts(DataFiles, Outputfile, W, H):
     '''
-    (list, str) -> None
+    (list, str, int, int) -> None
     
     :param DataFiles: List of data files generated after umi grouping 
     :param Outputfile: Name of the output figure file 
@@ -897,6 +903,9 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
                   'ratio': children to parent umis ratio
                   'parents': total umi count
                   'children': children umi count 
+    :param W: Figure width in inches
+    :param H: Figure Height in inches
+    
     Generates a plot with umi counts (children, parents or children to parents ratio)
     
     Pre-condition: Data files are not merged (datafile_chrN:A-B.csv) and not empty
@@ -926,7 +935,7 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(9, 6)
+    figure.set_size_inches(W, H)
     
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
@@ -1006,14 +1015,16 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     figure.savefig(Outputfile, bbox_inches = 'tight')
     plt.close()
 
-def PlotParentFreq(DataFiles, Color, Outputfile):
+def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     '''
-    (list, list, str) -> None
+    (list, list, str, int, int) -> None
     
     :param DataFiles: List of .csv data files generated after umi grouping
     :param Color: List of colors for plotting
     :param Outputfile: Name of the output figure file 
-     
+    :param W: Figure width in inches
+    :param H: Figure Height in inches 
+    
     Generates a plot with parent frequencies vs children count for all regions
     
     Pre-condition: consensus and data files are not merged (chrN:A-B.cons and chrN:A-B.csv)
@@ -1041,7 +1052,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(7, 4)
+    figure.set_size_inches(W, H)
     
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
@@ -1336,19 +1347,21 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     return ax
     
     
-def PlotNetworkDegree(UmiFile, Outputfile):
+def PlotNetworkDegree(UmiFile, Outputfile, W, H):
     '''
-    (str, str) -> None
+    (str, str, int, int) -> None
     
     :param UmiFile: Path to json file with umi parent: children relationships
     :param Outputfile: Name of output figure file
+    :param W: Figure width in inches
+    :param H: Figure Height in inches
     
     Plot an histogram of network degree and the entire network of umis parent-children relationships    
     '''
 
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(9, 6)
+    figure.set_size_inches(W, H)
     
     # plot network degree
     ax1 = CreateDegreeAx(2, 1, 1, figure, UmiFile)
@@ -1480,11 +1493,11 @@ def GetUmiFamilySizeFromGrouping(UmiFile):
 
 def PlotFamSizeReadDepth(UmiFile, Outputfile):
     '''
-    (str, str) -> dict
+    (str, str, int, int) -> dict
     
     :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
     :param Outputfile: Name of output figure file
-          
+            
     Plot a marginal plot of UMI family size and read depth    
     '''
     
@@ -1572,9 +1585,9 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     plt.savefig(Outputfile, bbox_inches = 'tight')
     plt.close()
 
-def PlotUMiFrequency(L, Outputfile, Title, overlapping):
+def PlotUMiFrequency(L, Outputfile, Title, overlapping, W, H):
     '''
-    (list, str, str, str, bool) -> None
+    (list, str, str, str, bool, int, int) -> None
         
     :param L: List with umi counts
     :param Outputfile: Name of output figure file
@@ -1582,13 +1595,15 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     :param XLabel: Label of the X axis
     :param overlapping: True or False for 2 distributions. 
                         If True, L is a 2-item list, each being a list of counts
+    :param W: Figure width in inches
+    :param H: Figure Height in inches        
             
     Plot an histogram of UMI occurence or density plots UMI occurence for multiple distributions
     '''
     
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(9, 6)
+    figure.set_size_inches(W, H)
         
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
@@ -1719,13 +1734,16 @@ def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     return ax
     
     
-def PlotReadDepth(UmiFile, Outputfile):
+def PlotReadDepth(UmiFile, Outputfile, W, H):
     '''
-    (str) -> None
+    (str, str, int, int) -> None
     
     
     :param UmiFile: Path to json file with umi-parent relationships and family count after grouping
-    
+    :param Outputfile: Path to the output figure file
+    :param W: Figure width in inches
+    :param H: Figure Height in inches
+        
     Plot the distribution of read depth at positions og highest and lower umi abundance
     as a proportion of all positions within a given umi family 
     '''
@@ -1757,7 +1775,7 @@ def PlotReadDepth(UmiFile, Outputfile):
     
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(13, 6)
+    figure.set_size_inches(W, H)
         
     # get read depth for all positions and umi groups
     data1 = [list(All[i].values())[0] for i in All]
@@ -1774,15 +1792,17 @@ def PlotReadDepth(UmiFile, Outputfile):
     plt.close()
 
 
-def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
+def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
     '''
-    (str, str) -> None
+    (str, str, str, int, int) -> None
 
     :param ReadInfo: Path to json with info about reads generated during pre-processing or grouping
     :param Outputfile: Path to the output figure file
     :param datatype: Step recording reads. Accepted values:
                      preprocessing: record incorrect/correct reads
                      mapping: record unmapped/mapped reads
+    :param W: Figure width in inches
+    :param H: Figure Height in inches     
         
     Generate a donut graph with proportions of correct/incorrect reads found
     during pre-processing or mapped/unmapped reads found during grouping
@@ -1810,7 +1830,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     
     # create figure
     figure = plt.figure()
-    figure.set_size_inches(7, 7)
+    figure.set_size_inches(W, H)
     
     # create ax instance
     ax = figure.add_subplot(1, 1, 1)
