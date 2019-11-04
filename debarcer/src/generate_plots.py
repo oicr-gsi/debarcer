@@ -531,7 +531,7 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    figure.close()
         
 
 def ExtractNonRefFreq(ConsensusFile):
@@ -741,7 +741,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    figure.close()
 
 
 def ExtractDepth(ConsensusFile):
@@ -904,7 +904,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-        
+    figure.close()    
  
 def ComputeIntervalSize(Coordinates):
     '''
@@ -1051,7 +1051,7 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     ax.set_axisbelow(True)
     
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    figure.close()
     
 
 def PlotParentFreq(DataFiles, Color, Outputfile):
@@ -1160,7 +1160,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    figure.close()
 
 def ParentToChildren(UmiFile):
     '''
@@ -1426,7 +1426,7 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     # save figure    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    figure.close()
 
 
 def GetUmiCountFromPreprocessing(Datafile):
@@ -1737,7 +1737,7 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
      
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    figure.close()
 
 
 def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
@@ -1859,7 +1859,7 @@ def PlotReadDepth(UmiFile, Outputfile):
            
     # save figure to file  
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    figure.close()
 
 
 def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
@@ -1927,4 +1927,4 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    figure.close()
