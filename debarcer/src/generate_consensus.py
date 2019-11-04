@@ -501,7 +501,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
             # compute consensus for uncollapsed data, and get coverage
             cons_data[f_size], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
         cons_data[0], coverage = generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
