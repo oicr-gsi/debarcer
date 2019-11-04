@@ -744,7 +744,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     except:
         print(type(h), type(v))
 
-    GetSize(figure, (8, 10))
+    SetSize(figure, (8, 10))
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
