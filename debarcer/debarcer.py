@@ -552,7 +552,7 @@ def generate_plots(args):
     
     print('PlotIncorrectReads')
         
-    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 5, 5)
+    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 7, 7)
         
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
@@ -617,7 +617,7 @@ def generate_plots(args):
         # plot raw and consensus depth
         Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
         #plt.clf(), plt.cla()
-        PlotConsDepth(filename, Colors, Outputfile)
+        PlotConsDepth(filename, Colors, Outputfile, 10, 7)
        
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
@@ -633,7 +633,7 @@ def generate_plots(args):
         # plot network and degree
         #plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
-        PlotNetworkDegree(filename, Outputfile)
+        PlotNetworkDegree(filename, Outputfile, 9, 6)
         
         print('PlotFamSizeReadDepth')
         
@@ -649,7 +649,7 @@ def generate_plots(args):
         # plot distribution of read depth for each umi families
         #plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
-        PlotReadDepth(filename, Outputfile)
+        PlotReadDepth(filename, Outputfile, 13, 6)
 
     # plot umi frequency for individual umis before grouping
     for filename in UmiInfoFiles:
@@ -662,7 +662,7 @@ def generate_plots(args):
         all_umis, parent_umis = GetIndividualUmiInfo(filename)
         Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
         #plt.clf(), plt.cla()
-        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
+        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True, 9, 6)
     
     # plot proportion of mapped/unmapped reads
     for filename in MappingInfo:
@@ -672,7 +672,7 @@ def generate_plots(args):
         #plt.clf(), plt.cla()
         
         print('PlotIncorrectReads', 'mapping')
-        PlotIncorrectReads(filename, Outputfile, 'mapping')
+        PlotIncorrectReads(filename, Outputfile, 'mapping', 5, 5)
         
     
 
@@ -704,7 +704,7 @@ def generate_plots(args):
     
     # plot children vs parent umis for each interval
     #plt.clf(), plt.cla()
-    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension))
+    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension), 9, 6)
 
 
     print('PlotParentFreq')
@@ -713,7 +713,7 @@ def generate_plots(args):
 
     # plot parent frequencies vs children UMI counts
     #plt.clf(), plt.cla()
-    PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension))
+    PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension), 7, 4)
     
     # check if reporting
     if args.report == True:
