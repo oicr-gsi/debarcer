@@ -31,6 +31,34 @@ import yaml
 #import mpl_toolkits.axes_grid1.axes_size as Size
 
 
+from matplotlib.image import imread
+from tempfile import NamedTemporaryFile
+
+def GetSize(fig, dpi=100):
+    with NamedTemporaryFile(suffix='.png') as f:
+        fig.savefig(f.name, bbox_inches='tight', dpi=dpi)
+        height, width, _channels = imread(f.name).shape
+        return width / dpi, height / dpi
+
+def SetSize(fig, size, dpi=100, eps=1e-2, give_up=2, min_size_px=10):
+    target_width, target_height = size
+    set_width, set_height = target_width, target_height # reasonable starting point
+    deltas = [] # how far we have
+    while True:
+        fig.set_size_inches([set_width, set_height])
+        actual_width, actual_height = GetSize(fig, dpi=dpi)
+        set_width *= target_width / actual_width
+        set_height *= target_height / actual_height
+        deltas.append(abs(actual_width - target_width) + abs(actual_height - target_height))
+        if deltas[-1] < eps:
+            return True
+        if len(deltas) > give_up and sorted(deltas[-give_up:]) == deltas[-give_up:]:
+            return False
+        if set_width * dpi < min_size_px or set_height * dpi < min_size_px:
+            return False
+
+
+
 def SetUpTicks(AxisMax):
     '''
     (num) -> int
@@ -631,7 +659,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     return ax
 
 
-def PlotNonRefFreqData(ConsFile, Color, Outputfile, H, W, **Options):
+def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     '''
     (str, list, str) -> None
     
@@ -660,7 +688,11 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, H, W, **Options):
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
     plt.clf()
-    figure = plt.figure(1, figsize = (W, H))
+    #figure = plt.figure(1, figsize = (W, H))
+    
+    figure = plt.figure()
+    
+    
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
     #figure = plt.figure(1, figsize = (4, 20))
@@ -712,7 +744,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, H, W, **Options):
     except:
         print(type(h), type(v))
 
-
+    GetSize(figure, (8, 10))
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')

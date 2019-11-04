@@ -716,12 +716,8 @@ def generate_plots(args):
     
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
-    Outputfile = os.path.join(FigDir, 'Child_Parent_Umis_Ratio')
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=Outputfile, minval=args.minratio, datatype='ratio')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
 
-    height, width, channels = scipy.ndimage.imread(Outputfile).shape
-    print(height, width)
-    
     print('PlotUmiCounts')
     
     
