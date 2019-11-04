@@ -20,7 +20,8 @@ from src.generate_report import WriteReport
  
 import matplotlib.pyplot as plt
 import numpy as np
-   
+import scipy.ndimage   
+
 
 """
 debarcer.py - main interface for Debarcer
@@ -553,6 +554,11 @@ def generate_plots(args):
         
     PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing')
         
+    height, width, channels = scipy.ndimage.imread(Outputfile).shape
+    print(height, width)
+    
+    
+    
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
     CheckFilePath([Inputfile])
@@ -568,7 +574,12 @@ def generate_plots(args):
     print('PlotUMiFrequency')
     
     PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False)
-        
+    
+    height, width, channels = scipy.ndimage.imread(Outputfile).shape
+    print(height, width)
+    
+
+    
     # plot coverage
     plt.clf(), plt.cla()
     
@@ -595,6 +606,8 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
         plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile, ylabel='Non-reference allele frequency')
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
     
     
         print('PlotNonRefFreqData LOW')
@@ -605,6 +618,8 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
         
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
         
         print('PlotConsDepth')
         
@@ -614,6 +629,11 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
         #plt.clf(), plt.cla()
         PlotConsDepth(filename, Colors, Outputfile)
+       
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
+    
+        
         
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
@@ -630,7 +650,10 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile)
-            
+        
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
+    
         
         print('PlotFamSizeReadDepth')
         
@@ -640,6 +663,9 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
         PlotFamSizeReadDepth(filename, Outputfile)
         
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
+        
         print('PlotReadDepth')
         
         
@@ -647,6 +673,10 @@ def generate_plots(args):
         plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
         PlotReadDepth(filename, Outputfile)
+
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
+
 
     # plot umi frequency for individual umis before grouping
     for filename in UmiInfoFiles:
@@ -665,7 +695,8 @@ def generate_plots(args):
         
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True)
     
-    
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
     
     # plot proportion of mapped/unmapped reads
     for filename in MappingInfo:
@@ -677,13 +708,19 @@ def generate_plots(args):
         print('PlotIncorrectReads', 'mapping')
         PlotIncorrectReads(filename, Outputfile, 'mapping')
     
+        height, width, channels = scipy.ndimage.imread(Outputfile).shape
+        print(height, width)
+    
 
     print('PlotUmiCounts')
     
     # plot children to parent umi count ratio
     plt.clf(), plt.cla()
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
+    Outputfile = os.path.join(FigDir, 'Child_Parent_Umis_Ratio')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=Outputfile, minval=args.minratio, datatype='ratio')
 
+    height, width, channels = scipy.ndimage.imread(Outputfile).shape
+    print(height, width)
     
     print('PlotUmiCounts')
     

@@ -706,7 +706,11 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
 
     h, v =  axes_size.AxesX(ax), axes_size.AxesY(ax)
     print('PlotNonRefFreqData', h, v, 'fig', 8, 10)
-
+    
+    try:
+        print(int(h), int(v))
+    except:
+        print(type(h), type(v))
 
 
 
