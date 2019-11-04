@@ -691,8 +691,8 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     #figure = plt.figure(1, figsize = (W, H))
     
     figure = plt.figure()
-    fig = plt.gcf()
-    fig.set_size_inches(8,10)
+    figure = plt.gcf()
+    figure.set_size_inches(8,10)
     
     #figure = plt.gcf()
     #figure.set_size_inches(8, 10)
