@@ -504,31 +504,14 @@ def PlotMeanFamSize(ConsFile, Color, Outputfile):
     # extract consensus depth for each family size -> {fam: {pos: meanfamSize}}
     Data = ExtractFamSize(ConsFile)
     
-    # clear previous axes
-    #plt.clf()
-    
-    #plt.gcf().set_size_inches(10, 7, forward=True)
-    
-    
     # create figure object + ax
-    #figure = plt.figure(1, figsize = (10, 7))
     figure = plt.figure()
-    
-    #figure.gcf()
-    #plt.gcf().set_size_inches(10, 7, forward=True)
-    
     figure.set_size_inches(10, 7)
-    
-    
-    
     ax = CreateMeanFamAx(1, 1, 1, figure, Data, Color, 'Mean family size', region)
-    
-    
-      
-    
+       
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-        
+    plt.close()    
 
 def ExtractNonRefFreq(ConsensusFile):
     '''
@@ -683,20 +666,8 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
     # create figure
-    
-    
-    #plt.clf()
-    
-    
-    #figure = plt.figure(1, figsize = (W, H))
-    
     figure = plt.figure()
-    #figure = plt.gcf()
     figure.set_size_inches(8,10)
-    
-    #figure = plt.gcf()
-    #figure.set_size_inches(8, 10)
-    #figure = plt.figure(1, figsize = (4, 20))
     
     # make a sorted list of family sizes
     FamSize = list(Data.keys())
@@ -737,7 +708,7 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, **Options):
 
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    plt.close()
 
 def ExtractDepth(ConsensusFile):
     '''
@@ -885,11 +856,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
             d[pos] = Data[i][pos]
         L.append(d)
     
-    # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(10, 7, forward=True)
-        
-    #figure = plt.figure(1, figsize = (10, 7))
+    # create figure
     figure = plt.figure()
     figure.set_size_inches(10, 7)
     
@@ -899,7 +866,7 @@ def PlotConsDepth(ConsFile, Color, Outputfile):
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-     
+    plt.close() 
  
 def ComputeIntervalSize(Coordinates):
     '''
@@ -955,20 +922,9 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     CTU = [Data[i][0] for i in Coordinates]
     PTU = [Data[i][1] for i in Coordinates]
     
-    # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True)
-    
     # create figure
-    #figure = plt.figure(1, figsize = (9, 6))
-    
-    
-    
     figure = plt.figure()
     figure.set_size_inches(9, 6)
-    
-    
-    
     
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
@@ -1046,7 +1002,7 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile):
     ax.set_axisbelow(True)
     
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    plt.close()
 
 def PlotParentFreq(DataFiles, Color, Outputfile):
     '''
@@ -1081,20 +1037,9 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Data.keys()))
     
-    # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(7, 4, forward=True)
-       
     # create figure
-    #figure = plt.figure(1, figsize = (7, 4))
-    
-    
     figure = plt.figure()
     figure.set_size_inches(7, 4)
-    
-    
-    
-    
     
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
@@ -1154,7 +1099,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile):
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    plt.close()
 
 def ParentToChildren(UmiFile):
     '''
@@ -1399,18 +1344,9 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     Plot an histogram of network degree and the entire network of umis parent-children relationships    
     '''
 
-    # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(9, 6, forward=True)    
-    
     # create figure
-    #figure = plt.figure(1, figsize = (9, 6))
-    
     figure = plt.figure()
     figure.set_size_inches(9, 6)
-    
-    
-    
     
     # plot network degree
     ax1 = CreateDegreeAx(2, 1, 1, figure, UmiFile)
@@ -1420,7 +1356,7 @@ def PlotNetworkDegree(UmiFile, Outputfile):
     # save figure    
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    plt.close()
 
 def GetUmiCountFromPreprocessing(Datafile):
     '''
@@ -1580,10 +1516,6 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
     # join dataframes
     df = S.join(R)    
     
-    # clear previous axes
-    #plt.clf()
-    #plt.gcf().set_size_inches(8, 8, forward=True)
-    
     # seaborn returns an ax object
     ax = sns.jointplot(x='depth', y='size', data=df, kind='scatter', color="pink",
                   space=0, ratio=3, marginal_kws={'bins':15, 'color':'#d9b3ff'}, annot_kws=dict(stat='r'),
@@ -1636,7 +1568,7 @@ def PlotFamSizeReadDepth(UmiFile, Outputfile):
                 labelsize = 12, direction = 'out')
 
     plt.savefig(Outputfile, bbox_inches = 'tight')
-
+    plt.close()
 
 def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     '''
@@ -1652,17 +1584,10 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
     Plot an histogram of UMI occurence or density plots UMI occurence for multiple distributions
     '''
     
-    # clear previous axes
-    #plt.clf()
     # create figure
-    #figure = plt.figure(1, figsize = (9, 6))
-    
     figure = plt.figure()
     figure.set_size_inches(9, 6)
-    
-    
-    
-    
+        
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     
@@ -1730,7 +1655,7 @@ def PlotUMiFrequency(L, Outputfile, Title, overlapping):
      
     # save figure to file    
     figure.savefig(Outputfile, bbox_inches = 'tight')
-
+    plt.close()
 
 def CreateAxReadDepth(columns, rows, position, figure, data, YLabel):
     
@@ -1828,17 +1753,10 @@ def PlotReadDepth(UmiFile, Outputfile):
                     Others[parent] = {}
                 Others[parent][i[0]] = i[1]
     
-    # clear previous axes
-    #plt.clf()
     # create figure
-    #figure = plt.figure(1, figsize = (13, 6))
-    
-    
     figure = plt.figure()
     figure.set_size_inches(13, 6)
-    
-    
-    
+        
     # get read depth for all positions and umi groups
     data1 = [list(All[i].values())[0] for i in All]
     # get read depth for positions with highest umi abundance
@@ -1851,7 +1769,7 @@ def PlotReadDepth(UmiFile, Outputfile):
            
     # save figure to file  
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    plt.close()
 
 
 def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
@@ -1888,12 +1806,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     # use MathText to highlight substring in bold
     names = ["{0}\n".format(good_name) + r"$\bf{" + str(s_good) + "}$", "{0}\n".format(bad_name) + r"$\bf{" + str(s_bad) + "}$"] 
     
-    # clear previous axes
-    #plt.clf()
     # create figure
-    #figure = plt.figure(1, figsize = (7, 7))
-    
-    
     figure = plt.figure()
     figure.set_size_inches(7, 7)
     
@@ -1919,4 +1832,4 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype):
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
-    
+    plt.close()
