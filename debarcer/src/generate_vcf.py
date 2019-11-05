@@ -92,13 +92,13 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     newfile.write('##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n')
     newfile.write('##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n')
     newfile.write('##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n')
-    newfile.write('##FILTER=<ID=a{0},Description=\"Alt allele depth below {0}\">\n'.format(filter_threshold))
-    newfile.write('##FORMAT=<ID=AD,Number=1,Type=Integer,Description=\"Allele Depth\">\n')
-    newfile.write('##FORMAT=<ID=AL,Number=R,Type=Integer,Description=\"Alternate Allele Depth\">\n')
-    newfile.write('##FORMAT=<ID=AF,Number=R,Type=Float,Description=\"Alternate Allele Frequency\">\n')
+    newfile.write('##INFO=<ID=AD,Number=1,Type=Integer,Description=\"Reference allele Depth\">\n')
+    newfile.write('##INFO=<ID=AL,Number=A,Type=Integer,Description=\"Alternate Allele Depth\">\n')
+    newfile.write('##INFO=<ID=AF,Number=A,Type=Float,Description=\"Alternate Allele Frequency\">\n')
+    newfile.write('##FILTER=<ID=a{0},Description=\"Alternate allele depth below {0}\">\n'.format(filter_threshold))
         
     # write data header 
-    newfile.write('\t'.join(['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'SAMPLE']) + '\n')
+    newfile.write('\t'.join(['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO']) + '\n')
 
     # loop over sorted contigs and sorted positions in cons data for given famsize 
     
@@ -126,12 +126,9 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
                     rawdepth = int(L[header.index('RAWDP')])
                     # get minimum and mean family size
                     minfam = int(L[header.index('FAM')])
-            
                     meanfam = float(L[header.index('MEAN_FAM')])
-                    # set up format string : ref allele depth, alt allele depth, alt ref freqs
-                    fmt_str = 'AD:AL:AF'
-                    # record info
-                    info = 'RDP={0};CDP={1};MIF={2};MNF={3}'.format(rawdepth, consdepth, minfam, round(meanfam, 2))
+                    # set up info
+                    info = 'RDP={0};CDP={1};MIF={2};MNF={3};AD={4};AL={5};AF={6}'
         
                     # get the reference allele
                     ref = L[header.index('REF')]
@@ -148,16 +145,16 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
                     alt_depth = [str(depth[i]) for i in alt_alleles]
                     # make a list of frequencies for alternative alelles passing alt_threshold 
                     alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
-                    # make a list with alternative alleles info
-                    alt_info = '{0}:{1}:{2}'.format(depth[ref], ','.join(alt_depth), ','.join(alt_freq))
-                
+                    # record info
+                    info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
+                                   
                     # get the filter value based on min_read_depth
                     if True in [depth[i] >= filter_threshold for i in alt_alleles]:
                         filt = 'PASS' 
                     else:
                         filt = 'a{0}'.format(filter_threshold)
             
-                    newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info, fmt_str, alt_info]) + '\n')
+                    newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info]) + '\n')
             
     newfile.close()        
 
