@@ -1,10 +1,6 @@
 import os
 import pysam
-import configparser
-import argparse
 import operator
-import json
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds
 import yaml
 
 def get_ref_seq(contig, region_start, region_end, reference):
