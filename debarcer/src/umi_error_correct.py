@@ -15,22 +15,11 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
     and a dictionary with counts of unmapped, mapped, secondary and supplementary reads in the region 
     '''
     
-    secondary, supplementary = 0, 0
-    
-    
     region = contig + ':' + str(region_start + 1) + '-' + str(region_end)
     umi_counts, read_info = {}, {region: {'mapped': 0, 'unmapped': 0, 'secondary': 0, 'supplementary': 0}}
         
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
         for read in bam_reader.fetch(contig, region_start, region_end):
-            
-            if read.is_supplementary == True:
-                read_info[region]['supplementary'] += 1
-            if read.is_secondary == True:
-                read_info[region]['secondary'] += 1
-            
-            
-            
             # skip unmapped reads
             if read.is_unmapped == False:
                 # skipp secondary and supplementary reads
@@ -59,12 +48,6 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
             elif read.is_unmapped == True:
                 # record unmapped reads
                 read_info[region]['unmapped'] += 1
-                
-    
-    
-    print('secondary', secondary, 'supplementary', supplementary, 'unmapped', read_info[region]['unmapped'])
-    
-    
     return (umi_counts, read_info)
 
 
