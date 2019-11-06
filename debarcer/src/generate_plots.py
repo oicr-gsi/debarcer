@@ -1816,18 +1816,26 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
         total, good, bad = data['Total'], data['Correct'], data['Incorrect']
         good_name, bad_name = 'correct', 'incorrect'
         Title = 'Pre-processed reads'
+        size = [good/total * 100, bad/total * 100]
+        s_good, s_bad = format(good, ','), format(bad, ',')
+        # use MathText to highlight substring in bold
+        names = ["{0}\n".format(good_name) + r"$\bf{" + str(s_good) + "}$", "{0}\n".format(bad_name) + r"$\bf{" + str(s_bad) + "}$"] 
+        colors = ['#d9b3ff','#0073e6']
     elif datatype == 'mapping':
         region = list(data.keys())[0]
-        good, bad = data[region]['mapped'], data[region]['unmapped']
-        total = good + bad
-        good_name, bad_name = 'mapped', 'unmapped'
+        mapped, unmapped, secondary, supplementary = data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'], data[region]['supplementary']
+        total = mapped + unmapped + secondary + supplementary
+        mapped_name, unmapped_name, sec_name, suppl_name = 'mapped', 'unmapped', 'secondary', 'supplementary'
         Title = 'Filtered reads'
-    size = [good/total * 100, bad/total * 100]
-    s_good, s_bad = format(good, ','), format(bad, ',')
-    
-    # use MathText to highlight substring in bold
-    names = ["{0}\n".format(good_name) + r"$\bf{" + str(s_good) + "}$", "{0}\n".format(bad_name) + r"$\bf{" + str(s_bad) + "}$"] 
-    
+        size = [mapped/total * 100, unmapped/total * 100, secondary/total * 100, supplementary/total * 100]
+        s_mapped, s_unmapped, s_sec, s_suppl = format(mapped, ','), format(unmapped, ','), format(secondary, ','), format(supplementary, ',')
+        # use MathText to highlight substring in bold
+        names = ["{0}\n".format(mapped_name) + r"$\bf{" + str(s_mapped) + "}$",
+                 "{0}\n".format(unmapped_name) + r"$\bf{" + str(s_unmapped) + "}$",
+                 "{0}\n".format(sec_name) + r"$\bf{" + str(s_sec) + "}$",
+                 "{0}\n".format(suppl_name) + r"$\bf{" + str(s_suppl) + "}$"] 
+        colors = ['#d9b3ff','#0073e6', '#cce6ff', '#66b3ff']
+        
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W, H)
@@ -1839,7 +1847,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
     my_circle=plt.Circle( (0,0), 0.7, color='white')
     
     # plot data as pie chart
-    ax.pie(size, labels=names, colors=['#d9b3ff','#0073e6'],
+    ax.pie(size, labels=names, colors=colors,
            textprops={'fontsize':22, 'fontweight':'normal'},
            wedgeprops = { 'linewidth' : 7, 'edgecolor' : 'white' })
     # add circle in the center of the pie to create a donut
@@ -1851,7 +1859,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
        
     # Equal aspect ratio ensures that pie is drawn as a circle
     ax.axis('equal')  
-    
+
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
     plt.close()
