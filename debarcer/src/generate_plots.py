@@ -590,7 +590,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
      
-    
+    print('ymax adjusted', YMax)
     
     
     
@@ -605,7 +605,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 5)])
     elif 30 < YMax <=50:
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 10)])
-    else:
+    elif YMax > 50:
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 20)])
     
     # write label for y and x axis
