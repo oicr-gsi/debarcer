@@ -1,15 +1,16 @@
 import pysam
 import src.umi_network_collapse as network
 
-def umi_count(contig, region_start, region_end, bam_file):
+def umi_count(contig, region_start, region_end, bam_file, truncate):
     '''
-    (str, int, int, file) -> (dict, dict)
+    (str, int, int, file, bool) -> (dict, dict)
     
     :param contig: Chromosome, eg chrN
     :param region_start: Start index of the region, 0-based half-opened
     :param region_end: End index of the region, 0-based half opened
     :bam_file: Bam file with umi in read names
-    
+    :param truncate: Skip reads overlapping with the genomic interval if True
+        
     Returns a tuple with a  dictionary of umi tally for each umi in a given region
     and a dictionary with counts of unmapped and mapped reads in the region 
     '''
@@ -21,16 +22,23 @@ def umi_count(contig, region_start, region_end, bam_file):
         for read in bam_reader.fetch(contig, region_start, region_end):
             # skip unmapped reads
             if read.is_unmapped == False:
-                # record mapped reads
-                read_info[region]['mapped'] += 1
-                # extract the umi sequence from read name
-                # umis <- list of umi sequences
-                umis = read.query_name.split(':')[-1].split(';')
-                for i in umis:
-                    if i in umi_counts:
-                        umi_counts[i] += 1
-                    else:
-                        umi_counts[i] = 1
+                # get the start position 0-based
+                pos = int(read.reference_start)
+                end = int(read.reference_end)
+                # skip reads overlapping with region if truncate is True
+                if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
+                    continue
+                else:
+                    # record mapped reads
+                    read_info[region]['mapped'] += 1
+                    # extract the umi sequence from read name
+                    # umis <- list of umi sequences
+                    umis = read.query_name.split(':')[-1].split(';')
+                    for i in umis:
+                        if i in umi_counts:
+                            umi_counts[i] += 1
+                        else:
+                            umi_counts[i] = 1
             elif read.is_unmapped == True:
                 # record unmapped reads
                 read_info[region]['unmapped'] += 1
@@ -82,8 +90,8 @@ def is_overlapping(read_start, read_end, region_start, region_end):
     '''
     (int, int, int, int) -> bool
     
-    :param read_start: read start position, 0-based half open
-    :param read_end: read end position. Points to one past the last aligned residue
+    :param read_start: 0-based leftmost coordinate of the read on the reference genome
+    :param read_end: aligned reference position of the read on the reference genome (one past the last aligned residue)
     :param region_start: Start index of the region, 0-based half opened
     :param region_end: End index of the region, 0-based half opened
     
@@ -133,14 +141,6 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
                 # get the start position 0-based
                 pos = int(read.reference_start)
                 end = int(read.reference_end)
-                
-                print('------')
-                print('ref_start', read.reference_start, 'query_start', read.query_alignment_start)
-                print('ref_end', read.reference_end, 'query_end', read.query_alignment_end)
-                print('ref_length', read.reference_length, 'query_length', read.query_length, 'query_alignment_length', read.query_alignment_length)
-                print('----')
-                
-                
                 
                 # skip reads overlapping with region if truncate is True
                 if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
