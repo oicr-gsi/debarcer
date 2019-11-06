@@ -15,6 +15,9 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
     and a dictionary with counts of unmapped and mapped reads in the region 
     '''
     
+    secondary, supplementary = 0, 0
+    
+    
     region = contig + ':' + str(region_start + 1) + '-' + str(region_end)
     umi_counts, read_info = {}, {region: {'mapped': 0, 'unmapped': 0}}
         
@@ -22,6 +25,13 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
         for read in bam_reader.fetch(contig, region_start, region_end):
             # skip unmapped reads
             if read.is_unmapped == False:
+                
+                if read.is_supplementary:
+                    supplementary += 1
+                if read.is_secondary:
+                    secondary += 1
+                
+                
                 # get the start position 0-based
                 pos = int(read.reference_start)
                 end = int(read.reference_end)
@@ -43,6 +53,10 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
                 # record unmapped reads
                 read_info[region]['unmapped'] += 1
                 
+    
+    
+    print('secondary', secondary, 'supplementary', supplementary)
+    
     
     return (umi_counts, read_info)
 
