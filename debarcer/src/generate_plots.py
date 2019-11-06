@@ -582,9 +582,18 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     else:
         YMax = [Data[i] for i in Data]
         YMax = max(YMax)
+    
+    print('ymax', YMax)
+    
+    
+    
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
-        
+     
+    
+    
+    
+    
     # write y axis ticks
     if YMax <=2:
         ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 0.2)])
