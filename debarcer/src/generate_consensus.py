@@ -178,7 +178,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             consensus_seq[pos][family_key][allele] = 1
     
     
-    print('unmapped', unmapped, 'secondary', secondary, 'supplementary', supplementary)
+    print('consensus_seq', 'unmapped', unmapped, 'secondary', secondary, 'supplementary', supplementary)
        
     
     return consensus_seq, FamSize
@@ -204,6 +204,12 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     and the average read depth for the given region
     '''
 
+
+    unmapped = 0
+    secondary = 0
+    supplementary = 0
+    
+
     uncollapsed_seq = {}
 
     # make a list to store number of reads 
@@ -220,6 +226,13 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
             # restict pileup columns to genomic region
             if region_start <= pos < region_end:
 
+                
+                
+                
+                
+                
+                
+                
                 # record number of read in pileup
                 covArray.append(pileupcolumn.nsegments)
 
@@ -231,6 +244,26 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                     # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
                     
                     # get reference and alternative bases
+                    
+                    
+                    
+                    
+                    read_data = read.alignment
+                    if read_data.is_unmapped:
+                        unmapped += 1
+                    if read_data.is_secondary:
+                        secondary += 1
+                    if read_data.is_supplementary:
+                        supplementary += 1
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
                     if not read.is_del and read.indel == 0:
                         ref_base = ref_seq[pos - region_start]
                         alt_base = read.alignment.query_sequence[read.query_position]
@@ -260,6 +293,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
         coverage = sum(covArray) / len(covArray)
     except:
         coverage = 0
+    
+    
+    
+    print('uncollapsed_seq', 'unmapped', unmapped, 'secondary', secondary, 'supplementary', supplementary)
     
     return uncollapsed_seq, round(coverage, 2)
 
