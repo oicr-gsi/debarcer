@@ -79,6 +79,11 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     and a dictionary to keep track of family size for each position
     '''
 
+
+    unmapped = 0
+    secondary = 0
+    supplementary = 0
+
     # create a dict to store umi family size at each position {position: {parent: {distance: count}}}
     FamSize = {}
 
@@ -99,6 +104,17 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                     # pileupread obj: represention of an aligned read
                     # get read information
                     read_data = read.alignment
+                    
+                    if read_data.is_unmapped:
+                        unmapped += 1
+                    if read_data.is_secondary:
+                        secondary += 1
+                    if read_data.is_supplementary:
+                        supplementary += 1
+                    
+                    
+                    
+                    
                     read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                     # get all recorded umis
                     umis = read_name.split(":")[-1].split(';')
@@ -160,6 +176,11 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             consensus_seq[pos][family_key][allele] += 1
                                         else:
                                             consensus_seq[pos][family_key][allele] = 1
+    
+    
+    print('unmapped', unmapped, 'secondary', secondary, 'supplementary', supplementary)
+       
+    
     return consensus_seq, FamSize
 
 
