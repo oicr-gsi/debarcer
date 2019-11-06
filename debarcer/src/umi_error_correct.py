@@ -269,7 +269,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     print("Counting UMIs...")
     # count umi sequences -> dict {umi_seq: count}
     # count mapped and unmapped reads
-    counts, mapped_reads = umi_count(contig, region_start, region_end, bam_file)
+    counts, mapped_reads = umi_count(contig, region_start, region_end, bam_file, truncate)
     umis = counts.keys()
     
     print("Clustering UMIs...")
