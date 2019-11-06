@@ -12,43 +12,42 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
     :param truncate: Skip reads overlapping with the genomic interval if True
         
     Returns a tuple with a  dictionary of umi tally for each umi in a given region
-    and a dictionary with counts of unmapped and mapped reads in the region 
+    and a dictionary with counts of unmapped, mapped, secondary and supplementary reads in the region 
     '''
     
     secondary, supplementary = 0, 0
     
     
     region = contig + ':' + str(region_start + 1) + '-' + str(region_end)
-    umi_counts, read_info = {}, {region: {'mapped': 0, 'unmapped': 0}}
+    umi_counts, read_info = {}, {region: {'mapped': 0, 'unmapped': 0, 'secondary': 0, 'supplementary': 0}}
         
     with pysam.AlignmentFile(bam_file, "rb") as bam_reader:
         for read in bam_reader.fetch(contig, region_start, region_end):
             # skip unmapped reads
             if read.is_unmapped == False:
-                
-                if read.is_supplementary:
-                    supplementary += 1
-                if read.is_secondary:
-                    secondary += 1
-                
-                
-                # get the start position 0-based
-                pos = int(read.reference_start)
-                end = int(read.reference_end)
-                # skip reads overlapping with region if truncate is True
-                if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
-                    continue
-                else:
-                    # record mapped reads
-                    read_info[region]['mapped'] += 1
-                    # extract the umi sequence from read name
-                    # umis <- list of umi sequences
-                    umis = read.query_name.split(':')[-1].split(';')
-                    for i in umis:
-                        if i in umi_counts:
-                            umi_counts[i] += 1
-                        else:
-                            umi_counts[i] = 1
+                # skipp secondary and supplementary reads
+                if read.is_supplementary == True:
+                    read_info[region]['supplementary'] += 1
+                if read.is_secondary == True:
+                    read_info[region]['secondary'] += 1
+                if read.is_supplementary == False and read.is_secondary == False:
+                    # get the start position 0-based
+                    pos = int(read.reference_start)
+                    end = int(read.reference_end)
+                    # skip reads overlapping with region if truncate is True
+                    if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
+                        continue
+                    else:
+                        # record mapped reads
+                        read_info[region]['mapped'] += 1
+                        # extract the umi sequence from read name
+                        # umis <- list of umi sequences
+                        umis = read.query_name.split(':')[-1].split(';')
+                        for i in umis:
+                            if i in umi_counts:
+                                umi_counts[i] += 1
+                            else:
+                                umi_counts[i] = 1
             elif read.is_unmapped == True:
                 # record unmapped reads
                 read_info[region]['unmapped'] += 1
@@ -150,31 +149,33 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
         for read in bam_reader.fetch(contig, region_start, region_end):
             # skip unmapped reads
             if read.is_unmapped == False:
-                # umi <- list of umi sequences
-                umis = read.query_name.split(':')[-1].split(';')
-                # get the start position 0-based
-                pos = int(read.reference_start)
-                end = int(read.reference_end)
+                # skip secondary and supplementary reads
+                if read.is_supplementary == False and read.is_secondary == False:
+                    # umi <- list of umi sequences
+                    umis = read.query_name.split(':')[-1].split(';')
+                    # get the start position 0-based
+                    pos = int(read.reference_start)
+                    end = int(read.reference_end)
                 
-                # skip reads overlapping with region if truncate is True
-                if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
-                    continue
-                else:
-                    # for each umi sequence
-                    for umi in umis:
-                        # get the parent umi
-                        parent = parent_umi[umi]
-                        # initialize inner dict if parent not in umi_families
-                        if parent not in D:
-                            D[parent] = {}
-                        # check if umi is recorded for that group
-                        if umi not in D[parent]:
-                            D[parent][umi] = {}
-                        # check if position is recorded
-                        if pos in D[parent][umi]:
-                            D[parent][umi][pos] += 1
-                        else:
-                            D[parent][umi][pos] = 1
+                    # skip reads overlapping with region if truncate is True
+                    if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
+                        continue
+                    else:
+                        # for each umi sequence
+                        for umi in umis:
+                            # get the parent umi
+                            parent = parent_umi[umi]
+                            # initialize inner dict if parent not in umi_families
+                            if parent not in D:
+                                D[parent] = {}
+                            # check if umi is recorded for that group
+                            if umi not in D[parent]:
+                                D[parent][umi] = {}
+                            # check if position is recorded
+                            if pos in D[parent][umi]:
+                                D[parent][umi][pos] += 1
+                            else:
+                                D[parent][umi][pos] = 1
     return D
 
 
