@@ -1818,9 +1818,19 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
         Title = 'Pre-processed reads'
         size = [good/total * 100, bad/total * 100]
         s_good, s_bad = format(good, ','), format(bad, ',')
+        colors = ['#d9b3ff', '#0073e6']
+        
+        # sort data 
+        data = sorted(list(zip(size, [s_good, s_bad], [good_name, bad_name], colors)), key=lambda x:x[0])
+        # get back counts, size, names and colors 
+        size = [i[0] for i in data]
+        counts = [i[1] for i in data]
+        names = [i[2] for i in data]
+        colors = [i[3] for i in data]
         # use MathText to highlight substring in bold
-        names = ["{0}\n".format(good_name) + r"$\bf{" + str(s_good) + "}$", "{0}\n".format(bad_name) + r"$\bf{" + str(s_bad) + "}$"] 
-        colors = ['#d9b3ff','#0073e6']
+        labels = []
+        for i in range(len(names)):
+            labels.append("{0}\n".format(names[i]) + r"$\bf{" + str(counts[i]) + "}$")
     elif datatype == 'mapping':
         region = list(data.keys())[0]
         mapped, unmapped, secondary, supplementary = data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'], data[region]['supplementary']
@@ -1829,13 +1839,20 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
         Title = 'Filtered reads'
         size = [mapped/total * 100, unmapped/total * 100, secondary/total * 100, supplementary/total * 100]
         s_mapped, s_unmapped, s_sec, s_suppl = format(mapped, ','), format(unmapped, ','), format(secondary, ','), format(supplementary, ',')
-        # use MathText to highlight substring in bold
-        names = ["{0}\n".format(mapped_name) + r"$\bf{" + str(s_mapped) + "}$",
-                 "{0}\n".format(unmapped_name) + r"$\bf{" + str(s_unmapped) + "}$",
-                 "{0}\n".format(sec_name) + r"$\bf{" + str(s_sec) + "}$",
-                 "{0}\n".format(suppl_name) + r"$\bf{" + str(s_suppl) + "}$"] 
         colors = ['#d9b3ff','#0073e6', '#cce6ff', '#66b3ff']
         
+        # sort data
+        data = sorted(list(zip(size, [s_mapped, s_unmapped, s_sec, s_suppl], [mapped_name, unmapped_name, sec_name, suppl_name], colors)), key=lambda x:x[0])
+        # get back counts and size
+        size = [i[0] for i in data]
+        counts = [i[1] for i in data]
+        names = [i[2] for i in data]
+        colors = [i[3] for i in data]
+        # use MathText to highlight substring in bold
+        labels = []
+        for i in range(len(names)):
+            labels.append("{0}\n".format(names[i]) + r"$\bf{" + str(counts[i]) + "}$")
+           
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W, H)
@@ -1847,9 +1864,10 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
     my_circle=plt.Circle( (0,0), 0.7, color='white')
     
     # plot data as pie chart
-    ax.pie(size, labels=names, colors=colors,
+    ax.pie(size, labels=labels, colors=colors,
            textprops={'fontsize':22, 'fontweight':'normal'},
-           wedgeprops = { 'linewidth' : 7, 'edgecolor' : 'white' })
+           wedgeprops = { 'linewidth' : 7, 'edgecolor' : 'white' },
+           startangle=90)
     # add circle in the center of the pie to create a donut
     p=plt.gcf()
     p.gca().add_artist(my_circle)
