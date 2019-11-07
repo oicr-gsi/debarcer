@@ -1834,7 +1834,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
             labels.append("{0}\n".format(names[i]) + r"$\bf{" + str(counts[i]) + "}$")
     elif datatype == 'mapping':
         region = list(data.keys())[0]
-        mapped, unmapped, nonprimary data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'] + data[region]['supplementary']
+        mapped, unmapped, nonprimary =  data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'] + data[region]['supplementary']
         total = mapped + unmapped + nonprimary
         mapped_name, unmapped_name, nonprimary_name = 'mapped', 'unmapped', 'non-primary'
         Title = 'Filtered reads'
