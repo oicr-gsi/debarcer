@@ -1867,9 +1867,13 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
     my_circle=plt.Circle( (0,0), 0.7, color='white')
     
     # plot data as pie chart
+    if datatype == 'preprocessing':
+        lw = 7
+    elif datatype == 'mapping':
+        lw = 2
     ax.pie(size, labels=labels, colors=colors,
            textprops={'fontsize':22, 'fontweight':'normal'},
-           wedgeprops = { 'linewidth' : 7, 'edgecolor' : 'white' })
+           wedgeprops = { 'linewidth' : lw, 'edgecolor' : 'white' })
     # add circle in the center of the pie to create a donut
     p=plt.gcf()
     p.gca().add_artist(my_circle)
