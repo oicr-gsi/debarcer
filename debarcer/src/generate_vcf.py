@@ -132,45 +132,51 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     for contig in Chromosomes:
         for pos in positions:
             for size in famsize:
-                L = consdata[contig][size][pos]
-                # get reference frequency
-                ref_freq = float(L[header.index('REF_FREQ')]) 
-                # create VCF record if ref freq low enough to consider variant at position 
-                if ref_freq <= ref_threshold:
-                    # get consensus and raw depth       
-                    consdepth = int(L[header.index('CONSDP')])
-                    rawdepth = int(L[header.index('RAWDP')])
-                    # get minimum and mean family size
-                    minfam = int(L[header.index('FAM')])
-                    meanfam = float(L[header.index('MEAN_FAM')])
-                    # set up info
-                    info = 'RDP={0};CDP={1};MIF={2};MNF={3};AD={4};AL={5};AF={6}'
-        
-                    # get the reference allele
-                    ref = L[header.index('REF')]
-                    # get the list of alleles
-                    alleles = ['A', 'C', 'G', 'T', 'I', 'D', 'N']
-                    # get the allele read depth
-                    depth = {i:int(L[header.index(i)]) for i in alleles}
-                    # compute allele frequency for each allele
-                    freq = {i: (depth[i]/sum(depth.values())) * 100 for i in alleles}
+                # check pos membership for merged consensus files
+                if pos in consdata[contig][size]:
+                    
                 
-                    # make a list of alternative alleles with frequency >= alt_threshold
-                    alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
-                    # make a list of read depth for alternative alleles passing alt_threshold
-                    alt_depth = [str(depth[i]) for i in alt_alleles]
-                    # make a list of frequencies for alternative alelles passing alt_threshold 
-                    alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
-                    # record info
-                    info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
+                
+                
+                    L = consdata[contig][size][pos]
+                    # get reference frequency
+                    ref_freq = float(L[header.index('REF_FREQ')]) 
+                    # create VCF record if ref freq low enough to consider variant at position 
+                    if ref_freq <= ref_threshold:
+                        # get consensus and raw depth       
+                        consdepth = int(L[header.index('CONSDP')])
+                        rawdepth = int(L[header.index('RAWDP')])
+                        # get minimum and mean family size
+                        minfam = int(L[header.index('FAM')])
+                        meanfam = float(L[header.index('MEAN_FAM')])
+                        # set up info
+                        info = 'RDP={0};CDP={1};MIF={2};MNF={3};AD={4};AL={5};AF={6}'
+        
+                        # get the reference allele
+                        ref = L[header.index('REF')]
+                        # get the list of alleles
+                        alleles = ['A', 'C', 'G', 'T', 'I', 'D', 'N']
+                        # get the allele read depth
+                        depth = {i:int(L[header.index(i)]) for i in alleles}
+                        # compute allele frequency for each allele
+                        freq = {i: (depth[i]/sum(depth.values())) * 100 for i in alleles}
+                
+                        # make a list of alternative alleles with frequency >= alt_threshold
+                        alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
+                        # make a list of read depth for alternative alleles passing alt_threshold
+                        alt_depth = [str(depth[i]) for i in alt_alleles]
+                        # make a list of frequencies for alternative alelles passing alt_threshold 
+                        alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
+                        # record info
+                        info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
                                    
-                    # get the filter value based on min_read_depth
-                    if True in [depth[i] >= filter_threshold for i in alt_alleles]:
-                        filt = 'PASS' 
-                    else:
-                        filt = 'a{0}'.format(filter_threshold)
+                        # get the filter value based on min_read_depth
+                        if True in [depth[i] >= filter_threshold for i in alt_alleles]:
+                            filt = 'PASS' 
+                        else:
+                            filt = 'a{0}'.format(filter_threshold)
             
-                    newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info]) + '\n')
+                        newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info]) + '\n')
             
     newfile.close()        
 
