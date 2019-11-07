@@ -63,7 +63,7 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     :param filter_threshold: minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
       
-    Write a VCF from the consensus file
+    Write a VCF from the consensus file. Allow multiple records per position for each family sizes.
     '''
     
     # parse consensus file
@@ -111,12 +111,16 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     # add back non-numerical contigs
     Chromosomes.extend(others)
     
-    
+    # make a list of family sizes
+    famsize = []
+    for i in consdata:
+        famsize.extend(list(consdata[i].keys()))
+    famsize = sorted(list(map(lambda x: int(x), list(set(famsize)))))
+        
     for contig in Chromosomes:
-        # check if fam size in consdata
-        if famsize in consdata[contig]:
-            for pos in sorted(consdata[contig][famsize]):
-                L = consdata[contig][famsize][pos]
+        for size in famsize:
+            for pos in sorted(consdata[contig][size]):
+                L = consdata[contig][size][pos]
                 # get reference frequency
                 ref_freq = float(L[header.index('REF_FREQ')]) 
                 # create VCF record if ref freq low enough to consider variant at position 
