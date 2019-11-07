@@ -115,9 +115,17 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
         famsize.extend(list(consdata[i].keys()))
     famsize = sorted(list(map(lambda x: int(x), list(set(famsize)))))
         
+    # make a sorted list of positions
+    positions = []
+    for i in consdata:
+        for j in consdata[i]:
+            positions.extend(list(consdata[i][j].keys()))
+    positions = sorted(list(map(lambda x: int(x)), list(set(positions))))
+       
+    
     for contig in Chromosomes:
-        for size in famsize:
-            for pos in sorted(consdata[contig][size]):
+        for pos in positions:
+            for size in famsize:
                 L = consdata[contig][size][pos]
                 # get reference frequency
                 ref_freq = float(L[header.index('REF_FREQ')]) 
