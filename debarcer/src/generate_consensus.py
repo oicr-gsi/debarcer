@@ -88,8 +88,27 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns
         for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper=stepper):
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             # get column position
             pos = int(pileupcolumn.reference_pos)  
+            
+            
+            if contig == 'chr3' and pos == 137781619:
+                myseq = pileupcolumn.get_query_sequences(add_indels=True)
+                print(myseq) 
+            
+            
+            
             # restict pileup columns to genomic region
             if region_start <= pos < region_end:
                 # loop over reads in pileup column
