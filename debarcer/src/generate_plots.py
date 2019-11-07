@@ -1834,18 +1834,15 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
             labels.append("{0}\n".format(names[i]) + r"$\bf{" + str(counts[i]) + "}$")
     elif datatype == 'mapping':
         region = list(data.keys())[0]
-        mapped, unmapped, nonprimary =  data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'] + data[region]['supplementary']
-        total = mapped + unmapped + nonprimary
-        mapped_name, unmapped_name, nonprimary_name = 'mapped', 'unmapped', 'non-primary'
+        mapped, discarded = data[region]['mapped'], data[region]['unmapped'] + data[region]['secondary'] + data[region]['supplementary']
+        total = mapped + discarded
+        mapped_name, discarded_name = 'mapped', 'discarded'
         Title = 'Filtered reads'
-        size = [mapped/total * 100, unmapped/total * 100, nonprimary/total * 100]
-        s_mapped, s_unmapped, s_nonprimary = format(mapped, ','), format(unmapped, ','), format(nonprimary, ',')
-        colors = ['#d9b3ff','#0073e6', '#cce6ff']
-        
-        # '#66b3ff'          
-                  
+        size = [mapped/total * 100, discarded/total * 100]
+        s_mapped, s_discarded = format(mapped, ','), format(discarded, ',')
+        colors = ['#ffe680','#ffb3b3']
         # sort data
-        data = sorted(list(zip(size, [s_mapped, s_unmapped, s_nonprimary], [mapped_name, unmapped_name, nonprimary_name], colors)), key=lambda x:x[0])
+        data = sorted(list(zip(size, [s_mapped, s_discarded], [mapped_name, discarded_name], colors)), key=lambda x:x[0])
         # get back counts and size
         size = [i[0] for i in data]
         counts = [i[1] for i in data]
