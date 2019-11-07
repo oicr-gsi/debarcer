@@ -1840,7 +1840,7 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
         Title = 'Filtered reads'
         size = [mapped/total * 100, discarded/total * 100]
         s_mapped, s_discarded = format(mapped, ','), format(discarded, ',')
-        colors = ['#ffe680','#ffb3b3']
+        colors = ['#ffe680','#990000']
         # sort data
         data = sorted(list(zip(size, [s_mapped, s_discarded], [mapped_name, discarded_name], colors)), key=lambda x:x[0])
         # get back counts and size
