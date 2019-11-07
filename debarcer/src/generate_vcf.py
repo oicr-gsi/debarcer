@@ -65,6 +65,12 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     Write a VCF from the consensus file. Allow multiple records per position for each family sizes.
     '''
     
+    
+    print(consfile)
+    
+    
+    
+    
     # parse consensus file
     consdata = GetConsData(consfile)
 
