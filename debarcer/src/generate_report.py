@@ -518,7 +518,7 @@ def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
     # add description of the figures
     style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
     padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
-    L.append(renderer('<p style="{0}">Proportion of mapped and unmapped reads in genomic regions</p>'.format(style)))
+    L.append(renderer('<p style="{0}">Unmapped reads and non-primary alignments are discarded</p>'.format(style)))
     L.append(renderer('<pre> </pre>'))
     
     # make a sorted list of regions for 'before_grouping' figures
@@ -1035,6 +1035,8 @@ def WriteReport(directory, extension, Outputfile, mincov, minratio, minumis, min
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Mapping', renderer)
     # add figures from mapping, update figure counter
     figcounter = AddMapping(L, font_family, extension, FigPaths, figcounter, 1, renderer)
+    # add spacer line
+    AddSpacerLine(L, renderer) 
 
     ## Pre-grouping section
     headernum = AddHeader(L, 1, 'black', headernum+1, font_family, 'Umi distribution before family grouping', renderer)
