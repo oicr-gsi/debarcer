@@ -168,6 +168,17 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         # compute allele frequency for each allele
                         freq = {i: (depth[i]/sum(depth.values())) * 100 for i in alleles}
                 
+                
+                        if contig == 'chr4' and pos == 7728552:
+                            print('ref', ref)
+                            print('depth', depth)
+                            print('freq', freq)
+                    
+                
+                
+                
+                
+                
                         # make a list of alternative alleles with frequency >= alt_threshold
                         alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
                         # make a list of read depth for alternative alleles passing alt_threshold
@@ -176,7 +187,16 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
                         # record info
                         info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
-                                   
+                           
+                        
+                        if contig == 'chr4' and pos == 7728552:
+                            print('alleles', alt_alleles)
+                            print('alt_depth', alt_depth)
+                            print('alt_freq', alt_freq)
+                    
+                        
+                        
+                        
                         # get the filter value based on min_read_depth
                         if True in [depth[i] >= filter_threshold for i in alt_alleles]:
                             filt = 'PASS' 
