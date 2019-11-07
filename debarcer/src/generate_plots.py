@@ -579,19 +579,9 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         except:
             YMax = [Data[i] for i in Data]
             YMax = max(YMax)
-    
-        finally:
-             print('ymax', YMax)
-    
-    
-    
     else:
         YMax = [Data[i] for i in Data]
         YMax = max(YMax)
-    
-   
-    
-    
     
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
@@ -1844,16 +1834,18 @@ def PlotIncorrectReads(ReadInfo, Outputfile, datatype, W, H):
             labels.append("{0}\n".format(names[i]) + r"$\bf{" + str(counts[i]) + "}$")
     elif datatype == 'mapping':
         region = list(data.keys())[0]
-        mapped, unmapped, secondary, supplementary = data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'], data[region]['supplementary']
-        total = mapped + unmapped + secondary + supplementary
-        mapped_name, unmapped_name, sec_name, suppl_name = 'mapped', 'unmapped', 'secondary', 'supplementary'
+        mapped, unmapped, nonprimary data[region]['mapped'], data[region]['unmapped'], data[region]['secondary'] + data[region]['supplementary']
+        total = mapped + unmapped + nonprimary
+        mapped_name, unmapped_name, nonprimary_name = 'mapped', 'unmapped', 'non-primary'
         Title = 'Filtered reads'
-        size = [mapped/total * 100, unmapped/total * 100, secondary/total * 100, supplementary/total * 100]
-        s_mapped, s_unmapped, s_sec, s_suppl = format(mapped, ','), format(unmapped, ','), format(secondary, ','), format(supplementary, ',')
-        colors = ['#d9b3ff','#0073e6', '#cce6ff', '#66b3ff']
+        size = [mapped/total * 100, unmapped/total * 100, nonprimary/total * 100]
+        s_mapped, s_unmapped, s_nonprimary = format(mapped, ','), format(unmapped, ','), format(nonprimary, ',')
+        colors = ['#d9b3ff','#0073e6', '#cce6ff']
         
+        # '#66b3ff'          
+                  
         # sort data
-        data = sorted(list(zip(size, [s_mapped, s_unmapped, s_sec, s_suppl], [mapped_name, unmapped_name, sec_name, suppl_name], colors)), key=lambda x:x[0])
+        data = sorted(list(zip(size, [s_mapped, s_unmapped, s_nonprimary], [mapped_name, unmapped_name, nonprimary_name], colors)), key=lambda x:x[0])
         # get back counts and size
         size = [i[0] for i in data]
         counts = [i[1] for i in data]
