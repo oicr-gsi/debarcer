@@ -194,16 +194,15 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             print('alt_depth', alt_depth)
                             print('alt_freq', alt_freq)
                     
-                        
-                        
-                        
-                        # get the filter value based on min_read_depth
-                        if True in [depth[i] >= filter_threshold for i in alt_alleles]:
-                            filt = 'PASS' 
-                        else:
-                            filt = 'a{0}'.format(filter_threshold)
+                        # check that alernative alleles are recorded
+                        if len(alt_alleles) != 0:
+                            # get the filter value based on min_read_depth
+                            if True in [depth[i] >= filter_threshold for i in alt_alleles]:
+                                filt = 'PASS' 
+                            else:
+                                filt = 'a{0}'.format(filter_threshold)
             
-                        newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info]) + '\n')
+                            newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info]) + '\n')
             
     newfile.close()        
 
