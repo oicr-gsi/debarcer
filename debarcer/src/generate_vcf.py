@@ -120,7 +120,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     for i in consdata:
         for j in consdata[i]:
             positions.extend(list(consdata[i][j].keys()))
-    positions = sorted(list(map(lambda x: int(x)), list(set(positions))))
+    positions = sorted(list(map(lambda x: int(x), list(set(positions)))))
        
     
     for contig in Chromosomes:
