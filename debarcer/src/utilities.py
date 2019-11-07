@@ -10,6 +10,19 @@ import os
 import itertools
 import numpy as np
 import subprocess
+import time
+
+
+def GetCurrentTime():
+    '''
+    (None) -> str
+    
+    Return a formatted string with current local time
+    '''
+    
+    date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())    
+    return '[{0}] '.format(date)
+
 
 def CheckRegionFormat(region):
     '''

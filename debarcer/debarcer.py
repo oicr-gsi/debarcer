@@ -1,9 +1,7 @@
 import argparse
 import sys
 import os
-import datetime
 import json
-import time
 import mistune
 from src.preprocess_fastqs import reheader_fastqs, check_library_prep
 from src.umi_error_correct import get_umi_families, umi_datafile
@@ -11,7 +9,7 @@ from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import WriteVCF
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
- FormatRegion, GroupQCWriter, CreateDirTree, CheckFileContent, DropEmptyFiles, CheckFilePath, ConvertArgToBool
+ FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime
 from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
  PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
@@ -37,9 +35,6 @@ Authors: Alexandra Bodak, Lawrence Heisler, Richard Jovelin, Isha Warikoo
 Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 """
 
-def timestamp():
-    """Returns the current time in a nice format for log files."""
-    return "[{}] ".format(str(datetime.datetime.now()).split('.')[0])
 
 
 def preprocess_reads(args):
@@ -158,8 +153,8 @@ def group_umis(args):
     # get umi position and distance thresholds 
     pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     dist_threshold = GetThresholds(args.config, 'umi_edit_distance_threshold', args.distthreshold)
-                
-    print(timestamp() + "Grouping UMIs...")
+          
+    print(GetCurrentTime() + "Grouping UMIs...")
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     # keep the most abundant family within group and ignore others if args.ignore is True
@@ -193,9 +188,9 @@ def group_umis(args):
     with open(read_file, 'w') as newfile:
         json.dump(mapped_reads, newfile, sort_keys = True, indent=4)
         
-    print(timestamp() + "UMI grouping complete. CSV files written to {0}.".format(os.path.join(outdir, 'Datafiles')))
-    print(timestamp() + "UMI grouping complete. UMI files written to {0}.".format(os.path.join(outdir, 'Umifiles')))
-    print(timestamp() + "UMI grouping complete. QC files written to {0}.".format(os.path.join(outdir, 'Stats')))
+    print(GetCurrentTime() + 'UMI grouping complete. CSV files written to {0}.'.format(os.path.join(outdir, 'Datafiles')))
+    print(GetCurrentTime() + 'UMI grouping complete. UMI files written to {0}.'.format(os.path.join(outdir, 'Umifiles')))
+    print(GetCurrentTime() + 'UMI grouping complete. QC files written to {0}.'.format(os.path.join(outdir, 'Stats')))
 
 
 def collapse(args):
@@ -268,8 +263,7 @@ def collapse(args):
     except:
         raise ValueError("ERR: Unable to load umi json file")
         
-    print(timestamp() + "Generating consensus...")
-
+    print(GetCurrentTime() + 'Generating consensus...')
 
     # get percent threshold 
     consensus_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
@@ -288,7 +282,7 @@ def collapse(args):
     ConsDir = os.path.join(outdir, 'Consfiles')
     generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
  
-    print(timestamp() + "Consensus generated. Consensus file written to {}.".format(ConsDir))
+    print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
 
 def VCF_converter(args):
@@ -344,7 +338,7 @@ def VCF_converter(args):
     # get filter threshold
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
-    print(timestamp() + "Generating VCFs...")
+    print(GetCurrentTime() + 'Generating VCFs...')
 
     # loop over consensus files
     for filename in ConsFiles:
@@ -352,7 +346,7 @@ def VCF_converter(args):
         outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '.vcf')
         WriteVCF(filename, outputfile, args.reference, ref_threshold, alt_threshold, filter_threshold)
 
-    print(timestamp() + "VCFs generated. VCF files written to {0}.".format(VCFDir))
+    print(GetCurrentTime() + 'VCFs generated. VCF files written to {0}'.format(VCFDir))
 
 
 def merge_files(args):
