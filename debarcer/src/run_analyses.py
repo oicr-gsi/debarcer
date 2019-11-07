@@ -292,7 +292,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             jobname3 =  name_job('MergeDataFiles')
             MergeJobNames.append(jobname3)
             # run merge datafiles
-            #subprocess.call(QsubCmd2.format(jobname3, GroupJobNames[-1], LogDir, queue, '20', MergeScript1), shell=True)    
             subprocess.call(QsubCmd1.format(jobname3, LogDir, queue, str(mem), MergeScript1), shell=True)    
                 
             # merge umi files     
@@ -303,7 +302,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             jobname4 = name_job('MergeUmiFiles')
             MergeJobNames.append(jobname4)
             # run merge umi files
-            #subprocess.call(QsubCmd2.format(jobname5, GroupJobNames[-1], LogDir, queue, '20', MergeScript3), shell=True)
             subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, str(mem), MergeScript2), shell=True)
          
         # check if collapse jobs are still running
@@ -317,7 +315,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             jobname5 = name_job('MergeConsensusFiles')
             MergeJobNames.append(jobname5)
             # run merge consensus files
-            #subprocess.call(QsubCmd2.format(jobname4, ConsJobNames[-1], LogDir, queue, '20', MergeScript2), shell=True)    
             subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, str(mem), MergeScript3), shell=True)    
         
     # make a list of call jobs
