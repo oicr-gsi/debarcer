@@ -298,10 +298,9 @@ def VCF_converter(args):
     :param config: Path to the config file
     :param outdir: Output directory where subdirectories are created
     
-    param consfile: Path to the consensus file (merged or not)
+    :param consfile: Path to the consensus file (merged or not)
     :param outputfile: Path to the output VCF file
     :param reference" Path to the reference genome 
-    :param famsize: Minimum umi family size to collapse umi
     :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
     :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
@@ -345,21 +344,13 @@ def VCF_converter(args):
     # get filter threshold
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
-    # get minimum umi family sizes
-    family_sizes = list(map(lambda x: int(x.strip()), args.famsize.split(',')))
-    # generate vcf for famsize = 0. this is because 0 can be omitted during collapse
-    if 0 not in family_sizes:
-        family_sizes.append(0)
-        
     print(timestamp() + "Generating VCFs...")
 
     # loop over consensus files
     for filename in ConsFiles:
-        # loop over family sizes
-        for family in family_sizes:
-            # write a VCF per family size and consensus file
-            outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_umifam_' + str(family) + '.vcf')
-            WriteVCF(filename, outputfile, args.reference, family, ref_threshold, alt_threshold, filter_threshold)
+        # write a VCF per consensus file (may include multiple records for each family size)
+        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '.vcf')
+        WriteVCF(filename, outputfile, args.reference, ref_threshold, alt_threshold, filter_threshold)
 
     print(timestamp() + "VCFs generated. VCF files written to {0}.".format(VCFDir))
 
@@ -816,7 +807,6 @@ if __name__ == '__main__':
     v_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
     v_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
     v_parser.add_argument('-rf', '--Reference', dest='reference', help='Path to the refeence genome')
-    v_parser.add_argument('-f', '--Famsize', dest='famsize', help='Comma-separated list of minimum umi family size to collapase on')
     v_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', default=95, type=float, 
                           help='Maximum reference frequency to consider (%) alternative variants\
                           (ie. position with ref freq <= ref_threshold is considered variable)')

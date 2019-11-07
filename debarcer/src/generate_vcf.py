@@ -48,14 +48,13 @@ def GetConsData(consfile):
         
     
 
-def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_threshold, filter_threshold):
+def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filter_threshold):
     '''
-    (str, str, str, int, float, int, int) -> None
+    (str, str, str, float, int, int) -> None
     
     :param consfile: Path to the consensus file (merged or not)
     :param outputfile: Path to the output VCF file
     :param reference" Path to the reference genome 
-    :param famsize: Minimum umi family size to collapse umi
     :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
     :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
@@ -85,8 +84,7 @@ def WriteVCF(consfile, outputfile, reference, famsize, ref_threshold, alt_thresh
     newfile.write('##fileDate={0}\n'.format(time.strftime('%Y%m%d', time.localtime())))
     newfile.write('##reference={0}\n'.format(reference))
     newfile.write('##source=Debarcer v. {0}\n'.format(version))
-    newfile.write('##f_size={0}\n'.format(famsize))
-        
+            
     # write info/filter/format metadata
     newfile.write('##INFO=<ID=RDP,Number=1,Type=Integer,Description=\"Raw Depth\">\n')
     newfile.write('##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n')

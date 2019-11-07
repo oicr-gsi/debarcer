@@ -329,10 +329,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         if running_groupmerge == False:
             # generate VCF from all consensus files 
             # set up vcf command
-            VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -f \"{4}\" -rt {5} -at {6} -ft {7}'
+            VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -rt {4} -at {5} -ft {6}'
             CallScript = os.path.join(QsubDir, 'VarCall.sh')
             newfile = open(CallScript, 'w')
-            newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, famsize, ref_threshold, alt_threshold, filter_threshold))
+            newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, ref_threshold, alt_threshold, filter_threshold))
             newfile.close()    
             jobname6 = name_job('Call')
             CallJobs.append(jobname6)
