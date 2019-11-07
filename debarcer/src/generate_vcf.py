@@ -135,10 +135,17 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                 # check pos membership for merged consensus files
                 if pos in consdata[contig][size]:
                     
-                
-                
+                    
                 
                     L = consdata[contig][size][pos]
+                    
+                    
+                    if contig == 'chr4' and pos == 7728552:
+                        print(contig, pos)
+                        print(L)
+                        print('---')
+                
+                    
                     # get reference frequency
                     ref_freq = float(L[header.index('REF_FREQ')]) 
                     # create VCF record if ref freq low enough to consider variant at position 
