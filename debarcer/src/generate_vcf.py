@@ -65,12 +65,6 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     Write a VCF from the consensus file. Allow multiple records per position for each family sizes.
     '''
     
-    
-    print(consfile)
-    
-    
-    
-    
     # parse consensus file
     consdata = GetConsData(consfile)
 
@@ -134,17 +128,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
             for size in famsize:
                 # check pos membership for merged consensus files
                 if pos in consdata[contig][size]:
-                    
-                    
-                
                     L = consdata[contig][size][pos]
-                    
-                    
-                    if contig == 'chr4' and pos == 7728552:
-                        print(contig, pos)
-                        print(L)
-                        print('---')
-                
                     
                     # get reference frequency
                     ref_freq = float(L[header.index('REF_FREQ')]) 
@@ -168,17 +152,6 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         # compute allele frequency for each allele
                         freq = {i: (depth[i]/sum(depth.values())) * 100 for i in alleles}
                 
-                
-                        if contig == 'chr4' and pos == 7728552:
-                            print('ref', ref)
-                            print('depth', depth)
-                            print('freq', freq)
-                    
-                
-                
-                
-                
-                
                         # make a list of alternative alleles with frequency >= alt_threshold
                         alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
                         # make a list of read depth for alternative alleles passing alt_threshold
@@ -188,12 +161,6 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         # record info
                         info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
                            
-                        
-                        if contig == 'chr4' and pos == 7728552:
-                            print('alleles', alt_alleles)
-                            print('alt_depth', alt_depth)
-                            print('alt_freq', alt_freq)
-                    
                         # check that alernative alleles are recorded
                         if len(alt_alleles) != 0:
                             # get the filter value based on min_read_depth
