@@ -347,9 +347,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5} -mv {6} -mr {7} -mu {8} -mc {9} -rt {10}'
             PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
             newfile = open(PlotScript, 'w')
-            # non-ref freq to cut Y axis  
-            nonreffreq = 100 - ref_threshold
-            newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren, nonreffreq))
+            newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren, ref_threshold))
             newfile.close()
             jobname7 = name_job('Plot')
             subprocess.call(QsubCmd1.format(jobname7, LogDir, queue, str(mem), PlotScript), shell=True)    
