@@ -199,12 +199,12 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
             # not only contained within region
             pos = int(pileupcolumn.reference_pos) 
 
+            # record number of non-filtered reads in pileup
+            read_count = 0
+
             # restict pileup columns to genomic region
             if region_start <= pos < region_end:
             
-                # record number of read in pileup
-                covArray.append(pileupcolumn.nsegments)
-
                 assert pos != region_end  
                 # loop over reads in pileup column
                 for read in pileupcolumn.pileups:
@@ -218,6 +218,8 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                     # get the AlignedSegment obj
                     read_data = read.alignment
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
+                        # update read counter
+                        read_count += 1
                         if not read.is_del and read.indel == 0:
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
@@ -241,6 +243,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                 uncollapsed_seq[pos][allele] = 1
                             else:
                                 uncollapsed_seq[pos][allele] += 1
+                covArray.append(read_count)                          
     # compute coverage
     try:
         coverage = sum(covArray) / len(covArray)
