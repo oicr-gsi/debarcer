@@ -443,10 +443,19 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
     Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
     newfile.write('\t'.join(Header) + '\n')
 
-    # loop over fam size
-    for f_size in sorted(cons_data.keys()):
-        # loop over positions 
-        for pos in cons_data[f_size]:
+    # make a sorted list of positions
+    positions = []
+    for i in cons_data:
+        positions.extend(list(cons_data[i].keys()))
+    positions = sorted(list(map(lambda x: int(x), list(set(positions)))))
+
+    # loop over positions
+    for pos in positions:
+        # loop over fam size
+        for f_size in sorted(cons_data.keys()):
+            
+            assert pos in cons_data[f_size]
+            
             # get the reference
             ref_base = ref_seq[pos-region_start]
             # get ref, stats and consensus info
