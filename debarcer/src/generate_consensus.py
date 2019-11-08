@@ -222,7 +222,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     
     test = []
     read2 = []
-    
+    alnstart = []
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
@@ -270,6 +270,9 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             # Next position is a deletion (current base + next bases are ref)
                             ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                             alt_base = read.alignment.query_sequence[read.query_position]
+                
+                
+                            alnstart.append(read_data.query_alignment_start)
                 
                             if ref_base != '':
                                 read2.append(read.alignment.is_read2)
@@ -319,7 +322,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     print('max query pos', max(test))
     print('mean', sum(test) /  len(test))    
     print('read2', set(read2))
-
+    print('aln start', min(alnstart), max(alnstart), sum(alnstart/len(alnstart)))
     
     return uncollapsed_seq, round(coverage, 2)
 
