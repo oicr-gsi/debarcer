@@ -107,7 +107,8 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                 try:
                     myseq = pileupcolumn.get_query_sequences()
                     print(myseq) 
-                
+                except:
+                    myseq = ''
             
             
             # restict pileup columns to genomic region
