@@ -257,7 +257,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                             alt_base = read.alignment.query_sequence[read.query_position]
                 
-                        if ref_seq == '' and pos in ['137781693', 137781693, '137781727', 137781727]:
+                        if ref_base == '' and pos in ['137781693', 137781693, '137781727', 137781727]:
                             print('check ref_base')
                             print('ref_base', ref_base, 'alt_base', alt_base)
                             print('ref_seq', len(ref_seq))
