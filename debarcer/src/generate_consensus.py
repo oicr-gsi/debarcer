@@ -103,10 +103,11 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
             pos = int(pileupcolumn.reference_pos)  
             
             
-            if contig == 'chr3' and pos == 137781619:
-                myseq = pileupcolumn.get_query_sequences()
-                print(myseq) 
-            
+            if contig == 'chr3':
+                try:
+                    myseq = pileupcolumn.get_query_sequences()
+                    print(myseq) 
+                
             
             
             # restict pileup columns to genomic region
