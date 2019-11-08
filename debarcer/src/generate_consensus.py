@@ -263,11 +263,16 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             print('ref_seq', len(ref_seq))
                             print('pos', pos)
                             print('region_start', region_start)
+                            print('ref start', read_data.reference_start)
                             print('red_quey', read.query_position)
                             print('read indel', read.indel)
+                            print('query infer length', read_data.infer_query_length())
+                            print('query length', read_data.query_length)
+                            print('query aln length', read_data.query_alignment_length)
+                            print('query al end', read_data.query_alignment_end)
+                            print('region end', region_end)
+                            print('ref end', read_data.reference_end)
                             
-                
-                
                 
                         # query position is None if is_del or is_refskip is set
                         if not read.is_del and not read.is_refskip:
