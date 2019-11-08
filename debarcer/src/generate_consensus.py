@@ -369,7 +369,29 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
         cons_info = consensuses
         stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
-                    
+                  
+        
+        if pos == '137781693' or 137781693:
+            print('consensus')
+            print('insert')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        elif pos == '137781727' or 137781727:
+            print('consensus')
+            print('del')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        
+        
+        
+        
+        
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
     return cons_data
@@ -418,8 +440,32 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
         cons_info = uncollapsed_seq[pos]
         stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
-            
+        
+        if pos == '137781693' or 137781693:
+            print('uncollapsed')
+            print('insert')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        elif pos == '137781727' or 137781727:
+            print('uncollapsed')
+            print('del')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        
+        
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
+    
+        
+    
+    
+    
+    
     return cons_data, coverage
 
 
