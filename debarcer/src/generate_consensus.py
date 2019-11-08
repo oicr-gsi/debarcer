@@ -99,6 +99,8 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                     # get read information as AlignedSegment
                     read_data = read.alignment
                     
+                    ref_base, alt_base = 'empty', 'empty'
+                    
                     # skip unmapped, secondary and supplementary reads/alignments
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         read_name, start_pos = read_data.query_name, int(read_data.reference_start)
