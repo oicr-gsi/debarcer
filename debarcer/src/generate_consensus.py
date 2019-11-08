@@ -264,7 +264,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             print('pos', pos)
                             print('region_start', region_start)
                             print('ref start', read_data.reference_start)
-                            print('red_quey', read.query_position)
+                            print('query position', read.query_position)
                             print('read indel', read.indel)
                             print('query infer length', read_data.infer_query_length())
                             print('query length', read_data.query_length)
