@@ -218,6 +218,12 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     # make a list to store number of reads 
     covArray = []
     
+    
+    
+    test = []
+    
+    
+    
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper):
@@ -248,14 +254,25 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         if not read.is_del and read.indel == 0:
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
+                        
+                            test.append(read.query_position)
+                        
                         elif read.indel > 0:
                             # Next position is an insert (current base is ref)
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                        
+                            test.append(read.query_position)
+                        
+                        
                         elif read.indel < 0:
                             # Next position is a deletion (current base + next bases are ref)
                             ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                             alt_base = read.alignment.query_sequence[read.query_position]
+                
+                            test.append(read.query_position)
+                
+                
                 
                         if ref_base == '' and pos in ['137781693', 137781693, '137781727', 137781727]:
                             print('check ref_base')
@@ -291,6 +308,14 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
         coverage = sum(covArray) / len(covArray)
     except:
         coverage = 0
+    
+    
+    
+    print('min query pos', min(test))
+    print('max query pos', max(test))
+    print('mean', sum(test) /  len(test))    
+
+
     
     return uncollapsed_seq, round(coverage, 2)
 
