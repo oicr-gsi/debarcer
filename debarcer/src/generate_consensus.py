@@ -255,15 +255,15 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
                             
-                            assert read.query_position <= len(ref_seq)
-                            test.append(read.query_position)
+                            
+                            
                         
                         elif read.indel > 0:
                             # Next position is an insert (current base is ref)
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
                         
-                            test.append(read.query_position)
+                            
                         
                         
                         elif read.indel < 0:
@@ -271,7 +271,8 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                             alt_base = read.alignment.query_sequence[read.query_position]
                 
-                            test.append(read.query_position)
+                            if ref_base != '':
+                                test.append(read.query_position)
                 
                 
                 
