@@ -322,7 +322,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     print('max query pos', max(test))
     print('mean', sum(test) /  len(test))    
     print('read2', set(read2))
-    print('aln start', min(alnstart), max(alnstart), sum(alnstart/len(alnstart)))
+    print('aln start', min(alnstart), max(alnstart), sum(alnstart)/len(alnstart))
     
     return uncollapsed_seq, round(coverage, 2)
 
