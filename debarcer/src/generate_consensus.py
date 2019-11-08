@@ -88,29 +88,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns
         for pileupcolumn in reader.pileup(contig, region_start, region_end, truncate=truncate, ignore_orphans=ignore_orphans, max_depth=max_depth, stepper=stepper):
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
             # get column position
             pos = int(pileupcolumn.reference_pos)  
-            
-            
-            try:
-                myseq = pileupcolumn.get_query_sequences()
-                print(myseq) 
-                print('yes', pileupcolumn.nsegments) 
-            except:
-                print('except', pileupcolumn.nsegments)
-            
-            
+
             # restict pileup columns to genomic region
             if region_start <= pos < region_end:
                 # loop over reads in pileup column
@@ -164,15 +144,29 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             # Next position is an insert (current base is ref)
                                             ref_base = ref_seq[ref_pos]
                                             alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
+                                            print('insert', pos, ref_pos, region_start, read.indel, alt_base)
+                                        
+                                        
                                         elif read.indel < 0:
                                             # Next position is a deletion (current base + next bases are ref)
                                             ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
                                             alt_base = read_data.query_sequence[read.query_position]
                                     
+                                            print('del', pos, ref_pos, region_start, read.indel, alt_base)
+                                        
+                                    
+                                    
                                         # query position is None if is_del or is_refskip is set
                                         if not read.is_del and not read.is_refskip:
                                             # add base info
                                             allele = (ref_base, alt_base)
+                                            
+                                            if len(alt_base) !=1:
+                                                print('indel', allele)
+                                            
+                                            
+                                            
+                                            
                                             # count the number of reads supporting this allele
                                             if pos not in consensus_seq:
                                                 consensus_seq[pos] = {}
