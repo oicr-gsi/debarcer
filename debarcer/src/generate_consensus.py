@@ -221,7 +221,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     
     
     test = []
-    
+    read2 = []
     
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
@@ -272,6 +272,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             alt_base = read.alignment.query_sequence[read.query_position]
                 
                             if ref_base != '':
+                                read2.append(read.alignment.is_read2)
                                 test.append(read.query_position)
                 
                 
@@ -316,7 +317,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     print('min query pos', min(test))
     print('max query pos', max(test))
     print('mean', sum(test) /  len(test))    
-
+    print('read2', set(read2))
 
     
     return uncollapsed_seq, round(coverage, 2)
