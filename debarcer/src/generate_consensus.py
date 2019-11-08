@@ -329,49 +329,48 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # create a dict to store consensus info
     cons_data = {}
 
-    # loop over positions in region
-    for base_pos in range(region_start, region_end):
+
+    # loop over positions in region. positions already recorded in consensus_seq
+    for pos in consensus_seq:
         # extract ref base
-        ref_base = ref_seq[base_pos-region_start]
-        # check if base pos has been recorded 
-        if base_pos in consensus_seq:
-            # record raw depth and consensus info at position
-            consensuses = {}
-            raw_depth = 0
+        ref_base = ref_seq[pos-region_start]
+        # record raw depth and consensus info at position
+        consensuses = {}
+        raw_depth = 0
             
-            # compute minimum and mean family size
-            min_fam, mean_fam = get_fam_size(FamSize, base_pos) 
+        # compute minimum and mean family size
+        min_fam, mean_fam = get_fam_size(FamSize, pos) 
                         
-            for family in consensus_seq[base_pos]:
-                # get the allele with highest count       
-                cons_allele = max(consensus_seq[base_pos][family].items(), key = operator.itemgetter(1))[0]
-                # compute allele frequency within umi family
-                cons_denom = sum(consensus_seq[base_pos][family].values())
-                cons_freq = (consensus_seq[base_pos][family][cons_allele]/cons_denom) * 100
-                # compute raw depth                
-                raw_depth += cons_denom
-                # check if allele frequencyand allele count > thresholds
-                if cons_freq >= consensus_threshold and consensus_seq[base_pos][family][cons_allele] >= count_threshold:
-                    # count allele
-                    if cons_allele in consensuses:
-                        consensuses[cons_allele] += 1
-                    else:
-                        consensuses[cons_allele] = 1
-            # compute consensus depth across all alleles
-            cons_depth = sum(consensuses.values())
+        for family in consensus_seq[pos]:
+            # get the allele with highest count       
+            cons_allele = max(consensus_seq[pos][family].items(), key = operator.itemgetter(1))[0]
+            # compute allele frequency within umi family
+            cons_denom = sum(consensus_seq[pos][family].values())
+            cons_freq = (consensus_seq[pos][family][cons_allele]/cons_denom) * 100
+            # compute raw depth                
+            raw_depth += cons_denom
+            # check if allele frequencyand allele count > thresholds
+            if cons_freq >= consensus_threshold and consensus_seq[pos][family][cons_allele] >= count_threshold:
+                # count allele
+                if cons_allele in consensuses:
+                   consensuses[cons_allele] += 1
+                else:
+                   consensuses[cons_allele] = 1
+        # compute consensus depth across all alleles
+        cons_depth = sum(consensuses.values())
             
-            # compute ref frequency
-            if (ref_base, ref_base) in consensuses:
-                ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100
-            else:
-                ref_freq = 0
+        # compute ref frequency
+        if (ref_base, ref_base) in consensuses:
+            ref_freq = (consensuses[(ref_base, ref_base)] / cons_depth) * 100
+        else:
+            ref_freq = 0
             
-            # record ref, consensus and stats info
-            ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
-            cons_info = consensuses
-            stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
+        # record ref, consensus and stats info
+        ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
+        cons_info = consensuses
+        stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                     
-            cons_data[base_pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
+        cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
     return cons_data
 
@@ -403,26 +402,24 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     # create a dict to store consensus info
     cons_data = {}
     
-    # loop over positions in genomic region
-    for base_pos in range(region_start, region_end):
+    # loop over positions in region. positions already recorded in uncollapsed_seq
+    for pos in uncollapsed_seq:
         # extract ref base    
-        ref_base = ref_seq[base_pos-region_start]
-        # check if base pos has been recorded     
-        if base_pos in uncollapsed_seq:
-            # compute depth at position        
-            depth = sum(uncollapsed_seq[base_pos].values())
-            # compute ref frequency
-            if (ref_base, ref_base) in uncollapsed_seq[base_pos]:
-                ref_freq = (uncollapsed_seq[base_pos][(ref_base, ref_base)] / depth) * 100
-            else:
-                ref_freq = 0
+        ref_base = ref_seq[pos-region_start]
+        # compute depth at position        
+        depth = sum(uncollapsed_seq[pos].values())
+        # compute ref frequency
+        if (ref_base, ref_base) in uncollapsed_seq[pos]:
+            ref_freq = (uncollapsed_seq[pos][(ref_base, ref_base)] / depth) * 100
+        else:
+            ref_freq = 0
 
-            # record ref, consensus and stats info 
-            ref_info = {"contig": contig, "base_pos": base_pos, "ref_base": ref_base}
-            cons_info = uncollapsed_seq[base_pos]
-            stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
+        # record ref, consensus and stats info 
+        ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
+        cons_info = uncollapsed_seq[pos]
+        stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
             
-            cons_data[base_pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
+        cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     return cons_data, coverage
 
 
@@ -446,40 +443,46 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
     Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
     newfile.write('\t'.join(Header) + '\n')
 
-    # loop over positions         
-    for base_pos in range(region_start, region_end):
-        # get the reference
-        ref_base = ref_seq[base_pos-region_start]
+    # make a sorted list of positions
+    positions = []
+    for i in cons_data:
+        positions.extend(list(cons_data[i].keys()))
+    positions = sorted(list(map(lambda x: int(x), list(set(positions)))))
+
+    # loop over positions
+    for pos in positions:
         # loop over fam size
         for f_size in sorted(cons_data.keys()):
-            # check if position recorded for given fam size
-            if base_pos in cons_data[f_size]:
-                # get ref, stats and consensus info
-                ref = cons_data[f_size][base_pos]['ref_info']
+            
+            assert pos in cons_data[f_size]
+            
+            # get the reference
+            ref_base = ref_seq[pos-region_start]
+            # get ref, stats and consensus info
+            ref = cons_data[f_size][pos]['ref_info']
                 
-                assert ref_base == ref['ref_base']
-                                
-                cons = cons_data[f_size][base_pos]['cons_info']
-                stats = cons_data[f_size][base_pos]['stats']
-                # count each bases
-                counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
-                for allele in cons:
-                    # ref > 1 => deletion
-                    if len(allele[0]) > 1:
-                        counts['D'] += cons[allele]
-                    # allele > 1 => insertion
-                    elif len(allele[1]) > 1:
-                        counts['I'] += cons[allele]
-                    else:
-                        counts[allele[1]] += cons[allele]
-                # write line to file
-                line = [contig, base_pos + 1, ref_base, counts['A'], counts['C'],
-                        counts['G'], counts['T'], counts['I'], counts['D'],
-                        counts['N'], stats['rawdp'], stats['consdp'], f_size,
-                        stats['ref_freq'], stats['mean_fam']]
-                newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
+            assert ref_base == ref['ref_base']
+                               
+            cons = cons_data[f_size][pos]['cons_info']
+            stats = cons_data[f_size][pos]['stats']
+            # count each bases
+            counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
+            for allele in cons:
+                # ref > 1 => deletion
+                if len(allele[0]) > 1:
+                    counts['D'] += cons[allele]
+                # allele > 1 => insertion
+                elif len(allele[1]) > 1:
+                    counts['I'] += cons[allele]
+                else:
+                    counts[allele[1]] += cons[allele]
+            # write line to file
+            line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
+                    counts['G'], counts['T'], counts['I'], counts['D'],
+                    counts['N'], stats['rawdp'], stats['consdp'], f_size,
+                    stats['ref_freq'], stats['mean_fam']]
+            newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
                 
-    
     # close file after writing
     newfile.close()
             
