@@ -271,13 +271,15 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
                             alt_base = read.alignment.query_sequence[read.query_position]
                 
-                
+                            
+                            if ref_base != '':
+                                alnstart.append(read_data.query_alignment_start)
                             
                 
                             if ref_base == '':
                                 read2.append(read.alignment.is_read2)
                                 test.append(read.query_position)
-                                alnstart.append(read_data.query_alignment_start)    
+                                    
                 
                 
                         if ref_base == '' and pos in ['137781693', 137781693, '137781727', 137781727]:
