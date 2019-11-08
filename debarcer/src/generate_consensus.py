@@ -144,7 +144,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             # Next position is an insert (current base is ref)
                                             ref_base = ref_seq[ref_pos]
                                             alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
-                                            print('insert', pos, ref_pos, region_start, read.indel, alt_base)
+                                            print('insert', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
                                         
                                         
                                         elif read.indel < 0:
@@ -152,7 +152,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
                                             alt_base = read_data.query_sequence[read.query_position]
                                     
-                                            print('del', pos, ref_pos, region_start, read.indel, alt_base)
+                                            print('del', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
                                         
                                     
                                     
@@ -176,6 +176,15 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 consensus_seq[pos][family_key][allele] += 1
                                             else:
                                                 consensus_seq[pos][family_key][allele] = 1
+    
+                                        elif read.is_del:
+                                            allele = (ref_base, alt_base)
+                                            print(allele)
+    
+    
+    
+    
+    
     return consensus_seq, FamSize
 
 
