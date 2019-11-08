@@ -254,7 +254,8 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         if not read.is_del and read.indel == 0:
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
-                        
+                            
+                            assert read.query_position <= len(ref_seq)
                             test.append(read.query_position)
                         
                         elif read.indel > 0:
