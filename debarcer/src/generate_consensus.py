@@ -374,7 +374,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                   
         
-        if pos == '137781693' or 137781693:
+        if pos == '137781693' or pos == 137781693:
             print('consensus')
             print('insert')
             print(pos)
@@ -382,7 +382,7 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             print(cons_info)
             print(stats)
             print('----')
-        elif pos == '137781727' or 137781727:
+        elif pos == '137781727' or pos == 137781727:
             print('consensus')
             print('del')
             print(pos)
