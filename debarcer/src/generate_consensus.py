@@ -179,7 +179,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     
                                         elif read.is_del:
                                             allele = (ref_base, alt_base)
-                                            print(allele)
+                                            print(pos, allele)
     
     
     
