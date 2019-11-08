@@ -444,7 +444,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
         cons_info = uncollapsed_seq[pos]
         stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
         
-        if pos == '137781693' or 137781693:
+        if pos == '137781693' or pos == 137781693:
             print('uncollapsed')
             print('insert')
             print(pos)
@@ -452,7 +452,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
             print(cons_info)
             print(stats)
             print('----')
-        elif pos == '137781727' or 137781727:
+        elif pos == '137781727' or pos == 137781727:
             print('uncollapsed')
             print('del')
             print(pos)
