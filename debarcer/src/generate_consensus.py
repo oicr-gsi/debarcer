@@ -270,7 +270,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             # Next position is a deletion (current base + next bases are ref)
                             ref_base = ref_seq[pos - region_start:pos - region_start + abs(read.indel) + 1]
                             
-                            #print('ref_base', pos, ref_base)
+                            print('ref_base', pos, ref_base)
                             
                             alt_base = read.alignment.query_sequence[read.query_position]
                 
