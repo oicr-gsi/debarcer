@@ -373,8 +373,8 @@ def get_fam_size(FamSize, position):
     
 def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (dict, int, str, str, int, int, str, int, int, int, int, bool, bool, str) -> dict
-    
+    (dict, int, str, str, int, int, str, int, float, int, int, bool, bool, str) -> dict
+        
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
                          positions are 0-based half opened
@@ -410,7 +410,6 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     for pos in consensus_seq:
         # extract ref base
         ref_base = consensus_seq[pos]['ref_base']
-        assert ref_base == ref_seq[pos-region_start]
         # record raw depth and consensus info at position
         consensuses = {}
         raw_depth = 0
@@ -505,20 +504,13 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     for pos in uncollapsed_seq:
         # get ref base    
         ref_base = uncollapsed_seq[pos]['ref_base']
-        
-        
-        assert ref_base == ref_seq[pos-region_start]
-        
-        
         # compute depth at position        
-        
         depth = sum(uncollapsed_seq[pos]['alleles'].values())
         # compute ref frequency
         if (ref_base, ref_base) in uncollapsed_seq[pos]['alleles']:
             ref_freq = (uncollapsed_seq[pos]['alleles'][(ref_base, ref_base)] / depth) * 100
         else:
             ref_freq = 0
-
         # record ref, consensus and stats info 
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
         cons_info = uncollapsed_seq[pos]['alleles']
@@ -544,19 +536,14 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
         
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
-        
-    
-    
-    
-    
     return cons_data, coverage
 
 
-def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir):
+def raw_table_output(cons_data, contig, region_start, region_end, outdir):
     '''
-    (dict, str, str, int, int, str, num, num) -> None
+    (dict, str, int, int, str) -> None
     
-    :param ref_seq: Sequence of the reference corresponding to the given region
+    :param cons_data: Consensus data for each family size and position
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
@@ -566,7 +553,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
     '''
     
     # get the path to the output file
-    OutputFile = os.path.join(outdir, '{}:{}-{}.cons'.format(contig, region_start + 1, region_end))
+    OutputFile = os.path.join(outdir, '{0}:{1}-{2}.cons'.format(contig, region_start + 1, region_end))
     newfile = open(OutputFile, 'w')
 
     Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
@@ -585,12 +572,10 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
             
             assert pos in cons_data[f_size]
             
-            # get the reference
-            ref_base = ref_seq[pos-region_start]
             # get ref, stats and consensus info
             ref = cons_data[f_size][pos]['ref_info']
-                
-            assert ref_base == ref['ref_base']
+            # get the reference
+            ref_base = ref['ref_base']
                                
             cons = cons_data[f_size][pos]['cons_info']
             stats = cons_data[f_size][pos]['stats']
@@ -675,7 +660,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
 
     # write output consensus file
     print("Writing output...")
-    raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdir)
+    raw_table_output(cons_data, contig, region_start, region_end, outdir)
     # save coverage to a yaml in outdir/Stats    
     StatsDir = os.path.join(os.path.dirname(outdir), 'Stats')
     if os.path.isdir(StatsDir) == False:
