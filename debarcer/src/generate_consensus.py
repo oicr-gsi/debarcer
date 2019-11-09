@@ -270,7 +270,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             # Next position is a deletion (current base + next bases are ref)
                             ref_base = ref_seq[pos - region_start:pos - region_start + abs(read.indel) + 1]
                             
-                            #print('ref_base', ref_base)
+                            #print('ref_base', pos, ref_base)
                             
                             alt_base = read.alignment.query_sequence[read.query_position]
                 
@@ -322,12 +322,11 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
         coverage = 0
     
     
-    
-    print('min query pos', min(test))
-    print('max query pos', max(test))
-    print('mean', sum(test) /  len(test))    
+    if len(test) !=0:
+        print('min query pos', min(test), 'max query pos', max(test), 'mean', sum(test) /  len(test))    
     print('read2', set(read2))
-    print('aln start', min(alnstart), max(alnstart), sum(alnstart)/len(alnstart))
+    if len(alnstart) != 0:
+        print('aln start', min(alnstart), max(alnstart), sum(alnstart)/len(alnstart))
     
     return uncollapsed_seq, round(coverage, 2)
 
