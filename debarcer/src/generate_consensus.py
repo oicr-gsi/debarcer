@@ -213,6 +213,8 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     and the average read depth for the given region
     '''
 
+
+    # create a dict {pos: {'ref_base': reference base}, {'alleles': {allele: count}}}
     uncollapsed_seq = {}
 
     # make a list to store number of reads 
@@ -255,6 +257,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
                             
+                            # record ref base
+                            if pos not in uncollapsed_seq:
+                                uncollapsed_seq[pos] = {}
+                            uncollapsed_seq[pos]['ref_base'] = ref_base    
                             
                             
                         
@@ -310,10 +316,12 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             # count the number of reads supporting this allele
                             if pos not in uncollapsed_seq:
                                 uncollapsed_seq[pos] = {}
-                            if allele not in uncollapsed_seq[pos]:
-                                uncollapsed_seq[pos][allele] = 1
+                            if 'alleles' not in uncollapsed_seq[pos]:
+                                uncollapsed_seq[pos]['alleles'] = {}
+                            if allele not in uncollapsed_seq[pos]['alleles']:
+                                uncollapsed_seq[pos]['alleles'][allele] = 1
                             else:
-                                uncollapsed_seq[pos][allele] += 1
+                                uncollapsed_seq[pos]['alleles'][allele] += 1
                 covArray.append(read_count)                          
     # compute coverage
     try:
@@ -474,7 +482,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     and the average read depth per position for the region
     '''
     
-    # get uncolapased seq info {pos: {(ref, atl): count}}
+    # get uncolapased seq info {pos: {'ref_base': reference base}, {'alleles': {allele: count}}}
     uncollapsed_seq, coverage = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     
     # create a dict to store consensus info
@@ -482,19 +490,25 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     
     # loop over positions in region. positions already recorded in uncollapsed_seq
     for pos in uncollapsed_seq:
-        # extract ref base    
-        ref_base = ref_seq[pos-region_start]
+        # get ref base    
+        ref_base = uncollapsed_seq[pos]['ref_base']
+        
+        
+        assert ref_base == ref_seq[pos-region_start]
+        
+        
         # compute depth at position        
-        depth = sum(uncollapsed_seq[pos].values())
+        
+        depth = sum(uncollapsed_seq[pos]['alleles'].values())
         # compute ref frequency
-        if (ref_base, ref_base) in uncollapsed_seq[pos]:
-            ref_freq = (uncollapsed_seq[pos][(ref_base, ref_base)] / depth) * 100
+        if (ref_base, ref_base) in uncollapsed_seq[pos]['alleles']:
+            ref_freq = (uncollapsed_seq[pos]['alleles'][(ref_base, ref_base)] / depth) * 100
         else:
             ref_freq = 0
 
         # record ref, consensus and stats info 
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
-        cons_info = uncollapsed_seq[pos]
+        cons_info = uncollapsed_seq[pos]['alleles']
         stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
         
         if pos == '137781693' or pos == 137781693:
