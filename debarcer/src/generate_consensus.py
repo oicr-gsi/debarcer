@@ -592,6 +592,13 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
                     counts['I'] += cons[allele]
                 else:
                     counts[allele[1]] += cons[allele]
+           
+            
+            if pos in [137781715, '137781715'] and f_size == 0:
+                print(counts)
+            
+            
+            
             # write line to file
             line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
                     counts['G'], counts['T'], counts['I'], counts['D'],
