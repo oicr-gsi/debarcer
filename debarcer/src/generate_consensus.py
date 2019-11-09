@@ -298,7 +298,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             print('query al end', read_data.query_alignment_end)
                             print('region end', region_end)
                             print('ref end', read_data.reference_end)
-                            
+                            print('aligned pairs', read_data.aligned_pairs(with_seq=True))
                 
                         # query position is None if is_del or is_refskip is set
                         if not read.is_del and not read.is_refskip:
