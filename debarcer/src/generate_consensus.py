@@ -83,6 +83,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
     FamSize = {}
 
     # create a dict to store consensus seq info
+    # {pos: {'ref_base': ref_base, 'families': {famkey: {allele: count}}}}
     consensus_seq = {}
     
     with pysam.AlignmentFile(bam_file, "rb") as reader:
@@ -142,6 +143,14 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                         if not read.is_del and read.indel == 0:
                                             ref_base = ref_seq[ref_pos]
                                             alt_base = read_data.query_sequence[read.query_position]
+                                        
+                                            if pos not in consensus_seq:
+                                                consensus_seq[pos] = {}
+                                            if 'ref_base' not in consensus_seq[pos]:
+                                                consensus_seq[pos]['ref_base'] = ref_base
+                                        
+                                        
+                                        
                                         elif read.indel > 0:
                                             # Next position is an insert (current base is ref)
                                             ref_base = ref_seq[ref_pos]
@@ -174,12 +183,14 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             # count the number of reads supporting this allele
                                             if pos not in consensus_seq:
                                                 consensus_seq[pos] = {}
-                                            if family_key not in consensus_seq[pos]:
-                                                consensus_seq[pos][family_key] = {}
-                                            if allele in consensus_seq[pos][family_key]:
-                                                consensus_seq[pos][family_key][allele] += 1
+                                            if 'families' not in consensus_seq[pos]:
+                                                consensus_seq[pos]['families'] = {}
+                                            if family_key not in consensus_seq[pos]['families']:
+                                                consensus_seq[pos]['families'][family_key] = {}
+                                            if allele in consensus_seq[pos]['families'][family_key]:
+                                                consensus_seq[pos]['families'][family_key][allele] += 1
                                             else:
-                                                consensus_seq[pos][family_key][allele] = 1
+                                                consensus_seq[pos]['families'][family_key][allele] = 1
     
 #                                        elif read.is_del:
 #                                            allele = (ref_base, alt_base)
@@ -213,6 +224,8 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     and the average read depth for the given region
     '''
 
+
+    # create a dict {pos: {'ref_base': reference base}, {'alleles': {allele: count}}}
     uncollapsed_seq = {}
 
     # make a list to store number of reads 
@@ -255,6 +268,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
                             
+                            # record ref base
+                            if pos not in uncollapsed_seq:
+                                uncollapsed_seq[pos] = {}
+                            uncollapsed_seq[pos]['ref_base'] = ref_base    
                             
                             
                         
@@ -310,10 +327,12 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             # count the number of reads supporting this allele
                             if pos not in uncollapsed_seq:
                                 uncollapsed_seq[pos] = {}
-                            if allele not in uncollapsed_seq[pos]:
-                                uncollapsed_seq[pos][allele] = 1
+                            if 'alleles' not in uncollapsed_seq[pos]:
+                                uncollapsed_seq[pos]['alleles'] = {}
+                            if allele not in uncollapsed_seq[pos]['alleles']:
+                                uncollapsed_seq[pos]['alleles'][allele] = 1
                             else:
-                                uncollapsed_seq[pos][allele] += 1
+                                uncollapsed_seq[pos]['alleles'][allele] += 1
                 covArray.append(read_count)                          
     # compute coverage
     try:
@@ -378,7 +397,8 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     Generates consensus data for a given family size and genomic region
     '''
 
-    # get consensus info for each base position and umi group in the given region {pos: {fam_key: {(ref, alt):count}}}
+    # get consensus info for each base position and umi group in the given region
+    # {pos: {'ref_base': ref_base, 'families': {famkey: {allele: count}}}}
     # get family size at each position 
     consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
@@ -389,7 +409,8 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # loop over positions in region. positions already recorded in consensus_seq
     for pos in consensus_seq:
         # extract ref base
-        ref_base = ref_seq[pos-region_start]
+        ref_base = consensus_seq[pos]['ref_base']
+        assert ref_base == ref_seq[pos-region_start]
         # record raw depth and consensus info at position
         consensuses = {}
         raw_depth = 0
@@ -397,16 +418,16 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         # compute minimum and mean family size
         min_fam, mean_fam = get_fam_size(FamSize, pos) 
                         
-        for family in consensus_seq[pos]:
+        for family in consensus_seq[pos]['families']:
             # get the allele with highest count       
-            cons_allele = max(consensus_seq[pos][family].items(), key = operator.itemgetter(1))[0]
+            cons_allele = max(consensus_seq[pos]['families'][family].items(), key = operator.itemgetter(1))[0]
             # compute allele frequency within umi family
-            cons_denom = sum(consensus_seq[pos][family].values())
-            cons_freq = (consensus_seq[pos][family][cons_allele]/cons_denom) * 100
+            cons_denom = sum(consensus_seq[pos]['families'][family].values())
+            cons_freq = (consensus_seq[pos]['families'][family][cons_allele]/cons_denom) * 100
             # compute raw depth                
             raw_depth += cons_denom
             # check if allele frequencyand allele count > thresholds
-            if cons_freq >= consensus_threshold and consensus_seq[pos][family][cons_allele] >= count_threshold:
+            if cons_freq >= consensus_threshold and consensus_seq[pos]['families'][family][cons_allele] >= count_threshold:
                 # count allele
                 if cons_allele in consensuses:
                    consensuses[cons_allele] += 1
@@ -474,7 +495,7 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     and the average read depth per position for the region
     '''
     
-    # get uncolapased seq info {pos: {(ref, atl): count}}
+    # get uncolapased seq info {pos: {'ref_base': reference base}, {'alleles': {allele: count}}}
     uncollapsed_seq, coverage = get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     
     # create a dict to store consensus info
@@ -482,19 +503,25 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
     
     # loop over positions in region. positions already recorded in uncollapsed_seq
     for pos in uncollapsed_seq:
-        # extract ref base    
-        ref_base = ref_seq[pos-region_start]
+        # get ref base    
+        ref_base = uncollapsed_seq[pos]['ref_base']
+        
+        
+        assert ref_base == ref_seq[pos-region_start]
+        
+        
         # compute depth at position        
-        depth = sum(uncollapsed_seq[pos].values())
+        
+        depth = sum(uncollapsed_seq[pos]['alleles'].values())
         # compute ref frequency
-        if (ref_base, ref_base) in uncollapsed_seq[pos]:
-            ref_freq = (uncollapsed_seq[pos][(ref_base, ref_base)] / depth) * 100
+        if (ref_base, ref_base) in uncollapsed_seq[pos]['alleles']:
+            ref_freq = (uncollapsed_seq[pos]['alleles'][(ref_base, ref_base)] / depth) * 100
         else:
             ref_freq = 0
 
         # record ref, consensus and stats info 
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
-        cons_info = uncollapsed_seq[pos]
+        cons_info = uncollapsed_seq[pos]['alleles']
         stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
         
         if pos == '137781693' or pos == 137781693:
@@ -578,6 +605,13 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
                     counts['I'] += cons[allele]
                 else:
                     counts[allele[1]] += cons[allele]
+           
+            
+            if pos in [137781715, '137781715', '137781714', 137781714, '137781716', 137781716] and f_size == 0:
+                print(counts)
+            
+            
+            
             # write line to file
             line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
                     counts['G'], counts['T'], counts['I'], counts['D'],
