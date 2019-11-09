@@ -594,7 +594,7 @@ def raw_table_output(cons_data, ref_seq, contig, region_start, region_end, outdi
                     counts[allele[1]] += cons[allele]
            
             
-            if pos in [137781715, '137781715'] and f_size == 0:
+            if pos in [137781715, '137781715', '137781714', 137781714, '137781716', 137781716] and f_size == 0:
                 print(counts)
             
             
