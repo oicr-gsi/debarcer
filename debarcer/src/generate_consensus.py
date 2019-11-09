@@ -465,9 +465,6 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
             print('----')
         
         
-        
-        
-        
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
     return cons_data
@@ -591,12 +588,6 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                 else:
                     counts[allele[1]] += cons[allele]
            
-            
-            if pos in [137781715, '137781715', '137781714', 137781714, '137781716', 137781716] and f_size == 0:
-                print(counts)
-            
-            
-            
             # write line to file
             line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
                     counts['G'], counts['T'], counts['I'], counts['D'],
