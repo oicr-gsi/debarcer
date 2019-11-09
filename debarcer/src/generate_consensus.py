@@ -146,7 +146,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             # Next position is an insert (current base is ref)
                                             ref_base = ref_seq[ref_pos]
                                             alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
-                                            print('insert', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
+                                            
+                                            
+                                            #print('insert', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
                                         
                                         
                                         elif read.indel < 0:
@@ -154,7 +156,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
                                             alt_base = read_data.query_sequence[read.query_position]
                                     
-                                            print('del', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
+                                            #print('del', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
                                         
                                     
                                     
@@ -163,8 +165,8 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             # add base info
                                             allele = (ref_base, alt_base)
                                             
-                                            if len(alt_base) !=1:
-                                                print('indel', allele)
+#                                            if len(alt_base) !=1:
+#                                                print('indel', allele)
                                             
                                             
                                             
@@ -179,10 +181,11 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             else:
                                                 consensus_seq[pos][family_key][allele] = 1
     
-                                        elif read.is_del:
-                                            allele = (ref_base, alt_base)
-                                            print(pos, allele)
-    
+#                                        elif read.is_del:
+#                                            allele = (ref_base, alt_base)
+#                                            
+#                                            print(pos, allele)
+#    
     
     
     
@@ -215,6 +218,12 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
     # make a list to store number of reads 
     covArray = []
     
+    
+    
+    test = []
+    read2 = []
+    alnstart = []
+    
     with pysam.AlignmentFile(bam_file, "rb") as reader:
         # loop over pileup columns 
         for pileupcolumn in reader.pileup(contig, region_start, region_end, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper):
@@ -245,14 +254,54 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         if not read.is_del and read.indel == 0:
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
+                            
+                            
+                            
+                        
                         elif read.indel > 0:
                             # Next position is an insert (current base is ref)
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                        
+                            
+                        
+                        
                         elif read.indel < 0:
                             # Next position is a deletion (current base + next bases are ref)
-                            ref_base = ref_seq[read.query_position:read.query_position + abs(read.indel) + 1]
+                            ref_base = ref_seq[pos - region_start:pos - region_start + abs(read.indel) + 1]
+                            
+                            #print('ref_base', pos, ref_base)
+                            
                             alt_base = read.alignment.query_sequence[read.query_position]
+                
+                            
+                            if ref_base != '':
+                                alnstart.append(read_data.query_alignment_start)
+                            
+                
+                            if ref_base == '':
+                                read2.append(read.alignment.is_read2)
+                                test.append(read.query_position)
+                                    
+                
+                
+                        if ref_base == '' and pos in ['137781693', 137781693, '137781727', 137781727]:
+                            print('check ref_base')
+                            print('ref_base', ref_base, 'alt_base', alt_base)
+                            print('ref_seq', len(ref_seq))
+                            print('pos', pos)
+                            print('region_start', region_start)
+                            print('ref start', read_data.reference_start)
+                            print('query position', read.query_position)
+                            print('query aln start', read_data.query_alignment_start)
+                            print('read indel', read.indel)
+                            print('query infer length', read_data.infer_query_length())
+                            print('query length', read_data.query_length)
+                            print('query aln length', read_data.query_alignment_length)
+                            print('query al end', read_data.query_alignment_end)
+                            print('region end', region_end)
+                            print('ref end', read_data.reference_end)
+                            print('aligned pairs', read_data.get_aligned_pairs(with_seq=True))
                 
                         # query position is None if is_del or is_refskip is set
                         if not read.is_del and not read.is_refskip:
@@ -271,6 +320,13 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
         coverage = sum(covArray) / len(covArray)
     except:
         coverage = 0
+    
+    
+    if len(test) !=0:
+        print('min query pos', min(test), 'max query pos', max(test), 'mean', sum(test) /  len(test))    
+    print('read2', set(read2))
+    if len(alnstart) != 0:
+        print('aln start', min(alnstart), max(alnstart), sum(alnstart)/len(alnstart))
     
     return uncollapsed_seq, round(coverage, 2)
 
@@ -369,7 +425,29 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
         cons_info = consensuses
         stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
-                    
+                  
+        
+        if pos == '137781693' or pos == 137781693:
+            print('consensus')
+            print('insert')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        elif pos == '137781727' or pos == 137781727:
+            print('consensus')
+            print('del')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        
+        
+        
+        
+        
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
     return cons_data
@@ -418,8 +496,32 @@ def generate_uncollapsed(ref_seq, contig, region_start, region_end, bam_file, ma
         ref_info = {"contig": contig, "base_pos": pos, "ref_base": ref_base}
         cons_info = uncollapsed_seq[pos]
         stats = {"rawdp": depth, "consdp": depth, "min_fam": 0, "mean_fam": 0, "ref_freq": ref_freq}
-            
+        
+        if pos == '137781693' or pos == 137781693:
+            print('uncollapsed')
+            print('insert')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        elif pos == '137781727' or pos == 137781727:
+            print('uncollapsed')
+            print('del')
+            print(pos)
+            print(ref_info)
+            print(cons_info)
+            print(stats)
+            print('----')
+        
+        
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
+    
+        
+    
+    
+    
+    
     return cons_data, coverage
 
 
