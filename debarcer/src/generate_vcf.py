@@ -146,7 +146,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         # get the reference allele
                         ref = L[header.index('REF')]
                         # get the list of single nucleotides
-                        alleles = [L[header.index(i)] for i in 'ACGTN']
+                        alleles = [header[header.index(i)] for i in 'ACGTN']
                         
                         # make lists of deletions and counts
                         deletions = L[header.index('D_(ref, del)')].split(',')
