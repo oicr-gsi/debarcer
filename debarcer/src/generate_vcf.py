@@ -149,12 +149,12 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         alleles = [header[header.index(i)] for i in 'ACGTN']
                         
                         # make lists of deletions and counts
-                        deletions = L[header.index('D_(ref, del)')].split(',')
-                        delcounts = L[header.index('D_counts')].split(',')
+                        deletions = L[header.index('D_(ref, del)')].split(';')
+                        delcounts = L[header.index('D_counts')].split(';')
                         
                         # make lists of insertions and counts
-                        insertions = L[header.index('I_(ref,ins)')].split(',')
-                        inscounts = L[header.index('I_counts')].split(',')
+                        insertions = L[header.index('I_(ref,ins)')].split(';')
+                        inscounts = L[header.index('I_counts')].split(';')
                         
                         
                         ### continue here
@@ -229,7 +229,9 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                                     filt = 'a{0}'.format(filter_threshold)
                                 # record info
                                 del_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], del_depth[i], del_freq[i])
-                                newfile.write('\t'.join([contig, str(pos), '.', del_alleles[i][0], del_alleles[i][1], '0', filt, del_info]) + '\n')
+                                # extract ref allele and alt allele
+                                k = list(map(lambda x: x.strip(), del_alleles[i].replace("'", '').replace('(', '').replace(')', '').split(',')))
+                                newfile.write('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, del_info]) + '\n')
                         # check that insertions are recorded
                         if len(ins_alleles) != 0:
                             # record insertions seperately on distinct lines
@@ -241,6 +243,8 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                                     filt = 'a{0}'.format(filter_threshold)
                                 # record info
                                 ins_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ins_depth[i], ins_freq[i])
-                                newfile.write('\t'.join([contig, str(pos), '.', ins_alleles[i][0], ins_alleles[i][1], '0', filt, ins_info]) + '\n')
+                                # extract ref allele and alt allele
+                                k = list(map(lambda x: x.strip(), ins_alleles[i].replace("'", '').replace('(', '').replace(')', '').split(',')))
+                                newfile.write('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, ins_info]) + '\n')
     newfile.close()        
 
