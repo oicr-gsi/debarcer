@@ -145,22 +145,54 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
         
                         # get the reference allele
                         ref = L[header.index('REF')]
-                        # get the list of alleles
-                        alleles = ['A', 'C', 'G', 'T', 'I', 'D', 'N']
-                        # get the allele read depth
+                        # get the list of single nucleotides
+                        alleles = [header[header.index(i)] for i in 'ACGTN']
+                        
+                        # make lists of deletions and counts
+                        deletions = L[header.index('D_(ref, del)')].split(';')
+                        delcounts = L[header.index('D_counts')].split(';')
+                        
+                        # make lists of insertions and counts
+                        insertions = L[header.index('I_(ref,ins)')].split(';')
+                        inscounts = L[header.index('I_counts')].split(';')
+                        
+                        # get the read depth for each allele and indels
                         depth = {i:int(L[header.index(i)]) for i in alleles}
-                        # compute allele frequency for each allele
-                        freq = {i: (depth[i]/sum(depth.values())) * 100 for i in alleles}
+                        if deletions != ['']:
+                            for i in range(len(deletions)):                      
+                                depth[deletions[i]] = int(delcounts[i])
+                        if insertions != ['']:
+                            for i in range(len(insertions)):
+                                depth[insertions[i]] = int(inscounts[i])
+                                               
+                        # compute frequencies for each allele and indel
+                        freq = {i: (depth[i]/sum(depth.values())) * 100 for i in depth}
                 
+                        # record snvs and indels on different lines
+                                    
                         # make a list of alternative alleles with frequency >= alt_threshold
-                        alt_alleles = [i for i in freq if i != ref and freq[i] >= alt_threshold]
+                        alt_alleles = [i for i in freq if i in alleles and i != ref and freq[i] >= alt_threshold]
                         # make a list of read depth for alternative alleles passing alt_threshold
                         alt_depth = [str(depth[i]) for i in alt_alleles]
                         # make a list of frequencies for alternative alelles passing alt_threshold 
                         alt_freq = [str(round(freq[i], 4)) for i in alt_alleles]
                         # record info
-                        info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
-                           
+                        alt_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ','.join(alt_depth), ','.join(alt_freq))
+                        
+                        # make list of deletions with frequency >= alt_threshold
+                        del_alleles = [i for i in freq if i in deletions and freq[i] >= alt_threshold]
+                        # make a list of read depth for deletions passing alt_threshold
+                        del_depth = [str(depth[i]) for i in del_alleles]
+                        # make a list of frequencies for deletions passing alt_threshold
+                        del_freq = [str(round(freq[i], 4)) for i in del_alleles]
+                        
+                        # make list of insertions with frequency >= alt_threshold
+                        ins_alleles = [i for i in freq if i in insertions and freq[i] >= alt_threshold]
+                        # make a list of read depth for insertions passing alt_threshold
+                        ins_depth = [str(depth[i]) for i in ins_alleles] 
+                        # make a list of frequencies for insertions passing alt_threshold
+                        ins_freq = [str(round(freq[i], 4)) for i in ins_alleles]
+                        
                         # check that alernative alleles are recorded
                         if len(alt_alleles) != 0:
                             # get the filter value based on min_read_depth
@@ -169,7 +201,34 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             else:
                                 filt = 'a{0}'.format(filter_threshold)
             
-                            newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, info]) + '\n')
-            
+                            newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, alt_info]) + '\n')
+                        # check that depetions are recorded
+                        if len(del_alleles) != 0:
+                            # record deletions seperately on distinct lines
+                            for i in range(len(del_alleles)):
+                                # get the filter value based on min_read_depth
+                                if depth[del_alleles[i]] >= filter_threshold == True:
+                                    filt == 'PASS'
+                                else:
+                                    filt = 'a{0}'.format(filter_threshold)
+                                # record info
+                                del_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], del_depth[i], del_freq[i])
+                                # extract ref allele and alt allele
+                                k = list(map(lambda x: x.strip(), del_alleles[i].replace("'", '').replace('(', '').replace(')', '').split(',')))
+                                newfile.write('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, del_info]) + '\n')
+                        # check that insertions are recorded
+                        if len(ins_alleles) != 0:
+                            # record insertions seperately on distinct lines
+                            for i in range(len(ins_alleles)):
+                                # get the filter value based on min_read_depth
+                                if depth[ins_alleles[i]] >= filter_threshold == True:
+                                    filt == 'PASS'
+                                else:
+                                    filt = 'a{0}'.format(filter_threshold)
+                                # record info
+                                ins_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ins_depth[i], ins_freq[i])
+                                # extract ref allele and alt allele
+                                k = list(map(lambda x: x.strip(), ins_alleles[i].replace("'", '').replace('(', '').replace(')', '').split(',')))
+                                newfile.write('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, ins_info]) + '\n')
     newfile.close()        
 
