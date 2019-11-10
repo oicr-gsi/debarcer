@@ -627,8 +627,8 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                         
             line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
                     counts['G'], counts['T'], counts['N'],
-                    ','.join([i[1] for i in I]), ','.join([str(i[0]) for i in I]),
-                    ','.join([i[1] for i in D]), ','.join([str(i[0]) for i in D]),
+                    ','.join(str([i[1]) for i in I]), ','.join([str(i[0]) for i in I]),
+                    ','.join([str(i[1]) for i in D]), ','.join([str(i[0]) for i in D]),
                     stats['rawdp'], stats['consdp'], f_size,
                     stats['ref_freq'], stats['mean_fam']]
             newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
