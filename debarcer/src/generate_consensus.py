@@ -139,7 +139,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                         # skip positions with deletions or ref not defined
                                         # events are captured at the position before they occur
                                         if not read.is_del and not read.is_refskip:
-                                            # read.indel is indel length of next position 
+                                            # read.indel looks ahead to see if indel at next position(s) 
                                             # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
     
                                             # get reference and alternative bases  
@@ -251,11 +251,17 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         # skip positions with deletions or ref not defined
                         # events are captured at the position before they occur
                         if not read.is_del and not read.is_refskip:
-                            # look ahead to see if indel at following position(s)
+                            # get aligned read, ref pos and ref base 
+                            pairs = read_data.get_aligned_pairs(with_seq=True)
+    
+                            # read.indel looks ahead to see if indel at next position(s)
                             if read.indel == 0:
                                 # no indel, record ref and alt 
                                 ref_base = ref_seq[pos - region_start]
                                 alt_base = read.alignment.query_sequence[read.query_position]
+                            
+                                assert ref_base == pairs[read.query_position][-1]
+                              
                             
                                 # record ref base
                                 if pos not in uncollapsed_seq:
@@ -268,6 +274,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                 # Next position is an insert (current base is ref)
                                 ref_base = ref_seq[pos - region_start]
                                 alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                        
+                                assert ref_base == pairs[read.query_position][-1]
+                              
+                        
                         
                                 if pos in ['137781693', 137781693]:
                                     print('read.indel > 0', read.is_del, read.is_refskip)
@@ -287,6 +297,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                 #print('ref_base', pos, ref_base)
                             
                                 alt_base = read.alignment.query_sequence[read.query_position]
+                
+                                assert ref_base == ''.join([i[-1] for i in pairs[read.query_position: read.query_position +  abs(read.indel) + 1]])
+                                
+                               
                 
                             
                                 if ref_base != '':
