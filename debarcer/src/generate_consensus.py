@@ -590,28 +590,7 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                         counts[allele] += 1
                     else:
                         counts[allele] = 1
-                
-            
-            #{'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
-            
-            
-#            for allele in cons:
-#                # count single nucleotides
-#                
-#                
-#                
-#                # ref > 1 => deletion
-#                if len(allele[0]) > 1:
-#                    counts['D'] += cons[allele]
-#                # allele > 1 => insertion
-#                elif len(allele[1]) > 1:
-#                    counts['I'] += cons[allele]
-#                else:
-#                    counts[allele[1]] += cons[allele]
-#           
-            # write line to file
-            
-            # make parallel list of indels and indel counts 
+            # make lists of indels and indel counts 
             D, I = [], []
             for allele in counts:
                 if len(allele) == 2:
