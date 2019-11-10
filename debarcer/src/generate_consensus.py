@@ -142,36 +142,48 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                             # read.indel looks ahead to see if indel at next position(s) 
                                             # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
     
-                                            # get reference and alternative bases  
+                                            # get aligned read, ref pos and ref base 
+                                            pairs = read_data.get_aligned_pairs(with_seq=True)
+                                            # read.indel looks ahead to see if indel at next position(s)  
                                             if read.indel == 0:
-                                                ref_base = ref_seq[ref_pos]
-                                                alt_base = read_data.query_sequence[read.query_position]
-                                        
+                                                # no indel, record ref and alt 
+                                                # get index of pileupcolumn pos in aligned pairs
+                                                j = [i[1] for i in pairs].index(pos)
+                                                # record base on ref and read
+                                                ref_base = pairs[j][-1].upper()
+    
+                                                assert ref_base == ref_seq[ref_pos].upper() 
+                                                
+                                                alt_base = read_data.query_sequence[read.query_position].upper()
+                                                # keep track of ref_base at pos
                                                 if pos not in consensus_seq:
                                                     consensus_seq[pos] = {}
                                                 if 'ref_base' not in consensus_seq[pos]:
                                                     consensus_seq[pos]['ref_base'] = ref_base
                                         
                                             elif read.indel > 0:
-                                                # Next position is an insert (current base is ref)
-                                                ref_base = ref_seq[ref_pos]
-                                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel)+1]
+                                                # next position is an insertion
+                                                # get index of pileupcolumn pos in aligned pairs
+                                                j = [i[1] for i in pairs].index(pos)
+                                                # record base on ref and insertion on read
+                                                ref_base = pairs[j][-1].upper()
+                                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
                                             
-                                                #print('insert', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
-                                        
+                                                assert ref_base == ref_seq[ref_pos].upper()
+                                                
                                             elif read.indel < 0:
-                                                # Next position is a deletion (current base + next bases are ref)
-                                                ref_base = ref_seq[ref_pos:ref_pos + abs(read.indel) + 1]
+                                                # next position is deletion
+                                                # get index of pileupcolumn pos in aligned pairs
+                                                j = [i[1] for i in pairs].index(pos)
+                                                # record base on ref at pos + ref bases deleted on read and base on read
+                                                ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
                                                 alt_base = read_data.query_sequence[read.query_position]
-                                    
-                                                #print('del', pos, ref_pos, region_start, read.indel, ref_base, alt_base)
+                                
+                                                assert ref_base == ref_seq[ref_pos:ref_pos + abs(read.indel) + 1].upper()
                                     
                                             # add base info
                                             allele = (ref_base, alt_base)
-                                            
-#                                           if len(alt_base) !=1:
-#                                                print('indel', allele)
-                                            
+                                                                                      
                                             # count the number of reads supporting this allele
                                             if pos not in consensus_seq:
                                                 consensus_seq[pos] = {}
@@ -183,8 +195,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 consensus_seq[pos]['families'][family_key][allele] += 1
                                             else:
                                                 consensus_seq[pos]['families'][family_key][allele] = 1
-    
-    return consensus_seq, FamSize
+        return consensus_seq, FamSize
 
 
 def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper):
@@ -252,7 +263,6 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                                 # record base on ref and read
                                 ref_base = pairs[j][-1].upper()
                                 alt_base = read.alignment.query_sequence[read.query_position].upper()
-                            
                                 # record ref base
                                 if pos not in uncollapsed_seq:
                                     uncollapsed_seq[pos] = {}
