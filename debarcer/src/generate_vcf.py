@@ -149,7 +149,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         alleles = [header[header.index(i)] for i in 'ACGTN']
                         
                         # make lists of deletions and counts
-                        deletions = L[header.index('D_(ref, del)')].split(';')
+                        deletions = L[header.index('D_(ref,del)')].split(';')
                         delcounts = L[header.index('D_counts')].split(';')
                         
                         # make lists of insertions and counts
