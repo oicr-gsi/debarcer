@@ -227,7 +227,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             for i in range(len(ins_alleles)):
                                 # get the filter value based on min_read_depth
                                 if depth[ins_alleles[i]] >= filter_threshold == True:
-                                    filt == 'PASS':
+                                    filt == 'PASS'
                                 else:
                                     filt = 'a{0}'.format(filter_threshold)
                                 # record info
