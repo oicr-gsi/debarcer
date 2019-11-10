@@ -277,15 +277,16 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         
                         elif read.indel > 0:
                             
-                            if pos in ['137781693', 137781693, '137781727', 137781727]:
-                                print('read.indel > 0', read.is_del)
                             
                             # Next position is an insert (current base is ref)
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
                         
-                            
-                        
+                            if pos in ['137781693', 137781693]:
+                                print('read.indel > 0', read.is_del)
+                                print(ref_base)
+                                print(read.alignment.query_sequence[read.query_position])
+                                print(alt_base)
                         
                         elif read.indel < 0:
                             
@@ -311,7 +312,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                     
                 
                 
-                        if read.indel > 0 or read.indel < 0 and pos in ['137781693', 137781693, '137781727', 137781727]:
+                        if (read.indel > 0 or read.indel < 0) and pos in ['137781693', 137781693, '137781727', 137781727]:
                             print('check ref_base')
                             print('ref_base', ref_base, 'alt_base', alt_base)
                             print('ref_seq', len(ref_seq))
