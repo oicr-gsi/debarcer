@@ -553,7 +553,7 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
     OutputFile = os.path.join(outdir, '{0}:{1}-{2}.cons'.format(contig, region_start + 1, region_end))
     newfile = open(OutputFile, 'w')
 
-    Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'I', 'D', 'N', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
+    Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'N', 'I_(ref,ins)', 'I_counts', 'D_(ref, del)', 'D_counts', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
     newfile.write('\t'.join(Header) + '\n')
 
     # make a sorted list of positions
@@ -576,22 +576,39 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                                
             cons = cons_data[f_size][pos]['cons_info']
             stats = cons_data[f_size][pos]['stats']
-            # count each bases
-            counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'I': 0, 'D': 0, 'N': 0}
+            
+            # count each allele, initiate with single nucleotides
+            counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0}
             for allele in cons:
-                # ref > 1 => deletion
-                if len(allele[0]) > 1:
-                    counts['D'] += cons[allele]
-                # allele > 1 => insertion
-                elif len(allele[1]) > 1:
-                    counts['I'] += cons[allele]
-                else:
+                # count single nucleotides
+                if len(allele[0]) == 1 and len(allele[1]) == 1:
+                    # snv or no change
                     counts[allele[1]] += cons[allele]
-           
-            # write line to file
+                else:
+                    # indel, record allele and its count
+                    if allele in counts:
+                        counts[allele] += 1
+                    else:
+                        counts[allele] = 1
+            # make lists of indels and indel counts 
+            D, I = [], []
+            for allele in counts:
+                if len(allele) == 2:
+                    # indel
+                    if len(allele[1]) > 1:
+                        # insertions
+                        I.append([counts[allele], allele])
+                    elif len(allele[0]) > 1:
+                        # deletions
+                        D.append([counts[allele], allele])
+            D.sort()
+            I.sort()
+                        
             line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
-                    counts['G'], counts['T'], counts['I'], counts['D'],
-                    counts['N'], stats['rawdp'], stats['consdp'], f_size,
+                    counts['G'], counts['T'], counts['N'],
+                    ','.join([str(i[1]) for i in I]), ','.join([str(i[0]) for i in I]),
+                    ','.join([str(i[1]) for i in D]), ','.join([str(i[0]) for i in D]),
+                    stats['rawdp'], stats['consdp'], f_size,
                     stats['ref_freq'], stats['mean_fam']]
             newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
                 
