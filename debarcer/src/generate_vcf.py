@@ -172,7 +172,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             
                             
                             for i in range(len(deletions)):
-                                print(i, deletions, delcounts)
+                                print(i, deletions[i], delcounts)
                                 
                                 
                                 
