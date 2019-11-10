@@ -172,6 +172,10 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             
                             
                             for i in range(len(deletions)):
+                                print(i, deletions, delcounts)
+                                
+                                
+                                
                                 depth[deletions[i]] = int(delcounts[i])
                         if insertions != ['']:
                             for i in range(len(insertions)):
