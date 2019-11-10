@@ -553,7 +553,7 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
     OutputFile = os.path.join(outdir, '{0}:{1}-{2}.cons'.format(contig, region_start + 1, region_end))
     newfile = open(OutputFile, 'w')
 
-    Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'N', 'I_(ref,ins)', 'I_counts', 'D_(ref, del)', 'D_counts', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
+    Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'N', 'I_(ref,ins)', 'I_counts', 'D_(ref,del)', 'D_counts', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
     newfile.write('\t'.join(Header) + '\n')
 
     # make a sorted list of positions
