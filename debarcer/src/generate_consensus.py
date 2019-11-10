@@ -269,6 +269,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                 try:
                                     assert ref_base == pairs[read.query_position][-1].upper()
                                 except:
+                                    print(pos)
                                     print(pairs)
                                     print(ref_base)
                                     print(read.query_position)
@@ -297,6 +298,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                 try:
                                     assert ref_base == pairs[read.query_position][-1].upper()
                                 except:
+                                    print(pos)
                                     print(pairs)
                                     print(ref_base)
                                     print(read.query_position)
