@@ -95,7 +95,7 @@ def MergeConsensusFiles(ConsDir):
     
         # get Header
         infile = open(S[0])
-        Header = infile.readline().rstrip().split()
+        Header = infile.readline().rstrip().split('\t')
         infile.close()
     
         # write merged consensus file
