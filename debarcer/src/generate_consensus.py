@@ -331,7 +331,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             
                                 alt_base = read.alignment.query_sequence[read.query_position]
                 
-                                assert ref_base == ''.join([i[-1] for i in pairs[read.query_position: read.query_position +  abs(read.indel) + 1]]).upper()
+#                                assert ref_base == ''.join([i[-1] for i in pairs[read.query_position: read.query_position +  abs(read.indel) + 1]]).upper()
                                 
                                
                 
