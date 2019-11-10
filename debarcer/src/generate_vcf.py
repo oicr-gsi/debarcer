@@ -156,26 +156,10 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         insertions = L[header.index('I_(ref,ins)')].split(';')
                         inscounts = L[header.index('I_counts')].split(';')
                         
-                        
-                        ### continue here
-                        
-                        # add indel counts to depth
-                        # need to adjust freq to take into account indels 
-                        # seperate insertions, deletions and snvs on disctint line
-                        # alt-alleles, add membership to allele, do not include indels
-                        
                         # get the read depth for each allele and indels
                         depth = {i:int(L[header.index(i)]) for i in alleles}
                         if deletions != ['']:
-                            print(deletions)
-                            print(delcounts)
-                            
-                            
-                            for i in range(len(deletions)):
-                                print(i, deletions[i], delcounts)
-                                
-                                
-                                
+                            for i in range(len(deletions)):                      
                                 depth[deletions[i]] = int(delcounts[i])
                         if insertions != ['']:
                             for i in range(len(insertions)):
