@@ -294,6 +294,14 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                                 ref_base = ref_seq[pos - region_start]
                                 alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
                         
+                        
+                                # find pileupcolumn pos in aligned pairs
+                                j = [i[1] for i in pairs].index(pos)
+                                assert ref_base == pairs[j][-1].upper()
+                            
+                        
+                        
+                        
 #                                print(pairs)
 #                                print(ref_base)
 #                                print(read.query_position)
@@ -333,7 +341,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                 
 #                                assert ref_base == ''.join([i[-1] for i in pairs[read.query_position: read.query_position +  abs(read.indel) + 1]]).upper()
                                 
-                               
+                                # find pileupcolumn pos in aligned pairs
+                                j = [i[1] for i in pairs].index(pos)
+                                assert ref_base == ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
+                                                            
                 
                             
                                 if ref_base != '':
