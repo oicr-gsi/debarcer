@@ -265,17 +265,22 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
 #                                print(read.query_position)
 #                                print(pairs[read.query_position])
                             
+                                # find pileupcolumn pos in aligned pairs
+                                j = [i[1] for i in pairs].index(pos)
+                                assert ref_base == pairs[j][-1].upper()
                             
-                                try:
-                                    assert ref_base == pairs[read.query_position][-1].upper()
-                                except:
-                                    print(pos)
-                                    print(pairs)
-                                    print(ref_base)
-                                    print(read.query_position)
-                                    print(pairs[read.query_position])
-                                    print('no indel')
-                                    assert 1 < 0
+                            
+                            
+#                                try:
+#                                    assert ref_base == pairs[read.query_position][-1].upper()
+#                                except:
+#                                    print(pos)
+#                                    print(pairs)
+#                                    print(ref_base)
+#                                    print(read.query_position)
+#                                    print(pairs[read.query_position])
+#                                    print('no indel')
+#                                    assert 1 < 0
                             
                                 # record ref base
                                 if pos not in uncollapsed_seq:
@@ -295,16 +300,16 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
 #                                print(pairs[read.query_position])
 #                                assert ref_base == pairs[read.query_position][-1].upper()
                               
-                                try:
-                                    assert ref_base == pairs[read.query_position][-1].upper()
-                                except:
-                                    print(pos)
-                                    print(pairs)
-                                    print(ref_base)
-                                    print(read.query_position)
-                                    print(pairs[read.query_position])
-                                    print('insertion')
-                                    assert 1 < 0
+#                                try:
+#                                    assert ref_base == pairs[read.query_position][-1].upper()
+#                                except:
+#                                    print(pos)
+#                                    print(pairs)
+#                                    print(ref_base)
+#                                    print(read.query_position)
+#                                    print(pairs[read.query_position])
+#                                    print('insertion')
+#                                    assert 1 < 0
                             
                         
                                 if pos in ['137781693', 137781693]:
