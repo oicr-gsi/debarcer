@@ -264,78 +264,76 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         # update read counter
                         read_count += 1
-                        if not read.is_del and read.indel == 0:
-                            
-                            assert read.is_refskip == False
-                            
-                            
-                            ref_base = ref_seq[pos - region_start]
-                            alt_base = read.alignment.query_sequence[read.query_position]
-                            
-                            # record ref base
-                            if pos not in uncollapsed_seq:
-                                uncollapsed_seq[pos] = {}
-                            uncollapsed_seq[pos]['ref_base'] = ref_base    
-                            
-                            
                         
-                        elif read.indel > 0:
+                        # skip positions with deletions or ref not defined
+                        # events are captured at the position before they occur
+                        if not read.is_del and not read.is_refskip:
+                            # look ahead to see if indel at following position(s)
+                            if read.indel == 0:
+                                # no indel, record ref and alt 
+                                ref_base = ref_seq[pos - region_start]
+                                alt_base = read.alignment.query_sequence[read.query_position]
                             
+                                # record ref base
+                                if pos not in uncollapsed_seq:
+                                    uncollapsed_seq[pos] = {}
+                                uncollapsed_seq[pos]['ref_base'] = ref_base    
                             
-                            # Next position is an insert (current base is ref)
-                            ref_base = ref_seq[pos - region_start]
-                            alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
+                            elif read.indel > 0:
+                                # insertion
+                            
+                                # Next position is an insert (current base is ref)
+                                ref_base = ref_seq[pos - region_start]
+                                alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
                         
-                            if pos in ['137781693', 137781693]:
-                                print('read.indel > 0', read.is_del, read.is_refskip)
-                                print(ref_base)
-                                print(read.alignment.query_sequence[read.query_position])
-                                print(alt_base)
+                                if pos in ['137781693', 137781693]:
+                                    print('read.indel > 0', read.is_del, read.is_refskip)
+                                    print(ref_base)
+                                    print(read.alignment.query_sequence[read.query_position])
+                                    print(alt_base)
                         
-                        elif read.indel < 0:
+                            elif read.indel < 0:
                             
-                            if pos in ['137781693', 137781693, '137781727', 137781727]:
-                                print('read.indel < 0', read.is_del, read.is_refskip)
+                                if pos in ['137781693', 137781693, '137781727', 137781727]:
+                                    print('read.indel < 0', read.is_del, read.is_refskip)
                             
                             
-                            # Next position is a deletion (current base + next bases are ref)
-                            ref_base = ref_seq[pos - region_start:pos - region_start + abs(read.indel) + 1]
+                                # Next position is a deletion (current base + next bases are ref)
+                                ref_base = ref_seq[pos - region_start:pos - region_start + abs(read.indel) + 1]
                             
-                            #print('ref_base', pos, ref_base)
+                                #print('ref_base', pos, ref_base)
                             
-                            alt_base = read.alignment.query_sequence[read.query_position]
+                                alt_base = read.alignment.query_sequence[read.query_position]
                 
                             
-                            if ref_base != '':
-                                alnstart.append(read_data.query_alignment_start)
+                                if ref_base != '':
+                                    alnstart.append(read_data.query_alignment_start)
                             
                 
-                            if ref_base == '':
-                                read2.append(read.alignment.is_read2)
-                                test.append(read.query_position)
+                                if ref_base == '':
+                                    read2.append(read.alignment.is_read2)
+                                    test.append(read.query_position)
                                     
                 
                 
-                        if (read.indel > 0 or read.indel < 0) and pos in ['137781693', 137781693, '137781727', 137781727]:
-                            print('check ref_base')
-                            print('ref_base', ref_base, 'alt_base', alt_base)
-                            print('ref_seq', len(ref_seq))
-                            print('pos', pos)
-                            print('region_start', region_start)
-                            print('ref start', read_data.reference_start)
-                            print('query position', read.query_position)
-                            print('query aln start', read_data.query_alignment_start)
-                            print('read indel', read.indel)
-                            print('query infer length', read_data.infer_query_length())
-                            print('query length', read_data.query_length)
-                            print('query aln length', read_data.query_alignment_length)
-                            print('query al end', read_data.query_alignment_end)
-                            print('region end', region_end)
-                            print('ref end', read_data.reference_end)
-                            print('aligned pairs', read_data.get_aligned_pairs(with_seq=True))
+                            if (read.indel > 0 or read.indel < 0) and pos in ['137781693', 137781693, '137781727', 137781727]:
+                                print('check ref_base')
+                                print('ref_base', ref_base, 'alt_base', alt_base)
+                                print('ref_seq', len(ref_seq))
+                                print('pos', pos)
+                                print('region_start', region_start)
+                                print('ref start', read_data.reference_start)
+                                print('query position', read.query_position)
+                                print('query aln start', read_data.query_alignment_start)
+                                print('read indel', read.indel)
+                                print('query infer length', read_data.infer_query_length())
+                                print('query length', read_data.query_length)
+                                print('query aln length', read_data.query_alignment_length)
+                                print('query al end', read_data.query_alignment_end)
+                                print('region end', region_end)
+                                print('ref end', read_data.reference_end)
+                                print('aligned pairs', read_data.get_aligned_pairs(with_seq=True))
                 
-                        # query position is None if is_del or is_refskip is set
-                        if not read.is_del and not read.is_refskip:
                             # add base info
                             allele = (ref_base, alt_base)
                             # count the number of reads supporting this allele
