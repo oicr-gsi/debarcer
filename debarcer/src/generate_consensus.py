@@ -265,6 +265,10 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         # update read counter
                         read_count += 1
                         if not read.is_del and read.indel == 0:
+                            
+                            assert read.is_refskip == False
+                            
+                            
                             ref_base = ref_seq[pos - region_start]
                             alt_base = read.alignment.query_sequence[read.query_position]
                             
@@ -283,7 +287,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                             alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1]
                         
                             if pos in ['137781693', 137781693]:
-                                print('read.indel > 0', read.is_del)
+                                print('read.indel > 0', read.is_del, read.is_refskip)
                                 print(ref_base)
                                 print(read.alignment.query_sequence[read.query_position])
                                 print(alt_base)
@@ -291,7 +295,7 @@ def get_uncollapsed_seq(ref_seq, contig, region_start, region_end, bam_file, max
                         elif read.indel < 0:
                             
                             if pos in ['137781693', 137781693, '137781727', 137781727]:
-                                print('read.indel < 0', read.is_del)
+                                print('read.indel < 0', read.is_del, read.is_refskip)
                             
                             
                             # Next position is a deletion (current base + next bases are ref)
