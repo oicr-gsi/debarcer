@@ -119,12 +119,6 @@ def group_umis(args):
     Groups by hamming distance and form families based on physical distances within groups
     '''
     
-    
-    print('group', 'ignore',  args.ignore, type(args.ignore))
-    print('group', 'ignore', 'bool', isinstance(args.ignore, bool), 'str', isinstance(args.ignore, str))
-    
-    
-    
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
@@ -179,12 +173,12 @@ def group_umis(args):
     GroupQCWriter(umi_positions, Outputfile)
     
     # save information about individual UMIs as a json in Stats directory
-    umi_file = os.path.join(outdir, 'Stats/Umis_{}_before_grouping.json'.format(region))
+    umi_file = os.path.join(outdir, 'Stats/Umis_{0}_before_grouping.json'.format(region))
     with open(umi_file, 'w') as newfile:
         json.dump(umi_positions, newfile, sort_keys = True, indent=4)
     
     # save counts of unmapped and mapped reads as a json in Stats directory
-    read_file = os.path.join(outdir, 'Stats/Mapped_read_counts_{}.json'.format(region))
+    read_file = os.path.join(outdir, 'Stats/Mapped_read_counts_{0}.json'.format(region))
     with open(read_file, 'w') as newfile:
         json.dump(mapped_reads, newfile, sort_keys = True, indent=4)
         
@@ -216,19 +210,6 @@ def collapse(args):
         
     Base collapses from given BAM and umi family file
     '''
-    
-    
-    
-    
-    print('collapse:')
-    print('truncate', args.truncate, type(args.truncate))
-    print('collapse:', 'truncate', 'bool:', isinstance(args.truncate, bool), 'str',  isinstance(args.truncate, str)) 
-    print('collapse:', 'orphans', args.ignoreorphans, type(args.ignoreorphans))
-    print('collapse:', 'orphans', 'bool:', isinstance(args.ignoreorphans, bool), 'str',  isinstance(args.ignoreorphans, str)) 
-    
-    
-       
-    
     
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
@@ -414,13 +395,6 @@ def run_scripts(args):
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
 
-    print('run', 'ignoreorphans', args.ignoreorphans, type(args.ignoreorphans))
-    print('run', 'ignore', args.ignore, type(args.ignore))
-    print('run', 'merge', args.merge, type(args.merge))
-    print('run', 'plot', args.plot, type(args.plot))
-    print('run', 'report', args.report, type(args.report))
-
-
     # get bam file from config or command
     bamfile = GetInputFiles(args.config, args.bamfile, 'bam_file')
     
@@ -484,9 +458,6 @@ def generate_plots(args):
     ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
     non_ref_freq = 100 - ref_threshold
         
-    print('plot:', args.report, type(args.report))
-    print('plot', 'bool', isinstance(args.report, bool), 'str', isinstance(args.report, str))
-    
     # get subdirectories
     L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
     T = [os.path.join(args.directory, i) for i in L]
@@ -572,8 +543,7 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
         
         
-        #plt.clf(), plt.cla()
-        
+           
         
         PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
@@ -583,7 +553,6 @@ def generate_plots(args):
         
         # plot non-reference frequency
         Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
-        #plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
         
     
@@ -592,7 +561,6 @@ def generate_plots(args):
     
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
         Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
-        #plt.clf(), plt.cla()
         PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
         
         print('PlotConsDepth')
@@ -601,7 +569,6 @@ def generate_plots(args):
         
         # plot raw and consensus depth
         Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
-        #plt.clf(), plt.cla()
         PlotConsDepth(filename, Colors, Outputfile, 9, 6)
        
     # plot network and network degree for each umi file/region
@@ -616,7 +583,6 @@ def generate_plots(args):
         
         
         # plot network and degree
-        #plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
         PlotNetworkDegree(filename, Outputfile, 9, 6)
         
@@ -624,7 +590,6 @@ def generate_plots(args):
         
         
         # plot marginal distributions of UMI family size and read depth
-        #plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
         PlotFamSizeReadDepth(filename, Outputfile)
         
@@ -632,7 +597,6 @@ def generate_plots(args):
         
         
         # plot distribution of read depth for each umi families
-        #plt.clf(), plt.cla()
         Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
         PlotReadDepth(filename, Outputfile, 10, 6)
 
@@ -646,7 +610,6 @@ def generate_plots(args):
         # get parent+children and parent only counts
         all_umis, parent_umis = GetIndividualUmiInfo(filename)
         Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
-        #plt.clf(), plt.cla()
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True, 9, 6)
     
     # plot proportion of mapped/unmapped reads
@@ -654,8 +617,7 @@ def generate_plots(args):
         region = os.path.basename(filename)
         region = region[region.rindex('_')+1:-5].replace(':', '-')
         Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, args.extension))
-        #plt.clf(), plt.cla()
-        
+                
         print('PlotIncorrectReads', 'mapping')
         PlotIncorrectReads(filename, Outputfile, 'mapping', 5, 5)
         
@@ -664,14 +626,12 @@ def generate_plots(args):
     print('PlotUmiCounts')
     
     # plot children to parent umi count ratio
-    #plt.clf(), plt.cla()
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
 
     print('PlotUmiCounts')
     
     
     # plot total umi counts
-    #plt.clf(), plt.cla()
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), minval=args.minumis, datatype='umis')
 
     
@@ -679,7 +639,6 @@ def generate_plots(args):
     
     
     # plot children umi counts
-    #plt.clf(), plt.cla()
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), minval=args.minchildren, datatype='children')
 
     
@@ -688,7 +647,6 @@ def generate_plots(args):
     
     
     # plot children vs parent umis for each interval
-    #plt.clf(), plt.cla()
     PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension), 9, 6)
 
 
@@ -697,7 +655,6 @@ def generate_plots(args):
 
 
     # plot parent frequencies vs children UMI counts
-    #plt.clf(), plt.cla()
     PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension), 7, 4)
     
     # check if reporting
