@@ -316,6 +316,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         print(reads)
         print(umis)
         
+        assert 0 > 1
         
         # skip reads with spacer in wrong position
         if spacer == True and correct_spacer(readseqs, umis, spacer_seq) == False:
@@ -375,7 +376,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             writers[i].write(reads[k][3][UmiLength[i] + SpacerLength[i]:])
         
         
-        assert 0 > 1
+        
         
         
         
