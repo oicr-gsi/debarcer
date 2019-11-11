@@ -135,24 +135,8 @@ def correct_spacer(read, umi, umi_pos, spacer_seq):
     '''
     
     # set up bool <- True
-    # by default: spacer seq follows umi seq in read sequences with spacer 
+    # by default: umi/spacer config is correct 
     Correct = True
-    # for each read seq and umi seq
-    #     Correct <- False if umi in read and spacer position not as expected 
-    
-    
-#    for read in reads:
-#        for i in range(len(umis)):
-#            # check if umi in read. ignore reads if umi not in read
-#            if umis[i] in read:
-#                # remove umi from read.
-#                pos = umi_pos[i] - 1
-#                read = read[pos + len(umis[i]):]
-#                # check is spacer seq is immediately after umi 
-#                if not read.upper().startswith(spacer_seq.upper()):
-#                    # update bool
-#                    Correct = False
-    
     if umi.upper() not in read.upper():
         Correct = False
     else:
@@ -237,9 +221,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
 
     # get the number of input (1-3) and reheadered read files (1-2)
     num_reads, actual_reads  = int(prep['INPUT_READS']), int(prep['OUTPUT_READS'])
-    # get the indices of reads with  UMI (1-3)
+    # get the indices of reads with  UMI (1,2)
     umi_locs = [int(x.strip()) for x in prep['UMI_LOCS'].split(',')]
-    # get the length of the umis (1-3)
+    # get the length of the umis
     umi_lens = [int(x.strip()) for x in prep['UMI_LENS'].split(',')]
     # get the positions of umis within reads
     umi_pos = [int(x.strip()) for x in prep['UMI_POS'].split(',')]
@@ -324,8 +308,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     Total, Correct, Incorrect = 0, 0, 0
     # Record all umi sequences with correct umi/spacer configuration    
     UmiSequences = []
-       
-    
+    # Record read length
+    ReadLength = [set(), set()]
+        
     # loop over iterator with slices of 4 read lines from each line
     for reads in I:
         # count total reads
@@ -338,28 +323,12 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         # make a list of reads with umis
         reads_with_umis = [readseqs[i-1] for i in umi_locs]
         
-        
         # skip reads with spacer in wrong position
         if spacer == True and False in [correct_spacer(reads_with_umis[i], umis[i], umi_pos[i] -1, spacer_seq) for i in range(len(reads_with_umis))]:
             # count reads with incorrect umi/spacer configuration 
             Incorrect += 1
             continue
 
-        
-        
-        
-#        if spacer == True and correct_spacer(readseqs, umis, umi_pos, spacer_seq) == False:
-#            # count reads with incorrect umi/spacer configuration 
-#            Incorrect += 1
-#            continue
-        
-        
-        
-        
-        
-        
-        
-        
         # count number of reads with correct umi/spacer configuration
         Correct += 1
         
@@ -401,6 +370,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
 #        assert 0 > 1
         
         
+        
+        
         for i in range(len(writers)):
             # if paired reads and umis are in each read: assign each umi to its respective read
             # if paired read and single umi: assign the same umi to each read
@@ -416,7 +387,11 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
                 k = 0
             elif i > 0:
                 k = -1
-                
+            
+            # compute read length
+            ReadLength[i].add(len(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:]))
+            
+            # write new fastqs
             writers[i].write(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
             writers[i].write(reads[k][2])
             writers[i].write(reads[k][3][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
@@ -429,8 +404,13 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         
     print("Complete. Output written to {0}".format(outdir))
 
-
-    print('total', Total, 'correct', Correct, 'incorrect', Incorrect)
-
+    if len(ReadLength[0]) != 0:
+        lr1 = ReadLength[0]
+    if len(ReadLength[1]) != 0:
+        lr2 = ReadLength[1]
+     
+    print('total', Total, 'correct', Correct, 'incorrect', Incorrect, 'lr1', len(ReadLength[0]), 'lr2', len(ReadLength[1]))
+    # write json with correct/incorrect reads
+    #D = {'Total': Total, 'Correct': Correct, 'Incorrect': Incorrect}
 
     return Correct, Incorrect, Total, UmiSequences
