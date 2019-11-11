@@ -313,7 +313,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         readseqs = [i[1] for i in reads]
         umis = extract_umis(readseqs, umi_locs, umi_lens, umi_pos)
         
-        
+        print(reads)
+        print(umis)
+        assert 0 > 1
         
         
         
@@ -342,17 +344,6 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
          
         # make lists with umi lengths and spacer lengths    
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
-        
-        print(reads)
-        print(umis)
-        print(UmiLength)
-        print(SpacerLength)
-        print(readnames)
-        print(namerests)
-        print(total)
-        print('---')
-        
-        assert 0 > 1
         
         for i in range(len(writers)):
             
@@ -389,6 +380,10 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     for i in fastqs:
         i.close()
         
-    print("Complete. Output written to {}.".format(outdir))
+    print("Complete. Output written to {0}.".format(outdir))
+
+
+    print('correct', Correct, 'incorrect', Incorrect)
+
 
     return Correct, Incorrect, Total, UmiSequences
