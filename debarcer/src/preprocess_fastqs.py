@@ -349,6 +349,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         print(SpacerLength)
         print(readnames)
         print(namerests)
+        print(total)
+        print('---')
         
         assert 0 > 1
         
