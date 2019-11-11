@@ -231,10 +231,12 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     # get the length of the umis (1-3)
     umi_lens = [int(x.strip()) for x in prep['UMI_LENS'].split(',')]
     # get the positions of umis within reads
-    # if a single value is listed in the library_prep.ini, it will be propagated to all fastqs having umis
     umi_pos = [int(x.strip()) for x in prep['UMI_POS'].split(',')]
+    #  if a single value is listed in the library_prep.ini for umi_lens and umi_pos, it will be propagated to all fastqs having umis
     if ',' not in prep['UMI_POS']:
-        umi_pos = umi_pos *  len(umi_lens)
+        umi_pos = umi_pos *  len(umi_locs)
+    if ',' not in prep['UMI_LENS']:
+        umi_lens = umi_lens * len(umi_pos)
     
     # specify if a spacer is used or not
     spacer = prep.getboolean('SPACER')
@@ -340,17 +342,17 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
         
         
-        print(reads)
-        print(readseqs)
-        print(umis)
-        print(spacer_seq)
-        print(readnames)
-        print(namerests)
-        print(UmiLength)
-        print(SpacerLength)
-        print(umi_locs, umi_lens, umi_pos)
-        
-        assert 0 > 1
+#        print(reads)
+#        print(readseqs)
+#        print(umis)
+#        print(spacer_seq)
+#        print(readnames)
+#        print(namerests)
+#        print(UmiLength)
+#        print(SpacerLength)
+#        print(umi_locs, umi_lens, umi_pos)
+#        
+#        assert 0 > 1
         
         
         
