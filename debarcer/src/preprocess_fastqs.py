@@ -36,12 +36,12 @@ def check_library_prep(prepname, prepfile):
     
     unexpected = set(D.keys()).difference(set(expected))
     if len(unexpected) != 0:
-        unexpected = ', '.join(unexpected)
-        raise ValueError('ERR: unexpected keys in librabry prep: %s' %unexpected)
+        errmsg = 'ERR: unexpected keys in librabry prep: %s' % ', '.join(unexpected)
+        raise ValueError(errmsg)
     missing = set(expected).symmetric_difference(set(D.keys()))
     if len(missing) != 0:
-        missing = ', '.join(missing)
-        raise ValueError('ERR: missing keys in librabry prep: %s' %missing)
+        errmsg = 'ERR: missing keys in librabry prep: %s' % ', '.join(missing)
+        raise ValueError(errmsg)
        
     
     # check that umi_locs, umi_lens and umi_pos have same length
