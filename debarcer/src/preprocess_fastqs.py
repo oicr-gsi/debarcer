@@ -275,6 +275,15 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     else:
         umi_len_r2 = 0
 
+    # get the umi position 0-based for read1 and read2, set to 0 if only in read1
+    # required for removing umi and spacer from read
+    # if pos read 2 = 0, spacer length and umi length are also set to 0 -> do not cut read 
+    umi_pos_r1 = umi_pos[0] - 1
+    if len(umi_pos) > 1:
+        umi_pos_r2 = umi_pos[1] - 1
+    else:
+        umi_pos_r2 = 0
+
     # do a check based on number of input and output files currently supported in the library prep ini
     if num_reads == 3:
         assert actual_reads == 2, 'Expecting 2 output fastqs and 3 input fastqs'
@@ -338,8 +347,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             readnames.append(read_name2)
             namerests.append(rest2)
          
-        # make lists with umi lengths and spacer lengths    
-        UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
+        # make lists with umi lengths, spacer lengths and umi positions for     
+        UmiLength, SpacerLength, UmiPositions = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2], [umi_pos_r1, umi_pos_r2]    
         
         
 #        print(reads)
@@ -378,9 +387,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             elif i > 0:
                 k = -1
                 
-            writers[i].write(reads[k][1][UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
             writers[i].write(reads[k][2])
-            writers[i].write(reads[k][3][UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][3][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
         
     # close all open files
     for i in writers:
