@@ -339,6 +339,20 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         # make lists with umi lengths and spacer lengths    
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
         
+        
+        print(reads)
+        print(readseqs)
+        print(umis)
+        print(spacer_seq)
+        print(readnames)
+        print(namerests)
+        print(UmiLength)
+        print(SpacerLength)
+        print(umi_locs, umi_lens, umi_pos)
+        
+        
+        
+        
         for i in range(len(writers)):
             # add umi to read name and write to outputfile
             writers[i].write(readnames[i] + ":" + ';'.join(umis) + " " + namerests[i] + "\n")
