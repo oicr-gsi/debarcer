@@ -354,6 +354,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
 #        
 #        assert 0 > 1
         
+        print(umis)
+        print(writers)
+        
         print(len(umis), len(writers), len(umis) == len(writers))
         
         assert len(umis) == len(writers)
