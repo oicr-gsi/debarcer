@@ -350,6 +350,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         print(SpacerLength)
         print(umi_locs, umi_lens, umi_pos)
         
+        assert 0 > 1
         
         
         
