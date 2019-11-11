@@ -123,15 +123,15 @@ def extract_umis(reads, umi_locs, umi_lens, umi_pos):
     return umis
 
 
-def correct_spacer(reads, umis, umi_pos, spacer_seq):
+def correct_spacer(read, umi, umi_pos, spacer_seq):
     '''
-    (list, list, list, str) -> bool
-    :param reads: List of read sequences
-    :param umis: List of umi sequences
-    :param umi_pos: List umi_position in read
+    (str, str, int, str) -> bool
+    :param reads: Read sequence
+    :param umis: Umi sequence
+    :param umi_pos: Expected position 0-based on umi in read
     :spacer_seq: Spacer sequence
     
-    Return False if spacer in sequence but not at expected position and return True otherwise 
+    Return False if umi not in read or spacer in sequence but not at expected position and return True otherwise 
     '''
     
     # set up bool <- True
@@ -147,26 +147,21 @@ def correct_spacer(reads, umis, umi_pos, spacer_seq):
 #            if umis[i] in read:
 #                # remove umi from read.
 #                pos = umi_pos[i] - 1
-#                read = read[read.index(umi) + len(umi):]
+#                read = read[pos + len(umis[i]):]
 #                # check is spacer seq is immediately after umi 
 #                if not read.upper().startswith(spacer_seq.upper()):
 #                    # update bool
 #                    Correct = False
-#    
     
-    for i in range(len(reads)):
-        # check if umi in read
-        if umis[i] in reads[i]:
-            # remove umi from read.
-            pos = umi_pos[i] - 1
-            read = reads[i][pos + len(umis[i]):]
-            # check is spacer seq is immediately after umi 
-            if not read.upper().startswith(spacer_seq.upper()):
-                # update bool
-                Correct = False
+    if umi.upper() not in read.upper():
+        Correct = False
+    else:
+        read = read[umi_pos + len(umi):]
+        # check is spacer seq is immediately after umi 
+        if not read.upper().startswith(spacer_seq.upper()):
+            # update bool
+            Correct = False
     return Correct
-
-
 
 def open_optional_file(D, k):
     '''
@@ -340,11 +335,30 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         readseqs = [i[1] for i in reads]
         umis = extract_umis(readseqs, umi_locs, umi_lens, umi_pos)
         
+        # make a list of reads with umis
+        reads_with_umis = [readseqs[i-1] for i in umi_locs]
+        
+        
         # skip reads with spacer in wrong position
-        if spacer == True and correct_spacer(readseqs, umis, umi_pos, spacer_seq) == False:
+        if spacer == True and False in [correct_spacer(reads_with_umis[i], umis[i], umi_pos[i] -1, spacer_seq) for i in range(len(reads_with_umis))]:
             # count reads with incorrect umi/spacer configuration 
             Incorrect += 1
             continue
+
+        
+        
+        
+#        if spacer == True and correct_spacer(readseqs, umis, umi_pos, spacer_seq) == False:
+#            # count reads with incorrect umi/spacer configuration 
+#            Incorrect += 1
+#            continue
+        
+        
+        
+        
+        
+        
+        
         
         # count number of reads with correct umi/spacer configuration
         Correct += 1
