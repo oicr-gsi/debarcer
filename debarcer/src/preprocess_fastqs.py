@@ -313,12 +313,6 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         readseqs = [i[1] for i in reads]
         umis = extract_umis(readseqs, umi_locs, umi_lens, umi_pos)
         
-        print(reads)
-        print(umis)
-        assert 0 > 1
-        
-        
-        
         # skip reads with spacer in wrong position
         if spacer == True and correct_spacer(readseqs, umis, spacer_seq) == False:
             # count reads with incorrect umi/spacer configuration
@@ -346,9 +340,6 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
         
         for i in range(len(writers)):
-            
-            print(readnames[i] + ":" + ';'.join(umis) + " " + namerests[i] + "\n")
-            
             # add umi to read name and write to outputfile
             writers[i].write(readnames[i] + ":" + ';'.join(umis) + " " + namerests[i] + "\n")
             # remove umi and spacer from read seq. write reamining of read to outputfile
@@ -358,21 +349,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             elif i > 0:
                 k = -1
                 
-            print(i, k)
-            print(UmiLength[i], SpacerLength[i])
-            print(reads[k][1])
-            print(reads[k][1][UmiLength[i] + SpacerLength[i]:])
-            print(reads[k][2])    
-            print(reads[k][3])
-            
             writers[i].write(reads[k][1][UmiLength[i] + SpacerLength[i]:])
             writers[i].write(reads[k][2])
             writers[i].write(reads[k][3][UmiLength[i] + SpacerLength[i]:])
-        
-        
-        
-        
-        
         
     # close all open files
     for i in writers:
