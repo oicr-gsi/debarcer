@@ -3,23 +3,6 @@ import pysam
 import operator
 import yaml
 
-def get_ref_seq(contig, region_start, region_end, reference):
-    '''
-    (str, int, int, str) -> str
-    
-    :param contig: Chromosome, eg chrN
-    :param region_start: Start index of the region, 0-based half-opened
-    :param region_end: End index of the region, 0-based half opened
-    :param reference: Path to the reference genome
-    
-    Returns the sequence of the reference genome on contig between region_start and region_end included
-    '''
-    
-    with pysam.FastaFile(reference) as reader:
-        ref_seq = reader.fetch(contig, region_start, region_end).upper()
-    return ref_seq
-
-
 
 def find_closest(pos, L):
     '''
@@ -54,15 +37,14 @@ def find_closest(pos, L):
     return (smallest_dist, D[smallest_dist][-1][0], D[smallest_dist][-1][1])
 
 
-def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans, stepper):
+def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
     
-    (dict, int, str, str, int, int, str, int, int, bool, bool, str) -> (dict, dict)
+    (dict, int, str, int, int, str, int, int, bool, bool, str) -> (dict, dict)
     
     
     :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
     :param fam_size: Minimum umi family size 
-    :param ref_seq: Sequence of the reference corresponding to the given region
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
@@ -100,8 +82,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                     # get read information as AlignedSegment
                     read_data = read.alignment
                     
-                    ref_base, alt_base = 'empty', 'empty'
-                    
                     # skip unmapped, secondary and supplementary reads/alignments
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         read_name, start_pos = read_data.query_name, int(read_data.reference_start)
@@ -134,8 +114,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                         # use family key to count allele. collapsing is done within families. not per position
                                         family_key = parent + str(position_closest)
                                 
-                                        ref_pos = pos - region_start
-
                                         # skip positions with deletions or ref not defined
                                         # events are captured at the position before they occur
                                         if not read.is_del and not read.is_refskip:
@@ -151,16 +129,12 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 j = [i[1] for i in pairs].index(pos)
                                                 # record base on ref and read
                                                 ref_base = pairs[j][-1].upper()
-    
-                                                assert ref_base == ref_seq[ref_pos].upper() 
-                                                
                                                 alt_base = read_data.query_sequence[read.query_position].upper()
                                                 # keep track of ref_base at pos
                                                 if pos not in consensus_seq:
                                                     consensus_seq[pos] = {}
                                                 if 'ref_base' not in consensus_seq[pos]:
                                                     consensus_seq[pos]['ref_base'] = ref_base
-                                        
                                             elif read.indel > 0:
                                                 # next position is an insertion
                                                 # get index of pileupcolumn pos in aligned pairs
@@ -168,9 +142,6 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 # record base on ref and insertion on read
                                                 ref_base = pairs[j][-1].upper()
                                                 alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
-                                            
-                                                assert ref_base == ref_seq[ref_pos].upper()
-                                                
                                             elif read.indel < 0:
                                                 # next position is deletion
                                                 # get index of pileupcolumn pos in aligned pairs
@@ -178,12 +149,9 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 # record base on ref at pos + ref bases deleted on read and base on read
                                                 ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
                                                 alt_base = read_data.query_sequence[read.query_position]
-                                
-                                                assert ref_base == ref_seq[ref_pos:ref_pos + abs(read.indel) + 1].upper()
-                                    
+                                                                                
                                             # add base info
                                             allele = (ref_base, alt_base)
-                                                                                      
                                             # count the number of reads supporting this allele
                                             if pos not in consensus_seq:
                                                 consensus_seq[pos] = {}
@@ -195,7 +163,7 @@ def get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, reg
                                                 consensus_seq[pos]['families'][family_key][allele] += 1
                                             else:
                                                 consensus_seq[pos]['families'][family_key][allele] = 1
-        return consensus_seq, FamSize
+    return consensus_seq, FamSize
 
 
 def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper):
@@ -324,15 +292,14 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (dict, int, str, str, int, int, str, int, float, int, int, bool, bool, str) -> dict
+    (dict, int, str, int, int, str, int, float, int, int, bool, bool, str) -> dict
         
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
                          positions are 0-based half opened
     :param fam_size: Minimum umi family size
-    :param ref_seq: Sequence of the reference corresponding to the given region
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
@@ -353,11 +320,10 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
     # get consensus info for each base position and umi group in the given region
     # {pos: {'ref_base': ref_base, 'families': {famkey: {allele: count}}}}
     # get family size at each position 
-    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
     # create a dict to store consensus info
     cons_data = {}
-
 
     # loop over positions in region. positions already recorded in consensus_seq
     for pos in consensus_seq:
@@ -399,25 +365,6 @@ def generate_consensus(umi_families, fam_size, ref_seq, contig, region_start, re
         cons_info = consensuses
         stats = {"rawdp": raw_depth, "consdp": cons_depth, "min_fam": min_fam, "mean_fam": mean_fam, "ref_freq": ref_freq}
                   
-        
-        if pos == '137781693' or pos == 137781693:
-            print('consensus')
-            print('insert')
-            print(pos)
-            print(ref_info)
-            print(cons_info)
-            print(stats)
-            print('----')
-        elif pos == '137781727' or pos == 137781727:
-            print('consensus')
-            print('del')
-            print(pos)
-            print(ref_info)
-            print(cons_info)
-            print(stats)
-            print('----')
-        
-        
         cons_data[pos] = {'ref_info': ref_info, 'cons_info': cons_info, 'stats': stats}
     
     return cons_data
@@ -582,10 +529,6 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
     # get minimum umi family sizes
     family_sizes = list(map(lambda x: int(x.strip()), fam_size.split(',')))
 
-    # get reference sequence for the region 
-    print("Getting reference sequence...")
-    ref_seq = get_ref_seq(contig, region_start, region_end, reference)
-
     # get consensus data for each f_size + uncollapsed data
     print("Building consensus data...")
     cons_data = {}
@@ -595,7 +538,7 @@ def generate_consensus_output(reference, contig, region_start, region_end, bam_f
             # compute consensus for uncollapsed data, and get coverage
             cons_data[f_size], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, ref_seq, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
         cons_data[0], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
