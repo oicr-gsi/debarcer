@@ -313,8 +313,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         readseqs = [i[1] for i in reads]
         umis = extract_umis(readseqs, umi_locs, umi_lens, umi_pos)
         
-        print(reads)
-        print(umis)
+        
         
         
         
@@ -344,7 +343,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         # make lists with umi lengths and spacer lengths    
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
         
-        
+        print(reads)
+        print(umis)
         print(UmiLength)
         print(SpacerLength)
         print(readnames)
