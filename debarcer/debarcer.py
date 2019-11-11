@@ -88,8 +88,8 @@ def preprocess_reads(args):
     # write json with correct/incorrect reads
     D = {'Total': Total, 'Correct': Correct, 'Incorrect': Incorrect}
     with open(os.path.join(outdir, 'Stats/Read_Info.json'), 'w') as newfile:
-        json.dump(D, newfile, sort_Keys=True, indent=4)
-    
+        json.dump(D, newfile, indent=4)
+       
     # write table with umi sequences counts
     D = {}
     for i in UmiSequences:
