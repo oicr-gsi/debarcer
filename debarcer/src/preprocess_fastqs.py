@@ -342,29 +342,36 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
         
         
-#        print(reads)
-#        print(readseqs)
-#        print(umis)
-#        print(spacer_seq)
-#        print(readnames)
-#        print(namerests)
-#        print(UmiLength)
-#        print(SpacerLength)
-#        print(umi_locs, umi_lens, umi_pos)
-#        
-#        assert 0 > 1
+        print(reads)
+        print(readseqs)
+        print(umis)
+        print(spacer_seq)
+        print(readnames)
+        print(namerests)
+        print(UmiLength)
+        print(SpacerLength)
+        print(umi_locs, umi_lens, umi_pos)
+        
+        
         
         print(umis)
         print(writers)
         
         print(len(umis), len(writers), len(umis) == len(writers))
         
-        assert len(umis) == len(writers)
+        assert 0 > 1
+        
         
         for i in range(len(writers)):
-            # add umi to read name and write to outputfile
-            writers[i].write(readnames[i] + ":" + umis[i] + " " + namerests[i] + "\n")
-            # remove umi and spacer from read seq. write reamining of read to outputfile
+            # if paired reads and umis are in each read: assign each umi to its respective read
+            # if paired read and single umi: assign the same umi to each read
+            # if single end read, assign the umi to its read
+            if len(umis) > 1:
+                  # add umi to read name and write to outputfile
+                  writers[i].write(readnames[i] + ":" + umis[i] + " " + namerests[i] + "\n")
+            elif len(umis) == 1:
+                writers[i].write(readnames[i] + ":" + umis[0] + " " + namerests[i] + "\n")
+            # remove umi and spacer from read seq. write remaining of read to outputfile
             if i == 0:
                 # determine index for reads k <- 0 for r1, -1 for r2 or r3
                 k = 0
