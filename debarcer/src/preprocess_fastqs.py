@@ -342,24 +342,24 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
         
         
-        print(reads)
-        print(readseqs)
-        print(umis)
-        print(spacer_seq)
-        print(readnames)
-        print(namerests)
-        print(UmiLength)
-        print(SpacerLength)
-        print(umi_locs, umi_lens, umi_pos)
-        
-        
-        
-        print(umis)
-        print(writers)
-        
-        print(len(umis), len(writers), len(umis) == len(writers))
-        
-        assert 0 > 1
+#        print(reads)
+#        print(readseqs)
+#        print(umis)
+#        print(spacer_seq)
+#        print(readnames)
+#        print(namerests)
+#        print(UmiLength)
+#        print(SpacerLength)
+#        print(umi_locs, umi_lens, umi_pos)
+#        
+#        
+#        
+#        print(umis)
+#        print(writers)
+#        
+#        print(len(umis), len(writers), len(umis) == len(writers))
+#        
+#        assert 0 > 1
         
         
         for i in range(len(writers)):
