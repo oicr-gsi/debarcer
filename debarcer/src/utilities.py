@@ -426,3 +426,15 @@ def ConvertArgToBool(argument):
     else:
         raise ValueError('ERR: {0} is expected to be a boolean'.format(argument))
     
+def get_umi_from_name(read_name):
+    '''
+    (str) -> str
+    
+    :param read_name: Read template name 
+    
+    Return the umi sequence extracted from the read name
+    '''
+    
+    # this expression can retrieve the umi read name in fastq and bam
+    umi = read_name.split()[0].split(':')[-1].upper()
+    return umi
