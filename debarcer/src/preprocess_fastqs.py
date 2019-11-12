@@ -200,7 +200,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     Write new reheadered fastq file(s) prefix.umi.reheadered_RN.fastq.gz in outdir
     according to settings in prepfile corresponding to prename 
-    Returns a tuple with read counts (correct, incorrect umi/spacer configuration, total)
+    Returns a tuple with a dictionary with read counts and read length
+    (correct, incorrect umi/spacer configuration, total, length read1/read2)
     and a list of all umi sequences (with correct umi/spacer configuration)
     
     Pre-condition: fastqs have the same number of reads and files are in sync
@@ -349,29 +350,6 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         # make lists with umi lengths, spacer lengths and umi positions for     
         UmiLength, SpacerLength, UmiPositions = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2], [umi_pos_r1, umi_pos_r2]    
         
-        
-#        print(reads)
-#        print(readseqs)
-#        print(umis)
-#        print(spacer_seq)
-#        print(readnames)
-#        print(namerests)
-#        print(UmiLength)
-#        print(SpacerLength)
-#        print(umi_locs, umi_lens, umi_pos)
-#        
-#        
-#        
-#        print(umis)
-#        print(writers)
-#        
-#        print(len(umis), len(writers), len(umis) == len(writers))
-#        
-#        assert 0 > 1
-        
-        
-        
-        
         for i in range(len(writers)):
             # if paired reads and umis are in each read: assign each umi to its respective read
             # if paired read and single umi: assign the same umi to each read
@@ -403,14 +381,13 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         i.close()
         
     print("Complete. Output written to {0}".format(outdir))
-
+    
+    # record read indo as json
+    D = {'Total': Total, 'Correct': Correct, 'Incorrect': Incorrect}
     if len(ReadLength[0]) != 0:
-        lr1 = ReadLength[0]
+        lr1 = list(ReadLength[0])[0]
+        D['length_read1'] = lr1   
     if len(ReadLength[1]) != 0:
-        lr2 = ReadLength[1]
-     
-    print('total', Total, 'correct', Correct, 'incorrect', Incorrect, 'lr1', len(ReadLength[0]), 'lr2', len(ReadLength[1]))
-    # write json with correct/incorrect reads
-    #D = {'Total': Total, 'Correct': Correct, 'Incorrect': Incorrect}
-
-    return Correct, Incorrect, Total, UmiSequences
+        lr2 = list(ReadLength[1])[0]
+        D['length_read2'] = lr2
+    return D, UmiSequences

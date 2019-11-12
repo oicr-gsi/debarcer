@@ -79,14 +79,13 @@ def preprocess_reads(args):
                 sys.exit(1)
     
     # reheader fastqs and add umi in new fastqs header
-    # get the number of correct, incorrect and total reads and list of umi sequences
-    Correct, Incorrect, Total, UmiSequences = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
+    # get a json with read counts and list of umi sequences
+    D, UmiSequences = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
 	 
     # create subdirectoy structure
     CreateDirTree(outdir)
     
     # write json with correct/incorrect reads
-    D = {'Total': Total, 'Correct': Correct, 'Incorrect': Incorrect}
     with open(os.path.join(outdir, 'Stats/Read_Info.json'), 'w') as newfile:
         json.dump(D, newfile, indent=4)
        
