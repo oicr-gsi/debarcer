@@ -112,7 +112,7 @@ def MergeConsensusFiles(ConsDir):
         
         
         # convert chromos to int
-        L = list(map(lambda x: int(x[0]), L))
+        L = list(map(lambda x[0]: int(x[0]), L))
         
         
         print(L)
