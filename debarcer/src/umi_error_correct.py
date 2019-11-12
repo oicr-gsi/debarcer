@@ -1,5 +1,7 @@
 import pysam
 import src.umi_network_collapse as network
+from src.utilities import get_umi_from_name
+
 
 def umi_count(contig, region_start, region_end, bam_file, truncate):
     '''
@@ -38,13 +40,12 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
                         # record mapped reads
                         read_info[region]['mapped'] += 1
                         # extract the umi sequence from read name
-                        # umis <- list of umi sequences
-                        umis = read.query_name.split(':')[-1].split(';')
-                        for i in umis:
-                            if i in umi_counts:
-                                umi_counts[i] += 1
-                            else:
-                                umi_counts[i] = 1
+                        # excepting a single umi per read
+                        umi = get_umi_from_name(read.query_name)
+                        if umi in umi_counts:
+                            umi_counts[umi] += 1
+                        else:
+                            umi_counts[umi] = 1
             elif read.is_unmapped == True:
                 # record unmapped reads
                 read_info[region]['unmapped'] += 1
@@ -143,7 +144,8 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
                 # skip secondary and supplementary reads
                 if read.is_supplementary == False and read.is_secondary == False:
                     # umi <- list of umi sequences
-                    umis = read.query_name.split(':')[-1].split(';')
+                    # expecting a single umi
+                    umi = get_umi_from_name(read.query_name)
                     # get the start position 0-based
                     pos = int(read.reference_start)
                     end = int(read.reference_end)
@@ -152,21 +154,19 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
                     if truncate == True and is_overlapping(pos, end, region_start, region_end) == True:
                         continue
                     else:
-                        # for each umi sequence
-                        for umi in umis:
-                            # get the parent umi
-                            parent = parent_umi[umi]
-                            # initialize inner dict if parent not in umi_families
-                            if parent not in D:
-                                D[parent] = {}
-                            # check if umi is recorded for that group
-                            if umi not in D[parent]:
-                                D[parent][umi] = {}
-                            # check if position is recorded
-                            if pos in D[parent][umi]:
-                                D[parent][umi][pos] += 1
-                            else:
-                                D[parent][umi][pos] = 1
+                        # get the parent umi
+                        parent = parent_umi[umi]
+                        # initialize inner dict if parent not in umi_families
+                        if parent not in D:
+                            D[parent] = {}
+                        # check if umi is recorded for that group
+                        if umi not in D[parent]:
+                            D[parent][umi] = {}
+                        # check if position is recorded
+                        if pos in D[parent][umi]:
+                            D[parent][umi][pos] += 1
+                        else:
+                            D[parent][umi][pos] = 1
     return D
 
 

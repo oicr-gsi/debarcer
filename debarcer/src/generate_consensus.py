@@ -2,7 +2,7 @@ import os
 import pysam
 import operator
 import yaml
-
+from src.utilities import get_umi_from_name
 
 def find_closest(pos, L):
     '''
@@ -85,84 +85,82 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                     # skip unmapped, secondary and supplementary reads/alignments
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         read_name, start_pos = read_data.query_name, int(read_data.reference_start)
-                        # get all recorded umis
-                        umis = read_name.split(":")[-1].split(';')
-                
-                        for umi in umis:
-                            # check that umi is recorded
-                            if umi in umi_families:
-                                # find closest family from umi
-                                # make a list of (positions counts)
-                                L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
-                                closest, count, position_closest = find_closest(start_pos, L)
+                        # extract umi. expecting a single umi
+                        umi = get_umi_from_name(read_name)
+                        # check that umi is recorded
+                        if umi in umi_families:
+                            # find closest family from umi
+                            # make a list of (positions counts)
+                            L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                            closest, count, position_closest = find_closest(start_pos, L)
                         
-                                # check if closest family is within the position threshold
-                                if closest <= pos_threshold:
-                                    # found a umi family. check if family count is greater than family threshold
-                                    if count >= fam_size:
-                                        # get the parent sequence                                
-                                        parent = umi_families[umi]['parent']
-                                                                
-                                        # keep track of family size used to derive alt
-                                        # for a given position , parent and read position
-                                        if pos not in FamSize:
-                                            FamSize[pos] = {}
-                                        if parent not in FamSize[pos]:
-                                            FamSize[pos][parent] = {}
-                                        FamSize[pos][parent][closest] = count
+                            # check if closest family is within the position threshold
+                            if closest <= pos_threshold:
+                                # found a umi family. check if family count is greater than family threshold
+                                if count >= fam_size:
+                                    # get the parent sequence                                
+                                    parent = umi_families[umi]['parent']
+                                                               
+                                    # keep track of family size used to derive alt
+                                    # for a given position , parent and read position
+                                    if pos not in FamSize:
+                                        FamSize[pos] = {}
+                                    if parent not in FamSize[pos]:
+                                        FamSize[pos][parent] = {}
+                                    FamSize[pos][parent][closest] = count
                             
-                                        # use family key to count allele. collapsing is done within families. not per position
-                                        family_key = parent + str(position_closest)
+                                    # use family key to count allele. collapsing is done within families. not per position
+                                    family_key = parent + str(position_closest)
                                 
-                                        # skip positions with deletions or ref not defined
-                                        # events are captured at the position before they occur
-                                        if not read.is_del and not read.is_refskip:
-                                            # read.indel looks ahead to see if indel at next position(s) 
-                                            # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                                    # skip positions with deletions or ref not defined
+                                    # events are captured at the position before they occur
+                                    if not read.is_del and not read.is_refskip:
+                                        # read.indel looks ahead to see if indel at next position(s) 
+                                        # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
     
-                                            # get aligned read, ref pos and ref base 
-                                            pairs = read_data.get_aligned_pairs(with_seq=True)
-                                            # read.indel looks ahead to see if indel at next position(s)  
-                                            if read.indel == 0:
-                                                # no indel, record ref and alt 
-                                                # get index of pileupcolumn pos in aligned pairs
-                                                j = [i[1] for i in pairs].index(pos)
-                                                # record base on ref and read
-                                                ref_base = pairs[j][-1].upper()
-                                                alt_base = read_data.query_sequence[read.query_position].upper()
-                                                # keep track of ref_base at pos
-                                                if pos not in consensus_seq:
-                                                    consensus_seq[pos] = {}
-                                                if 'ref_base' not in consensus_seq[pos]:
-                                                    consensus_seq[pos]['ref_base'] = ref_base
-                                            elif read.indel > 0:
-                                                # next position is an insertion
-                                                # get index of pileupcolumn pos in aligned pairs
-                                                j = [i[1] for i in pairs].index(pos)
-                                                # record base on ref and insertion on read
-                                                ref_base = pairs[j][-1].upper()
-                                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
-                                            elif read.indel < 0:
-                                                # next position is deletion
-                                                # get index of pileupcolumn pos in aligned pairs
-                                                j = [i[1] for i in pairs].index(pos)
-                                                # record base on ref at pos + ref bases deleted on read and base on read
-                                                ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
-                                                alt_base = read_data.query_sequence[read.query_position]
-                                                                                
-                                            # add base info
-                                            allele = (ref_base, alt_base)
-                                            # count the number of reads supporting this allele
+                                        # get aligned read, ref pos and ref base 
+                                        pairs = read_data.get_aligned_pairs(with_seq=True)
+                                        # read.indel looks ahead to see if indel at next position(s)  
+                                        if read.indel == 0:
+                                            # no indel, record ref and alt 
+                                            # get index of pileupcolumn pos in aligned pairs
+                                            j = [i[1] for i in pairs].index(pos)
+                                            # record base on ref and read
+                                            ref_base = pairs[j][-1].upper()
+                                            alt_base = read_data.query_sequence[read.query_position].upper()
+                                            # keep track of ref_base at pos
                                             if pos not in consensus_seq:
                                                 consensus_seq[pos] = {}
-                                            if 'families' not in consensus_seq[pos]:
-                                                consensus_seq[pos]['families'] = {}
-                                            if family_key not in consensus_seq[pos]['families']:
-                                                consensus_seq[pos]['families'][family_key] = {}
-                                            if allele in consensus_seq[pos]['families'][family_key]:
-                                                consensus_seq[pos]['families'][family_key][allele] += 1
-                                            else:
-                                                consensus_seq[pos]['families'][family_key][allele] = 1
+                                            if 'ref_base' not in consensus_seq[pos]:
+                                                consensus_seq[pos]['ref_base'] = ref_base
+                                        elif read.indel > 0:
+                                            # next position is an insertion
+                                            # get index of pileupcolumn pos in aligned pairs
+                                            j = [i[1] for i in pairs].index(pos)
+                                            # record base on ref and insertion on read
+                                            ref_base = pairs[j][-1].upper()
+                                            alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
+                                        elif read.indel < 0:
+                                            # next position is deletion
+                                            # get index of pileupcolumn pos in aligned pairs
+                                            j = [i[1] for i in pairs].index(pos)
+                                            # record base on ref at pos + ref bases deleted on read and base on read
+                                            ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
+                                            alt_base = read_data.query_sequence[read.query_position]
+                                                                                
+                                        # add base info
+                                        allele = (ref_base, alt_base)
+                                        # count the number of reads supporting this allele
+                                        if pos not in consensus_seq:
+                                            consensus_seq[pos] = {}
+                                        if 'families' not in consensus_seq[pos]:
+                                            consensus_seq[pos]['families'] = {}
+                                        if family_key not in consensus_seq[pos]['families']:
+                                            consensus_seq[pos]['families'][family_key] = {}
+                                        if allele in consensus_seq[pos]['families'][family_key]:
+                                            consensus_seq[pos]['families'][family_key][allele] += 1
+                                        else:
+                                            consensus_seq[pos]['families'][family_key][allele] = 1
     return consensus_seq, FamSize
 
 
@@ -230,7 +228,7 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                                 j = [i[1] for i in pairs].index(pos)
                                 # record base on ref and read
                                 ref_base = pairs[j][-1].upper()
-                                alt_base = read.alignment.query_sequence[read.query_position].upper()
+                                alt_base = read_data.query_sequence[read.query_position].upper()
                                 # record ref base
                                 if pos not in uncollapsed_seq:
                                     uncollapsed_seq[pos] = {}
@@ -241,7 +239,7 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                                 j = [i[1] for i in pairs].index(pos)
                                 # record base on ref and insertion on read
                                 ref_base = pairs[j][-1].upper()
-                                alt_base = read.alignment.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
+                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
                             elif read.indel < 0:
                                 # next position is deletion
                                 # get index of pileupcolumn pos in aligned pairs

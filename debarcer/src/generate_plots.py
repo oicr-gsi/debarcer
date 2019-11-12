@@ -1716,8 +1716,7 @@ def PlotReadDepth(UmiFile, Outputfile, W, H):
     :param W: Figure width in inches
     :param H: Figure Height in inches
         
-    Plot the distribution of read depth at positions og highest and lower umi abundance
-    as a proportion of all positions within a given umi family 
+    Plot the distribution of read depth at positions of highest and lower umi abundance
     '''
     
     # get read depth for each umi family and position {parent: position: read_depth}

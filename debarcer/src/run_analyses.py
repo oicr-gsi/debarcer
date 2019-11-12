@@ -86,9 +86,28 @@ def MergeConsensusFiles(ConsDir):
         for i in ConsFiles:
             # extract chromo and start from filename
             chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
-            L.append((chromo, start, i))
-        # sort files on chromo and start
+            L.append([chromo, start, i])
+        # remove chr from chromo name
+        for i in range(len(L)):
+            L[i][0] = L[i][0].replace('chr', '')
+            # reorder chromosomes, place all non-numeric chromos at begining    
+            if L[i][0].isnumeric() == False:
+                j = L.pop(i)
+                L.insert(0, j)
+        # set non-numeric chromos aside
+        aside = []
+        while L[0][0].isnumeric() == False:
+            aside.append(L.pop(0))
+        # convert chromos to int
+        for i in range(len(L)):
+            L[i][0] = int(L[i][0])
+        # sort files on numeric chromo and start
         L.sort(key=operator.itemgetter(0, 1))
+        # add back non-numeric chromos
+        L.extend(aside)
+        # add back 'chr' in chromo name
+        for i in range(len(L)):
+            L[i][0] = 'chr' + str(L[i][0])
     
         # make a sorted list of full paths
         S = [os.path.join(ConsDir, i[-1]) for i in L]
