@@ -339,7 +339,7 @@ def AddPreprocessingFigs(L, font_family, extension, FigPaths, figcounter, N, ren
     # add description of the figures
     style = 'text-align: justify; text-justify: inter-word; padding-right: 20px;\
     padding-left:10px; font-family:{0}; font-size:18px'.format(font_family)
-    L.append(renderer('<p style="{0}">Reads with incorrect umi configuration are discarded</p>'.format(style)))
+    L.append(renderer('<p style="{0}">Reads (or pairs when paired-end) with incorrect umi configuration are discarded</p>'.format(style)))
     L.append(renderer('<pre> </pre>'))
     
     # keys to access figure files         
