@@ -112,7 +112,8 @@ def MergeConsensusFiles(ConsDir):
         
         
         # convert chromos to int
-        L = list(map(lambda x[0]: int(x[0]), L))
+        for i in range(len(L)):
+            L[i][0] = int(L[i][0])
         
         
         print(L)
@@ -125,7 +126,7 @@ def MergeConsensusFiles(ConsDir):
         L.extend(aside)
         # add back 'chr' in chromo name
         for i in range(len(L)):
-            L[i][0] = 'chr' + L[i][0]
+            L[i][0] = 'chr' + str(L[i][0])
     
         # make a sorted list of full paths
         S = [os.path.join(ConsDir, i[-1]) for i in L]
