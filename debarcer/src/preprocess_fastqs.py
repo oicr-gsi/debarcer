@@ -1,6 +1,5 @@
 import gzip
 import os
-import argparse
 import configparser
 from itertools import zip_longest
 
@@ -232,7 +231,7 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     if ',' not in prep['UMI_POS']:
         umi_pos = umi_pos *  len(umi_locs)
     if ',' not in prep['UMI_LENS']:
-        umi_lens = umi_lens * len(umi_pos)
+        umi_lens = umi_lens * len(umi_locs)
     
     # specify if a spacer is used or not
     spacer = prep.getboolean('SPACER')
