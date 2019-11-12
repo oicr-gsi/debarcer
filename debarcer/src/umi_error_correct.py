@@ -38,13 +38,12 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
                         # record mapped reads
                         read_info[region]['mapped'] += 1
                         # extract the umi sequence from read name
-                        # umis <- list of umi sequences
-                        umis = read.query_name.split(':')[-1].split(';')
-                        for i in umis:
-                            if i in umi_counts:
-                                umi_counts[i] += 1
-                            else:
-                                umi_counts[i] = 1
+                        # excepting a single umi per read
+                        umi = read.query_name.split()[0].split(':')[-1]
+                        if umi in umi_counts:
+                            umi_counts[umi] += 1
+                        else:
+                            umi_counts[umi] = 1
             elif read.is_unmapped == True:
                 # record unmapped reads
                 read_info[region]['unmapped'] += 1
