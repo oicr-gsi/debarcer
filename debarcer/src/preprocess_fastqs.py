@@ -33,9 +33,14 @@ def check_library_prep(prepname, prepfile):
     D = {i:j for i, j in L.items()} 
     # check that all expected parameters are present
     expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq', 'umi_pos'}
-    missing = set(D.keys()).symmetric_difference(set(expected))
+    
+    unexpected = set(D.keys()).difference(set(expected))
+    if len(unexpected) != 0:
+        raise ValueError('ERR: unexpected keys in librabry prep')
+    missing = set(expected).symmetric_difference(set(D.keys()))
     if len(missing) != 0:
-        raise ValueError('ERR: unexpected keys in librabry prep'.format(', '.join(missing)))
+        raise ValueError('ERR: missing keys in librabry prep')
+        
     # check that umi_locs, umi_lens and umi_pos have same length
     a = list(map(lambda x: x.strip(), D['umi_locs'].split(',')))
     b = list(map(lambda x: x.strip(), D['umi_lens'].split(',')))
@@ -118,34 +123,29 @@ def extract_umis(reads, umi_locs, umi_lens, umi_pos):
     return umis
 
 
-def correct_spacer(reads, umis, spacer_seq):
+def correct_spacer(read, umi, umi_pos, spacer_seq):
     '''
-    (list, list, str) -> bool
-    :param reads: List of read sequences
-    :param umis: List of umi sequences
+    (str, str, int, str) -> bool
+    :param reads: Read sequence
+    :param umis: Umi sequence
+    :param umi_pos: Expected position 0-based on umi in read
     :spacer_seq: Spacer sequence
     
-    Return False if spacer in sequence but not at expected position and return True otherwise 
+    Return False if umi not in read or spacer in sequence but not at expected position and return True otherwise 
     '''
     
     # set up bool <- True
-    # by default: spacer seq follows umi seq in read sequences with spacer 
+    # by default: umi/spacer config is correct 
     Correct = True
-    # for each read seq and umi seq
-    #     Correct <- False if umi in read and spacer position not as expected 
-    for read in reads:
-        for umi in umis:
-            # check if umi in read. ignore reads if umi not in read
-            if umi in read:
-                # remove umi from read. 
-                read = read[read.index(umi) + len(umi):]
-                # check is spacer seq is immediately after umi 
-                if not read.upper().startswith(spacer_seq.upper()):
-                    # update bool
-                    Correct = False
+    if umi.upper() not in read.upper():
+        Correct = False
+    else:
+        read = read[umi_pos + len(umi):]
+        # check is spacer seq is immediately after umi 
+        if not read.upper().startswith(spacer_seq.upper()):
+            # update bool
+            Correct = False
     return Correct
-
-
 
 def open_optional_file(D, k):
     '''
@@ -200,7 +200,8 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     Write new reheadered fastq file(s) prefix.umi.reheadered_RN.fastq.gz in outdir
     according to settings in prepfile corresponding to prename 
-    Returns a tuple with read counts (correct, incorrect umi/spacer configuration, total)
+    Returns a tuple with a dictionary with read counts and read length
+    (correct, incorrect umi/spacer configuration, total, length read1/read2)
     and a list of all umi sequences (with correct umi/spacer configuration)
     
     Pre-condition: fastqs have the same number of reads and files are in sync
@@ -221,15 +222,17 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
 
     # get the number of input (1-3) and reheadered read files (1-2)
     num_reads, actual_reads  = int(prep['INPUT_READS']), int(prep['OUTPUT_READS'])
-    # get the indices of reads with  UMI (1-3)
+    # get the indices of reads with  UMI (1,2)
     umi_locs = [int(x.strip()) for x in prep['UMI_LOCS'].split(',')]
-    # get the length of the umis (1-3)
+    # get the length of the umis
     umi_lens = [int(x.strip()) for x in prep['UMI_LENS'].split(',')]
     # get the positions of umis within reads
-    # if a single value is listed in the library_prep.ini, it will be propagated to all fastqs having umis
     umi_pos = [int(x.strip()) for x in prep['UMI_POS'].split(',')]
+    #  if a single value is listed in the library_prep.ini for umi_lens and umi_pos, it will be propagated to all fastqs having umis
     if ',' not in prep['UMI_POS']:
-        umi_pos = umi_pos *  len(umi_lens)
+        umi_pos = umi_pos *  len(umi_locs)
+    if ',' not in prep['UMI_LENS']:
+        umi_lens = umi_lens * len(umi_pos)
     
     # specify if a spacer is used or not
     spacer = prep.getboolean('SPACER')
@@ -268,6 +271,15 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     else:
         umi_len_r2 = 0
 
+    # get the umi position 0-based for read1 and read2, set to 0 if only in read1
+    # required for removing umi and spacer from read
+    # if pos read 2 = 0, spacer length and umi length are also set to 0 -> do not cut read 
+    umi_pos_r1 = umi_pos[0] - 1
+    if len(umi_pos) > 1:
+        umi_pos_r2 = umi_pos[1] - 1
+    else:
+        umi_pos_r2 = 0
+
     # do a check based on number of input and output files currently supported in the library prep ini
     if num_reads == 3:
         assert actual_reads == 2, 'Expecting 2 output fastqs and 3 input fastqs'
@@ -297,8 +309,9 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     Total, Correct, Incorrect = 0, 0, 0
     # Record all umi sequences with correct umi/spacer configuration    
     UmiSequences = []
-       
-    
+    # Record read length
+    ReadLength = [set(), set()]
+        
     # loop over iterator with slices of 4 read lines from each line
     for reads in I:
         # count total reads
@@ -307,12 +320,16 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         # make a list of read sequences
         readseqs = [i[1] for i in reads]
         umis = extract_umis(readseqs, umi_locs, umi_lens, umi_pos)
+        
+        # make a list of reads with umis
+        reads_with_umis = [readseqs[i-1] for i in umi_locs]
+        
         # skip reads with spacer in wrong position
-        if spacer == True and correct_spacer(readseqs, umis, spacer_seq) == False:
-            # count reads with incorrect umi/spacer configuration
+        if spacer == True and False in [correct_spacer(reads_with_umis[i], umis[i], umi_pos[i] -1, spacer_seq) for i in range(len(reads_with_umis))]:
+            # count reads with incorrect umi/spacer configuration 
             Incorrect += 1
             continue
-        
+
         # count number of reads with correct umi/spacer configuration
         Correct += 1
         
@@ -330,28 +347,47 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             readnames.append(read_name2)
             namerests.append(rest2)
          
-        # make lists with umi lengths and spacer lengths    
-        UmiLength, SpacerLength = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2]    
+        # make lists with umi lengths, spacer lengths and umi positions for     
+        UmiLength, SpacerLength, UmiPositions = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2], [umi_pos_r1, umi_pos_r2]    
         
         for i in range(len(writers)):
-            # add umi to read name and write to outputfile
-            writers[i].write(readnames[i] + ":" + ';'.join(umis) + " " + namerests[i] + "\n")
-            # remove umi and spacer from read seq. write reamining of read to outputfile
+            # if paired reads and umis are in each read: assign each umi to its respective read
+            # if paired read and single umi: assign the same umi to each read
+            # if single end read, assign the umi to its read
+            if len(umis) > 1:
+                  # add umi to read name and write to outputfile
+                  writers[i].write(readnames[i] + ":" + umis[i] + " " + namerests[i] + "\n")
+            elif len(umis) == 1:
+                writers[i].write(readnames[i] + ":" + umis[0] + " " + namerests[i] + "\n")
+            # remove umi and spacer from read seq. write remaining of read to outputfile
             if i == 0:
                 # determine index for reads k <- 0 for r1, -1 for r2 or r3
                 k = 0
             elif i > 0:
                 k = -1
-            writers[i].write(reads[k][1][UmiLength[i] + SpacerLength[i]:])
-            writers[i].write(reads[k][2])
-            writers[i].write(reads[k][3][UmiLength[i] + SpacerLength[i]:])
             
+            # compute read length
+            ReadLength[i].add(len(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:]))
+            
+            # write new fastqs
+            writers[i].write(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][2])
+            writers[i].write(reads[k][3][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
+        
     # close all open files
     for i in writers:
         i.close()
     for i in fastqs:
         i.close()
         
-    print("Complete. Output written to {}.".format(outdir))
-
-    return Correct, Incorrect, Total, UmiSequences
+    print("Complete. Output written to {0}".format(outdir))
+    
+    # record read indo as json
+    D = {'Total': Total, 'Correct': Correct, 'Incorrect': Incorrect}
+    if len(ReadLength[0]) != 0:
+        lr1 = list(ReadLength[0])[0]
+        D['length_read1'] = lr1   
+    if len(ReadLength[1]) != 0:
+        lr2 = list(ReadLength[1])[0]
+        D['length_read2'] = lr2
+    return D, UmiSequences
