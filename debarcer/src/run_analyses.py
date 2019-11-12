@@ -88,6 +88,9 @@ def MergeConsensusFiles(ConsDir):
             chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
             L.append([chromo, start, i])
         
+        print(L)
+        
+        
         # remove chr from chromo name
         for i in range(len(L)):
             L[i][0] = L[i][0].replace('chr', '')
@@ -100,7 +103,7 @@ def MergeConsensusFiles(ConsDir):
         while L[0][0].isnumeric() == False:
             aside.append(L.pop(0))
         # convert chromos to int
-        L = list(map(lambda x: int(x), L))
+        L = list(map(lambda x: int(x[0]), L))
         # sort files on numeric chromo and start
         L.sort(key=operator.itemgetter(0, 1))
     
