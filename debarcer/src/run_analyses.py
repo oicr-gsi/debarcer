@@ -98,12 +98,26 @@ def MergeConsensusFiles(ConsDir):
             if L[i][0].isnumeric() == False:
                 j = L.pop(i)
                 L.insert(0, j)
+        
+        print(L)
+        
+        
         # set non-numeric chromos aside
         aside = []
         while L[0][0].isnumeric() == False:
             aside.append(L.pop(0))
+        
+        
+        print(aside)
+        
+        
         # convert chromos to int
         L = list(map(lambda x: int(x[0]), L))
+        
+        
+        print(L)
+        
+        
         # sort files on numeric chromo and start
         L.sort(key=operator.itemgetter(0, 1))
     
