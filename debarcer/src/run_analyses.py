@@ -86,7 +86,7 @@ def MergeConsensusFiles(ConsDir):
         for i in ConsFiles:
             # extract chromo and start from filename
             chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
-            L.append((chromo, start, i))
+            L.append([chromo, start, i])
         
         # remove chr from chromo name
         for i in range(len(L)):
