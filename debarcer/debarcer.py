@@ -86,7 +86,7 @@ def preprocess_reads(args):
     CreateDirTree(outdir)
     
     # write json with correct/incorrect reads
-    with open(os.path.join(outdir, 'Stats/Read_Info.json'), 'w') as newfile:
+    with open(os.path.join(outdir, 'Stats/Processing_Read_Info.json'), 'w') as newfile:
         json.dump(D, newfile, indent=4)
        
     # write table with umi sequences counts
