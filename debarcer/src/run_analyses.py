@@ -360,7 +360,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         running_jobs = CheckJobs(L)
         if running_jobs == False:
             # generate plots and report if report is True
-            PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s {4} -r {5} -mv {6} -mr {7} -mu {8} -mc {9} -rt {10}'
+            PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s "{4}" -r {5} -mv {6} -mr {7} -mu {8} -mc {9} -rt {10}'
             PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
             newfile = open(PlotScript, 'w')
             newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren, ref_threshold))
