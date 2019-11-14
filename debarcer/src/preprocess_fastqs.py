@@ -350,14 +350,16 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         UmiLength, SpacerLength, UmiPositions = [umi_len_r1, umi_len_r2], [spacer_len_r1, spacer_len_r2], [umi_pos_r1, umi_pos_r2]    
         
         for i in range(len(writers)):
-            # if paired reads and umis are in each read: assign each umi to its respective read
+            # if paired reads and umis are in each read: concatenate umis and assign concatenated umi to each read
             # if paired read and single umi: assign the same umi to each read
             # if single end read, assign the umi to its read
             if len(umis) > 1:
-                  # add umi to read name and write to outputfile
-                  writers[i].write(readnames[i] + ":" + umis[i] + " " + namerests[i] + "\n")
+                # concatenate umis
+                umiseq = ''.join(umis)
             elif len(umis) == 1:
-                writers[i].write(readnames[i] + ":" + umis[0] + " " + namerests[i] + "\n")
+                umiseq = umis[0]
+            # add umi to read name and write to outputfile
+            writers[i].write(readnames[i] + ":" + umiseq + " " + namerests[i] + "\n")
             # remove umi and spacer from read seq. write remaining of read to outputfile
             if i == 0:
                 # determine index for reads k <- 0 for r1, -1 for r2 or r3
