@@ -271,8 +271,6 @@ def VCF_converter(args):
     
     :param config: Path to the config file
     :param outdir: Output directory where subdirectories are created
-    
-    :param consfile: Path to the consensus file (merged or not)
     :param outputfile: Path to the output VCF file
     :param reference" Path to the reference genome 
     :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
@@ -767,7 +765,7 @@ if __name__ == '__main__':
     v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold', type=int, default=10,
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)')
-    v_parser.add_argument('-f', '--Famsize', dest='famsize', type=int, help='Minimum UMI family size', reuired=True)
+    v_parser.add_argument('-f', '--Famsize', dest='famsize', type=int, help='Minimum UMI family size', required=True)
     v_parser.set_defaults(func=VCF_converter)
     
     ## Run scripts command 
