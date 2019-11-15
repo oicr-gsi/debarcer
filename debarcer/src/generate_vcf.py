@@ -50,7 +50,7 @@ def GetConsData(consfile):
 
 def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filter_threshold, famsize):
     '''
-    (str, str, str, float, int, int, int) -> None
+    (str, str, str, float, float, int, int) -> None
     
     :param consfile: Path to the consensus file (merged or not)
     :param outputfile: Path to the output VCF file
@@ -111,12 +111,6 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     # add back non-numerical contigs
     Chromosomes.extend(others)
     
-    # make a list of family sizes
-    famsize = []
-    for i in consdata:
-        famsize.extend(list(consdata[i].keys()))
-    famsize = sorted(list(map(lambda x: int(x), list(set(famsize)))))
-        
     # make a sorted list of positions
     positions = []
     for i in consdata:
