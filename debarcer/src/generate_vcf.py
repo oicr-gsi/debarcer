@@ -14,7 +14,7 @@ def GetConsData(consfile):
     (str) -> dict
     
     :param consfile: Path to the consensus file (merged or not)
-    
+           
     Returns a dictionary with consensus file info organized by chromo, and family
     size for each position
     '''
@@ -48,9 +48,9 @@ def GetConsData(consfile):
         
     
 
-def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filter_threshold):
+def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filter_threshold, famsize):
     '''
-    (str, str, str, float, int, int) -> None
+    (str, str, str, float, int, int, int) -> None
     
     :param consfile: Path to the consensus file (merged or not)
     :param outputfile: Path to the output VCF file
@@ -61,11 +61,13 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                           (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
     :param filter_threshold: minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
-      
-    Write a VCF from the consensus file. Allow multiple records per position for each family sizes.
+    :param famsize: Minimum umi family size 
+        
+    Write a VCF from the consensus file for a given umi family size.
+    Allow multiple records per position for SNVs and indels
     '''
     
-    # parse consensus file
+    # parse consensus file -> consensus info for all recorded umi fam size
     consdata = GetConsData(consfile)
 
     # get the header of the consfile
@@ -124,12 +126,12 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
        
     
     for contig in Chromosomes:
-        for pos in positions:
-            for size in famsize:
+        # check membership of famsize
+        if famsize in consdata[contig]:
+            for pos in positions:
                 # check pos membership for merged consensus files
-                if pos in consdata[contig][size]:
-                    L = consdata[contig][size][pos]
-                    
+                if pos in consdata[contig][famsize]:
+                    L = consdata[contig][famsize][pos]
                     # get reference frequency
                     ref_freq = float(L[header.index('REF_FREQ')]) 
                     # create VCF record if ref freq low enough to consider variant at position 
@@ -139,6 +141,10 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         rawdepth = int(L[header.index('RAWDP')])
                         # get minimum and mean family size
                         minfam = int(L[header.index('FAM')])
+                        
+                        assert minfam == famsize
+                        
+                        
                         meanfam = float(L[header.index('MEAN_FAM')])
                         # set up info
                         info = 'RDP={0};CDP={1};MIF={2};MNF={3};AD={4};AL={5};AF={6}'
@@ -202,7 +208,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                                 filt = 'a{0}'.format(filter_threshold)
             
                             newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, alt_info]) + '\n')
-                        # check that depetions are recorded
+                        # check that deletions are recorded
                         if len(del_alleles) != 0:
                             # record deletions seperately on distinct lines
                             for i in range(len(del_alleles)):

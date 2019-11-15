@@ -281,7 +281,8 @@ def VCF_converter(args):
                           (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
     :param filter_threshold: Minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
-    
+    :param famsize: Minimum UMI family size
+        
     Converts consensus files into VCF format
     '''
 
@@ -323,8 +324,8 @@ def VCF_converter(args):
     # loop over consensus files
     for filename in ConsFiles:
         # write a VCF per consensus file (may include multiple records for each family size)
-        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '.vcf')
-        WriteVCF(filename, outputfile, args.reference, ref_threshold, alt_threshold, filter_threshold)
+        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(args.famsize))
+        WriteVCF(filename, outputfile, args.reference, ref_threshold, alt_threshold, filter_threshold, args.famsize)
 
     print(GetCurrentTime() + 'VCFs generated. VCF files written to {0}'.format(VCFDir))
 
@@ -766,6 +767,7 @@ if __name__ == '__main__':
     v_parser.add_argument('-ft', '--FilterThreshold', dest='filterthreshold', type=int, default=10,
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)')
+    v_parser.add_argument('-f', '--Famsize', dest='famsize', type=int, help='Minimum UMI family size', reuired=True)
     v_parser.set_defaults(func=VCF_converter)
     
     ## Run scripts command 

@@ -343,16 +343,20 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         Z = ConsJobNames + MergeJobNames
         running_groupmerge = CheckJobs(Z)  
         if running_groupmerge == False:
-            # generate VCF from all consensus files 
-            # set up vcf command
-            VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -rt {4} -at {5} -ft {6}'
-            CallScript = os.path.join(QsubDir, 'VarCall.sh')
-            newfile = open(CallScript, 'w')
-            newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, ref_threshold, alt_threshold, filter_threshold))
-            newfile.close()    
-            jobname6 = name_job('Call')
-            CallJobs.append(jobname6)
-            subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, str(mem), CallScript), shell=True)    
+            # make a list of umi family size
+            umi_fam_size =  list(map(lambda x: int(x.strip()), famsize.split(',')))
+            # generate a single VCF for each umi family size
+            for size in umi_fam_size:
+                # generate VCF from all consensus files 
+                # set up vcf command
+                VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -rt {4} -at {5} -ft {6} -f {7}'
+                CallScript = os.path.join(QsubDir, 'VarCall_famsize_{0}.sh'.format(str(size)))
+                newfile = open(CallScript, 'w')
+                newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, ref_threshold, alt_threshold, filter_threshold, size))
+                newfile.close()    
+                jobname6 = name_job('Call_famsize_{0}'.format(str(size)))
+                CallJobs.append(jobname6)
+                subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, str(mem), CallScript), shell=True)    
     
     if plot == True:
         # make a list of jobs. wait until all jobs are done before plotting and reporting
