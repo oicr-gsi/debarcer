@@ -345,6 +345,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         if running_groupmerge == False:
             # make a list of umi family size
             umi_fam_size =  list(map(lambda x: int(x.strip()), famsize.split(',')))
+            # umi fam size 0 doesn't need to be explicitely passed to group/collapse
+            # but is required for group/collapse so add to list if not already present
+            if 0 not in umi_fam_size:
+                umi_fam_size.append(0)
             # generate a single VCF for each umi family size
             for size in umi_fam_size:
                 # generate VCF from all consensus files 
