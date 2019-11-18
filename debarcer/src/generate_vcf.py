@@ -108,6 +108,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     others = sorted([Chromosomes.pop(i) for i in range(len(Chromosomes)) if Chromosomes[i].isnumeric() == False])
     Chromosomes = sorted(list(map(lambda x: int(x), Chromosomes)))
     Chromosomes = list(map(lambda x: 'chr' + str(x), Chromosomes))
+    others = list(map(lambda x: 'chr' + str(x), others))
     # add back non-numerical contigs
     Chromosomes.extend(others)
     
