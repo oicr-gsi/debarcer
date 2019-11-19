@@ -78,27 +78,8 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
     # get debarcer version
     version = __version__
 
-    # open file for writing
-    newfile = open(outputfile, 'w')
-
-    # write VCF header 
-    newfile.write('##fileformat=VCFv4.1\n')
-    newfile.write('##fileDate={0}\n'.format(time.strftime('%Y%m%d', time.localtime())))
-    newfile.write('##reference={0}\n'.format(reference))
-    newfile.write('##source=Debarcer v. {0}\n'.format(version))
-            
-    # write info/filter/format metadata
-    newfile.write('##INFO=<ID=RDP,Number=1,Type=Integer,Description=\"Raw Depth\">\n')
-    newfile.write('##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n')
-    newfile.write('##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n')
-    newfile.write('##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n')
-    newfile.write('##INFO=<ID=AD,Number=1,Type=Integer,Description=\"Reference allele Depth\">\n')
-    newfile.write('##INFO=<ID=AL,Number=A,Type=Integer,Description=\"Alternate Allele Depth\">\n')
-    newfile.write('##INFO=<ID=AF,Number=A,Type=Float,Description=\"Alternate Allele Frequency\">\n')
-    newfile.write('##FILTER=<ID=a{0},Description=\"Alternate allele depth below {0}\">\n'.format(filter_threshold))
-        
-    # write data header 
-    newfile.write('\t'.join(['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO']) + '\n')
+    # create a list with VCF records for SNVs and indels, sorted by chromosome and position
+    Records = []
 
     # loop over sorted contigs and sorted positions in cons data for given famsize 
     
@@ -136,10 +117,6 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         rawdepth = int(L[header.index('RAWDP')])
                         # get minimum and mean family size
                         minfam = int(L[header.index('FAM')])
-                        
-                        assert minfam == famsize
-                        
-                        
                         meanfam = float(L[header.index('MEAN_FAM')])
                         # set up info
                         info = 'RDP={0};CDP={1};MIF={2};MNF={3};AD={4};AL={5};AF={6}'
@@ -202,7 +179,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             else:
                                 filt = 'a{0}'.format(filter_threshold)
             
-                            newfile.write('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, alt_info]) + '\n')
+                            Records.append('\t'.join([contig, str(pos), '.', ref, ','.join(alt_alleles), '0', filt, alt_info]) + '\n')
                         # check that deletions are recorded
                         if len(del_alleles) != 0:
                             # record deletions seperately on distinct lines
@@ -216,7 +193,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                                 del_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], del_depth[i], del_freq[i])
                                 # extract ref allele and alt allele
                                 k = list(map(lambda x: x.strip(), del_alleles[i].replace("'", '').replace('(', '').replace(')', '').split(',')))
-                                newfile.write('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, del_info]) + '\n')
+                                Records.append('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, del_info]) + '\n')
                         # check that insertions are recorded
                         if len(ins_alleles) != 0:
                             # record insertions seperately on distinct lines
@@ -230,6 +207,33 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                                 ins_info = info.format(rawdepth, consdepth, minfam, round(meanfam, 2), depth[ref], ins_depth[i], ins_freq[i])
                                 # extract ref allele and alt allele
                                 k = list(map(lambda x: x.strip(), ins_alleles[i].replace("'", '').replace('(', '').replace(')', '').split(',')))
-                                newfile.write('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, ins_info]) + '\n')
-    newfile.close()        
+                                Records.append('\t'.join([contig, str(pos), '.', k[0], k[1], '0', filt, ins_info]) + '\n')
+    
+    
+    # write VCF only if positions are recorded
+    if len(Records) != 0:
+        # open file for writing
+        newfile = open(outputfile, 'w')
+
+        # write VCF header 
+        newfile.write('##fileformat=VCFv4.1\n')
+        newfile.write('##fileDate={0}\n'.format(time.strftime('%Y%m%d', time.localtime())))
+        newfile.write('##reference={0}\n'.format(reference))
+        newfile.write('##source=Debarcer v. {0}\n'.format(version))
+            
+        # write info/filter/format metadata
+        newfile.write('##INFO=<ID=RDP,Number=1,Type=Integer,Description=\"Raw Depth\">\n')
+        newfile.write('##INFO=<ID=CDP,Number=1,Type=Integer,Description=\"Consensus Depth\">\n')
+        newfile.write('##INFO=<ID=MIF,Number=1,Type=Integer,Description=\"Minimum Family Size\">\n')
+        newfile.write('##INFO=<ID=MNF,Number=1,Type=Float,Description=\"Mean Family Size\">\n')
+        newfile.write('##INFO=<ID=AD,Number=1,Type=Integer,Description=\"Reference allele Depth\">\n')
+        newfile.write('##INFO=<ID=AL,Number=A,Type=Integer,Description=\"Alternate Allele Depth\">\n')
+        newfile.write('##INFO=<ID=AF,Number=A,Type=Float,Description=\"Alternate Allele Frequency\">\n')
+        newfile.write('##FILTER=<ID=a{0},Description=\"Alternate allele depth below {0}\">\n'.format(filter_threshold))
+        
+        # write data header 
+        newfile.write('\t'.join(['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO']) + '\n')
+        # write data
+        newfile.write('\n'.join(Records))
+        newfile.close()        
 
