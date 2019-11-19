@@ -1255,6 +1255,13 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
         step = 10
     elif len(node_color) >= 60:
         step = 20
+        
+    print('node degree')
+    print('step', step)
+    print('min degree', min(node_color))
+    print('max degree', max(node_color))
+    print('xticks', [str(i) for i in range(min(node_color), max(node_color)+2, step)])    
+        
     cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2, step)])
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
             
@@ -1285,30 +1292,24 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     degree_sequence = sorted([d for d in Degree.values()], reverse=True)
     # count nodes with a given degree
     degree_count = collections.Counter(degree_sequence)
-    # make parallel lists of degree and count sorted on degree
+    # get node degree 
     degree = sorted(degree_count.keys())
-    #count = [degree_count[i] for i in degree]
-    
     # compute minimum and maximum degree
     mindegree, maxdegree = degree[0], degree[-1]
-    
+    # make parallel lists of degree and count sorted on degree
+    # include all degree values between min and max degree
     degree = [i for i in range(mindegree, maxdegree + 1)]
     count = []
     for i in degree:
         if i in degree_count:
-            count.append(degree_count[0])
+            count.append(degree_count[i])
         else:
             count.append(0)
-        
-    assert len(count) == len(degree)
-    
-    
-    
     
     # plot network degree
     ax.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
                
-    # limit y axis and ste y axis ticks
+    # limit y axis and sset y axis ticks
     YMax = max(count)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
@@ -1324,14 +1325,11 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
-    
+    # set x ticks
     XMax = float(maxdegree + (maxdegree * 10/100))
     step = SetUpTicks(XMax)
     ax.xaxis.set_ticks([int(i) for i in np.arange(0, XMax, step)])
     
-    
-    #plt.xticks(degree, list(map(lambda x: str(x), degree)), ha = 'center', rotation = 0, fontsize = 9)
-           
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
