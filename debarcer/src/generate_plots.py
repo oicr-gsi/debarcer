@@ -1287,7 +1287,23 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     degree_count = collections.Counter(degree_sequence)
     # make parallel lists of degree and count sorted on degree
     degree = sorted(degree_count.keys())
-    count = [degree_count[i] for i in degree]
+    #count = [degree_count[i] for i in degree]
+    
+    # compute minimum and maximum degree
+    mindegree, maxdegree = degree[0], degree[-1]
+    
+    degree = [i for i in range(mindegree, maxdegree + 1)]
+    count = []
+    for i in degree:
+        if i in degree_count:
+            count.append(degree_count[0])
+        else:
+            count.append(0)
+        
+    assert len(count) == len(degree)
+    
+    
+    
     
     # plot network degree
     ax.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
@@ -1308,8 +1324,13 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
-    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
-    plt.xticks(degree, list(map(lambda x: str(x), degree)), ha = 'center', rotation = 0, fontsize = 9)
+    
+    XMax = float(maxdegree + (maxdegree * 10/100))
+    step = SetUpTicks(XMax)
+    ax.xaxis.set_ticks([int(i) for i in np.arange(0, XMax, step)], ha = 'center', rotation = 0, fontsize = 9)
+    
+    
+    #plt.xticks(degree, list(map(lambda x: str(x), degree)), ha = 'center', rotation = 0, fontsize = 9)
            
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
