@@ -1062,7 +1062,8 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
         children.extend(list(Data[Coordinates[i]].keys()))
     children = sorted(list(set(children)))
     minchildren, maxchildren = children[0], children[-1]
-    children = [i for i in range(0, maxchildren + 1)]
+    xstep = SetUpTicks(maxchildren)
+    children = [i for i in range(0, maxchildren + 1, xstep)]
     xPos = [i for i in range(len(children))]
     plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
                
