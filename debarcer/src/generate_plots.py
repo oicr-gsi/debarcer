@@ -1327,7 +1327,7 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     
     XMax = float(maxdegree + (maxdegree * 10/100))
     step = SetUpTicks(XMax)
-    ax.xaxis.set_ticks([int(i) for i in np.arange(0, XMax, step)], ha = 'center', rotation = 0, fontsize = 9)
+    ax.xaxis.set_ticks([int(i) for i in np.arange(0, XMax, step)])
     
     
     #plt.xticks(degree, list(map(lambda x: str(x), degree)), ha = 'center', rotation = 0, fontsize = 9)
