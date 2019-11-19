@@ -1264,7 +1264,7 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     print('node degree')
     
     print('degree.keys', len(list(degree.keys())))
-    print('degree.values', len(list(degree.values)))
+    print('degree.values', len(list(degree.values())))
     print('step', step)
     print('min degree', min(node_color))
     print('max degree', max(node_color))
