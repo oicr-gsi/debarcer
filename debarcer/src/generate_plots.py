@@ -1057,7 +1057,10 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     ax.set_title('Parent Frequency vs Children UMIs', size = 14)
     
     # write label for x axis
-    children = sorted(Data[Coordinates[0]].keys()) 
+    children = []
+    for i in range(len(Coordinates)):
+        children.extend(list(Data[Coordinates[i]].keys()))
+    children = sorted(list(set(children)))
     xPos = [i for i in range(len(children))]
     plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
                
