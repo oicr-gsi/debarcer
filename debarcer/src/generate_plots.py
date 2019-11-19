@@ -1246,7 +1246,16 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("bottom", size="5%", pad=0.05)
     cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+2)], use_gridspec=False)
-    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2)])
+    # write x ticks
+    if len(node_color) < 10:
+        step = 1
+    elif 10 <= len(node_color) < 20:
+        step = 2
+    elif 20 < len(node_color) < 60:
+        step = 10
+    elif len(node_color) >= 60:
+        step = 20
+    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2, step)])
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
             
     return ax
