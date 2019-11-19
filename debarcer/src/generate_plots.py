@@ -1061,6 +1061,8 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     for i in range(len(Coordinates)):
         children.extend(list(Data[Coordinates[i]].keys()))
     children = sorted(list(set(children)))
+    minchildren, maxchildren = children[0], children[-1]
+    children = [i for i in range(0, maxchildren + 1)]
     xPos = [i for i in range(len(children))]
     plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
                
@@ -1260,16 +1262,6 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
         step = 10
     elif len(list(set(node_color))) >= 60:
         step = 20
-        
-    print('node degree')
-    
-    print('degree.keys', len(list(degree.keys())))
-    print('degree.values', len(list(degree.values())))
-    print('step', step)
-    print('min degree', min(node_color))
-    print('max degree', max(node_color))
-    print('xticks', [str(i) for i in range(min(node_color), max(node_color)+2, step)])    
-        
     cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2, step)])
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
             
