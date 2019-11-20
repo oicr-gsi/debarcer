@@ -25,7 +25,7 @@ import seaborn as sns
 import pygal
 from pygal.style import DefaultStyle, Style
 import yaml
-
+import math
 
 def SetUpTicks(AxisMax):
     '''
@@ -54,8 +54,10 @@ def SetUpTicks(AxisMax):
         step = 500 
     elif 5000 < AxisMax <=10000:
         step = 1000 
+    elif 10000 < AxisMax <= 50000:
+        step = 5000
     else:
-        step = 2000
+        step = 10000
     return step
 
 
@@ -437,11 +439,11 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
         
-    # set up x axis
-    step = SetUpTicks(len(positions)) * 2
-    xtickspos = [i for i in range(0, len(positions), step)]
+    # set up x axis. divide genomic interval in 3
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(positions)+1, (len(positions)-1) / 3)]))
     xticks = [positions[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
+    
     ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
         
     # do not show y ticks
@@ -595,8 +597,8 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     ax.spines["left"].set_visible(False)  
     
     # set up x axis
-    step = SetUpTicks(len(pos)) * 2
-    xtickspos = [i for i in range(0, len(pos), step)]
+    # divide genomic interval in 3
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
     xticks = [pos[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
@@ -610,7 +612,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
                     right=False, left=False, labelbottom=False, colors = 'black',
                     labelsize = 12, direction = 'out')  
-    
     return ax
 
 
@@ -779,10 +780,11 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     ax.spines["left"].set_visible(False)  
 
     # set up x axis
-    step = SetUpTicks(len(pos)) * 2
-    xtickspos = [i for i in range(0, len(pos), step)]
+    # divide genomic interval in 3
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
     xticks = [pos[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
+    
     if 'XLabel' in Options:
         # show ticks
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
@@ -1055,7 +1057,13 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     ax.set_title('Parent Frequency vs Children UMIs', size = 14)
     
     # write label for x axis
-    children = sorted(Data[Coordinates[0]].keys()) 
+    children = []
+    for i in range(len(Coordinates)):
+        children.extend(list(Data[Coordinates[i]].keys()))
+    children = sorted(list(set(children)))
+    minchildren, maxchildren = children[0], children[-1]
+    xstep = SetUpTicks(maxchildren)
+    children = [i for i in range(0, maxchildren + 1, xstep)]
     xPos = [i for i in range(len(children))]
     plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
                
@@ -1246,7 +1254,16 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("bottom", size="5%", pad=0.05)
     cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+2)], use_gridspec=False)
-    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2)])
+    # write x ticks
+    if len(list(set(node_color))) < 10:
+        step = 1
+    elif 10 <= len(list(set(node_color))) < 20:
+        step = 2
+    elif 20 < len(list(set(node_color))) < 60:
+        step = 10
+    elif len(list(set(node_color))) >= 60:
+        step = 20
+    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2, step)])
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
             
     return ax
@@ -1276,14 +1293,24 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     degree_sequence = sorted([d for d in Degree.values()], reverse=True)
     # count nodes with a given degree
     degree_count = collections.Counter(degree_sequence)
-    # make parallel lists of degree and count sorted on degree
+    # get node degree 
     degree = sorted(degree_count.keys())
-    count = [degree_count[i] for i in degree]
+    # compute minimum and maximum degree
+    mindegree, maxdegree = degree[0], degree[-1]
+    # make parallel lists of degree and count sorted on degree
+    # include all degree values between min and max degree
+    degree = [i for i in range(mindegree, maxdegree + 1)]
+    count = []
+    for i in degree:
+        if i in degree_count:
+            count.append(degree_count[i])
+        else:
+            count.append(0)
     
     # plot network degree
     ax.bar(degree, count, width=0.4, color='#eaccff', edgecolor=['grey'] * len(degree), linewidth=0.7)
                
-    # limit y axis and ste y axis ticks
+    # limit y axis and sset y axis ticks
     YMax = max(count)
     YMax = float(YMax + (YMax * 10 /100))
     ax.set_ylim([0, YMax])    
@@ -1299,9 +1326,11 @@ def CreateDegreeAx(Columns, Rows, Position, figure, UmiFile):
     # hide these grids behind plot objects
     ax.set_axisbelow(True)
     
-    #leftLim, rightLim = xPos[0] -1, xPos[-1] +1
-    plt.xticks(degree, list(map(lambda x: str(x), degree)), ha = 'center', rotation = 0, fontsize = 9)
-           
+    # set x ticks
+    XMax = float(maxdegree + (maxdegree * 10/100))
+    step = SetUpTicks(XMax)
+    ax.xaxis.set_ticks([int(i) for i in np.arange(0, XMax, step)])
+    
     # add space between axis and tick labels
     ax.yaxis.labelpad = 18
     ax.xaxis.labelpad = 18
