@@ -612,7 +612,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     
     
     print(step)
-    print(xtickpos)
+    print(xtickspos)
     print(xticks)
     
     
