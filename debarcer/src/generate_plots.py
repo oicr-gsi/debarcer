@@ -25,7 +25,7 @@ import seaborn as sns
 import pygal
 from pygal.style import DefaultStyle, Style
 import yaml
-
+import math
 
 def SetUpTicks(AxisMax):
     '''
@@ -597,9 +597,16 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     ax.spines["left"].set_visible(False)  
     
     # set up x axis
-    step = SetUpTicks(len(pos)) * 2
-    xtickspos = [i for i in range(0, len(pos), step)]
-    xticks = [pos[i] for i in xtickspos]
+    # divide genomic interval in 4
+    xticks = list(map(lambda x: math.ceil(x), np.arange(pos[0], pos[-1], pos[-1]/4)))
+    xtickspos = [i for i in xticks]
+    
+    #step = SetUpTicks(len(pos)) * 2
+    #xtickspos = [i for i in range(0, len(pos), step)]
+    #xticks = [pos[i] for i in xtickspos]
+    
+    
+    
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
     if 'XLabel' in Options:
