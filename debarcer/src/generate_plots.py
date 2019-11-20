@@ -599,16 +599,21 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     # set up x axis
     # divide genomic interval in 4
     xticks = list(map(lambda x: math.ceil(x), np.arange(int(pos[0]), int(pos[-1]), (int(pos[-1]) - int(pos[0]))/4)))
-    
-    print(int(pos[-1])/4)
-    print(xticks)
-    
     xtickspos = [i for i in xticks]
     
-    #step = SetUpTicks(len(pos)) * 2
-    #xtickspos = [i for i in range(0, len(pos), step)]
-    #xticks = [pos[i] for i in xtickspos]
+    print((int(pos[-1]) - (int(pos[0])))/4)
+    print(xtickspos)
+    print(xticks)
     
+    
+    step = SetUpTicks(len(pos)) * 2
+    xtickspos = [i for i in range(0, len(pos), step)]
+    xticks = [pos[i] for i in xtickspos]
+    
+    
+    print(step)
+    print(xtickpos)
+    print(xticks)
     
     
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
