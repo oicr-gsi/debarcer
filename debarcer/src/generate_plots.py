@@ -604,26 +604,27 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
 #    xtickspos = [i for i in xticks]
 #    
     
-    xtickspos = list(map(lambda x: math.ceil(x), [i for i in np.arange(0, len(pos), len(pos) / 4)]))
+    xtickspos = list(map(lambda x: math.ceil(x), [i for i in np.arange(0, len(pos) + 1, len(pos) / 4)]))
     xticks = [pos[i] for i in xtickspos]
     
     
     
     print('****')
     print('new')
-    print((int(pos[-1]) - (int(pos[0])))/4)
+    print(pos[0], pos[-1])
+    print(0, len(pos))
     print(xtickspos)
     print(xticks)
     
     
     step = SetUpTicks(len(pos)) * 2
-    xtickspos = [i for i in range(0, len(pos), step)]
-    xticks = [pos[i] for i in xtickspos]
+    xtickspos1 = [i for i in range(0, len(pos), step)]
+    xticks1 = [pos[i] for i in xtickspos]
     
     print('old')
     print(step)
-    print(xtickspos)
-    print(xticks)
+    print(xtickspos1)
+    print(xticks1)
     print('----')
     
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
