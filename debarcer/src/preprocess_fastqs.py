@@ -256,13 +256,26 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     r2 = open_optional_file(KeyWords, 'r2')
     r3 = open_optional_file(KeyWords, 'r3')
       
-    # Open output fastqs in text mode for writing
+    # Open output fastqs in text mode for writing re-headered reads
     r1_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R1.fastq.gz"), "wt")
     if r2 != None:
         r2_writer = gzip.open(os.path.join(outdir, prefix + ".umi.reheadered_R2.fastq.gz"), "wt")
     else:
         r2_writer = None
 
+    # write reads with incorrect configuration to new fastqs
+    if spacer == True:
+        # Open fastqs in text mode for writing discarded reads
+        r1_discarded = gzip.open(os.path.join(outdir, prefix + ".incorrect_reads.R1.fastq.gz"), "wt")
+        if r2 != None:
+            r2_discarded = gzip.open(os.path.join(outdir, prefix + ".incorrect_reads.R2.fastq.gz"), "wt")
+        else:
+            r2_discarded = None
+        if r3 != None:
+            r3_discarded = gzip.open(os.path.join(outdir, prefix + ".incorrect_reads.R3.fastq.gz"), "wt")
+        else:
+            r3_discarded = None
+        
     # get the length of the umi for read1 and read2, set to 0 if only in read1
     umi_len_r1 = umi_lens[0]
     if len(umi_lens) > 1:
@@ -294,6 +307,10 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     # make a list of files open for writing
     writers = [i for i in [r1_writer, r2_writer] if i != None]
+
+    # make a list of files open for writing discarded reads
+    if spacer == True:
+        discarded = [i for i in [r1_discarded, r2_discarded, r3_discarded] if i != None]
     
     # check the number of input files
     # create iterator with reads from each file
@@ -327,6 +344,11 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         if spacer == True and False in [correct_spacer(reads_with_umis[i], umis[i], umi_pos[i] -1, spacer_seq) for i in range(len(reads_with_umis))]:
             # count reads with incorrect umi/spacer configuration 
             Incorrect += 1
+            # write reads with incorrect umi/spacer configuration to separate fastqs 
+            for i in range(len(discarded)):
+                for j in range(len(reads[i])):
+                    discarded[i].write(reads[i][j])
+            # skip read processing
             continue
 
         # count number of reads with correct umi/spacer configuration
@@ -380,7 +402,11 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
         i.close()
     for i in fastqs:
         i.close()
-        
+    if spacer == True:
+        if len(discarded) != 0:
+            for i in discarded:
+                i.close()
+    
     print("Complete. Output written to {0}".format(outdir))
     
     # record read indo as json
