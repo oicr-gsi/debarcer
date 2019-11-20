@@ -439,11 +439,6 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
         
-    # set up x axis
-    #step = SetUpTicks(len(positions)) * 2
-    #xtickspos = [i for i in range(0, len(positions), step)]
-    #xticks = [positions[i] for i in xtickspos]
-    
     # set up x axis. divide genomic interval in 3
     xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(positions)+1, (len(positions)-1) / 3)]))
     xticks = [positions[i] for i in xtickspos]
@@ -784,12 +779,6 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     ax.spines["right"].set_visible(False)    
     ax.spines["left"].set_visible(False)  
 
-    # set up x axis
-    #step = SetUpTicks(len(pos)) * 2
-    #xtickspos = [i for i in range(0, len(pos), step)]
-    #xticks = [pos[i] for i in xtickspos]
-    #plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
-    
     # set up x axis
     # divide genomic interval in 3
     xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
