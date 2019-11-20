@@ -604,7 +604,7 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
 #    xtickspos = [i for i in xticks]
 #    
     
-    xtickspos = list(map(lambda x: math.ceil(x), [i for i in np.arange(0, len(pos), len(pos) / 4)]))
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, len(pos) / 4)]))
     xticks = [pos[i] for i in xtickspos]
     
     
