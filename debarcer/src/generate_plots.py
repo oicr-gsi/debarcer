@@ -440,10 +440,15 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax.spines["left"].set_visible(False)  
         
     # set up x axis
-    step = SetUpTicks(len(positions)) * 2
-    xtickspos = [i for i in range(0, len(positions), step)]
+    #step = SetUpTicks(len(positions)) * 2
+    #xtickspos = [i for i in range(0, len(positions), step)]
+    #xticks = [positions[i] for i in xtickspos]
+    
+    # set up x axis. divide genomic interval in 3
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(positions)+1, (len(positions)-1) / 3)]))
     xticks = [positions[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
+    
     ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
         
     # do not show y ticks
@@ -598,35 +603,8 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
     
     # set up x axis
     # divide genomic interval in 3
-#    xticks = list(map(lambda x: math.ceil(x), np.arange(int(pos[0]), int(pos[-1]), (int(pos[-1]) - int(pos[0]))/4)))
-#    
-#    
-#    xtickspos = [i for i in xticks]
-#    
-    
     xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
     xticks = [pos[i] for i in xtickspos]
-    
-    
-    
-    print('****')
-    print('new')
-    print(pos[0], pos[-1])
-    print(0, len(pos))
-    print(xtickspos)
-    print(xticks)
-    
-    
-    step = SetUpTicks(len(pos)) * 2
-    xtickspos1 = [i for i in range(0, len(pos), step)]
-    xticks1 = [pos[i] for i in xtickspos]
-    
-    print('old')
-    print(step)
-    print(xtickspos1)
-    print(xticks1)
-    print('----')
-    
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
     if 'XLabel' in Options:
@@ -639,7 +617,6 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
                     right=False, left=False, labelbottom=False, colors = 'black',
                     labelsize = 12, direction = 'out')  
-    
     return ax
 
 
@@ -808,10 +785,17 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     ax.spines["left"].set_visible(False)  
 
     # set up x axis
-    step = SetUpTicks(len(pos)) * 2
-    xtickspos = [i for i in range(0, len(pos), step)]
+    #step = SetUpTicks(len(pos)) * 2
+    #xtickspos = [i for i in range(0, len(pos), step)]
+    #xticks = [pos[i] for i in xtickspos]
+    #plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
+    
+    # set up x axis
+    # divide genomic interval in 3
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
     xticks = [pos[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
+    
     if 'XLabel' in Options:
         # show ticks
         plt.tick_params(axis='both', which='both', bottom=True, top=False,
