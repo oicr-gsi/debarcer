@@ -31,7 +31,7 @@ def check_library_prep(prepname, prepfile):
     L = parse_prep(prepname, prepfile)
     D = {i:j for i, j in L.items()} 
     # check that all expected parameters are present
-    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq', 'umi_pos'}
+    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq', 'umi_pos', 'umi_inline'}
     
     unexpected = set(D.keys()).difference(set(expected))
     if len(unexpected) != 0:
@@ -68,19 +68,21 @@ def check_library_prep(prepname, prepfile):
                     int(j)
                 except:
                     raise ValueError('ERR: value for {0} should be a comma separated list of integers'.format(i))
-        elif i == 'spacer':
-            if D['spacer'].upper() == 'TRUE':
-                D['spacer'] = True
-            elif D['spacer'].upper() == 'FALSE':
-                D['spacer'] = False
+        elif i in ['spacer', 'umi_inline']:
+            if D[i].upper() == 'TRUE':
+                D[i] = True
+            elif D[i].upper() == 'FALSE':
+                D[i] = False
             else:
                 raise ValueError('ERR: value for {0} should be boolean'.format(i))
-            if D['spacer'] == True:
-                if D['spacer_seq'].lower() in ['none', '']:
-                    raise ValueError('ERR: spacer_seq if not defined')
-                non_valid = set(D['spacer_seq'].upper()).difference(set(nucleotides.upper()))    
-                if len(non_valid) != 0:
-                    raise ValueError('ERR: spacer sequence contains non valid nucleotides: {0}'.format(', '.join(non_valid)))
+            if i == 'spacer':
+                if D[i] == True:
+                    if D['spacer_seq'].lower() in ['none', '']:
+                        raise ValueError('ERR: spacer_seq if not defined')
+                    else:
+                        non_valid = set(D['spacer_seq'].upper()).difference(set(nucleotides.upper()))    
+                        if len(non_valid) != 0:
+                            raise ValueError('ERR: spacer sequence contains non valid nucleotides')
                 
 def getread(fastq_file):
     """
