@@ -15,7 +15,8 @@ from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDept
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
  PlotIncorrectReads, PlotDataPerRegion
 from src.generate_report import WriteReport   
- 
+import collections 
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -89,15 +90,14 @@ def preprocess_reads(args):
     with open(os.path.join(outdir, 'Stats/Processing_Read_Info.json'), 'w') as newfile:
         json.dump(D, newfile, indent=4)
        
+    # count umi sequences
+    umi_counts = dict(collections.Counter(UmiSequences))
     # write table with umi sequences counts
-    D = {}
-    for i in UmiSequences:
-        D[i] = UmiSequences.count(i)
     Outpufile = os.path.join(outdir, 'Stats/Umi_counts.txt')
     newfile = open(Outpufile, 'w')
     newfile.write('\t'.join(['Umi', 'Count']) + '\n')
-    for i in D:
-        newfile.write('\t'.join([i, str(D[i])]) + '\n')
+    for i in umi_counts:
+        newfile.write('\t'.join([i, str(umi_counts[i])]) + '\n')
     newfile.close()
 
 
