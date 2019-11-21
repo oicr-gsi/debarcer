@@ -235,7 +235,10 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     # specify if a spacer is used or not
     spacer = prep.getboolean('SPACER')
-            
+       
+    # check if umi is inline with reads or in seperate fastq
+    umi_inline = prep.getboolean('UMI_INLINE')
+     
     # get the spacer sequence and spacer length if exists 
     if spacer:
         spacer_seq = str(prep['SPACER_SEQ'])
@@ -389,13 +392,20 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             elif i > 0:
                 k = -1
             
+            # check if umis are inline with reads or not
+            # remove umi + spacer (if any) if umis inline with reads
+            if umi_inline == False:
+                p, l, s = 0, 0, 0
+            else:
+                p, l, s = UmiPositions[i], UmiLength[i], SpacerLength[i]
+            
             # compute read length
-            ReadLength[i].add(len(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:]))
+            ReadLength[i].add(len(reads[k][1][p + l + s:]))
             
             # write new fastqs
-            writers[i].write(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][1][p + l + s:])
             writers[i].write(reads[k][2])
-            writers[i].write(reads[k][3][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][3][p + l + s:])
         
     # close all open files
     for i in writers:
