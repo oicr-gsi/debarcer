@@ -31,7 +31,7 @@ def check_library_prep(prepname, prepfile):
     L = parse_prep(prepname, prepfile)
     D = {i:j for i, j in L.items()} 
     # check that all expected parameters are present
-    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq', 'umi_pos'}
+    expected = {'input_reads', 'output_reads', 'umi_locs', 'umi_lens', 'spacer', 'spacer_seq', 'umi_pos', 'umi_inline'}
     
     unexpected = set(D.keys()).difference(set(expected))
     if len(unexpected) != 0:
@@ -68,19 +68,21 @@ def check_library_prep(prepname, prepfile):
                     int(j)
                 except:
                     raise ValueError('ERR: value for {0} should be a comma separated list of integers'.format(i))
-        elif i == 'spacer':
-            if D['spacer'].upper() == 'TRUE':
-                D['spacer'] = True
-            elif D['spacer'].upper() == 'FALSE':
-                D['spacer'] = False
+        elif i in ['spacer', 'umi_inline']:
+            if D[i].upper() == 'TRUE':
+                D[i] = True
+            elif D[i].upper() == 'FALSE':
+                D[i] = False
             else:
                 raise ValueError('ERR: value for {0} should be boolean'.format(i))
-            if D['spacer'] == True:
-                if D['spacer_seq'].lower() in ['none', '']:
-                    raise ValueError('ERR: spacer_seq if not defined')
-                non_valid = set(D['spacer_seq'].upper()).difference(set(nucleotides.upper()))    
-                if len(non_valid) != 0:
-                    raise ValueError('ERR: spacer sequence contains non valid nucleotides: {0}'.format(', '.join(non_valid)))
+            if i == 'spacer':
+                if D[i] == True:
+                    if D['spacer_seq'].lower() in ['none', '']:
+                        raise ValueError('ERR: spacer_seq if not defined')
+                    else:
+                        non_valid = set(D['spacer_seq'].upper()).difference(set(nucleotides.upper()))    
+                        if len(non_valid) != 0:
+                            raise ValueError('ERR: spacer sequence contains non valid nucleotides')
                 
 def getread(fastq_file):
     """
@@ -235,7 +237,10 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
     
     # specify if a spacer is used or not
     spacer = prep.getboolean('SPACER')
-            
+       
+    # check if umi is inline with reads or in seperate fastq
+    umi_inline = prep.getboolean('UMI_INLINE')
+     
     # get the spacer sequence and spacer length if exists 
     if spacer:
         spacer_seq = str(prep['SPACER_SEQ'])
@@ -389,13 +394,20 @@ def reheader_fastqs(r1_file, outdir, prepname, prepfile, **KeyWords):
             elif i > 0:
                 k = -1
             
+            # check if umis are inline with reads or not
+            # remove umi + spacer (if any) if umis inline with reads
+            if umi_inline == False:
+                p, l, s = 0, 0, 0
+            else:
+                p, l, s = UmiPositions[i], UmiLength[i], SpacerLength[i]
+            
             # compute read length
-            ReadLength[i].add(len(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:]))
+            ReadLength[i].add(len(reads[k][1][p + l + s:]))
             
             # write new fastqs
-            writers[i].write(reads[k][1][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][1][p + l + s:])
             writers[i].write(reads[k][2])
-            writers[i].write(reads[k][3][UmiPositions[i] + UmiLength[i] + SpacerLength[i]:])
+            writers[i].write(reads[k][3][p + l + s:])
         
     # close all open files
     for i in writers:
