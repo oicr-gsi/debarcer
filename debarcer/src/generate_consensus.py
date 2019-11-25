@@ -496,12 +496,11 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
             
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
     (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool, str) -> None
     
     
-    :param reference: Path to the reference genome
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened

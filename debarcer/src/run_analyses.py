@@ -245,7 +245,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # set up group command
     GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8}'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -p {10} -m {11} -t {12} -i {13} -stp {14}'
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13}'
         
     # set qsub command
     QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -q {2} -l h_vmem={3}g \"bash {4}\"'
@@ -280,7 +280,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         umifile = os.path.join(UmiDir, '{0}.json'.format(region))
         CollapseScript = os.path.join(QsubDir, 'UmiCollapse_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(CollapseScript, 'w')
-        newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, reference, region, umifile,
+        newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, region, umifile,
                                          str(famsize), str(count_threshold), str(consensus_threshold),
                                          str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper) +'\n') 
         newfile.close()

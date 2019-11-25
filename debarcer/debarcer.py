@@ -252,15 +252,12 @@ def collapse(args):
     # get umi position threshold 
     pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
     
-    # get reference
-    reference = GetInputFiles(args.config, args.reference, 'reference_file')
-    
     # get comma-separated list of minimum family sizes 
     fam_size = GetFamSize(args.config, args.famsize)
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
+    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
  
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
