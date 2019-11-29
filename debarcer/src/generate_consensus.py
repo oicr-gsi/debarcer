@@ -128,11 +128,6 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                                             # record base on ref and read
                                             ref_base = pairs[j][-1].upper()
                                             alt_base = read_data.query_sequence[read.query_position].upper()
-                                            # keep track of ref_base at pos
-                                            if pos not in consensus_seq:
-                                                consensus_seq[pos] = {}
-                                            if 'ref_base' not in consensus_seq[pos]:
-                                                consensus_seq[pos]['ref_base'] = ref_base
                                         elif read.indel > 0:
                                             # next position is an insertion
                                             # get index of pileupcolumn pos in aligned pairs
@@ -150,9 +145,12 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                                                                                 
                                         # add base info
                                         allele = (ref_base, alt_base)
-                                        # count the number of reads supporting this allele
+                                        # keep track of ref_base at pos
                                         if pos not in consensus_seq:
                                             consensus_seq[pos] = {}
+                                        if 'ref_base' not in consensus_seq[pos]:
+                                            consensus_seq[pos]['ref_base'] = ref_base
+                                        # count the number of reads supporting this allele
                                         if 'families' not in consensus_seq[pos]:
                                             consensus_seq[pos]['families'] = {}
                                         if family_key not in consensus_seq[pos]['families']:
@@ -229,10 +227,6 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                                 # record base on ref and read
                                 ref_base = pairs[j][-1].upper()
                                 alt_base = read_data.query_sequence[read.query_position].upper()
-                                # record ref base
-                                if pos not in uncollapsed_seq:
-                                    uncollapsed_seq[pos] = {}
-                                uncollapsed_seq[pos]['ref_base'] = ref_base    
                             elif read.indel > 0:
                                 # next position is an insertion
                                 # get index of pileupcolumn pos in aligned pairs
@@ -250,9 +244,12 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                 
                             # add base info
                             allele = (ref_base, alt_base)
-                            # count the number of reads supporting this allele
+                            # record ref base
                             if pos not in uncollapsed_seq:
                                 uncollapsed_seq[pos] = {}
+                            if 'ref_base' not in uncollapsed_seq[pos]:
+                                uncollapsed_seq[pos]['ref_base'] = ref_base
+                            # count the number of reads supporting this allele
                             if 'alleles' not in uncollapsed_seq[pos]:
                                 uncollapsed_seq[pos]['alleles'] = {}
                             if allele not in uncollapsed_seq[pos]['alleles']:
