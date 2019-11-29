@@ -442,52 +442,50 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
     for pos in positions:
         # loop over fam size
         for f_size in sorted(cons_data.keys()):
-            
-            assert pos in cons_data[f_size]
-            
-            # get ref, stats and consensus info
-            ref = cons_data[f_size][pos]['ref_info']
-            # get the reference
-            ref_base = ref['ref_base']
+            # check that position is recorded
+            if pos in cons_data[f_size]:
+                # get ref, stats and consensus info
+                ref = cons_data[f_size][pos]['ref_info']
+                # get the reference
+                ref_base = ref['ref_base']
                                
-            cons = cons_data[f_size][pos]['cons_info']
-            stats = cons_data[f_size][pos]['stats']
+                cons = cons_data[f_size][pos]['cons_info']
+                stats = cons_data[f_size][pos]['stats']
             
-            # count each allele, initiate with single nucleotides
-            counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0}
-            for allele in cons:
-                # count single nucleotides
-                if len(allele[0]) == 1 and len(allele[1]) == 1:
-                    # snv or no change
-                    counts[allele[1]] += cons[allele]
-                else:
-                    # indel, record allele and its count
-                    if allele in counts:
-                        counts[allele] += 1
+                # count each allele, initiate with single nucleotides
+                counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0}
+                for allele in cons:
+                    # count single nucleotides
+                    if len(allele[0]) == 1 and len(allele[1]) == 1:
+                        # snv or no change
+                        counts[allele[1]] += cons[allele]
                     else:
-                        counts[allele] = 1
-            # make lists of indels and indel counts 
-            D, I = [], []
-            for allele in counts:
-                if len(allele) == 2:
-                    # indel
-                    if len(allele[1]) > 1:
-                        # insertions
-                        I.append([counts[allele], allele])
-                    elif len(allele[0]) > 1:
-                        # deletions
-                        D.append([counts[allele], allele])
-            D.sort()
-            I.sort()
+                        # indel, record allele and its count
+                        if allele in counts:
+                            counts[allele] += 1
+                        else:
+                            counts[allele] = 1
+                # make lists of indels and indel counts 
+                D, I = [], []
+                for allele in counts:
+                    if len(allele) == 2:
+                        # indel
+                        if len(allele[1]) > 1:
+                            # insertions
+                            I.append([counts[allele], allele])
+                        elif len(allele[0]) > 1:
+                            # deletions
+                            D.append([counts[allele], allele])
+                D.sort()
+                I.sort()
                         
-            line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
-                    counts['G'], counts['T'], counts['N'],
-                    ';'.join([str(i[1]) for i in I]), ';'.join([str(i[0]) for i in I]),
-                    ';'.join([str(i[1]) for i in D]), ';'.join([str(i[0]) for i in D]),
-                    stats['rawdp'], stats['consdp'], f_size,
-                    stats['ref_freq'], stats['mean_fam']]
-            newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
-                
+                line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
+                        counts['G'], counts['T'], counts['N'],
+                        ';'.join([str(i[1]) for i in I]), ';'.join([str(i[0]) for i in I]),
+                        ';'.join([str(i[1]) for i in D]), ';'.join([str(i[0]) for i in D]),
+                        stats['rawdp'], stats['consdp'], f_size,
+                        stats['ref_freq'], stats['mean_fam']]
+                newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
     # close file after writing
     newfile.close()
             
