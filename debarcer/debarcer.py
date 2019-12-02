@@ -15,6 +15,7 @@ from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDept
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
  PlotIncorrectReads, PlotDataPerRegion
 from src.generate_report import WriteReport   
+from src.find_regions_coverage import WriteTargetsBed
 import collections 
 
 import matplotlib.pyplot as plt
@@ -278,7 +279,7 @@ def VCF_converter(args):
                              (ie. filter = PASS if variant depth >= alt_threshold)
     :param famsize: Minimum UMI family size
         
-    Converts consensus files into VCF format
+    Converts consensus files into VCF format for a given family size
     '''
 
     # get output directory from the config or command. set to current dir if not provided
@@ -318,7 +319,7 @@ def VCF_converter(args):
 
     # loop over consensus files
     for filename in ConsFiles:
-        # write a VCF per consensus file (may include multiple records for each family size)
+        # write a VCF per consensus file for fiven family size
         outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(args.famsize))
         WriteVCF(filename, outputfile, args.reference, ref_threshold, alt_threshold, filter_threshold, args.famsize)
 
@@ -620,7 +621,30 @@ def generate_report(args):
     WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
     
 
-       
+def generate_bed(args):
+    '''
+    (list) -> None
+        
+    :param bamfile: Path to the bam file
+    :param outputfile: Path to the output bed file
+    :param contig: Chromosome name, eg. chrN
+    :param min_cov: Minimum read depth for all positions in genomic interval
+    :param region_size: Minimum length of the genomic interval    
+    :param max_depth: Maximum read depth
+    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
+    :param stepper: Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering    
+        
+    Write a bed file (1-based coordinates) with all genomic intervals of minimum
+    length region_size for which all positions have read depth equals to min_cov or greater
+        
+    Precondition: bamfile is coordinate-sorted and has 'SQ' fields    
+    '''
+    
+    WriteTargetsBed(args.bamfile, args.bed, args.mincov, args.regionsize, args.maxdepth, args.ignoreorphans, args.stepper)
+    
+
 if __name__ == '__main__':
         
     ## Argument + config parsing and error handling
@@ -640,6 +664,19 @@ if __name__ == '__main__':
     p_parser.add_argument('-c', '--Config', dest='config', help='Path to your config file')
     p_parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
     p_parser.set_defaults(func=preprocess_reads)
+    
+    ## Bed command
+    b_parser = subparsers.add_parser('bed', help='Generate a bed file by scanning input bam for regions of coverage')
+    b_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file', required=True)
+    b_parser.add_argument('-bd', '--Bedfile', dest='bed', help='Path to the output bed file', required=True)
+    b_parser.add_argument('-mv', '--MinCov', dest='mincov', type=int, help='Minimum read depth value at all positions in genomic interval', required=True)
+    b_parser.add_argument('-r', '--RegionSize', dest='regionsize', type=int, help='Minimum length of the genomic interval (in bp)', required=True)
+    b_parser.add_argument('-m', '--MaxDepth', dest='maxdepth', default=1000000, type=int, help='Maximum read depth. Default is 1000000')
+    b_parser.add_argument('-io', '--IgnoreOrphans', dest='ignoreorphans', action='store_true', help='Ignore orphans (paired reads that are not in a proper pair). Default is False, becomes True if used')
+    b_parser.add_argument('-stp', '--Stepper', dest='stepper', choices=['all', 'nofilter'], default='nofilter',
+                          help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
+                          nofilter: uses every single read turning off any filtering')
+    b_parser.set_defaults(func=generate_bed)
     
     ## UMI group command
     g_parser = subparsers.add_parser('group', help="Groups UMIs into families.")
