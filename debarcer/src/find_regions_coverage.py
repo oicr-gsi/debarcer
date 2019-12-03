@@ -115,21 +115,11 @@ def WriteTargetsBed(bamfile, outputfile, min_cov, region_size, max_depth, ignore
     chromos = GetContigs(bamfile)
     # loop over chromosomes
     for contig in chromos:
-        
-        print(contig)
-        
         # find genomic intervals on given chromosome
         D = FindRegionsCoverage(bamfile, contig, min_cov, region_size, max_depth, ignore_orphans, stepper)
         # collect intervals for chromo
         if len(D) != 0:
             Regions[contig] = D
-    
-    
-    print(len(Regions))
-    for i in Regions:
-        print(i, len(Regions[i]))
-    
-    
     
     # write header to bed file
     newfile = open(outputfile, 'w')
