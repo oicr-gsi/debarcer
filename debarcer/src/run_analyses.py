@@ -98,6 +98,8 @@ def MergeConsensusFiles(ConsDir):
         aside = []
         while L[0][0].isnumeric() == False:
             aside.append(L.pop(0))
+        # sort non-numeric chromos
+        aside.sort()
         # convert chromos to int
         for i in range(len(L)):
             L[i][0] = int(L[i][0])
@@ -260,7 +262,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # loop over regions
     for region in Regions:
         # check region format
-        CheckRegionFormat(region)
+        CheckRegionFormat(bamfile, region)
         
         ### RUN Group and Collapse for a given region ### 
         

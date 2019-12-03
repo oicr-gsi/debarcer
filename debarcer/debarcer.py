@@ -136,7 +136,7 @@ def group_umis(args):
     
     # check that region is properly formatted
     region = args.region
-    CheckRegionFormat(region)
+    CheckRegionFormat(bam_file, region)
     # get chromosome
     contig = region.split(":")[0]
     # get 1-based inclusive region coordinates   
@@ -228,7 +228,7 @@ def collapse(args):
 
     # check that region is properly formatted
     region = args.region
-    CheckRegionFormat(region)
+    CheckRegionFormat(bam_file, region)
     # get chromosome 
     contig = region.split(":")[0]
     # get 1-based inclusive region coordinates
