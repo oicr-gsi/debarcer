@@ -11,7 +11,6 @@ import itertools
 import numpy as np
 import subprocess
 import time
-import pysam
 from src.find_regions_coverage import GetContigs
 
 
