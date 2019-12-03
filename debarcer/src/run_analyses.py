@@ -81,6 +81,8 @@ def MergeConsensusFiles(ConsDir):
     ConsFiles = [i for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')] 
     # check that consfiles exist
     if len(ConsFiles) != 0:
+        # make a list to store consensus records
+        MergedContent = []
         # sort files
         L = []
         for i in ConsFiles:
@@ -119,17 +121,29 @@ def MergeConsensusFiles(ConsDir):
         Header = infile.readline().rstrip().split('\t')
         infile.close()
     
-        # write merged consensus file
-        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
-        newfile = open(MergedFile, 'w')
-        newfile.write('\t'.join(Header) + '\n')
+        # extract content from each consensus file
         for i in S:
             infile = open(i)
             # skip header and grab all data
             infile.readline()
-            data = infile.read().rstrip()
+            data = infile.read().rstrip().split('\n')
             infile.close()
-            newfile.write(data + '\n')
+            MergedContent.extend(data)
+    
+        # remove duplicate records. keep a single record if multiple duplicates
+        if len(MergedContent) != 0:
+            to_remove = []
+            for i in MergedContent:
+                if MergedContent.count(i) > 1:
+                    if i not in to_remove:
+                        to_remove.extend([i] * (MergedContent.count(i) -1))
+            for i in to_remove:
+                MergedContent.remove(i)
+        # write merged consensus file
+        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
+        newfile = open(MergedFile, 'w')
+        newfile.write('\t'.join(Header) + '\n')
+        newfile.write('\n'.join(MergedContent))
         newfile.close()
     
     
