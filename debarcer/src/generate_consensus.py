@@ -149,7 +149,12 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                                         if pos not in consensus_seq:
                                             consensus_seq[pos] = {}
                                         if 'ref_base' not in consensus_seq[pos]:
-                                            consensus_seq[pos]['ref_base'] = ref_base
+                                            # check ref_base.
+                                            # ref base is deleted region + ref base if only read with indel overlap positions
+                                            if len(ref_base) == 1:
+                                                consensus_seq[pos]['ref_base'] = ref_base
+                                            else:
+                                                consensus_seq[pos]['ref_base'] = ref_base[0]
                                         # count the number of reads supporting this allele
                                         if 'families' not in consensus_seq[pos]:
                                             consensus_seq[pos]['families'] = {}
@@ -248,7 +253,12 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                             if pos not in uncollapsed_seq:
                                 uncollapsed_seq[pos] = {}
                             if 'ref_base' not in uncollapsed_seq[pos]:
-                                uncollapsed_seq[pos]['ref_base'] = ref_base
+                                # check ref_base.
+                                # ref base is deleted region + ref base if only read with indel overlap positions
+                                if len(ref_base) == 1:
+                                    uncollapsed_seq[pos]['ref_base'] = ref_base
+                                else:
+                                    uncollapsed_seq[pos]['ref_base'] = ref_base[0]
                             # count the number of reads supporting this allele
                             if 'alleles' not in uncollapsed_seq[pos]:
                                 uncollapsed_seq[pos]['alleles'] = {}
