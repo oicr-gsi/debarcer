@@ -548,9 +548,9 @@ def generate_plots(args):
         Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
         PlotFamSizeReadDepth(filename, Outputfile)
         
-#        # plot distribution of read depth for each umi families
-#        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
-#        PlotReadDepth(filename, Outputfile, 10, 6)
+        # plot distribution of read depth for each umi families
+        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
+        PlotReadDepth(filename, Outputfile, 10, 6)
 
 #    # plot umi frequency for individual umis before grouping
 #    for filename in UmiInfoFiles:
