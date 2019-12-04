@@ -535,23 +535,23 @@ def generate_plots(args):
 #       
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
-        # get region from file name
-        region = os.path.basename(filename)
-        region = region[:-5]
-        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
+#        # get region from file name
+#        region = os.path.basename(filename)
+#        region = region[:-5]
+#        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
+#        
+#        # plot network and degree
+#        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
+#        PlotNetworkDegree(filename, Outputfile, 9, 6)
         
-        # plot network and degree
-        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
-        PlotNetworkDegree(filename, Outputfile, 9, 6)
-#        
-#        # plot marginal distributions of UMI family size and read depth
-#        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
-#        PlotFamSizeReadDepth(filename, Outputfile)
-#        
+        # plot marginal distributions of UMI family size and read depth
+        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
+        PlotFamSizeReadDepth(filename, Outputfile)
+        
 #        # plot distribution of read depth for each umi families
 #        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
 #        PlotReadDepth(filename, Outputfile, 10, 6)
-#
+
 #    # plot umi frequency for individual umis before grouping
 #    for filename in UmiInfoFiles:
 #        region = os.path.basename(filename)
