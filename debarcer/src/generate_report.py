@@ -445,9 +445,13 @@ def AddBeforeGroupingSection(L, font_family, extension, FigPaths, figcounter, N,
     keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
     
     # add warning for missing files
-    missing = '<br>'.join(['UMI_freq_distribution_{0}.{1}'.format(i, extension) for i in keys if FigPaths[i]['before_grouping'] == ''])
+    missing = ['UMI_freq_distribution_{0}.{1}'.format(i, extension) for i in keys if FigPaths[i]['before_grouping'] == '']
     if len(missing) != 0:
-        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        if len(missing) <= 10:
+            missing = '<br>'.join(missing)
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        else:
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files<br> </p>'.format(len(missing)))) 
         L.append(renderer('<pre> </pre>'))
     
     # define scaling factor and set alternate figure name
@@ -525,9 +529,13 @@ def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
     keys = sorted([i for i in FigPaths.keys() if 'chr' in i])
     
     # add warning for missing files
-    missing = '<br>'.join(['Proportion_unmapped_reads_{0}.{1}'.format(i, extension) for i in keys if FigPaths[i]['mapping'] == ''])
+    missing = ['Proportion_unmapped_reads_{0}.{1}'.format(i, extension) for i in keys if FigPaths[i]['mapping'] == '']
     if len(missing) != 0:
-        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        if len(missing) <= 10:
+            missing = '<br>'.join(missing)
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        else:
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files<br>{0} </p>'.format(len(missing)))) 
         L.append(renderer('<pre> </pre>'))
     
     # define scaling factor and set alternate figure name
@@ -627,11 +635,13 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
             PlotDataPerRegion(CovStats, DataFiles, minval=minvals[i], datatype=datatypes[i])
         except:
             missing.append(svgfigs[i])
-    missing = '<br>'.join(missing)
     if len(missing) != 0:
-        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        if len(missing) <= 10:
+            missing = '<br>'.join(missing)
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        else:
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files<br> </p>'.format(len(missing)))) 
         L.append(renderer('<pre> </pre>'))
-
 
     # add svg figs
     try:
@@ -750,9 +760,13 @@ def AddGrouping(L, font_family, extension, FigPaths, CovStats, DataFiles, minrat
             'depth':['Read_depth_per_umi_family_{0}.{1}', 'Read depth within group', 0.6, 'read depth']}
         
     
-    missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
+    missing = [Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == '']
     if len(missing) != 0:
-        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)))
+        if len(missing) <= 10:
+            missing = '<br>'.join(missing)
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing)))
+        else:
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files:<br> </p>'.format(len(missing))))
         L.append(renderer('<pre> </pre>'))
     
     # make groups of non-empty figure pairs
@@ -854,9 +868,13 @@ def AddCollapsing(L, font_family, extension, FigPaths, figcounter, N, num, rende
     
     # add warning for missing files
     # map keys to expected file names, legends, scaling factors and alternate figure names
-    missing = '<br>'.join([Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == ''])
+    missing = [Maps[i][0].format(j, extension) for i in Maps for j in regions if FigPaths[j][i] == '']
     if len(missing) != 0:
-        L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        if len(missing) <= 10:
+            missing = '<br>'.join(missing)
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
+        else:
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files:<br> </p>'.format(len(missing)))) 
         L.append(renderer('<pre> </pre>'))
     
     ## add famsize and raw inline and reffreq and lowreffreq as separate line
