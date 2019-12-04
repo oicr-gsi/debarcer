@@ -535,7 +535,7 @@ def AddMapping(L, font_family, extension, FigPaths, figcounter, N, renderer):
             missing = '<br>'.join(missing)
             L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing expected files:<br>{0} </p>'.format(missing))) 
         else:
-            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files<br>{0} </p>'.format(len(missing)))) 
+            L.append(renderer('<p style="color: Tomato;text-align: left; font-family: Arial, sans-serif; font-weight=bold;">[Warning]<br> Missing {0} expected files<br> </p>'.format(len(missing)))) 
         L.append(renderer('<pre> </pre>'))
     
     # define scaling factor and set alternate figure name
