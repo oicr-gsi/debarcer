@@ -56,8 +56,12 @@ def SetUpTicks(AxisMax):
         step = 1000 
     elif 10000 < AxisMax <= 50000:
         step = 5000
+    elif 50000 < AxisMax <= 200000:
+        step = 25000
+    elif 200000 < AxisMax <= 1000000:
+        step = 100000
     else:
-        step = 10000
+        step = 200000
     return step
 
 
