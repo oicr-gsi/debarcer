@@ -4,6 +4,7 @@ import json
 import subprocess
 from src.utilities import CheckRegionFormat, CheckJobs
 import uuid
+import collections
 
 
 def ExtractRegions(bedfile):
@@ -133,10 +134,11 @@ def MergeConsensusFiles(ConsDir):
         # remove duplicate records. keep a single record if multiple duplicates
         if len(MergedContent) != 0:
             to_remove = []
-            for i in MergedContent:
-                if MergedContent.count(i) > 1:
-                    if i not in to_remove:
-                        to_remove.extend([i] * (MergedContent.count(i) -1))
+            # count all records to find duplicates {record: count}
+            duplicates = collections.Counter(MergedContent)
+            for i in duplicates:
+                if duplicates[i] > 1:
+                    to_remove.extend([i] * (duplicates[i] -1))
             for i in to_remove:
                 MergedContent.remove(i)
         # write merged consensus file
