@@ -238,7 +238,7 @@ def FormatRegion(File):
     region = os.path.basename(File)
     if 'chr' in region and '.' in region:
         region = region[region.index('chr'):region.index('.')]
-        if '_' in region:
+        if '_' in region and ':' not in region:
             region = region.replace('_', ':')
     else:
         region = 'NA'
