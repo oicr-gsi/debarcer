@@ -207,12 +207,11 @@ def SortPositions(L):
             contigs.insert(0, j)
     # remove non-numeric chromos from contigs and add to new list
     aside = []
-    while contigs[0].isnumeric == False:
+    while contigs[0].isnumeric() == False:
         aside.append(contigs.pop(0))
     aside.sort()
     # convert contigs to int and sort
-    contigs = list(map(lambda x:int(x), contigs))    
-    contigs.sort()
+    contigs = sorted(list(map(lambda x:int(x), contigs)))    
     # add back non-numerical chromos
     contigs.extend(aside)
     # add back 'chr' to contigs
