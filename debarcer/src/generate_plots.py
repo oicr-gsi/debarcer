@@ -1006,12 +1006,11 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile, W, H):
     figure.savefig(Outputfile, bbox_inches = 'tight')
     plt.close()
 
-def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
+def PlotParentFreq(DataFiles, Outputfile, W, H):
     '''
-    (list, list, str, int, int) -> None
+    (list, str, int, int) -> None
     
     :param DataFiles: List of .csv data files generated after umi grouping
-    :param Color: List of colors for plotting
     :param Outputfile: Name of the output figure file 
     :param W: Figure width in inches
     :param H: Figure Height in inches 
@@ -1041,6 +1040,10 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Data.keys()))
     
+    # create a cmap and list of colors using divergening colors PiYG
+    cmap = plt.get_cmap('PiYG')
+    colors = [cmap(i) for i in np.linspace(0, 1, len(Coordinates))]
+        
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W, H)
@@ -1050,7 +1053,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     # loop over sorted regions
     for i in range(len(Coordinates)):
         # plot parent frequencies vs sorted number of children
-        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = Color[i], facecolor = Color[i], marker='o', lw = 1, s = 70, alpha = 0.5, clip_on=False)
+        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = colors[i], facecolor = colors[i], marker='o', lw = 1, s = 70, alpha = 0.3, clip_on=False)
     
     # limit y axis to maximum value
     YMax = []

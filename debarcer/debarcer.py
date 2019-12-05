@@ -581,7 +581,7 @@ def generate_plots(args):
     PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension), 9, 6)
 
     # plot parent frequencies vs children UMI counts
-    PlotParentFreq(DataFiles, Colors, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension), 7, 4)
+    PlotParentFreq(DataFiles, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension), 7, 4)
     
     # check if reporting
     if args.report == True:
