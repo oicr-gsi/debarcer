@@ -514,12 +514,12 @@ def generate_plots(args):
     # plot coverage
     PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
 
-#    # plot graphs for each consensus file
-#    for filename in ConsFiles:
-#        # plot mean family size for each consensus file/region
-#        region = FormatRegion(filename).replace(':', '-')
-#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-#        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
+    # plot graphs for each consensus file
+    for filename in ConsFiles:
+        # plot mean family size for each consensus file/region
+        region = FormatRegion(filename).replace(':', '-')
+        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
 #            
 #        # plot non-reference frequency
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
