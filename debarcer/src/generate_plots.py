@@ -978,27 +978,6 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile, W, H):
                 right=False, left=False, labelbottom=True, colors = 'black',
                 labelsize = 12, direction = 'out')  
         
-#    # add color bar
-#    # convert interval Sizes to array with shape
-#    a = np.array(Sizes)
-#    a = np.expand_dims(a, axis=0)
-#    # get image, use colors used for coloring interval sizes
-#    img = plt.imshow(a, interpolation = 'nearest', cmap = cmap)
-#    # set color bar size to graph size
-#    aspect=1.0
-#    im = ax.get_images()
-#    extent = im[0].get_extent()
-#    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
-#    # create color bar and set ticks
-#    b = list(map(lambda x: int(x), Sizes))
-#    step = SetUpTicks(max(b) - min(b))
-#    cb = plt.colorbar(img, ticks=[i for i in range(min(b), max(b)+1, step)], use_gridspec=True)
-#    cb.ax.set_yticklabels([str(i) for i in range(min(b), max(b)+1, step)])
-#    cb.ax.tick_params(labelsize=12)    
-#    cb.ax.tick_params(direction = 'out')
-#    cb.set_label('Interval size', size=14, labelpad=18)
-    
-    
     # add color bar
     cb = figure.colorbar(im, ax=ax)
     cb.set_label('Interval size', size=14, labelpad=18)
