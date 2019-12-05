@@ -199,19 +199,31 @@ def SortPositions(L):
         Chromos[chromo].sort()
     
     # make a list of sorted chromosomes
-    a = [int(i.replace('chr', '')) for i in Chromos if 'X' not in i]
-    a.sort()
-    for i in range(len(a)):
-        a[i] = 'chr' + str(a[i])
-    if 'chrX' in Chromos:
-        a.append('chrX')
-    
+    contigs = [i.replace('chr', '') for i in Chromos]
+    # place non-numeric contigs at beginining
+    for i in range(len(contigs)):
+        if contigs[i].isnumeric() == False:
+            j = contigs.pop(i)
+            contigs.insert(0, j)
+    # remove non-numeric chromos from contigs and add to new list
+    aside = []
+    while contigs[0].isnumeric == False:
+        aside.append(contigs.pop(0))
+    aside.sort()
+    # convert contigs to int and sort
+    contigs = list(map(lambda x:int(x), contigs))    
+    contigs.sort()
+    # add back non-numerical chromos
+    contigs.extend(aside)
+    # add back 'chr' to contigs
+    contigs = list(map(lambda x: 'chr' + str(x), contigs))
+       
     Positions = []
-    for i in a:
+    for i in contigs:
         for j in Chromos[i]:
             Positions.append(i + ':' + str(j[0]) + '-' + str(j[1]))
     return Positions                
-             
+ 
              
 def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
     '''
