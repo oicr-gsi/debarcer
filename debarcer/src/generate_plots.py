@@ -420,7 +420,7 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     # plot data  
     for i in range(len(FamSize)):
         # make a list of values for each position, including missing values
-        yvals = [Data[FamSize][j] if j in Data[FamSize] else None for j in positions]
+        yvals = [Data[FamSize[i]][j] if j in Data[FamSize][i] else None for j in positions]
         # convert to numpy array
         yvals = np.array(yvals).astype(np.double)
         # create a mask so that line plots doesn't leave gap between missing values
