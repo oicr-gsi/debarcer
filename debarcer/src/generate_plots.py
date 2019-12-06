@@ -419,11 +419,16 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax = figure.add_subplot(Rows, Columns, Position)
     # plot data  
     for i in range(len(FamSize)):
-        # get the positions corresponding to that family size
-        pos = list(map(lambda x: int(x), list(Data[FamSize[i]].keys())))
-        pos.sort()
-        pos = list(map(lambda x: str(x), pos))
-        ax.plot([j for j in range(len(pos))], [Data[FamSize[i]][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+        # make a list of values for each position, including missing values
+        yvals = [Data[FamSize][j] if j in Data[FamSize] else None for j in positions]
+        # convert to numpy array
+        yvals = np.array(yvals).astype(np.double)
+        # create a mask so that line plots doesn't leave gap between missing values
+        ymask = np.isfinite(yvals)
+        # create an array with positions
+        xvals = np.arange(len(positions))
+        # pass the mask to x and y values when plotting
+        ax.plot(xvals[ymask], yvals[ymask], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
     
     # limit y axis
     YMax = []
