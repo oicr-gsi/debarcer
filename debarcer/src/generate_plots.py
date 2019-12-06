@@ -428,7 +428,14 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
         # create an array with positions
         xvals = np.arange(len(positions))
         # pass the mask to x and y values when plotting
-        ax.plot(xvals[ymask], yvals[ymask], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+        
+        #ax.plot(xvals[ymask], yvals[ymask], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+    
+        ax.plot(xvals, yvals, color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+    
+    
+    
+    
     
     # limit y axis
     YMax = []
