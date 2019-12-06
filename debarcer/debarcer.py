@@ -518,12 +518,12 @@ def generate_plots(args):
     for filename in ConsFiles:
         # plot mean family size for each consensus file/region
         region = FormatRegion(filename).replace(':', '-')
-#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-#        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
+        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
-        # plot non-reference frequency
-        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
-        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
+#        # plot non-reference frequency
+#        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
+#        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
 #    
 #        # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
