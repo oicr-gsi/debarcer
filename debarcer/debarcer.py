@@ -516,10 +516,10 @@ def generate_plots(args):
 #
     # plot graphs for each consensus file
     for filename in ConsFiles:
-        # plot mean family size for each consensus file/region
-        region = FormatRegion(filename).replace(':', '-')
-        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
+#        # plot mean family size for each consensus file/region
+#        region = FormatRegion(filename).replace(':', '-')
+#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+#        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
 #        # plot non-reference frequency
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
@@ -529,9 +529,9 @@ def generate_plots(args):
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
 #        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
 #        
-#        # plot raw and consensus depth
-#        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
-#        PlotConsDepth(filename, Colors, Outputfile, 9, 6)
+        # plot raw and consensus depth
+        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
+        PlotConsDepth(filename, Colors, Outputfile, 9, 6)
 #       
 #    # plot network and network degree for each umi file/region
 #    for filename in UmiFiles:
