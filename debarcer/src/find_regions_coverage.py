@@ -30,13 +30,12 @@ def GetContigs(bamfile):
     return chromo 
 
 
-def FindRegionsCoverage(bamfile, contig, contig_length, min_cov, region_size, max_depth, ignore_orphans, stepper):
+def FindRegionsCoverage(bamfile, contig, min_cov, region_size, max_depth, ignore_orphans, stepper):
     '''
-    (str, str, int, int, int, int, bool, str) -> dict
+    (str, str, int, int, int, bool, str) -> dict
     
     :param bamfile: Path to the bam file
     :param contig: Chromosome name, eg. chrN
-    :param contig_length, Chromosome length
     :param min_cov: Minimum read depth for all positions in genomic interval
     :param region_size: Minimum length of the genomic interval    
     :param max_depth: Maximum read depth
@@ -60,7 +59,7 @@ def FindRegionsCoverage(bamfile, contig, contig_length, min_cov, region_size, ma
     # initiate region number    
     n = 1
     
-    for pileupcolumn in infile.pileup(contig, start=0, end=contig_length, max_depth=max_depth, ignore_orphans=ignore_orphans, stepper=stepper):
+    for pileupcolumn in infile.pileup(contig, max_depth=max_depth, ignore_orphans=ignore_orphans, stepper=stepper):
         # get column position
         pos = int(pileupcolumn.reference_pos)
         # compare number of reads at pileup position with minimum read depth required
