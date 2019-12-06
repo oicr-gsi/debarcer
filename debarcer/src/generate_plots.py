@@ -739,15 +739,16 @@ def ExtractDepth(ConsensusFile):
     return D                
                     
   
-def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
+def CreateConsDepthAx(Columns, Rows, Position, figure, Data, positions, Color, YLabel, **Options):
     '''
-    (int, int, int, figure_object, list, list, str, dict) -> ax object
+    (int, int, int, figure_object, list, list, list, str, dict) -> ax object
     
     :param columns: Number of columns
     :param rows: Number of rows
     :param position: Ax position in figure
     :param figure: Figure object opened for writing
     :param Data: Depth at each position for each family size
+    :param positions: Sorted list of positions within genomic intervals
     :param Color: List of colors
     :param Options: Accepted keys are:
                     'XLabel': Label of the X axis
@@ -758,16 +759,22 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     Return a ax in figure
     '''
     
-    # make a sorted list of positions
-    pos = list(map(lambda x: int(x), list(Data[0].keys())))
-    pos.sort()
-    pos = list(map(lambda x: str(x), pos))
-    
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(Rows, Columns, Position)
     # plot data
     for i in range(len(Data)):
-        ax.plot([j for j in range(len(pos))], [Data[i][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+        # add missing values, convert list to numpy array
+        yvals = np.array([Data[i][j] if j in Data[j] else None for j in positions]).astype(np.double)
+        # create mask so that line plots doesn't leave gaps between missing values
+        ymask = np.isfinite(yvals)
+        # create array with positions
+        xvals = np.arange(len(positions))
+        # pass the mask to x and y values when plotting
+                
+        #ax.plot([j for j in range(len(pos))], [Data[i][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+    
+    
+        ax.plot(xvals[ymask], yvals[ymask], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
     
     # limit y axis
     YMax = []
@@ -803,8 +810,8 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
 
     # set up x axis
     # divide genomic interval in 3
-    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
-    xticks = [pos[i] for i in xtickspos]
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(positions)+1, (len(positions)-1) / 3)]))
+    xticks = [str(positions[i]) for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
     if 'XLabel' in Options:
@@ -860,13 +867,20 @@ def PlotConsDepth(ConsFile, Color, Outputfile, W, H):
             d[pos] = Data[i][pos]
         L.append(d)
     
+    # make a sorted list of positions across all family size
+    # because some positions my be missing for some family size
+    positions = []
+    for i in FamSize:
+        positions.extend(list(Data[i].keys())) 
+    positions = sorted(list(set(positions)))
+    
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W, H)
     
     # plot raw depth, family size = 0    
-    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
-    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region)
+    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], positions, Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
+    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], positions, Color[1:], 'Consensus depth', XLabel=region)
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
