@@ -764,7 +764,7 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, positions, Color, Y
     # plot data
     for i in range(len(Data)):
         # add missing values, convert list to numpy array
-        yvals = np.array([Data[i][j] if j in Data[j] else None for j in positions]).astype(np.double)
+        yvals = np.array([Data[i][j] if j in Data[i] else None for j in positions]).astype(np.double)
         # create mask so that line plots doesn't leave gaps between missing values
         ymask = np.isfinite(yvals)
         # create array with positions
