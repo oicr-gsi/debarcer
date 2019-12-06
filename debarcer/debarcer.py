@@ -516,8 +516,8 @@ def generate_plots(args):
 #
     # plot graphs for each consensus file
     for filename in ConsFiles:
-#        # plot mean family size for each consensus file/region
-#        region = FormatRegion(filename).replace(':', '-')
+        # plot mean family size for each consensus file/region
+        region = FormatRegion(filename).replace(':', '-')
 #        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
 #        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
