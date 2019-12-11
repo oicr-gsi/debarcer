@@ -666,6 +666,19 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, W, H, **Options):
        
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
+    
+    # handle missing data among family sizes
+    # make a list with all positions across all family sizes
+    positions =[]
+    for i in Data:
+        positions.extend(list(Data[i].keys()))
+    positions = list(set(positions))    
+    # set missing values to 0
+    for i in Data:
+        for j in positions:
+            if j not in Data[i]:
+                Data[i][j] = 0
+       
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W,H)
