@@ -579,6 +579,9 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         YMax = max(YMax)
     
     YMax = float(YMax + (YMax * 10 /100))
+    #adjust YMax if 0, because of error bottom == top
+    if YMax == 0:
+        YMax = 1
     ax.set_ylim([0, YMax])    
      
     # write y axis ticks
