@@ -7,7 +7,7 @@ Created on Mon Dec  2 09:42:42 2019
 
 import pysam
 from src.utilities import get_consecutive_items
-from src.find_regions_coverage import GetContigs
+from src.utilities import GetContigs
 
 
 
