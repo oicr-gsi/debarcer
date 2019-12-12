@@ -514,11 +514,11 @@ def generate_plots(args):
     # plot coverage
 #    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
 
-    # plot graphs for each consensus file
-    for filename in ConsFiles:
-        # plot mean family size for each consensus file/region
-        region = FormatRegion(filename).replace(':', '-')
-        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+#    # plot graphs for each consensus file
+#    for filename in ConsFiles:
+#        # plot mean family size for each consensus file/region
+#        region = FormatRegion(filename).replace(':', '-')
+#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
 #        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
 #        # plot non-reference frequency
@@ -533,17 +533,17 @@ def generate_plots(args):
 #        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
 #        PlotConsDepth(filename, Colors, Outputfile, 9, 6)
 #       
-#    # plot network and network degree for each umi file/region
-#    for filename in UmiFiles:
-#        # get region from file name
-#        region = os.path.basename(filename)
-#        region = region[:-5]
-#        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
-#        
-#        # plot network and degree
-#        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
-#        PlotNetworkDegree(filename, Outputfile, 9, 6)
-#        
+    # plot network and network degree for each umi file/region
+    for filename in UmiFiles:
+        # get region from file name
+        region = os.path.basename(filename)
+        region = region[:-5]
+        region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
+        
+        # plot network and degree
+        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
+        PlotNetworkDegree(filename, Outputfile, 9, 6)
+        
 #        # plot marginal distributions of UMI family size and read depth
 #        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
 #        PlotFamSizeReadDepth(filename, Outputfile)

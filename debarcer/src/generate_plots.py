@@ -1105,23 +1105,8 @@ def PlotParentFreq(DataFiles, Outputfile, W, H):
     children = sorted(list(set(children)))
     minchildren, maxchildren = children[0], children[-1]
     xstep = SetUpTicks(maxchildren)
-    
-    
-    print('max children', maxchildren)
-    print(step, xstep)
-    
     children = [i for i in range(0, maxchildren + 1, xstep)]
-    #xPos = [i for i in range(len(children))]
-    
     xPos = [i for i in children]
-    
-    
-    print('tick vals', children)
-    print('tick pos', xPos)
-    
-    
-    
-    
     plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
                
     # add space between axis and tick labels
