@@ -441,7 +441,12 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     else:
         YMax = float(YMax + (YMax * 15 /100))
     ax.set_ylim([0, YMax])    
-        
+    if YMax < 10:
+        ystep = 2
+    else:
+        ystep = SetUpTicks(YMax)    
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, ystep)])
+
     # write label for y and x axis
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     ax.set_xlabel(XLabel, color = 'black',  size = 14, ha = 'center')
@@ -466,8 +471,6 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     xticks = [positions[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
-    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
-        
     # do not show y ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
