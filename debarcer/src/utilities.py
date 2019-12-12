@@ -11,7 +11,29 @@ import itertools
 import numpy as np
 import subprocess
 import time
-from src.find_regions_coverage import GetContigs
+import pysam
+
+
+def GetContigs(bamfile):
+    '''
+    (str)- > dict
+    
+    :param bamfile: Path to the bam file
+    
+    Returns a dictionary of contig name, contig length key, value pairs from the bam header
+        
+    Precondition: bamfile is coordinate-sorted and has 'SQ' fields
+    '''
+    
+    infile = pysam.AlignmentFile(bamfile)
+    # convert header object to dict
+    header = dict(infile.header)
+    # create a dict of {contig: length}
+    chromo = {}
+    for i in header['SQ']:
+        chromo[i['SN']] = i['LN']
+    infile.close()
+    return chromo 
 
 
 def GetCurrentTime():

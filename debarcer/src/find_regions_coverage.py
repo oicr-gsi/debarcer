@@ -7,27 +7,9 @@ Created on Mon Dec  2 09:42:42 2019
 
 import pysam
 from src.utilities import get_consecutive_items
+from src.find_regions_coverage import GetContigs
 
-def GetContigs(bamfile):
-    '''
-    (str)- > dict
-    
-    :param bamfile: Path to the bam file
-    
-    Returns a dictionary of contig name, contig length key, value pairs from the bam header
-        
-    Precondition: bamfile is coordinate-sorted and has 'SQ' fields
-    '''
-    
-    infile = pysam.AlignmentFile(bamfile)
-    # convert header object to dict
-    header = dict(infile.header)
-    # create a dict of {contig: length}
-    chromo = {}
-    for i in header['SQ']:
-        chromo[i['SN']] = i['LN']
-    infile.close()
-    return chromo 
+
 
 
 #def FindRegionsCoverage(bamfile, contig, min_cov, region_size, max_depth, ignore_orphans, stepper):
