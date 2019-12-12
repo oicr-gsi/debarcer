@@ -1111,7 +1111,10 @@ def PlotParentFreq(DataFiles, Outputfile, W, H):
     print(step, xstep)
     
     children = [i for i in range(0, maxchildren + 1, xstep)]
-    xPos = [i for i in range(len(children))]
+    #xPos = [i for i in range(len(children))]
+    
+    xPos = [i/10 for i in children]
+    
     
     print('tick vals', children)
     print('tick pos', xPos)
