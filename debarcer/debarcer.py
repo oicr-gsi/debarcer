@@ -501,7 +501,7 @@ def generate_plots(args):
     Inputfile = os.path.join(StatsDir, 'Processing_Read_Info.json')
     CheckFilePath([Inputfile])
     Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
-    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 6, 6)
+#    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 6, 6)
         
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
@@ -519,7 +519,7 @@ def generate_plots(args):
         # plot mean family size for each consensus file/region
         region = FormatRegion(filename).replace(':', '-')
         Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
+#        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
 #        # plot non-reference frequency
 #        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
