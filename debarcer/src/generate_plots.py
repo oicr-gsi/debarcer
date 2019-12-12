@@ -1296,7 +1296,6 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("bottom", size="5%", pad=0.05)
     
-    
     # make a list of degree 
     degree_vals = sorted(list(set(node_color)))
     cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(degree_vals), max(degree_vals)+2)], use_gridspec=False)
@@ -1306,31 +1305,13 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
         step = 1
     elif 10 < max(degree_vals) <= 30:
         step = 2
-    elif 30 < max(degree_vals) < 60:
+    elif 30 < max(degree_vals) <= 60:
         step = 10
-    elif max(degree_vals) >= 60:
+    elif max(degree_vals) > 60:
         step = 20
-    
     xtickslabels = [str(i) if i % step == 0 else '' for i in range(min(degree_vals), max(degree_vals)+2)]
     cb.ax.set_xticklabels(xtickslabels)
     
-    
-    
-    #cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+2)], use_gridspec=False)
-    
-    
-    
-    
-#    # write x ticks
-#    if len(list(set(node_color))) < 10:
-#        step = 1
-#    elif 10 <= len(list(set(node_color))) < 20:
-#        step = 2
-#    elif 20 < len(list(set(node_color))) < 60:
-#        step = 10
-#    elif len(list(set(node_color))) >= 60:
-#        step = 20
-#    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2, step)])
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
             
     return ax

@@ -501,7 +501,7 @@ def generate_plots(args):
     Inputfile = os.path.join(StatsDir, 'Processing_Read_Info.json')
     CheckFilePath([Inputfile])
     Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
-#    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 6, 6)
+    PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 6, 6)
         
     # plot UMI occurence resulting from pre-processing
     Inputfile = os.path.join(StatsDir, 'Umi_counts.txt')
@@ -509,30 +509,30 @@ def generate_plots(args):
     # get umi occurence
     umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
     Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
-#    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False, 8, 5)
+    PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False, 8, 5)
     
     # plot coverage
-#    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
 
-#    # plot graphs for each consensus file
-#    for filename in ConsFiles:
-#        # plot mean family size for each consensus file/region
-#        region = FormatRegion(filename).replace(':', '-')
-#        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
-#        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
+    # plot graphs for each consensus file
+    for filename in ConsFiles:
+        # plot mean family size for each consensus file/region
+        region = FormatRegion(filename).replace(':', '-')
+        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+        PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
-#        # plot non-reference frequency
-#        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
-#        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
-#    
-#        # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
-#        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
-#        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
-#        
-#        # plot raw and consensus depth
-#        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
-#        PlotConsDepth(filename, Colors, Outputfile, 9, 6)
-#       
+        # plot non-reference frequency
+        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
+        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
+    
+        # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
+        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
+        PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
+        
+        # plot raw and consensus depth
+        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
+        PlotConsDepth(filename, Colors, Outputfile, 9, 6)
+       
     # plot network and network degree for each umi file/region
     for filename in UmiFiles:
         # get region from file name
@@ -540,50 +540,45 @@ def generate_plots(args):
         region = region[:-5]
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
         
+        # plot network and degree
+        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
+        PlotNetworkDegree(filename, Outputfile, 9, 6)
         
-        if region in ['chr3-195508071-195508414', 'chr3-195508881-195509122', 'chr3-195509481-195510209']:
-            print(region)
+        # plot marginal distributions of UMI family size and read depth
+        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
+        PlotFamSizeReadDepth(filename, Outputfile)
         
+        # plot distribution of read depth for each umi families
+        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
+        PlotReadDepth(filename, Outputfile, 10, 6)
+
+    # plot umi frequency for individual umis before grouping
+    for filename in UmiInfoFiles:
+        region = os.path.basename(filename)
+        region = region[region.index('chr'): region.index('_before')].replace(':', '-')
+        # get parent+children and parent only counts
+        all_umis, parent_umis = GetIndividualUmiInfo(filename)
+        Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
+        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True, 9, 6)
+    
+    # plot proportion of mapped/unmapped reads
+    for filename in MappingInfo:
+        region = os.path.basename(filename)
+        region = region[region.rindex('_')+1:-5].replace(':', '-')
+        Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, args.extension))
+        PlotIncorrectReads(filename, Outputfile, 'mapping', 5, 5)
         
-            # plot network and degree
-            Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
-            PlotNetworkDegree(filename, Outputfile, 9, 6)
-        
-#        # plot marginal distributions of UMI family size and read depth
-#        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
-#        PlotFamSizeReadDepth(filename, Outputfile)
-#        
-#        # plot distribution of read depth for each umi families
-#        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
-#        PlotReadDepth(filename, Outputfile, 10, 6)
-#
-#    # plot umi frequency for individual umis before grouping
-#    for filename in UmiInfoFiles:
-#        region = os.path.basename(filename)
-#        region = region[region.index('chr'): region.index('_before')].replace(':', '-')
-#        # get parent+children and parent only counts
-#        all_umis, parent_umis = GetIndividualUmiInfo(filename)
-#        Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
-#        PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True, 9, 6)
-#    
-#    # plot proportion of mapped/unmapped reads
-#    for filename in MappingInfo:
-#        region = os.path.basename(filename)
-#        region = region[region.rindex('_')+1:-5].replace(':', '-')
-#        Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, args.extension))
-#        PlotIncorrectReads(filename, Outputfile, 'mapping', 5, 5)
-#        
-#    # plot children to parent umi count ratio
-#    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
-#    
-#    # plot total umi counts
-#    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), minval=args.minumis, datatype='umis')
-#
-#    # plot children umi counts
-#    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), minval=args.minchildren, datatype='children')
-#
-#    # plot children vs parent umis for each interval
-#    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension), 9, 6)
+    # plot children to parent umi count ratio
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
+    
+    # plot total umi counts
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), minval=args.minumis, datatype='umis')
+
+    # plot children umi counts
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), minval=args.minchildren, datatype='children')
+
+    # plot children vs parent umis for each interval
+    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension), 9, 6)
 
     # plot parent frequencies vs children UMI counts
     PlotParentFreq(DataFiles, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension), 7, 4)
