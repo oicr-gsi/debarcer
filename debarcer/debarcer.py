@@ -540,9 +540,14 @@ def generate_plots(args):
         region = region[:-5]
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
         
-        # plot network and degree
-        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
-        PlotNetworkDegree(filename, Outputfile, 9, 6)
+        
+        if region in ['chr3-195508071-195508414', 'chr3-195508881-195509122', 'chr3-195509481-195510209']:
+            print(region)
+        
+        
+            # plot network and degree
+            Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
+            PlotNetworkDegree(filename, Outputfile, 9, 6)
         
 #        # plot marginal distributions of UMI family size and read depth
 #        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
