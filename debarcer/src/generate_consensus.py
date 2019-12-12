@@ -128,11 +128,6 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                                             # record base on ref and read
                                             ref_base = pairs[j][-1].upper()
                                             alt_base = read_data.query_sequence[read.query_position].upper()
-                                            # keep track of ref_base at pos
-                                            if pos not in consensus_seq:
-                                                consensus_seq[pos] = {}
-                                            if 'ref_base' not in consensus_seq[pos]:
-                                                consensus_seq[pos]['ref_base'] = ref_base
                                         elif read.indel > 0:
                                             # next position is an insertion
                                             # get index of pileupcolumn pos in aligned pairs
@@ -150,9 +145,17 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                                                                                 
                                         # add base info
                                         allele = (ref_base, alt_base)
-                                        # count the number of reads supporting this allele
+                                        # keep track of ref_base at pos
                                         if pos not in consensus_seq:
                                             consensus_seq[pos] = {}
+                                        if 'ref_base' not in consensus_seq[pos]:
+                                            # check ref_base.
+                                            # ref base is deleted region + ref base if only read with indel overlap positions
+                                            if len(ref_base) == 1:
+                                                consensus_seq[pos]['ref_base'] = ref_base
+                                            else:
+                                                consensus_seq[pos]['ref_base'] = ref_base[0]
+                                        # count the number of reads supporting this allele
                                         if 'families' not in consensus_seq[pos]:
                                             consensus_seq[pos]['families'] = {}
                                         if family_key not in consensus_seq[pos]['families']:
@@ -229,10 +232,6 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                                 # record base on ref and read
                                 ref_base = pairs[j][-1].upper()
                                 alt_base = read_data.query_sequence[read.query_position].upper()
-                                # record ref base
-                                if pos not in uncollapsed_seq:
-                                    uncollapsed_seq[pos] = {}
-                                uncollapsed_seq[pos]['ref_base'] = ref_base    
                             elif read.indel > 0:
                                 # next position is an insertion
                                 # get index of pileupcolumn pos in aligned pairs
@@ -250,9 +249,17 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                 
                             # add base info
                             allele = (ref_base, alt_base)
-                            # count the number of reads supporting this allele
+                            # record ref base
                             if pos not in uncollapsed_seq:
                                 uncollapsed_seq[pos] = {}
+                            if 'ref_base' not in uncollapsed_seq[pos]:
+                                # check ref_base.
+                                # ref base is deleted region + ref base if only read with indel overlap positions
+                                if len(ref_base) == 1:
+                                    uncollapsed_seq[pos]['ref_base'] = ref_base
+                                else:
+                                    uncollapsed_seq[pos]['ref_base'] = ref_base[0]
+                            # count the number of reads supporting this allele
                             if 'alleles' not in uncollapsed_seq[pos]:
                                 uncollapsed_seq[pos]['alleles'] = {}
                             if allele not in uncollapsed_seq[pos]['alleles']:
@@ -445,63 +452,60 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
     for pos in positions:
         # loop over fam size
         for f_size in sorted(cons_data.keys()):
-            
-            assert pos in cons_data[f_size]
-            
-            # get ref, stats and consensus info
-            ref = cons_data[f_size][pos]['ref_info']
-            # get the reference
-            ref_base = ref['ref_base']
+            # check that position is recorded
+            if pos in cons_data[f_size]:
+                # get ref, stats and consensus info
+                ref = cons_data[f_size][pos]['ref_info']
+                # get the reference
+                ref_base = ref['ref_base']
                                
-            cons = cons_data[f_size][pos]['cons_info']
-            stats = cons_data[f_size][pos]['stats']
+                cons = cons_data[f_size][pos]['cons_info']
+                stats = cons_data[f_size][pos]['stats']
             
-            # count each allele, initiate with single nucleotides
-            counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0}
-            for allele in cons:
-                # count single nucleotides
-                if len(allele[0]) == 1 and len(allele[1]) == 1:
-                    # snv or no change
-                    counts[allele[1]] += cons[allele]
-                else:
-                    # indel, record allele and its count
-                    if allele in counts:
-                        counts[allele] += 1
+                # count each allele, initiate with single nucleotides
+                counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0}
+                for allele in cons:
+                    # count single nucleotides
+                    if len(allele[0]) == 1 and len(allele[1]) == 1:
+                        # snv or no change
+                        counts[allele[1]] += cons[allele]
                     else:
-                        counts[allele] = 1
-            # make lists of indels and indel counts 
-            D, I = [], []
-            for allele in counts:
-                if len(allele) == 2:
-                    # indel
-                    if len(allele[1]) > 1:
-                        # insertions
-                        I.append([counts[allele], allele])
-                    elif len(allele[0]) > 1:
-                        # deletions
-                        D.append([counts[allele], allele])
-            D.sort()
-            I.sort()
+                        # indel, record allele and its count
+                        if allele in counts:
+                            counts[allele] += 1
+                        else:
+                            counts[allele] = 1
+                # make lists of indels and indel counts 
+                D, I = [], []
+                for allele in counts:
+                    if len(allele) == 2:
+                        # indel
+                        if len(allele[1]) > 1:
+                            # insertions
+                            I.append([counts[allele], allele])
+                        elif len(allele[0]) > 1:
+                            # deletions
+                            D.append([counts[allele], allele])
+                D.sort()
+                I.sort()
                         
-            line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
-                    counts['G'], counts['T'], counts['N'],
-                    ';'.join([str(i[1]) for i in I]), ';'.join([str(i[0]) for i in I]),
-                    ';'.join([str(i[1]) for i in D]), ';'.join([str(i[0]) for i in D]),
-                    stats['rawdp'], stats['consdp'], f_size,
-                    stats['ref_freq'], stats['mean_fam']]
-            newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
-                
+                line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
+                        counts['G'], counts['T'], counts['N'],
+                        ';'.join([str(i[1]) for i in I]), ';'.join([str(i[0]) for i in I]),
+                        ';'.join([str(i[1]) for i in D]), ';'.join([str(i[0]) for i in D]),
+                        stats['rawdp'], stats['consdp'], f_size,
+                        stats['ref_freq'], stats['mean_fam']]
+                newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
     # close file after writing
     newfile.close()
             
 
 
-def generate_consensus_output(reference, contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
     '''
     (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool, str) -> None
     
     
-    :param reference: Path to the reference genome
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened

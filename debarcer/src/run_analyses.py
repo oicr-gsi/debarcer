@@ -4,6 +4,7 @@ import json
 import subprocess
 from src.utilities import CheckRegionFormat, CheckJobs
 import uuid
+import collections
 
 
 def ExtractRegions(bedfile):
@@ -81,6 +82,8 @@ def MergeConsensusFiles(ConsDir):
     ConsFiles = [i for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')] 
     # check that consfiles exist
     if len(ConsFiles) != 0:
+        # make a list to store consensus records
+        MergedContent = []
         # sort files
         L = []
         for i in ConsFiles:
@@ -98,6 +101,8 @@ def MergeConsensusFiles(ConsDir):
         aside = []
         while L[0][0].isnumeric() == False:
             aside.append(L.pop(0))
+        # sort non-numeric chromos
+        aside.sort()
         # convert chromos to int
         for i in range(len(L)):
             L[i][0] = int(L[i][0])
@@ -117,17 +122,30 @@ def MergeConsensusFiles(ConsDir):
         Header = infile.readline().rstrip().split('\t')
         infile.close()
     
-        # write merged consensus file
-        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
-        newfile = open(MergedFile, 'w')
-        newfile.write('\t'.join(Header) + '\n')
+        # extract content from each consensus file
         for i in S:
             infile = open(i)
             # skip header and grab all data
             infile.readline()
-            data = infile.read().rstrip()
+            data = infile.read().rstrip().split('\n')
             infile.close()
-            newfile.write(data + '\n')
+            MergedContent.extend(data)
+    
+        # remove duplicate records. keep a single record if multiple duplicates
+        if len(MergedContent) != 0:
+            to_remove = []
+            # count all records to find duplicates {record: count}
+            duplicates = collections.Counter(MergedContent)
+            for i in duplicates:
+                if duplicates[i] > 1:
+                    to_remove.extend([i] * (duplicates[i] -1))
+            for i in to_remove:
+                MergedContent.remove(i)
+        # write merged consensus file
+        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
+        newfile = open(MergedFile, 'w')
+        newfile.write('\t'.join(Header) + '\n')
+        newfile.write('\n'.join(MergedContent))
         newfile.close()
     
     
@@ -245,7 +263,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # set up group command
     GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8}'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -rf {4} -r \"{5}\" -u {6} -f \"{7}\" -ct {8} -pt {9} -p {10} -m {11} -t {12} -i {13} -stp {14}'
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13}'
         
     # set qsub command
     QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -q {2} -l h_vmem={3}g \"bash {4}\"'
@@ -260,7 +278,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # loop over regions
     for region in Regions:
         # check region format
-        CheckRegionFormat(region)
+        CheckRegionFormat(bamfile, region)
         
         ### RUN Group and Collapse for a given region ### 
         
@@ -280,7 +298,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         umifile = os.path.join(UmiDir, '{0}.json'.format(region))
         CollapseScript = os.path.join(QsubDir, 'UmiCollapse_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(CollapseScript, 'w')
-        newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, reference, region, umifile,
+        newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, region, umifile,
                                          str(famsize), str(count_threshold), str(consensus_threshold),
                                          str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper) +'\n') 
         newfile.close()

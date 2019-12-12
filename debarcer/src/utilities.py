@@ -11,6 +11,29 @@ import itertools
 import numpy as np
 import subprocess
 import time
+import pysam
+
+
+def GetContigs(bamfile):
+    '''
+    (str)- > dict
+    
+    :param bamfile: Path to the bam file
+    
+    Returns a dictionary of contig name, contig length key, value pairs from the bam header
+        
+    Precondition: bamfile is coordinate-sorted and has 'SQ' fields
+    '''
+    
+    infile = pysam.AlignmentFile(bamfile)
+    # convert header object to dict
+    header = dict(infile.header)
+    # create a dict of {contig: length}
+    chromo = {}
+    for i in header['SQ']:
+        chromo[i['SN']] = i['LN']
+    infile.close()
+    return chromo 
 
 
 def GetCurrentTime():
@@ -24,10 +47,11 @@ def GetCurrentTime():
     return '[{0}] '.format(date)
 
 
-def CheckRegionFormat(region):
+def CheckRegionFormat(bamfile, region):
     '''
     (str) -> None
     
+    :param bamfile: Path to the bam file. Vam must have a header with SQ fields
     :param region: A string with expected format chrN:posA-posB. posA and posB are 1-based inclusive
     
     Checks that region is properly formatted and raise ValueError if not
@@ -38,8 +62,9 @@ def CheckRegionFormat(region):
     
     # get chromosome and check format 
     contig = region.split(":")[0]
-    chromos = [str(i) for i in range(23)] + ['X', 'Y']
-    if contig[:len('chr')] != 'chr' and contig[len('chr'):] not in chromos:
+    # make a list of valid chromos from the bam header
+    chromos = GetContigs(bamfile)
+    if contig[:len('chr')] != 'chr' and contig not in chromos:
         raise ValueError('ERR: Incorrect chromosome name (should look like chr1:1200000-1250000)')
     region_start, region_end = region.split(":")[1].split("-")[0], region.split(":")[1].split("-")[1]
     if region_start.isnumeric() == False or region_end.isnumeric() == False:
@@ -235,7 +260,7 @@ def FormatRegion(File):
     region = os.path.basename(File)
     if 'chr' in region and '.' in region:
         region = region[region.index('chr'):region.index('.')]
-        if '_' in region:
+        if '_' in region and ':' not in region:
             region = region.replace('_', ':')
     else:
         region = 'NA'

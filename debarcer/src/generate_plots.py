@@ -56,8 +56,14 @@ def SetUpTicks(AxisMax):
         step = 1000 
     elif 10000 < AxisMax <= 50000:
         step = 5000
+    elif 50000 < AxisMax <= 200000:
+        step = 25000
+    elif 200000 < AxisMax <= 1000000:
+        step = 100000
+    elif 1000000 < AxisMax <= 5000000:
+        step = 500000
     else:
-        step = 10000
+        step = 1000000
     return step
 
 
@@ -193,19 +199,30 @@ def SortPositions(L):
         Chromos[chromo].sort()
     
     # make a list of sorted chromosomes
-    a = [int(i.replace('chr', '')) for i in Chromos if 'X' not in i]
-    a.sort()
-    for i in range(len(a)):
-        a[i] = 'chr' + str(a[i])
-    if 'chrX' in Chromos:
-        a.append('chrX')
-    
+    contigs = [i.replace('chr', '') for i in Chromos]
+    # place non-numeric contigs at beginining
+    for i in range(len(contigs)):
+        if contigs[i].isnumeric() == False:
+            j = contigs.pop(i)
+            contigs.insert(0, j)
+    # remove non-numeric chromos from contigs and add to new list
+    aside = []
+    while contigs[0].isnumeric() == False:
+        aside.append(contigs.pop(0))
+    aside.sort()
+    # convert contigs to int and sort
+    contigs = sorted(list(map(lambda x:int(x), contigs)))    
+    # add back non-numerical chromos
+    contigs.extend(aside)
+    # add back 'chr' to contigs
+    contigs = list(map(lambda x: 'chr' + str(x), contigs))
+       
     Positions = []
-    for i in a:
+    for i in contigs:
         for j in Chromos[i]:
             Positions.append(i + ':' + str(j[0]) + '-' + str(j[1]))
     return Positions                
-             
+ 
              
 def PlotDataPerRegion(CoverageStats, DataFiles, **Options):
     '''
@@ -402,12 +419,17 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     ax = figure.add_subplot(Rows, Columns, Position)
     # plot data  
     for i in range(len(FamSize)):
-        # get the positions corresponding to that family size
-        pos = list(map(lambda x: int(x), list(Data[FamSize[i]].keys())))
-        pos.sort()
-        pos = list(map(lambda x: str(x), pos))
-        ax.plot([j for j in range(len(pos))], [Data[FamSize[i]][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
-    
+        # make a list of values for each position, including missing values
+        yvals = [Data[FamSize[i]][j] if j in Data[FamSize[i]] else None for j in positions]
+        # convert to numpy array
+        yvals = np.array(yvals).astype(np.double)
+        # create a mask so that line plots doesn't leave gap between missing values
+        ymask = np.isfinite(yvals)
+        # create an array with positions
+        xvals = np.arange(len(positions))
+        # pass the mask to x and y values when plotting
+        ax.plot(xvals[ymask], yvals[ymask], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+        
     # limit y axis
     YMax = []
     for i in Data:
@@ -419,7 +441,12 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     else:
         YMax = float(YMax + (YMax * 15 /100))
     ax.set_ylim([0, YMax])    
-        
+    if YMax < 10:
+        ystep = 2
+    else:
+        ystep = SetUpTicks(YMax)    
+    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, ystep)])
+
     # write label for y and x axis
     ax.set_ylabel(YLabel, color = 'black',  size = 14, ha = 'center')
     ax.set_xlabel(XLabel, color = 'black',  size = 14, ha = 'center')
@@ -444,8 +471,6 @@ def CreateMeanFamAx(Columns, Rows, Position, figure, Data, Color, YLabel, XLabel
     xticks = [positions[i] for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
-    ax.yaxis.set_ticks([i for i in np.arange(0, YMax, 2)])
-        
     # do not show y ticks
     plt.tick_params(axis='both', which='both', bottom=True, top=False,
                 right=False, left=False, labelbottom=True, colors = 'black',
@@ -557,6 +582,9 @@ def CreateNonRefFreqAx(Columns, Rows, Position, figure, Data, Color, fam_size, *
         YMax = max(YMax)
     
     YMax = float(YMax + (YMax * 10 /100))
+    #adjust YMax if 0, because of error bottom == top
+    if YMax == 0:
+        YMax = 1
     ax.set_ylim([0, YMax])    
      
     # write y axis ticks
@@ -644,6 +672,19 @@ def PlotNonRefFreqData(ConsFile, Color, Outputfile, W, H, **Options):
        
     # extract non-reference frequency for all family sizes in consensus file
     Data = ExtractNonRefFreq(ConsFile)
+    
+    # handle missing data among family sizes
+    # make a list with all positions across all family sizes
+    positions =[]
+    for i in Data:
+        positions.extend(list(Data[i].keys()))
+    positions = list(set(positions))    
+    # set missing values to 0
+    for i in Data:
+        for j in positions:
+            if j not in Data[i]:
+                Data[i][j] = 0
+       
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W,H)
@@ -717,15 +758,16 @@ def ExtractDepth(ConsensusFile):
     return D                
                     
   
-def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Options):
+def CreateConsDepthAx(Columns, Rows, Position, figure, Data, positions, Color, YLabel, **Options):
     '''
-    (int, int, int, figure_object, list, list, str, dict) -> ax object
+    (int, int, int, figure_object, list, list, list, str, dict) -> ax object
     
     :param columns: Number of columns
     :param rows: Number of rows
     :param position: Ax position in figure
     :param figure: Figure object opened for writing
     :param Data: Depth at each position for each family size
+    :param positions: Sorted list of positions within genomic intervals
     :param Color: List of colors
     :param Options: Accepted keys are:
                     'XLabel': Label of the X axis
@@ -736,16 +778,22 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
     Return a ax in figure
     '''
     
-    # make a sorted list of positions
-    pos = list(map(lambda x: int(x), list(Data[0].keys())))
-    pos.sort()
-    pos = list(map(lambda x: str(x), pos))
-    
     # add a plot to figure (N row, N column, plot N)
     ax = figure.add_subplot(Rows, Columns, Position)
     # plot data
     for i in range(len(Data)):
-        ax.plot([j for j in range(len(pos))], [Data[i][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+        # add missing values, convert list to numpy array
+        yvals = np.array([Data[i][j] if j in Data[i] else None for j in positions]).astype(np.double)
+        # create mask so that line plots doesn't leave gaps between missing values
+        ymask = np.isfinite(yvals)
+        # create array with positions
+        xvals = np.arange(len(positions))
+        # pass the mask to x and y values when plotting
+                
+        #ax.plot([j for j in range(len(pos))], [Data[i][j] for j in pos], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
+    
+    
+        ax.plot(xvals[ymask], yvals[ymask], color = Color[i], marker='', linewidth=2, linestyle='-', alpha = 1)
     
     # limit y axis
     YMax = []
@@ -781,8 +829,8 @@ def CreateConsDepthAx(Columns, Rows, Position, figure, Data, Color, YLabel, **Op
 
     # set up x axis
     # divide genomic interval in 3
-    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(pos)+1, (len(pos)-1) / 3)]))
-    xticks = [pos[i] for i in xtickspos]
+    xtickspos = list(map(lambda x: math.floor(x), [i for i in np.arange(0, len(positions)+1, (len(positions)-1) / 3)]))
+    xticks = [str(positions[i]) for i in xtickspos]
     plt.xticks(xtickspos, xticks, ha = 'center', rotation = 0, fontsize = 12)
     
     if 'XLabel' in Options:
@@ -838,13 +886,20 @@ def PlotConsDepth(ConsFile, Color, Outputfile, W, H):
             d[pos] = Data[i][pos]
         L.append(d)
     
+    # make a sorted list of positions across all family size
+    # because some positions my be missing for some family size
+    positions = []
+    for i in FamSize:
+        positions.extend(list(Data[i].keys())) 
+    positions = sorted(list(set(positions)))
+    
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W, H)
     
     # plot raw depth, family size = 0    
-    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
-    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], Color[1:], 'Consensus depth', XLabel=region)
+    ax1 = CreateConsDepthAx(1, 2, 1, figure, L[0:1], positions, Color[0:1], 'Raw depth', legend=True, fam_size=FamSize, colors=Color)
+    ax2 = CreateConsDepthAx(1, 2, 2, figure, L[1:], positions, Color[1:], 'Consensus depth', XLabel=region)
     
     plt.tight_layout()
     figure.savefig(Outputfile, bbox_inches = 'tight')
@@ -914,7 +969,7 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile, W, H):
     # add a plot coverage to figure (N row, N column, plot N)
     ax = figure.add_subplot(1, 1, 1)
     # plot ctu/ptu ratio for each region
-    ax.scatter(PTU, CTU, edgecolor = 'lightgrey', clip_on=False, c = Sizes, cmap = cmap, marker='o', lw = 1, s = 160, alpha = 0.7)
+    im = ax.scatter(PTU, CTU, edgecolor = 'lightgrey', clip_on=False, c = Sizes, cmap = cmap, marker='o', lw = 1, s = 160, alpha = 0.7)
         
     # limit y axis to maximum value
     YMax = max(CTU)
@@ -962,25 +1017,9 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile, W, H):
                 labelsize = 12, direction = 'out')  
         
     # add color bar
-    # convert interval Sizes to array with shape
-    a = np.array(Sizes)
-    a = np.expand_dims(a, axis=0)
-    # get image, use colors used for coloring interval sizes
-    img = plt.imshow(a, interpolation = 'nearest', cmap = cmap)
-    # set color bar size to graph size
-    aspect=1.0
-    im = ax.get_images()
-    extent = im[0].get_extent()
-    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
-    # create color bar and set ticks
-    b = list(map(lambda x: int(x), Sizes))
-    step = SetUpTicks(max(b) - min(b))
-    cb = plt.colorbar(img, ticks=[i for i in range(min(b), max(b)+1, step)], use_gridspec=True)
-    cb.ax.set_yticklabels([str(i) for i in range(min(b), max(b)+1, step)])
-    cb.ax.tick_params(labelsize=12)    
-    cb.ax.tick_params(direction = 'out')
+    cb = figure.colorbar(im, ax=ax)
     cb.set_label('Interval size', size=14, labelpad=18)
-    
+        
     # add a light grey horizontal grid to the plot, semi-transparent, 
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.4, linewidth = 0.4)  
     # hide these grids behind plot objects
@@ -989,12 +1028,11 @@ def PlotParentsToChildrenCounts(DataFiles, Outputfile, W, H):
     figure.savefig(Outputfile, bbox_inches = 'tight')
     plt.close()
 
-def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
+def PlotParentFreq(DataFiles, Outputfile, W, H):
     '''
-    (list, list, str, int, int) -> None
+    (list, str, int, int) -> None
     
     :param DataFiles: List of .csv data files generated after umi grouping
-    :param Color: List of colors for plotting
     :param Outputfile: Name of the output figure file 
     :param W: Figure width in inches
     :param H: Figure Height in inches 
@@ -1024,6 +1062,10 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     # get a sorted list of positions
     Coordinates = SortPositions(list(Data.keys()))
     
+    # create a cmap and list of colors using divergening colors PiYG
+    cmap = plt.get_cmap('PiYG')
+    colors = [cmap(i) for i in np.linspace(0, 1, len(Coordinates))]
+        
     # create figure
     figure = plt.figure()
     figure.set_size_inches(W, H)
@@ -1033,7 +1075,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     # loop over sorted regions
     for i in range(len(Coordinates)):
         # plot parent frequencies vs sorted number of children
-        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = Color[i], facecolor = Color[i], marker='o', lw = 1, s = 70, alpha = 0.5, clip_on=False)
+        ax.scatter(sorted(Data[Coordinates[i]].keys()), [Data[Coordinates[i]][j] for j in sorted(Data[Coordinates[i]].keys())], edgecolor = colors[i], facecolor = colors[i], marker='o', lw = 1, s = 70, alpha = 0.3, clip_on=False)
     
     # limit y axis to maximum value
     YMax = []
@@ -1064,7 +1106,7 @@ def PlotParentFreq(DataFiles, Color, Outputfile, W, H):
     minchildren, maxchildren = children[0], children[-1]
     xstep = SetUpTicks(maxchildren)
     children = [i for i in range(0, maxchildren + 1, xstep)]
-    xPos = [i for i in range(len(children))]
+    xPos = [i for i in children]
     plt.xticks(xPos, list(map(lambda x: str(x), children)), ha = 'center', rotation = 0, fontsize = 9)
                
     # add space between axis and tick labels
@@ -1253,17 +1295,23 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
     # add discrete color bar for node degree
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("bottom", size="5%", pad=0.05)
-    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(node_color), max(node_color)+2)], use_gridspec=False)
-    # write x ticks
-    if len(list(set(node_color))) < 10:
+    
+    # make a list of degree 
+    degree_vals = sorted(list(set(node_color)))
+    cb = figure.colorbar(nodes, cax=cax, orientation = 'horizontal', ticks=[i for i in range(min(degree_vals), max(degree_vals)+2)], use_gridspec=False)
+    
+    #    # write x ticks
+    if max(degree_vals) <= 10:
         step = 1
-    elif 10 <= len(list(set(node_color))) < 20:
+    elif 10 < max(degree_vals) <= 30:
         step = 2
-    elif 20 < len(list(set(node_color))) < 60:
+    elif 30 < max(degree_vals) <= 60:
         step = 10
-    elif len(list(set(node_color))) >= 60:
+    elif max(degree_vals) > 60:
         step = 20
-    cb.ax.set_xticklabels([str(i) for i in range(min(node_color), max(node_color)+2, step)])
+    xtickslabels = [str(i) if i % step == 0 else '' for i in range(min(degree_vals), max(degree_vals)+2)]
+    cb.ax.set_xticklabels(xtickslabels)
+    
     cb.set_label('Node degree', size=14, ha='center', color='black', labelpad=18)
             
     return ax
