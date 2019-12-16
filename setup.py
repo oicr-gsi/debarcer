@@ -34,7 +34,9 @@ setup(
 	"Operating System :: Unix",
 	"Operating System :: MacOS",
 	],
-	install_requires=['argparse', 'configparser', 'pysam', 'pandas',
-                   'matplotlib', 'numpy', 'scipy', 'networkx', 'pygal', 'seaborn'],
+	install_requires = ['argparse', 'base64', 'collections', 'configparser',
+                     'gzip', 'itertools', 'json', 'matplotlib', 'mistune',
+                     'networkx', 'numpy', 'operator', 'pandas', 'pygal', 'pysam',
+                     'scipy', 'seaborn', 'subprocess', 'time', 'uuid', 'yaml'],
 	python_requires='>=3.6',
 )
