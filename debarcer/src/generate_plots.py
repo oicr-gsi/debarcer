@@ -1307,8 +1307,12 @@ def CreateNetworkAx(Columns, Rows, Position, figure, UmiFile):
         step = 2
     elif 30 < max(degree_vals) <= 60:
         step = 10
-    elif max(degree_vals) > 60:
+    elif 60 < max(degree_vals) <= 100:
         step = 20
+    elif 100 < max(degree_vals) <= 300:
+        step = 50
+    else:
+        step = 100
     xtickslabels = [str(i) if i % step == 0 else '' for i in range(min(degree_vals), max(degree_vals)+2)]
     cb.ax.set_xticklabels(xtickslabels)
     
