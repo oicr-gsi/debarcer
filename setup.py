@@ -6,7 +6,7 @@ from debarcer.src.version import __version__
 
 # Utility function to read the README file.
 
-with open("README.rst") as infile:
+with open("README.md") as infile:
     content = infile.read().rstrip()
 
 setup(
