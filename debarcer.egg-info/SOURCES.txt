@@ -1,13 +1,9 @@
 LICENSE
 MANIFEST.in
-README.rst
+README.md
 requirements.txt
 setup.cfg
 setup.py
-<<<<<<< HEAD
-config/demo_config.ini
-=======
->>>>>>> 1fc85b0239081073199e67dec944b515ed790b21
 config/library_prep_types.ini
 config/sample_config.ini
 debarcer/debarcer.py
@@ -16,3 +12,14 @@ debarcer.egg-info/SOURCES.txt
 debarcer.egg-info/dependency_links.txt
 debarcer.egg-info/requires.txt
 debarcer.egg-info/top_level.txt
+debarcer/src/find_regions_coverage.py
+debarcer/src/generate_consensus.py
+debarcer/src/generate_plots.py
+debarcer/src/generate_report.py
+debarcer/src/generate_vcf.py
+debarcer/src/preprocess_fastqs.py
+debarcer/src/run_analyses.py
+debarcer/src/umi_error_correct.py
+debarcer/src/umi_network_collapse.py
+debarcer/src/utilities.py
+debarcer/src/version.py
