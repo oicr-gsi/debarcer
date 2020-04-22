@@ -550,8 +550,7 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
     raw_table_output(cons_data, contig, region_start, region_end, outdir)
     # save coverage to a yaml in outdir/Stats    
     StatsDir = os.path.join(os.path.dirname(outdir), 'Stats')
-    if os.path.isdir(StatsDir) == False:
-        os.mkdir(StatsDir)
+    os.makedirs(StatsDir, exist_ok=True)
     covdata = {contig + ':' + str(region_start+1) + '-' + str(region_end): coverage}
         
     with open(os.path.join(StatsDir, 'CoverageStats.yml'), 'a') as newfile:

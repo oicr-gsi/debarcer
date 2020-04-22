@@ -57,12 +57,11 @@ def preprocess_reads(args):
         
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
-    # create outputdir if doesn't exist
-    if os.path.isdir(outdir) == False:
-        if os.path.isfile(outdir) == True:
-            raise ValueError('ERR: Output directory cannot be a file')
-        else:
-            os.makedirs(outdir)
+    # create outputdir
+    if os.path.isfile(outdir) == True:
+        raise ValueError('ERR: Output directory cannot be a file')
+    else:
+        os.makedirs(outdir, exist_ok=True)
     
     # get input prep file from config or command
     prepfile = GetInputFiles(args.config, args.prepfile, 'prep_file')
@@ -121,12 +120,11 @@ def group_umis(args):
     
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
-    # create outputdir if doesn't exist
-    if os.path.isdir(outdir) == False:
-        if os.path.isfile(outdir) == True:
-            raise ValueError('ERR: Output directory cannot be a file')
-        else:
-            os.makedirs(outdir)
+    # create outputdir
+    if os.path.isfile(outdir) == True:
+        raise ValueError('ERR: Output directory cannot be a file')
+    else:
+        os.makedirs(outdir, exist_ok=True)
     
     # create subdirectoy structure
     CreateDirTree(outdir)
@@ -213,12 +211,11 @@ def collapse(args):
     
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
-    # create outputdir if doesn't exist
-    if os.path.isdir(outdir) == False:
-        if os.path.isfile(outdir) == True:
-            raise ValueError('ERR: Output directory cannot be a file')
-        else:
-            os.makedirs(outdir)
+    # create outputdir
+    if os.path.isfile(outdir) == True:
+        raise ValueError('ERR: Output directory cannot be a file')
+    else:
+        os.makedirs(outdir, exist_ok=True)
     
     # create subdirectoy structure
     CreateDirTree(outdir)
@@ -285,11 +282,10 @@ def VCF_converter(args):
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
     # create outputdir if doesn't exist
-    if os.path.isdir(outdir) == False:
-        if os.path.isfile(outdir) == True:
-            raise ValueError('ERR: Output directory cannot be a file')
-        else:
-            os.makedirs(outdir)
+    if os.path.isfile(outdir) == True:
+        raise ValueError('ERR: Output directory cannot be a file')
+    else:
+        os.makedirs(outdir, exist_ok=True)
     
     # get the subdirectory with consensus files
     ConsDir = os.path.join(outdir, 'Consfiles')
@@ -305,9 +301,8 @@ def VCF_converter(args):
     
     # create vcf dir if doesn't exist already
     VCFDir = os.path.join(outdir, 'VCFfiles')
-    if os.path.isdir(VCFDir) == False:
-        os.mkdir(VCFDir)
-    
+    os.makedirs(VCFDir, exist_ok=True)
+       
     # get reference threshold
     ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
     # get allele threshold
@@ -399,12 +394,11 @@ def run_scripts(args):
        
     # get output directory from the config or command. set to current dir if not provided
     outdir = GetOutputDir(args.config, args.outdir)
-    # create outputdir if doesn't exist
-    if os.path.isdir(outdir) == False:
-        if os.path.isfile(outdir) == True:
-            raise ValueError('ERR: Output directory cannot be a file')
-        else:
-            os.makedirs(outdir)
+    # create outputdir
+    if os.path.isfile(outdir) == True:
+        raise ValueError('ERR: Output directory cannot be a file')
+    else:
+        os.makedirs(outdir, exist_ok=True)
     
     # create subdirectoy structure
     CreateDirTree(outdir)
@@ -466,8 +460,7 @@ def generate_plots(args):
         
     # create directory to save figures if it doesn't exist
     FigDir = os.path.join(args.directory, 'Figures')
-    if os.path.isdir(FigDir) == False:
-        os.mkdir(FigDir)
+    os.makedirs(FigDir, exist_ok=True)
         
     # make a list of consensus files that are not empty
     ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i.startswith('chr') and i[-5:] == '.cons']
@@ -588,8 +581,7 @@ def generate_plots(args):
         if args.extension != 'pdf':
             # create subdirectory
             ReportDir = os.path.join(args.directory, 'Report')
-            if os.path.isdir(ReportDir) == False:
-                os.mkdir(ReportDir)
+            os.makedirs(ReportDir, exist_ok=True)
             report = os.path.join(ReportDir, 'debarcer_report.html')
             WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
             
@@ -608,8 +600,7 @@ def generate_report(args):
     
     # create subdirectory
     ReportDir = os.path.join(args.directory, 'Report')
-    if os.path.isdir(ReportDir) == False:
-        os.mkdir(ReportDir)
+    os.makedirs(ReportDir, exist_ok=True)
     report = os.path.join(ReportDir, 'debarcer_report.html')
     
     # check that subdirectories with required files exist
