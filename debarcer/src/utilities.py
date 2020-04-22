@@ -319,14 +319,12 @@ def CreateDirTree(directory):
     Tree = []
     for i in L:
         j = os.path.join(directory, i)
-        if os.path.isdir(j) == False:
-            os.makedirs(j)
+        os.makedirs(j, exist_ok=True)
         Tree.append(j)
     # create log directory    
     QsubDir = Tree[4]
     LogDir = os.path.join(QsubDir, 'Logs')
-    if os.path.isdir(LogDir) == False:
-        os.makedirs(LogDir)
+    os.makedirs(LogDir, exist_ok=True)
          
        
 def CheckFileContent(File):
