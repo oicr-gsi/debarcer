@@ -114,7 +114,8 @@ def group_umis(args):
     :param postthreshold: Distance threshold in bp for defining families within groups
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
     :param truncate: Skip reads overlapping with the genomic interval if True. Default is False
-        
+    :param separator: String separating the UMI from the remaining of the read name
+    
     Groups by hamming distance and form families based on physical distances within groups
     '''
     
@@ -150,7 +151,7 @@ def group_umis(args):
     
     # Generate UMI families within groups using the position of the most frequent umi as reference for each family
     # keep the most abundant family within group and ignore others if args.ignore is True
-    umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate)
+    umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate, args.separator)
     
     # get the number of parent umis, number of children and number of parent given a number of children
     filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
@@ -199,6 +200,7 @@ def collapse(args):
     :param countthreshold: Base count threshold in pileup column
     :param percentthreshold: Base percent threshold in pileup column
     :param postthreshold: Umi position threshold for grouping umis together
+    :param separator: String separating the UMI from the remaining of the read name
     :param maxdepth: Maximum read depth. Default is 1000000
     :param truncate: Only consider pileup columns in given region. Default is False
     :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
@@ -255,7 +257,7 @@ def collapse(args):
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
+    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, args.separator, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
  
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
@@ -382,7 +384,8 @@ def run_scripts(args):
     :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
     :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
     :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
-       
+    :param separator: String separating the UMI from the remaining of the read name
+        
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
 
@@ -421,7 +424,7 @@ def run_scripts(args):
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.queue)
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.queue, args.separator)
     
     
 def generate_plots(args):
@@ -679,6 +682,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-p', '--Position', dest='postthreshold', type=int, help='Umi position threshold for grouping umis together')
     g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=ConvertArgToBool, default=False, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='Discard reads overlapping with the genomic region if True. Default is False')
+    g_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command
@@ -700,6 +704,7 @@ if __name__ == '__main__':
     c_parser.add_argument('-stp', '--Stepper', dest='stepper', choices=['all', 'nofilter'], default='nofilter',
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
+    c_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -757,6 +762,7 @@ if __name__ == '__main__':
     r_parser.add_argument('-stp', '--Stepper', dest='stepper', choices=['all', 'nofilter'], default='nofilter',
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
+    r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 

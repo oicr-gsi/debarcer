@@ -3,15 +3,16 @@ import src.umi_network_collapse as network
 from src.utilities import get_umi_from_name
 
 
-def umi_count(contig, region_start, region_end, bam_file, truncate):
+def umi_count(contig, region_start, region_end, bam_file, truncate, separator):
     '''
-    (str, int, int, file, bool) -> (dict, dict)
+    (str, int, int, file, bool, str) -> (dict, dict)
     
     :param contig: Chromosome, eg chrN
     :param region_start: Start index of the region, 0-based half-opened
     :param region_end: End index of the region, 0-based half opened
     :bam_file: Bam file with umi in read names
     :param truncate: Skip reads overlapping with the genomic interval if True
+    :param separator: String separating the UMI from the remaining of the read name    
         
     Returns a tuple with a  dictionary of umi tally for each umi in a given region
     and a dictionary with counts of unmapped, mapped, secondary and supplementary reads in the region 
@@ -41,7 +42,7 @@ def umi_count(contig, region_start, region_end, bam_file, truncate):
                         read_info[region]['mapped'] += 1
                         # extract the umi sequence from read name
                         # excepting a single umi per read
-                        umi = get_umi_from_name(read.query_name)
+                        umi = get_umi_from_name(read.query_name, separator)
                         if umi in umi_counts:
                             umi_counts[umi] += 1
                         else:
@@ -115,9 +116,9 @@ def is_overlapping(read_start, read_end, region_start, region_end):
     return overlap
 
 
-def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate):
+def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate, separator):
     """
-    (str, int, int, file, list, bool) -> dict
+    (str, int, int, file, list, bool, str) -> dict
     
     :param contig: Chromosome, eg ChrN
     :param region_start: Start index of the region, 0-based half opened
@@ -125,6 +126,7 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
     :param bam_file: Bam file with umi in read names
     :param umi_groups: List with groups of umi sequences separated by given hamming distance
     :param truncate: Skip reads overlapping with the genomic interval if True    
+    :param separator: String separating the UMI from the remaining of the read name    
         
     Return a dictionary of dictionaries with parent umi and all children umis
     with their count at each position
@@ -145,7 +147,7 @@ def extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups
                 if read.is_supplementary == False and read.is_secondary == False:
                     # umi <- list of umi sequences
                     # expecting a single umi
-                    umi = get_umi_from_name(read.query_name)
+                    umi = get_umi_from_name(read.query_name, separator)
                     # get the start position 0-based
                     pos = int(read.reference_start)
                     end = int(read.reference_end)
@@ -254,7 +256,7 @@ def find_group_families(contig, umi_families, pos_threshold, ignore_others):
     return C
 
 
-def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore_others, truncate):
+def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore_others, truncate, separator):
     """
     
     (str, int, int, file, int, int, bool) -> tuple
@@ -267,7 +269,8 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     :param dist_threshold: The hamming distance threshold to connect parent and child umis     
     :param ignore_others: Ignore families distant from the most abundant family
     :param truncate: Skip reads overlapping with the genomic interval if True    
-        
+    :param separator: String separating the UMI from the remaining of the read name    
+    
     Returns a tuple of dictionaries with umi information before and after grouping,
     and counts of mapped and unmapped reads in the region
     """ 
@@ -275,7 +278,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
     print("Counting UMIs...")
     # count umi sequences -> dict {umi_seq: count}
     # count mapped and unmapped reads
-    counts, mapped_reads = umi_count(contig, region_start, region_end, bam_file, truncate)
+    counts, mapped_reads = umi_count(contig, region_start, region_end, bam_file, truncate, separator)
     umis = counts.keys()
     
     print("Clustering UMIs...")

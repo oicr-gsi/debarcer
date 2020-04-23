@@ -37,10 +37,10 @@ def find_closest(pos, L):
     return (smallest_dist, D[smallest_dist][-1][0], D[smallest_dist][-1][1])
 
 
-def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, max_depth, truncate, ignore_orphans, stepper):
+def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, max_depth, truncate, ignore_orphans, stepper):
     '''
     
-    (dict, int, str, int, int, str, int, int, bool, bool, str) -> (dict, dict)
+    (dict, int, str, int, int, str, int, str, int, bool, bool, str) -> (dict, dict)
     
     
     :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
@@ -50,12 +50,14 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
     :param region_end: End index of the region of interest. 0-based half opened
     :param bam_file: Path to the bam file
     :param pos_threshold: Window size to group indivual umis into families within groups 
+    :param separator: String separating the UMI from the remaining of the read name
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
+        
         
     Returns a tuple with a dictionary representing consensus info at each base position in the given region
     and a dictionary to keep track of family size for each position
@@ -86,7 +88,7 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                         # extract umi. expecting a single umi
-                        umi = get_umi_from_name(read_name)
+                        umi = get_umi_from_name(read_name, separator)
                         # check that umi is recorded
                         if umi in umi_families:
                             # find closest family from umi
@@ -297,9 +299,9 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (dict, int, str, int, int, str, int, float, int, int, bool, bool, str) -> dict
+    (dict, int, str, int, int, str, int, float, int, str, int, bool, bool, str) -> dict
         
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
@@ -312,12 +314,14 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
     :param pos_threshold: Window size to group indivual umis into families within groups
     :param consensus_threshold: Majority rule consensus threshold for alternative base within family 
     :param count_threshold: Count consensus threshold for alternative base within family
+    :param separator: String separating the UMI from the remaining of the read name
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering    
+     
 
     Generates consensus data for a given family size and genomic region
     '''
@@ -325,7 +329,7 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
     # get consensus info for each base position and umi group in the given region
     # {pos: {'ref_base': ref_base, 'families': {famkey: {allele: count}}}}
     # get family size at each position 
-    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
     # create a dict to store consensus info
     cons_data = {}
@@ -501,9 +505,9 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
             
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, str, int, int, str, dict, str, str, int, num, int, num, num, int, bool, bool, str) -> None
+    (str, str, int, int, str, dict, str, str, int, num, int, num, num, str, int, bool, bool, str) -> None
     
     
     :param contig: Chromosome name, eg. chrN
@@ -518,6 +522,7 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
     :param pos_threshold: Window size to group indivual umis into families within groups
     :param consensus_threshold: Majority rule consensus threshold for alternative base within family 
     :param count_threshold: Count consensus threshold for alternative base within family
+    :param separator: String separating the UMI from the remaining of the read name
     :param max_depth: Maximum read depth
     :param truncate: Consider only pileup columns within interval defined by region start and end if True
     :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
@@ -540,7 +545,7 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
             # compute consensus for uncollapsed data, and get coverage
             cons_data[f_size], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
         cons_data[0], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
