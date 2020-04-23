@@ -380,15 +380,16 @@ def run_scripts(args):
     :param minchildren: Minimum number of umi children to label regions
     :param extension: Figure file extension
     :param sample: Sample name to appear in report. If empty str, outdir basename is used
-    :param queue: SGE queue for submitting jobs. Default is default
+    :param queue: SGE queue for submitting jobs
     :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
     :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
     :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
+    :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
     :param separator: String separating the UMI from the remaining of the read name
         
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
-
+    
     # get bam file from config or command
     bamfile = GetInputFiles(args.config, args.bamfile, 'bam_file')
     
@@ -424,7 +425,7 @@ def run_scripts(args):
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.queue, args.separator)
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.queue, args.project, args.separator)
     
     
 def generate_plots(args):
@@ -749,7 +750,8 @@ if __name__ == '__main__':
     r_parser.add_argument('-cl', '--Call', dest='call', action='store_false', help='Convert consensus files to VCF format. Default is True, becomes False if used')
     r_parser.add_argument('-ex', '--Extension', dest='extension', choices=['png', 'jpeg', 'pdf'], default='png', help='Figure format. Does not generate a report if pdf, even with -r True. Default is png')
     r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
-    r_parser.add_argument('-q', '--Queue', dest='queue', default='default', help='SGE queue for submitting jobs. Default is default')
+    r_parser.add_argument('-q', '--Queue', dest='queue', help='SGE queue for submitting jobs. Queue and project are mutually exclusive. Run on Univa if Project and SGE if queue is used')
+    r_parser.add_argument('-pr', '--Project', dest='project', help='Project for submitting jobs on Univa. Queue and project are mutually exclusive. Run on Univa if Project and SGE if queue is used')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default=20, type=int, help='Requested memory for submitting jobs to SGE. Default is 20g')
     r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
                           help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
