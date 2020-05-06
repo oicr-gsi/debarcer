@@ -419,18 +419,24 @@ def run_scripts(args):
     alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
-    if args.project == None:
-        print('args.project', args.project)
-        project = ''
-    else:
-        project = args.project
-    if args.queue == None:
-        queue = ''
-    else:
-        queue = args.queue
-    print('debarcer queue', queue, type(project))
-    print('debarcer project', project, type(project))
+    # convert None arguments to empty strings
+    project, queue = list(map(lambda x: x or '', [args.project, args.queue]))
     
+#    
+#    if args.project == None:
+#        project = ''
+#    else:
+#        project = args.project
+#    if args.queue == None:
+#        queue = ''
+#    else:
+#        queue = args.queue
+        
+    print('debarcer project', project, type(project))
+    print('debarcer queue', queue, type(queue))    
+        
+        
+        
     # create shell scripts and run qsubs to Group and Collapse umis 
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,

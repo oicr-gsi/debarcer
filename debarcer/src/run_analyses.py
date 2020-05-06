@@ -273,11 +273,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # set up collapse cmd
     CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s {14}'
     
-
-    print('project', project)
-    print('queue', queue)
-
-    
     # set qsub command
     if project == '':
         # run jobs on sge
