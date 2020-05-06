@@ -419,13 +419,16 @@ def run_scripts(args):
     alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
+    # convert None arguments to empty strings
+    project, queue = list(map(lambda x: x or '', [args.project, args.queue]))
+    
     # create shell scripts and run qsubs to Group and Collapse umis 
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.queue, args.project, args.separator)
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, queue, project, args.separator)
     
     
 def generate_plots(args):
