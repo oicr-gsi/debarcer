@@ -287,7 +287,7 @@ def get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, 
         
     print("Grouping UMIs by position...")
     # record all umis per group and position
-    umi_positions = extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate)
+    umi_positions = extract_umi_from_read(contig, region_start, region_end, bam_file, umi_groups, truncate, separator)
     
     # get the positions and counts of umi families within each group (position is from the most abundant family)  
     umi_families = find_group_families(contig, umi_positions, pos_threshold, ignore_others)
