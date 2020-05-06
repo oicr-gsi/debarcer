@@ -422,21 +422,6 @@ def run_scripts(args):
     # convert None arguments to empty strings
     project, queue = list(map(lambda x: x or '', [args.project, args.queue]))
     
-#    
-#    if args.project == None:
-#        project = ''
-#    else:
-#        project = args.project
-#    if args.queue == None:
-#        queue = ''
-#    else:
-#        queue = args.queue
-        
-    print('debarcer project', project, type(project))
-    print('debarcer queue', queue, type(queue))    
-        
-        
-        
     # create shell scripts and run qsubs to Group and Collapse umis 
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
