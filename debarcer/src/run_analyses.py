@@ -132,20 +132,40 @@ def MergeConsensusFiles(ConsDir):
             MergedContent.extend(data)
     
         # remove duplicate records. keep a single record if multiple duplicates
+        
+        NewContent = []
         if len(MergedContent) != 0:
-            to_remove = []
-            # count all records to find duplicates {record: count}
-            duplicates = collections.Counter(MergedContent)
-            for i in duplicates:
-                if duplicates[i] > 1:
-                    to_remove.extend([i] * (duplicates[i] -1))
-            for i in to_remove:
-                MergedContent.remove(i)
+#            to_remove = []
+#            # count all records to find duplicates {record: count}
+#            duplicates = collections.Counter(MergedContent)
+#            for i in duplicates:
+#                if duplicates[i] > 1:
+#                    to_remove.extend([i] * (duplicates[i] -1))
+#            for i in to_remove:
+#                MergedContent.remove(i)
+#        
+            # keep a single position per chromosome if positions are from overlapping regions
+            # note that nucleotide counts at given positions may slightly different in overlapping regions
+        
+            # make a list of (chromo, pos) already recorded
+            recorded = []
+            for i in MergedContent:
+                chromo = i.split('\t')[0]
+                pos = i.split('\t')[1]
+                fam = i.split('\t')[10]
+                if (chromo, pos, fam) not in recorded:
+                    NewContent.append(i)
+                    recorded.append((chromo, pos, fam))
+                
         # write merged consensus file
         MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
         newfile = open(MergedFile, 'w')
         newfile.write('\t'.join(Header) + '\n')
-        newfile.write('\n'.join(MergedContent))
+        #newfile.write('\n'.join(MergedContent))
+        
+        newfile.write('\n'.join(NewContent))
+        
+        
         newfile.close()
     
     
