@@ -39,7 +39,10 @@ def GetConsData(consfile):
             famsize = int(line[header.index('FAM')])
             if famsize not in data[contig]:
                 data[contig][famsize] = {}
-            # collect info     
+            # collect info 
+            if pos in data[contig][famsize]:
+                print(consfile)
+                print(contig, famsize, pos)
             assert pos not in data[contig][famsize]
             data[contig][famsize][pos] = line
     
