@@ -165,8 +165,11 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             print(delcounts)
                             print(insertions)
                             print(inscounts)
-                                
-                                
+                            print(L[header.index('I_(ref,ins)')])
+                            print(L[header.index('I_counts')])
+                            print(L[header.index('D_(ref,del)')])
+                            print(L[header.index('D_counts')])
+                            
                                 
                                 
                         
