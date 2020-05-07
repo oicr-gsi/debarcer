@@ -135,18 +135,8 @@ def MergeConsensusFiles(ConsDir):
         
         NewContent = []
         if len(MergedContent) != 0:
-#            to_remove = []
-#            # count all records to find duplicates {record: count}
-#            duplicates = collections.Counter(MergedContent)
-#            for i in duplicates:
-#                if duplicates[i] > 1:
-#                    to_remove.extend([i] * (duplicates[i] -1))
-#            for i in to_remove:
-#                MergedContent.remove(i)
-#        
             # keep a single position per chromosome if positions are from overlapping regions
-            # note that nucleotide counts at given positions may slightly different in overlapping regions
-        
+            # note that nucleotide counts at same positions in overlaping regions may slightly different
             # make a list of (chromo, pos) already recorded
             recorded = []
             for i in MergedContent:
