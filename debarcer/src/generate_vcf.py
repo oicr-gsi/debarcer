@@ -160,7 +160,7 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             print(consfile)
                             print(contig)
                             print(pos)
-                            
+                            print(depth)
                                 
                                 
                                 
