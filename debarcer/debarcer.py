@@ -268,8 +268,7 @@ def VCF_converter(args):
     
     :param config: Path to the config file
     :param outdir: Output directory where subdirectories are created
-    :param outputfile: Path to the output VCF file
-    :param reference" Path to the reference genome 
+    :param reference: Path to the reference genome 
     :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
     :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
