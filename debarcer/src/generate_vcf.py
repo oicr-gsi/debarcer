@@ -153,6 +153,18 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                                 depth[insertions[i]] = int(inscounts[i])
                                                
                         # compute frequencies for each allele and indel
+                        
+                        
+                        
+                        for i in depth:
+                            if sum(depth.values()) == 0:
+                                print(consfile)
+                                
+                                
+                                
+                                
+                                
+                        
                         freq = {i: (depth[i]/sum(depth.values())) * 100 for i in depth}
                 
                         # record snvs and indels on different lines
