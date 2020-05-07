@@ -156,10 +156,11 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                         
                         
                         
-                        for i in depth:
-                            if sum(depth.values()) == 0:
-                                print(consfile)
-                                
+                        if sum(depth.values()) == 0:
+                            print(consfile)
+                            print(contig)
+                            print(pos)
+                            
                                 
                                 
                                 
