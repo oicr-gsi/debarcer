@@ -161,6 +161,10 @@ def WriteVCF(consfile, outputfile, reference, ref_threshold, alt_threshold, filt
                             print(contig)
                             print(pos)
                             print(depth)
+                            print(deletions)
+                            print(delcounts)
+                            print(insertions)
+                            print(inscounts)
                                 
                                 
                                 
