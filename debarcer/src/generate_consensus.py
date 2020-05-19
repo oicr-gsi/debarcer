@@ -429,23 +429,23 @@ def generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth, 
 def raw_table_output(cons_data, contig, region_start, region_end, outdir):
     '''
     (dict, str, int, int, str) -> None
-    
+
     :param cons_data: Consensus data for each family size and position
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
     :param region_end: End index of the region of interest. 0-based half opened
     :param outdir: Output directory
-    
+
     Writes a long-form consensus file for every event detected in the collapsed data
     '''
     
     # get the path to the output file
     OutputFile = os.path.join(outdir, '{0}:{1}-{2}.cons'.format(contig, region_start + 1, region_end))
     newfile = open(OutputFile, 'w')
-
+    
     Header = ['CHROM', 'POS', 'REF', 'A', 'C', 'G', 'T', 'N', 'I_(ref,ins)', 'I_counts', 'D_(ref,del)', 'D_counts', 'RAWDP', 'CONSDP', 'FAM', 'REF_FREQ', 'MEAN_FAM']
     newfile.write('\t'.join(Header) + '\n')
-
+    
     # make a sorted list of positions
     positions = []
     for i in cons_data:
@@ -462,10 +462,10 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                 ref = cons_data[f_size][pos]['ref_info']
                 # get the reference
                 ref_base = ref['ref_base']
-                               
+
                 cons = cons_data[f_size][pos]['cons_info']
                 stats = cons_data[f_size][pos]['stats']
-            
+                
                 # count each allele, initiate with single nucleotides
                 counts = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0}
                 for allele in cons:
@@ -476,9 +476,11 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                     else:
                         # indel, record allele and its count
                         if allele in counts:
-                            counts[allele] += 1
+                            #counts[allele] += 1
+                            counts[allele] += cons[allele]
                         else:
-                            counts[allele] = 1
+                            #counts[allele] = 1
+                            counts[allele] = cons[allele]
                 # make lists of indels and indel counts 
                 D, I = [], []
                 for allele in counts:
@@ -492,13 +494,14 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                             D.append([counts[allele], allele])
                 D.sort()
                 I.sort()
-                        
+                
                 line = [contig, pos + 1, ref_base, counts['A'], counts['C'],
                         counts['G'], counts['T'], counts['N'],
                         ';'.join([str(i[1]) for i in I]), ';'.join([str(i[0]) for i in I]),
                         ';'.join([str(i[1]) for i in D]), ';'.join([str(i[0]) for i in D]),
                         stats['rawdp'], stats['consdp'], f_size,
                         stats['ref_freq'], stats['mean_fam']]
+
                 newfile.write('\t'.join(list(map(lambda x: str(x), line))) + '\n')
     # close file after writing
     newfile.close()
