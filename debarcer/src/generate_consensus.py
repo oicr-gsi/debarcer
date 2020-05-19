@@ -476,10 +476,8 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
                     else:
                         # indel, record allele and its count
                         if allele in counts:
-                            #counts[allele] += 1
                             counts[allele] += cons[allele]
                         else:
-                            #counts[allele] = 1
                             counts[allele] = cons[allele]
                 # make lists of indels and indel counts 
                 D, I = [], []
