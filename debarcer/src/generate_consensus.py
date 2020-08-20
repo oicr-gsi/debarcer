@@ -306,10 +306,10 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper, base_quality_score):
+def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
     (dict, int, str, int, int, str, int, float, int, str, int, int, bool, bool, str) -> dict
-        
+    
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
                          positions are 0-based half opened
