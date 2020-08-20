@@ -280,9 +280,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     DataDir = os.path.join(outdir, 'Datafiles')
 
     # set up group command
-    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8} -s {9}'
+    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8} -s \"{9}\"'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s {14} -bq {15}'
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s \"{14}\" -bq {15}'
     
     # set qsub command
     if project == '':
