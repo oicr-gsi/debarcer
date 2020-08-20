@@ -388,7 +388,7 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
 
 
 
-def generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper, base_quality_score):
+def generate_uncollapsed(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
     (str, int, int, str, int, bool, bool, str, int) -> (dict, float)
     
@@ -554,12 +554,12 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
         # check if 0 is passed as fam_size argument
         if f_size == 0:
             # compute consensus for uncollapsed data, and get coverage
-            cons_data[f_size], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper, base_quality_score)
+            cons_data[f_size], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, base_quality_score, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper, base_quality_score)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
-        cons_data[0], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper, base_quality_score)
+        cons_data[0], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, base_quality_score, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
     # write output consensus file
     print("Writing output...")
