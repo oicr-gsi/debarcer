@@ -87,7 +87,7 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                     # skip unmapped, secondary and supplementary reads/alignments
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         # check if the base quality is above threshold
-                        if read_data.query_position is not None:
+                        if read.query_position is not None:
                             if read_data.query_qualities[read.query_position] >= base_quality_score:
                                 read_name, start_pos = read_data.query_name, int(read_data.reference_start)
                                 # extract umi. expecting a single umi
@@ -222,7 +222,7 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, base_quality
                     read_data = read.alignment
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
                         # check if the base quality is above threshold
-                        if read_data.query_position is not None:
+                        if read.query_position is not None:
                             if read_data.query_qualities[read.query_position] >= base_quality_score:
                                 # update read counter
                                 read_count += 1
