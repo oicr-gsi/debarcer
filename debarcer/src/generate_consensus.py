@@ -515,9 +515,9 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
             
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper, base_quality_score):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, str, int, int, str, dict, str, str, int, num, int, num, num, str, int, bool, bool, str, int) -> None
+    (str, str, int, int, str, dict, str, str, int, num, int, num, num, str,, int, int, bool, bool, str) -> None
     
     
     :param contig: Chromosome name, eg. chrN
