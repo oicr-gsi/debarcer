@@ -37,10 +37,10 @@ def find_closest(pos, L):
     return (smallest_dist, D[smallest_dist][-1][0], D[smallest_dist][-1][1])
 
 
-def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, max_depth, truncate, ignore_orphans, stepper, base_quality_score):
+def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
     
-    (dict, int, str, int, int, str, int, str, int, bool, bool, str, int) -> (dict, dict)
+    (dict, int, str, int, int, str, int, str, int, int, bool, bool, str) -> (dict, dict)
     
     
     :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
@@ -172,9 +172,9 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
     return consensus_seq, FamSize
 
 
-def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper, base_quality_score):
+def get_uncollapsed_seq(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, int, int, str, str, int, bool, bool, str, int) -> (dict, float)
+    (str, int, int, str, str, int, int, bool, bool, str) -> (dict, float)
     
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
@@ -308,7 +308,7 @@ def get_fam_size(FamSize, position):
     
 def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper, base_quality_score):
     '''
-    (dict, int, str, int, int, str, int, float, int, str, int, bool, bool, str, int) -> dict
+    (dict, int, str, int, int, str, int, float, int, str, int, int, bool, bool, str) -> dict
         
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
@@ -337,7 +337,7 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
     # get consensus info for each base position and umi group in the given region
     # {pos: {'ref_base': ref_base, 'families': {famkey: {allele: count}}}}
     # get family size at each position 
-    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper, base_quality_score)
+    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, base_quality_score, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
 
     # create a dict to store consensus info
     cons_data = {}
@@ -409,7 +409,7 @@ def generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth, 
     '''
     
     # get uncolapased seq info {pos: {'ref_base': reference base}, {'alleles': {allele: count}}}
-    uncollapsed_seq, coverage = get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper, base_quality_score)
+    uncollapsed_seq, coverage = get_uncollapsed_seq(contig, region_start, region_end, bam_file, base_quality_score, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
     
     # create a dict to store consensus info
     cons_data = {}
