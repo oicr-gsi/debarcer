@@ -711,7 +711,7 @@ if __name__ == '__main__':
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
     c_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
-    c_parser.add_argument('-bq', '--Quality', dest='base_quality_score', default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
+    c_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -770,7 +770,7 @@ if __name__ == '__main__':
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
-    r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
+    r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 
