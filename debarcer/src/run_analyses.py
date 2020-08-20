@@ -217,7 +217,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans, ignore, stepper,
                 merge, plot, report, call, mincov, minratio, minumis, minchildren, extension,
-                sample, mydebarcer, mypython, mem, queue, project, separator):
+                sample, mydebarcer, mypython, mem, queue, project, separator, base_quality_score):
     '''
     (str, str, str, str, str, int, float, int, int, float, float, int, int,
     bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str,
@@ -261,7 +261,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     :param queue: queue to submit jobs to 
     :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
     :param separator: String separating the UMI from the remaining of the read name
-    
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
+        
     Submit jobs for Umi Group and Collapse
     '''
     
@@ -281,7 +282,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     # set up group command
     GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8} -s {9}'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s {14}'
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s {14} -bq {15}'
     
     # set qsub command
     if project == '':
@@ -336,7 +337,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         newfile = open(CollapseScript, 'w')
         newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, region, umifile,
                                          str(famsize), str(count_threshold), str(consensus_threshold),
-                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper, separator) +'\n') 
+                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper, separator, str(base_quality_score)) +'\n') 
         newfile.close()
         # get a umique job name
         jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))

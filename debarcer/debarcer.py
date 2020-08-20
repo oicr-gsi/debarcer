@@ -207,7 +207,9 @@ def collapse(args):
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
         
+    
     Base collapses from given BAM and umi family file
     '''
     
@@ -257,7 +259,7 @@ def collapse(args):
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, args.separator, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
+    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, args.separator, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper, args.base_quality_score)
  
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
@@ -385,7 +387,9 @@ def run_scripts(args):
     :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
     :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
     :param separator: String separating the UMI from the remaining of the read name
-        
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
+    
+    
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
     
@@ -427,7 +431,7 @@ def run_scripts(args):
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, queue, project, args.separator)
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, queue, project, args.separator, args.base_quality_score)
     
     
 def generate_plots(args):
@@ -708,6 +712,7 @@ if __name__ == '__main__':
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
     c_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
+    c_parser.add_argument('-bq', '--Quality', dest='base_quality_score', default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -767,6 +772,7 @@ if __name__ == '__main__':
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
+    r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 
