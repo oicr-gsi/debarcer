@@ -302,6 +302,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         # get a umique job name
         jobname1 = name_job('UmiGroup' + '_' + region.replace(':', '-'))
         subprocess.call(QsubCmd1.format(jobname1, LogDir, project, str(mem), GroupScript), shell=True)    
+        
+        print(QsubCmd1.format(jobname1, LogDir, project, str(mem), GroupScript))
+        
+        
         # record jobname
         GroupJobNames.append(jobname1)
         
@@ -317,6 +321,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))
         # run collapse umi for region
         subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, project, str(mem), CollapseScript), shell=True)
+        
+        print(QsubCmd2.format(jobname2, jobname1, LogDir, project, str(mem), CollapseScript))
+        
         # record jobname2
         ConsJobNames.append(jobname2)
     
