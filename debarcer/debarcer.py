@@ -384,7 +384,7 @@ def run_scripts(args):
     :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
     :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
     :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
-    :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
+    :param project: Project name to submit jobs on univa
     :param separator: String separating the UMI from the remaining of the read name
     :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
     
@@ -421,17 +421,14 @@ def run_scripts(args):
     alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
-    # convert None arguments to empty strings
-    project, queue = list(map(lambda x: x or '', [args.project, args.queue]))
-    
     # create shell scripts and run qsubs to Group and Collapse umis 
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, queue, project, args.separator, args.base_quality_score)
-    
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.project, args.separator, args.base_quality_score)
+  
     
 def generate_plots(args):
     '''
@@ -756,7 +753,7 @@ if __name__ == '__main__':
     r_parser.add_argument('-cl', '--Call', dest='call', action='store_false', help='Convert consensus files to VCF format. Default is True, becomes False if used')
     r_parser.add_argument('-ex', '--Extension', dest='extension', choices=['png', 'jpeg', 'pdf'], default='png', help='Figure format. Does not generate a report if pdf, even with -r True. Default is png')
     r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
-    r_parser.add_argument('-pr', '--Project', dest='project', help='Project for submitting jobs on Univa. Queue and project are mutually exclusive. Run on Univa if Project and SGE if queue is used')
+    r_parser.add_argument('-pr', '--Project', dest='project', default='gsi', help='Project for submitting jobs on Univa')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default=20, type=int, help='Requested memory for submitting jobs to SGE. Default is 20g')
     r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
                           help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
