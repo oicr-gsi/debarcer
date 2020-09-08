@@ -462,3 +462,25 @@ def get_umi_from_name(read_name, separator):
     # this expression can retrieve the umi read name in fastq and bam
     umi = read_name.split()[0].split(separator)[-1].upper()
     return umi
+
+
+def get_read_count(bamfile, contig, start, stop):
+    '''
+    (str, str, int, int) -> int
+    
+    :param bamfile (str): Path to the bam file with aligned reads
+    :param contig (str): Reference_name of the genomic region (chromosome)
+    :param start (int): Start of the genomic region (0-based inclusive)
+    :param stop (int): End of the genomic region (0-based exclusive)
+ 
+    Returns the read count of all mapped reads in the genomic region specified by contig, start and stop.
+    '''
+    
+    # open file for reading
+    infile = pysam.AlignmentFile(bamfile) 
+    # count read in region
+    read_counts = infile.count(contig, start, stop, until_eof=False, read_callback='nofilter')
+    infile.close()
+    
+    return read_counts
+
