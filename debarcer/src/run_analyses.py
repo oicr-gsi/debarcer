@@ -217,11 +217,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans, ignore, stepper,
                 merge, plot, report, call, mincov, minratio, minumis, minchildren, extension,
-                sample, mydebarcer, mypython, mem, queue, project, separator):
+                sample, mydebarcer, mypython, mem, project, separator, base_quality_score):
     '''
     (str, str, str, str, str, int, float, int, int, float, float, int, int,
     bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str,
-    str, str, str, int, str, str, str) -> None
+    str, str, int, str, str, str) -> None
     
     :param bamfile: Path to the bam file
     :param outdir: Directory where .umis, and datafiles are written
@@ -258,18 +258,12 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     :param mydebarcer: Path to the debarcer script
     :param mypython: Path to python
     :param mem: Requested memory
-    :param queue: queue to submit jobs to 
     :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
     :param separator: String separating the UMI from the remaining of the read name
-    
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
+        
     Submit jobs for Umi Group and Collapse
     '''
-    
-    # project and queue are mutually exclusive
-    if project != '':
-        queue = ''
-    if queue != '':
-        project = ''
     
     # get output directories   
     UmiDir = os.path.join(outdir, 'Umifiles')
@@ -279,26 +273,14 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     DataDir = os.path.join(outdir, 'Datafiles')
 
     # set up group command
-    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8} -s {9}'
+    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8} -s \"{9}\"'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s {14}'
+    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s \"{14}\" -bq {15}'
     
-    # set qsub command
-    if project == '':
-        # run jobs on sge
-        if queue == '':
-            # run without specifying queue
-            QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -l h_vmem={2}g \"bash {3}\"'
-            QsubCmd2 = 'qsub -b y -cwd -N {0} -hold_jid {1} -o {2} -e {2} -l h_vmem={3}g \"bash {4}\"'
-        else:
-            QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -q {2} -l h_vmem={3}g \"bash {4}\"'
-            QsubCmd2 = 'qsub -b y -cwd -N {0} -hold_jid {1} -o {2} -e {2} -q {3} -l h_vmem={4}g \"bash {5}\"'
-    else:
-        # run jobs on univa
-        QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -P {2} -l h_vmem={3}g \"bash {4}\"'
-        QsubCmd2 = 'qsub -b y -cwd -N {0} -hold_jid {1} -o {2} -e {2} -P {3} -l h_vmem={4}g \"bash {5}\"'
-    
-    
+    # run jobs on univa
+    QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -P {2} -l h_vmem={3}g \"bash {4}\"'
+    QsubCmd2 = 'qsub -b y -cwd -N {0} -hold_jid {1} -o {2} -e {2} -P {3} -l h_vmem={4}g \"bash {5}\"'
+        
     # extract regions from bedfile
     Regions = ExtractRegions(bedfile)
     
@@ -319,14 +301,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         newfile.close()
         # get a umique job name
         jobname1 = name_job('UmiGroup' + '_' + region.replace(':', '-'))
-        # run group umi for region
-        if project == '':
-            if queue == '':
-                subprocess.call(QsubCmd1.format(jobname1, LogDir, str(mem), GroupScript), shell=True)
-            else:
-                subprocess.call(QsubCmd1.format(jobname1, LogDir, queue, str(mem), GroupScript), shell=True)
-        else:
-            subprocess.call(QsubCmd1.format(jobname1, LogDir, project, str(mem), GroupScript), shell=True)    
+        subprocess.call(QsubCmd1.format(jobname1, LogDir, project, str(mem), GroupScript), shell=True)    
+        
+        print(QsubCmd1.format(jobname1, LogDir, project, str(mem), GroupScript))
+        
+        
         # record jobname
         GroupJobNames.append(jobname1)
         
@@ -336,19 +315,15 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         newfile = open(CollapseScript, 'w')
         newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, region, umifile,
                                          str(famsize), str(count_threshold), str(consensus_threshold),
-                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper, separator) +'\n') 
+                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper, separator, str(base_quality_score)) +'\n') 
         newfile.close()
         # get a umique job name
         jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))
         # run collapse umi for region
-        if project == '':
-            # run jobs on sge
-            if queue == '':
-                subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, str(mem), CollapseScript), shell=True)
-            else:
-                subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, queue, str(mem), CollapseScript), shell=True)
-        else:
-            subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, project, str(mem), CollapseScript), shell=True)
+        subprocess.call(QsubCmd2.format(jobname2, jobname1, LogDir, project, str(mem), CollapseScript), shell=True)
+        
+        print(QsubCmd2.format(jobname2, jobname1, LogDir, project, str(mem), CollapseScript))
+        
         # record jobname2
         ConsJobNames.append(jobname2)
     
@@ -371,13 +346,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             jobname3 =  name_job('MergeDataFiles')
             MergeJobNames.append(jobname3)
             # run merge datafiles
-            if project == '':
-                if queue == '':
-                    subprocess.call(QsubCmd1.format(jobname3, LogDir, str(mem), MergeScript1), shell=True) 
-                else:
-                    subprocess.call(QsubCmd1.format(jobname3, LogDir, queue, str(mem), MergeScript1), shell=True) 
-            else:
-                subprocess.call(QsubCmd1.format(jobname3, LogDir, project, str(mem), MergeScript1), shell=True) 
+            subprocess.call(QsubCmd1.format(jobname3, LogDir, project, str(mem), MergeScript1), shell=True) 
     
             # merge umi files     
             MergeScript2 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
@@ -387,13 +356,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             jobname4 = name_job('MergeUmiFiles')
             MergeJobNames.append(jobname4)
             # run merge umi files
-            if project == '':
-                if queue == '':
-                    subprocess.call(QsubCmd1.format(jobname4, LogDir, str(mem), MergeScript2), shell=True)
-                else:
-                    subprocess.call(QsubCmd1.format(jobname4, LogDir, queue, str(mem), MergeScript2), shell=True)
-            else:
-                subprocess.call(QsubCmd1.format(jobname4, LogDir, project, str(mem), MergeScript2), shell=True)
+            subprocess.call(QsubCmd1.format(jobname4, LogDir, project, str(mem), MergeScript2), shell=True)
             
         # check if collapse jobs are still running
         running_collapse = CheckJobs(ConsJobNames)
@@ -406,13 +369,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             jobname5 = name_job('MergeConsensusFiles')
             MergeJobNames.append(jobname5)
             # run merge consensus files
-            if project == '':
-                if queue == '':
-                    subprocess.call(QsubCmd1.format(jobname5, LogDir, str(mem), MergeScript3), shell=True)
-                else:
-                    subprocess.call(QsubCmd1.format(jobname5, LogDir, queue, str(mem), MergeScript3), shell=True)
-            else:
-                subprocess.call(QsubCmd1.format(jobname5, LogDir, project, str(mem), MergeScript3), shell=True)
+            subprocess.call(QsubCmd1.format(jobname5, LogDir, project, str(mem), MergeScript3), shell=True)
             
     # make a list of call jobs
     CallJobs = [] 
@@ -438,13 +395,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
                 newfile.close()    
                 jobname6 = name_job('Call_famsize_{0}'.format(str(size)))
                 CallJobs.append(jobname6)
-                if project == '':
-                    if queue == '':
-                        subprocess.call(QsubCmd1.format(jobname6, LogDir, str(mem), CallScript), shell=True)    
-                    else:
-                        subprocess.call(QsubCmd1.format(jobname6, LogDir, queue, str(mem), CallScript), shell=True)    
-                else:
-                    subprocess.call(QsubCmd1.format(jobname6, LogDir, project, str(mem), CallScript), shell=True)    
+                subprocess.call(QsubCmd1.format(jobname6, LogDir, project, str(mem), CallScript), shell=True)    
     
     if plot == True:
         # make a list of jobs. wait until all jobs are done before plotting and reporting
@@ -458,11 +409,5 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren, ref_threshold))
             newfile.close()
             jobname7 = name_job('Plot')
-            if project == '':
-                if queue == '':
-                    subprocess.call(QsubCmd1.format(jobname7, LogDir, str(mem), PlotScript), shell=True)
-                else:
-                    subprocess.call(QsubCmd1.format(jobname7, LogDir, queue, str(mem), PlotScript), shell=True)
-            else:
-                subprocess.call(QsubCmd1.format(jobname7, LogDir, project, str(mem), PlotScript), shell=True)  
+            subprocess.call(QsubCmd1.format(jobname7, LogDir, project, str(mem), PlotScript), shell=True)  
                

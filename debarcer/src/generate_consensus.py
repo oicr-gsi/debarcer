@@ -37,10 +37,10 @@ def find_closest(pos, L):
     return (smallest_dist, D[smallest_dist][-1][0], D[smallest_dist][-1][1])
 
 
-def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, max_depth, truncate, ignore_orphans, stepper):
+def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
     
-    (dict, int, str, int, int, str, int, str, int, bool, bool, str) -> (dict, dict)
+    (dict, int, str, int, int, str, int, str, int, int, bool, bool, str) -> (dict, dict)
     
     
     :param umi_families: Information about each umi: parent umi and positions, counts of each family within a given group
@@ -57,7 +57,7 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
-        
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted.
         
     Returns a tuple with a dictionary representing consensus info at each base position in the given region
     and a dictionary to keep track of family size for each position
@@ -86,92 +86,96 @@ def get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, 
                     
                     # skip unmapped, secondary and supplementary reads/alignments
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
-                        read_name, start_pos = read_data.query_name, int(read_data.reference_start)
-                        # extract umi. expecting a single umi
-                        umi = get_umi_from_name(read_name, separator)
-                        # check that umi is recorded
-                        if umi in umi_families:
-                            # find closest family from umi
-                            # make a list of (positions counts)
-                            L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
-                            closest, count, position_closest = find_closest(start_pos, L)
-                        
-                            # check if closest family is within the position threshold
-                            if closest <= pos_threshold:
-                                # found a umi family. check if family count is greater than family threshold
-                                if count >= fam_size:
-                                    # get the parent sequence                                
-                                    parent = umi_families[umi]['parent']
-                                                               
-                                    # keep track of family size used to derive alt
-                                    # for a given position , parent and read position
-                                    if pos not in FamSize:
-                                        FamSize[pos] = {}
-                                    if parent not in FamSize[pos]:
-                                        FamSize[pos][parent] = {}
-                                    FamSize[pos][parent][closest] = count
-                            
-                                    # use family key to count allele. collapsing is done within families. not per position
-                                    family_key = parent + str(position_closest)
+                        # check if the base quality is above threshold
+                        if read.query_position is not None:
+                            if read_data.query_qualities[read.query_position] >= int(base_quality_score):
                                 
-                                    # skip positions with deletions or ref not defined
-                                    # events are captured at the position before they occur
-                                    if not read.is_del and not read.is_refskip:
-                                        # read.indel looks ahead to see if indel at next position(s) 
-                                        # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
+                                read_name, start_pos = read_data.query_name, int(read_data.reference_start)
+                                # extract umi. expecting a single umi
+                                umi = get_umi_from_name(read_name, separator)
+                                # check that umi is recorded
+                                if umi in umi_families:
+                                    # find closest family from umi
+                                    # make a list of (positions counts)
+                                    L = [(int(i.split(':')[1]), umi_families[umi]['positions'][i]) for i in umi_families[umi]['positions']]
+                                    closest, count, position_closest = find_closest(start_pos, L)
+                        
+                                    # check if closest family is within the position threshold
+                                    if closest <= pos_threshold:
+                                        # found a umi family. check if family count is greater than family threshold
+                                        if count >= fam_size:
+                                            # get the parent sequence                                
+                                            parent = umi_families[umi]['parent']
+                                                               
+                                            # keep track of family size used to derive alt
+                                            # for a given position , parent and read position
+                                            if pos not in FamSize:
+                                                FamSize[pos] = {}
+                                            if parent not in FamSize[pos]:
+                                                FamSize[pos][parent] = {}
+                                            FamSize[pos][parent][closest] = count
+                            
+                                            # use family key to count allele. collapsing is done within families. not per position
+                                            family_key = parent + str(position_closest)
+                                
+                                            # skip positions with deletions or ref not defined
+                                            # events are captured at the position before they occur
+                                            if not read.is_del and not read.is_refskip:
+                                                # read.indel looks ahead to see if indel at next position(s) 
+                                                # 0 --> not indel; > 0 --> insertion; < 0 --> deletion
     
-                                        # get aligned read, ref pos and ref base 
-                                        pairs = read_data.get_aligned_pairs(with_seq=True)
-                                        # read.indel looks ahead to see if indel at next position(s)  
-                                        if read.indel == 0:
-                                            # no indel, record ref and alt 
-                                            # get index of pileupcolumn pos in aligned pairs
-                                            j = [i[1] for i in pairs].index(pos)
-                                            # record base on ref and read
-                                            ref_base = pairs[j][-1].upper()
-                                            alt_base = read_data.query_sequence[read.query_position].upper()
-                                        elif read.indel > 0:
-                                            # next position is an insertion
-                                            # get index of pileupcolumn pos in aligned pairs
-                                            j = [i[1] for i in pairs].index(pos)
-                                            # record base on ref and insertion on read
-                                            ref_base = pairs[j][-1].upper()
-                                            alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
-                                        elif read.indel < 0:
-                                            # next position is deletion
-                                            # get index of pileupcolumn pos in aligned pairs
-                                            j = [i[1] for i in pairs].index(pos)
-                                            # record base on ref at pos + ref bases deleted on read and base on read
-                                            ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
-                                            alt_base = read_data.query_sequence[read.query_position]
+                                                # get aligned read, ref pos and ref base 
+                                                pairs = read_data.get_aligned_pairs(with_seq=True)
+                                                # read.indel looks ahead to see if indel at next position(s)  
+                                                if read.indel == 0:
+                                                    # no indel, record ref and alt 
+                                                    # get index of pileupcolumn pos in aligned pairs
+                                                    j = [i[1] for i in pairs].index(pos)
+                                                    # record base on ref and read
+                                                    ref_base = pairs[j][-1].upper()
+                                                    alt_base = read_data.query_sequence[read.query_position].upper()
+                                                elif read.indel > 0:
+                                                    # next position is an insertion
+                                                    # get index of pileupcolumn pos in aligned pairs
+                                                    j = [i[1] for i in pairs].index(pos)
+                                                    # record base on ref and insertion on read
+                                                    ref_base = pairs[j][-1].upper()
+                                                    alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
+                                                elif read.indel < 0:
+                                                    # next position is deletion
+                                                    # get index of pileupcolumn pos in aligned pairs
+                                                    j = [i[1] for i in pairs].index(pos)
+                                                    # record base on ref at pos + ref bases deleted on read and base on read
+                                                    ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
+                                                    alt_base = read_data.query_sequence[read.query_position]
                                                                                 
-                                        # add base info
-                                        allele = (ref_base, alt_base)
-                                        # keep track of ref_base at pos
-                                        if pos not in consensus_seq:
-                                            consensus_seq[pos] = {}
-                                        if 'ref_base' not in consensus_seq[pos]:
-                                            # check ref_base.
-                                            # ref base is deleted region + ref base if only read with indel overlap positions
-                                            if len(ref_base) == 1:
-                                                consensus_seq[pos]['ref_base'] = ref_base
-                                            else:
-                                                consensus_seq[pos]['ref_base'] = ref_base[0]
-                                        # count the number of reads supporting this allele
-                                        if 'families' not in consensus_seq[pos]:
-                                            consensus_seq[pos]['families'] = {}
-                                        if family_key not in consensus_seq[pos]['families']:
-                                            consensus_seq[pos]['families'][family_key] = {}
-                                        if allele in consensus_seq[pos]['families'][family_key]:
-                                            consensus_seq[pos]['families'][family_key][allele] += 1
-                                        else:
-                                            consensus_seq[pos]['families'][family_key][allele] = 1
+                                                # add base info
+                                                allele = (ref_base, alt_base)
+                                                # keep track of ref_base at pos
+                                                if pos not in consensus_seq:
+                                                    consensus_seq[pos] = {}
+                                                if 'ref_base' not in consensus_seq[pos]:
+                                                    # check ref_base.
+                                                    # ref base is deleted region + ref base if only read with indel overlap positions
+                                                    if len(ref_base) == 1:
+                                                        consensus_seq[pos]['ref_base'] = ref_base
+                                                    else:
+                                                        consensus_seq[pos]['ref_base'] = ref_base[0]
+                                                # count the number of reads supporting this allele
+                                                if 'families' not in consensus_seq[pos]:
+                                                    consensus_seq[pos]['families'] = {}
+                                                if family_key not in consensus_seq[pos]['families']:
+                                                    consensus_seq[pos]['families'][family_key] = {}
+                                                if allele in consensus_seq[pos]['families'][family_key]:
+                                                    consensus_seq[pos]['families'][family_key][allele] += 1
+                                                else:
+                                                    consensus_seq[pos]['families'][family_key][allele] = 1
     return consensus_seq, FamSize
 
 
-def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper):
+def get_uncollapsed_seq(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, int, int, str, str, int, bool, bool, str) -> (dict, float)
+    (str, int, int, str, str, int, int, bool, bool, str) -> (dict, float)
     
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
@@ -183,7 +187,8 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
-    
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted.
+        
     Returns a tuple with a nested dictionary representing counts of each base at each base position,
     and the average read depth for the given region
     '''
@@ -217,58 +222,61 @@ def get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth, t
                     # get the AlignedSegment obj
                     read_data = read.alignment
                     if read_data.is_unmapped == False and read_data.is_secondary == False and read_data.is_supplementary == False:
-                        # update read counter
-                        read_count += 1
+                        # check if the base quality is above threshold
+                        if read.query_position is not None:
+                            if read_data.query_qualities[read.query_position] >= int(base_quality_score):
+                                # update read counter
+                                read_count += 1
                         
-                        # skip positions with deletions or ref not defined
-                        # events are captured at the position before they occur
-                        if not read.is_del and not read.is_refskip:
-                            # get aligned read, ref pos and ref base 
-                            pairs = read_data.get_aligned_pairs(with_seq=True)
+                                # skip positions with deletions or ref not defined
+                                # events are captured at the position before they occur
+                                if not read.is_del and not read.is_refskip:
+                                    # get aligned read, ref pos and ref base 
+                                    pairs = read_data.get_aligned_pairs(with_seq=True)
     
-                            # read.indel looks ahead to see if indel at next position(s)
-                            if read.indel == 0:
-                                # no indel, record ref and alt 
-                                # get index of pileupcolumn pos in aligned pairs
-                                j = [i[1] for i in pairs].index(pos)
-                                # record base on ref and read
-                                ref_base = pairs[j][-1].upper()
-                                alt_base = read_data.query_sequence[read.query_position].upper()
-                            elif read.indel > 0:
-                                # next position is an insertion
-                                # get index of pileupcolumn pos in aligned pairs
-                                j = [i[1] for i in pairs].index(pos)
-                                # record base on ref and insertion on read
-                                ref_base = pairs[j][-1].upper()
-                                alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
-                            elif read.indel < 0:
-                                # next position is deletion
-                                # get index of pileupcolumn pos in aligned pairs
-                                j = [i[1] for i in pairs].index(pos)
-                                # record base on ref at pos + ref bases deleted on read and base on read
-                                ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
-                                alt_base = read.alignment.query_sequence[read.query_position]
+                                    # read.indel looks ahead to see if indel at next position(s)
+                                    if read.indel == 0:
+                                        # no indel, record ref and alt 
+                                        # get index of pileupcolumn pos in aligned pairs
+                                        j = [i[1] for i in pairs].index(pos)
+                                        # record base on ref and read
+                                        ref_base = pairs[j][-1].upper()
+                                        alt_base = read_data.query_sequence[read.query_position].upper()
+                                    elif read.indel > 0:
+                                        # next position is an insertion
+                                        # get index of pileupcolumn pos in aligned pairs
+                                        j = [i[1] for i in pairs].index(pos)
+                                        # record base on ref and insertion on read
+                                        ref_base = pairs[j][-1].upper()
+                                        alt_base = read_data.query_sequence[read.query_position:read.query_position + abs(read.indel) + 1].upper()
+                                    elif read.indel < 0:
+                                        # next position is deletion
+                                        # get index of pileupcolumn pos in aligned pairs
+                                        j = [i[1] for i in pairs].index(pos)
+                                        # record base on ref at pos + ref bases deleted on read and base on read
+                                        ref_base = ''.join([i[-1] for i in pairs[j: j +  abs(read.indel) + 1]]).upper()
+                                        alt_base = read.alignment.query_sequence[read.query_position]
                 
-                            # add base info
-                            allele = (ref_base, alt_base)
-                            # record ref base
-                            if pos not in uncollapsed_seq:
-                                uncollapsed_seq[pos] = {}
-                            if 'ref_base' not in uncollapsed_seq[pos]:
-                                # check ref_base.
-                                # ref base is deleted region + ref base if only read with indel overlap positions
-                                if len(ref_base) == 1:
-                                    uncollapsed_seq[pos]['ref_base'] = ref_base
-                                else:
-                                    uncollapsed_seq[pos]['ref_base'] = ref_base[0]
-                            # count the number of reads supporting this allele
-                            if 'alleles' not in uncollapsed_seq[pos]:
-                                uncollapsed_seq[pos]['alleles'] = {}
-                            if allele not in uncollapsed_seq[pos]['alleles']:
-                                uncollapsed_seq[pos]['alleles'][allele] = 1
-                            else:
-                                uncollapsed_seq[pos]['alleles'][allele] += 1
-                covArray.append(read_count)                          
+                                    # add base info
+                                    allele = (ref_base, alt_base)
+                                    # record ref base
+                                    if pos not in uncollapsed_seq:
+                                        uncollapsed_seq[pos] = {}
+                                    if 'ref_base' not in uncollapsed_seq[pos]:
+                                        # check ref_base.
+                                        # ref base is deleted region + ref base if only read with indel overlap positions
+                                        if len(ref_base) == 1:
+                                            uncollapsed_seq[pos]['ref_base'] = ref_base
+                                        else:
+                                            uncollapsed_seq[pos]['ref_base'] = ref_base[0]
+                                    # count the number of reads supporting this allele
+                                    if 'alleles' not in uncollapsed_seq[pos]:
+                                        uncollapsed_seq[pos]['alleles'] = {}
+                                    if allele not in uncollapsed_seq[pos]['alleles']:
+                                        uncollapsed_seq[pos]['alleles'][allele] = 1
+                                    else:
+                                        uncollapsed_seq[pos]['alleles'][allele] += 1
+                        covArray.append(read_count)                          
     # compute coverage
     try:
         coverage = sum(covArray) / len(covArray)
@@ -299,10 +307,10 @@ def get_fam_size(FamSize, position):
     return (min_fam, mean_fam)
     
     
-def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (dict, int, str, int, int, str, int, float, int, str, int, bool, bool, str) -> dict
-        
+    (dict, int, str, int, int, str, int, float, int, str, int, int, bool, bool, str) -> dict
+    
     :param umi_families: Information about each umi: parent umi and positions,
                          counts of each family within a given group
                          positions are 0-based half opened
@@ -321,7 +329,8 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering    
-     
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted.
+    
 
     Generates consensus data for a given family size and genomic region
     '''
@@ -329,7 +338,7 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
     # get consensus info for each base position and umi group in the given region
     # {pos: {'ref_base': ref_base, 'families': {famkey: {allele: count}}}}
     # get family size at each position 
-    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+    consensus_seq, FamSize = get_consensus_seq(umi_families, fam_size, contig, region_start, region_end, bam_file, pos_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper)
 
     # create a dict to store consensus info
     cons_data = {}
@@ -380,9 +389,9 @@ def generate_consensus(umi_families, fam_size, contig, region_start, region_end,
 
 
 
-def generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth, truncate, ignore_orphans, stepper):
+def generate_uncollapsed(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, int, int, str, int, bool, bool, str) -> (dict, float)
+    (str, int, int, str, int, bool, bool, str, int) -> (dict, float)
     
     :param contig: Chromosome name, eg. chrN
     :param region_start: Start index of the region of interest. 0-based half opened
@@ -394,13 +403,14 @@ def generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth, 
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
-        
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted.
+            
     Returns a dictionary with uncollapsed consensus data for the genomic region,
     and the average read depth per position for the region
     '''
     
     # get uncolapased seq info {pos: {'ref_base': reference base}, {'alleles': {allele: count}}}
-    uncollapsed_seq, coverage = get_uncollapsed_seq(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+    uncollapsed_seq, coverage = get_uncollapsed_seq(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper)
     
     # create a dict to store consensus info
     cons_data = {}
@@ -506,9 +516,9 @@ def raw_table_output(cons_data, contig, region_start, region_end, outdir):
             
 
 
-def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, separator, max_depth, truncate, ignore_orphans, stepper):
+def generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, outdir, fam_size, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper):
     '''
-    (str, str, int, int, str, dict, str, str, int, num, int, num, num, str, int, bool, bool, str) -> None
+    (str, str, int, int, str, dict, str, str, int, num, int, num, num, str,, int, int, bool, bool, str) -> None
     
     
     :param contig: Chromosome name, eg. chrN
@@ -530,6 +540,7 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
     
     Generates consensus output file and yaml file with coverage for each region
     '''
@@ -544,12 +555,12 @@ def generate_consensus_output(contig, region_start, region_end, bam_file, umi_fa
         # check if 0 is passed as fam_size argument
         if f_size == 0:
             # compute consensus for uncollapsed data, and get coverage
-            cons_data[f_size], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+            cons_data[f_size], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper)
         else:
-            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+            cons_data[f_size] = generate_consensus(umi_families, f_size, contig, region_start, region_end, bam_file, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth, truncate, ignore_orphans, stepper)
     # compute consensus for uncollapsed data if not in fam_size argument, and get coverage
     if 0 not in family_sizes:
-        cons_data[0], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, max_depth=max_depth, truncate=truncate, ignore_orphans=ignore_orphans, stepper=stepper)
+        cons_data[0], coverage = generate_uncollapsed(contig, region_start, region_end, bam_file, base_quality_score, max_depth, truncate, ignore_orphans, stepper)
 
     # write output consensus file
     print("Writing output...")

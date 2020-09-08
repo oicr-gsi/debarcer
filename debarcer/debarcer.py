@@ -207,7 +207,9 @@ def collapse(args):
     :param stepper: Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
         
+    
     Base collapses from given BAM and umi family file
     '''
     
@@ -257,7 +259,7 @@ def collapse(args):
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, args.separator, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
+    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, args.separator, args.base_quality_score, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
  
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
@@ -379,13 +381,14 @@ def run_scripts(args):
     :param minchildren: Minimum number of umi children to label regions
     :param extension: Figure file extension
     :param sample: Sample name to appear in report. If empty str, outdir basename is used
-    :param queue: SGE queue for submitting jobs
     :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
     :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
     :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
-    :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
+    :param project: Project name to submit jobs on univa
     :param separator: String separating the UMI from the remaining of the read name
-        
+    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
+    
+    
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
     
@@ -418,17 +421,14 @@ def run_scripts(args):
     alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
     filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
     
-    # convert None arguments to empty strings
-    project, queue = list(map(lambda x: x or '', [args.project, args.queue]))
-    
     # create shell scripts and run qsubs to Group and Collapse umis 
     submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, queue, project, args.separator)
-    
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.project, args.separator, args.base_quality_score)
+  
     
 def generate_plots(args):
     '''
@@ -708,6 +708,7 @@ if __name__ == '__main__':
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
     c_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
+    c_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     c_parser.set_defaults(func=collapse)
 
     ## Variant call command - requires cons file (can only run after collapse)
@@ -752,8 +753,7 @@ if __name__ == '__main__':
     r_parser.add_argument('-cl', '--Call', dest='call', action='store_false', help='Convert consensus files to VCF format. Default is True, becomes False if used')
     r_parser.add_argument('-ex', '--Extension', dest='extension', choices=['png', 'jpeg', 'pdf'], default='png', help='Figure format. Does not generate a report if pdf, even with -r True. Default is png')
     r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
-    r_parser.add_argument('-q', '--Queue', dest='queue', help='SGE queue for submitting jobs. Queue and project are mutually exclusive. Run on Univa if Project and SGE if queue is used')
-    r_parser.add_argument('-pr', '--Project', dest='project', help='Project for submitting jobs on Univa. Queue and project are mutually exclusive. Run on Univa if Project and SGE if queue is used')
+    r_parser.add_argument('-pr', '--Project', dest='project', default='gsi', help='Project for submitting jobs on Univa')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default=20, type=int, help='Requested memory for submitting jobs to SGE. Default is 20g')
     r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
                           help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
@@ -767,6 +767,7 @@ if __name__ == '__main__':
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
+    r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 
