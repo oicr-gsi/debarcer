@@ -9,7 +9,7 @@ from src.generate_consensus import generate_consensus_output
 from src.generate_vcf import WriteVCF
 from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
 from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
- FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime
+ FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, get_read_count
 from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
  PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
@@ -115,6 +115,7 @@ def group_umis(args):
     :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
     :param truncate: Skip reads overlapping with the genomic interval if True. Default is False
     :param separator: String separating the UMI from the remaining of the read name
+    :param readcount: Minimum number of reads in region required for grouping. Default is 0  
     
     Groups by hamming distance and form families based on physical distances within groups
     '''
@@ -149,42 +150,51 @@ def group_umis(args):
           
     print(GetCurrentTime() + "Grouping UMIs...")
     
-    # Generate UMI families within groups using the position of the most frequent umi as reference for each family
-    # keep the most abundant family within group and ignore others if args.ignore is True
-    umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate, args.separator)
+    # count reads in genomic region
+    read_count = get_read_count(bam_file, contig, region_start, region_end)
     
-    # get the number of parent umis, number of children and number of parent given a number of children
-    filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
-    header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-    # use 1-based inclusive coordinates in datafile output
-    info = [contig, str(region_start + 1), str(region_end)] + umi_datafile(umi_groups)
-    with open(filename, 'w') as newfile:
-        newfile.write('\t'.join(header) + '\n')
-        newfile.write('\t'.join(info) + '\n')
-    
-    # save umi families as a json. positions in the json are 0-based half opened
-    umi_file = os.path.join(outdir, 'Umifiles/{0}.json'.format(region))
-    with open(umi_file, 'w') as newfile:
-        json.dump(umi_families, newfile, sort_keys = True, indent=4)
-    
-    # write a summary file of UMI relationships and count for each individual umi before grouping
-    Outputfile = os.path.join(outdir, 'Stats/UMI_relationships_{0}.txt'.format(region))
-    GroupQCWriter(umi_positions, Outputfile)
-    
-    # save information about individual UMIs as a json in Stats directory
-    umi_file = os.path.join(outdir, 'Stats/Umis_{0}_before_grouping.json'.format(region))
-    with open(umi_file, 'w') as newfile:
-        json.dump(umi_positions, newfile, sort_keys = True, indent=4)
-    
-    # save counts of unmapped and mapped reads as a json in Stats directory
-    read_file = os.path.join(outdir, 'Stats/Mapped_read_counts_{0}.json'.format(region))
-    with open(read_file, 'w') as newfile:
-        json.dump(mapped_reads, newfile, sort_keys = True, indent=4)
+    print(GetCurrentTime() + "{0} reads in {1}".format(read_count, region))
         
-    print(GetCurrentTime() + 'UMI grouping complete. CSV files written to {0}.'.format(os.path.join(outdir, 'Datafiles')))
-    print(GetCurrentTime() + 'UMI grouping complete. UMI files written to {0}.'.format(os.path.join(outdir, 'Umifiles')))
-    print(GetCurrentTime() + 'UMI grouping complete. QC files written to {0}.'.format(os.path.join(outdir, 'Stats')))
-
+    # check that read count is greater than threshold
+    if read_count > args.readcount:
+        # Generate UMI families within groups using the position of the most frequent umi as reference for each family
+        # keep the most abundant family within group and ignore others if args.ignore is True
+        umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate, args.separator)
+    
+        # get the number of parent umis, number of children and number of parent given a number of children
+        filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
+        header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+        # use 1-based inclusive coordinates in datafile output
+        info = [contig, str(region_start + 1), str(region_end)] + umi_datafile(umi_groups)
+        with open(filename, 'w') as newfile:
+            newfile.write('\t'.join(header) + '\n')
+            newfile.write('\t'.join(info) + '\n')
+    
+        # save umi families as a json. positions in the json are 0-based half opened
+        umi_file = os.path.join(outdir, 'Umifiles/{0}.json'.format(region))
+        with open(umi_file, 'w') as newfile:
+            json.dump(umi_families, newfile, sort_keys = True, indent=4)
+    
+        # write a summary file of UMI relationships and count for each individual umi before grouping
+        Outputfile = os.path.join(outdir, 'Stats/UMI_relationships_{0}.txt'.format(region))
+        GroupQCWriter(umi_positions, Outputfile)
+    
+        # save information about individual UMIs as a json in Stats directory
+        umi_file = os.path.join(outdir, 'Stats/Umis_{0}_before_grouping.json'.format(region))
+        with open(umi_file, 'w') as newfile:
+            json.dump(umi_positions, newfile, sort_keys = True, indent=4)
+    
+        # save counts of unmapped and mapped reads as a json in Stats directory
+        read_file = os.path.join(outdir, 'Stats/Mapped_read_counts_{0}.json'.format(region))
+        with open(read_file, 'w') as newfile:
+            json.dump(mapped_reads, newfile, sort_keys = True, indent=4)
+        
+        print(GetCurrentTime() + 'UMI grouping complete. CSV files written to {0}.'.format(os.path.join(outdir, 'Datafiles')))
+        print(GetCurrentTime() + 'UMI grouping complete. UMI files written to {0}.'.format(os.path.join(outdir, 'Umifiles')))
+        print(GetCurrentTime() + 'UMI grouping complete. QC files written to {0}.'.format(os.path.join(outdir, 'Stats')))
+    
+    else:
+        print(GetCurrentTime() + 'Not enough reads in region {0}. Found {1} reads and more than {2} reads are required for grouping'.format(region, read_count, args.readcount))
 
 def collapse(args):
     '''
@@ -387,8 +397,8 @@ def run_scripts(args):
     :param project: Project name to submit jobs on univa
     :param separator: String separating the UMI from the remaining of the read name
     :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
-    
-    
+    :param readcount: Minimum number of reads in region required for grouping. Default is 0  
+        
     Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     '''
     
@@ -427,7 +437,7 @@ def run_scripts(args):
                 alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
                 args.ignore, args.stepper, args.merge, args.plot, args.report,
                 args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.project, args.separator, args.base_quality_score)
+                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.project, args.separator, args.base_quality_score, args.readcount)
   
     
 def generate_plots(args):
@@ -686,6 +696,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-i', '--Ignore', dest='ignore', choices=[True, False], type=ConvertArgToBool, default=False, help='Keep the most abundant family and ignore families at other positions within each group. Default is False')
     g_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='Discard reads overlapping with the genomic region if True. Default is False')
     g_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
+    g_parser.add_argument('-rc', '--ReadCount', dest='readcount', default=0, type=int, help = 'Minimum number of reads in region required for grouping. Default is 0')
     g_parser.set_defaults(func=group_umis)
     
     ## Base collapse command
@@ -768,6 +779,7 @@ if __name__ == '__main__':
                           nofilter: uses every single read turning off any filtering')
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
+    r_parser.add_argument('-rc', '--ReadCount', dest='readcount', default=0, type=int, help = 'Minimum number of reads in region required for grouping. Default is 0')
     r_parser.set_defaults(func=run_scripts)
     
     ## Merge files command 
