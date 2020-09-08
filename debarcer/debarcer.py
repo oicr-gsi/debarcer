@@ -194,7 +194,7 @@ def group_umis(args):
         print(GetCurrentTime() + 'UMI grouping complete. QC files written to {0}.'.format(os.path.join(outdir, 'Stats')))
     
     else:
-        print(GetCurrentTime() + 'Not enough reads in region {0}. Found {1} reads and at least {2} reads required for grouping'.format(region, read_count, args.readcount))
+        print(GetCurrentTime() + 'Not enough reads in region {0}. Found {1} reads and more than {2} reads are required for grouping'.format(region, read_count, args.readcount))
 
 def collapse(args):
     '''
