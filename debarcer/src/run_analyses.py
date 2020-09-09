@@ -4,7 +4,6 @@ import json
 import subprocess
 from src.utilities import CheckRegionFormat, CheckJobs
 import uuid
-import collections
 
 
 def ExtractRegions(bedfile):
@@ -88,8 +87,12 @@ def MergeConsensusFiles(ConsDir):
         L = []
         for i in ConsFiles:
             # extract chromo and start from filename
-            chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+            if ':' in i:
+                chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+            elif '_' in i:
+                chromo, start = i[:i.index('_')], int(i[i.index('_')+1:i.index('-')])
             L.append([chromo, start, i])
+        
         # remove chr from chromo name
         for i in range(len(L)):
             L[i][0] = L[i][0].replace('chr', '')
@@ -113,10 +116,9 @@ def MergeConsensusFiles(ConsDir):
         # add back 'chr' in chromo name
         for i in range(len(L)):
             L[i][0] = 'chr' + str(L[i][0])
-    
+        
         # make a sorted list of full paths
         S = [os.path.join(ConsDir, i[-1]) for i in L]
-    
         # get Header
         infile = open(S[0])
         Header = infile.readline().rstrip().split('\t')
@@ -130,9 +132,7 @@ def MergeConsensusFiles(ConsDir):
             data = infile.read().rstrip().split('\n')
             infile.close()
             MergedContent.extend(data)
-    
         # remove duplicate records. keep a single record if multiple duplicates
-        
         NewContent = []
         if len(MergedContent) != 0:
             # keep a single position per chromosome if positions are from overlapping regions
@@ -142,24 +142,19 @@ def MergeConsensusFiles(ConsDir):
             for i in MergedContent:
                 chromo = i.split('\t')[0]
                 pos = i.split('\t')[1]
-                fam = i.split('\t')[10]
+                fam = i.split('\t')[14]
                 if (chromo, pos, fam) not in recorded:
                     NewContent.append(i)
                     recorded.append((chromo, pos, fam))
-                
         # write merged consensus file
         MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
         newfile = open(MergedFile, 'w')
         newfile.write('\t'.join(Header) + '\n')
-        #newfile.write('\n'.join(MergedContent))
-        
         newfile.write('\n'.join(NewContent))
-        
-        
+                
         newfile.close()
     
     
-
 def MergeDataFiles(DataDir):
     '''
     (str) -> None
