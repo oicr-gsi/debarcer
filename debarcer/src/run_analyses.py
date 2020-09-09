@@ -4,7 +4,6 @@ import json
 import subprocess
 from src.utilities import CheckRegionFormat, CheckJobs
 import uuid
-import collections
 
 
 def ExtractRegions(bedfile):
