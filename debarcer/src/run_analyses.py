@@ -88,8 +88,12 @@ def MergeConsensusFiles(ConsDir):
         L = []
         for i in ConsFiles:
             # extract chromo and start from filename
-            chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+            try:
+                chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+            except:
+                chromo, start = i[:i.index('_')], int(i[i.index('_')+1:i.index('-')])
             L.append([chromo, start, i])
+        
         # remove chr from chromo name
         for i in range(len(L)):
             L[i][0] = L[i][0].replace('chr', '')
@@ -113,10 +117,9 @@ def MergeConsensusFiles(ConsDir):
         # add back 'chr' in chromo name
         for i in range(len(L)):
             L[i][0] = 'chr' + str(L[i][0])
-    
+        
         # make a sorted list of full paths
         S = [os.path.join(ConsDir, i[-1]) for i in L]
-    
         # get Header
         infile = open(S[0])
         Header = infile.readline().rstrip().split('\t')
@@ -130,9 +133,7 @@ def MergeConsensusFiles(ConsDir):
             data = infile.read().rstrip().split('\n')
             infile.close()
             MergedContent.extend(data)
-    
         # remove duplicate records. keep a single record if multiple duplicates
-        
         NewContent = []
         if len(MergedContent) != 0:
             # keep a single position per chromosome if positions are from overlapping regions
@@ -142,23 +143,135 @@ def MergeConsensusFiles(ConsDir):
             for i in MergedContent:
                 chromo = i.split('\t')[0]
                 pos = i.split('\t')[1]
-                fam = i.split('\t')[10]
+                fam = i.split('\t')[14]
                 if (chromo, pos, fam) not in recorded:
                     NewContent.append(i)
                     recorded.append((chromo, pos, fam))
+        return NewContent
                 
         # write merged consensus file
         MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
         newfile = open(MergedFile, 'w')
         newfile.write('\t'.join(Header) + '\n')
-        #newfile.write('\n'.join(MergedContent))
-        
         newfile.write('\n'.join(NewContent))
-        
-        
+                
         newfile.close()
     
     
+
+
+
+#########################################################
+
+
+#def MergeConsensusFiles(ConsDir):
+#    '''
+#    (str) -> None
+#
+#    :param ConsDir: Directory Consfiles containing .cons consensus files
+#    
+#    Merge all .cons consensus files in Consfiles into a unique Merged_ConsensusFile.cons file in Consfiles
+#    '''
+#    
+#    # make a list of consensus files
+#    ConsFiles = [i for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')] 
+#    # check that consfiles exist
+#    if len(ConsFiles) != 0:
+#        # make a list to store consensus records
+#        MergedContent = []
+#        # sort files
+#        L = []
+#        for i in ConsFiles:
+#            # extract chromo and start from filename
+#            chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
+#            L.append([chromo, start, i])
+#        # remove chr from chromo name
+#        for i in range(len(L)):
+#            L[i][0] = L[i][0].replace('chr', '')
+#            # reorder chromosomes, place all non-numeric chromos at begining    
+#            if L[i][0].isnumeric() == False:
+#                j = L.pop(i)
+#                L.insert(0, j)
+#        # set non-numeric chromos aside
+#        aside = []
+#        while L[0][0].isnumeric() == False:
+#            aside.append(L.pop(0))
+#        # sort non-numeric chromos
+#        aside.sort()
+#        # convert chromos to int
+#        for i in range(len(L)):
+#            L[i][0] = int(L[i][0])
+#        # sort files on numeric chromo and start
+#        L.sort(key=operator.itemgetter(0, 1))
+#        # add back non-numeric chromos
+#        L.extend(aside)
+#        # add back 'chr' in chromo name
+#        for i in range(len(L)):
+#            L[i][0] = 'chr' + str(L[i][0])
+#    
+#        # make a sorted list of full paths
+#        S = [os.path.join(ConsDir, i[-1]) for i in L]
+#    
+#        # get Header
+#        infile = open(S[0])
+#        Header = infile.readline().rstrip().split('\t')
+#        infile.close()
+#    
+#        # extract content from each consensus file
+#        for i in S:
+#            infile = open(i)
+#            # skip header and grab all data
+#            infile.readline()
+#            data = infile.read().rstrip().split('\n')
+#            infile.close()
+#            MergedContent.extend(data)
+#    
+#        # remove duplicate records. keep a single record if multiple duplicates
+#        
+#        NewContent = []
+#        if len(MergedContent) != 0:
+#            # keep a single position per chromosome if positions are from overlapping regions
+#            # note that nucleotide counts at same positions in overlaping regions may slightly different
+#            # make a list of (chromo, pos) already recorded
+#            recorded = []
+#            for i in MergedContent:
+#                chromo = i.split('\t')[0]
+#                pos = i.split('\t')[1]
+#                fam = i.split('\t')[10]
+#                if (chromo, pos, fam) not in recorded:
+#                    NewContent.append(i)
+#                    recorded.append((chromo, pos, fam))
+#                
+#        # write merged consensus file
+#        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
+#        newfile = open(MergedFile, 'w')
+#        newfile.write('\t'.join(Header) + '\n')
+#        #newfile.write('\n'.join(MergedContent))
+#        
+#        newfile.write('\n'.join(NewContent))
+#        
+#        
+#        newfile.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########################################################
+
 
 def MergeDataFiles(DataDir):
     '''
