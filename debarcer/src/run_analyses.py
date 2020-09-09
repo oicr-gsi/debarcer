@@ -147,8 +147,6 @@ def MergeConsensusFiles(ConsDir):
                 if (chromo, pos, fam) not in recorded:
                     NewContent.append(i)
                     recorded.append((chromo, pos, fam))
-        return NewContent
-                
         # write merged consensus file
         MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
         newfile = open(MergedFile, 'w')
