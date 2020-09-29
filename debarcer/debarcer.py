@@ -6,19 +6,19 @@ import mistune
 import collections 
 
 
-from src.preprocess_fastqs import reheader_fastqs, check_library_prep
-from src.umi_error_correct import get_umi_families, umi_datafile
-from src.generate_consensus import generate_consensus_output
-from src.generate_vcf import WriteVCF
-from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
+from debarcer.preprocess_fastqs import reheader_fastqs, check_library_prep
+from debarcer.umi_error_correct import get_umi_families, umi_datafile
+from debarcer.generate_consensus import generate_consensus_output
+from debarcer.generate_vcf import WriteVCF
+from debarcer.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
+from debarcer.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
  FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, get_read_count
-from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
+from debarcer.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
  PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
  PlotIncorrectReads, PlotDataPerRegion
-from src.generate_report import WriteReport   
-from src.find_regions_coverage import WriteTargetsBed
+from debarcer.generate_report import WriteReport   
+from debarcer.find_regions_coverage import WriteTargetsBed
 
 import matplotlib.pyplot as plt
 import numpy as np

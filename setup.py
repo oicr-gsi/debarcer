@@ -1,10 +1,9 @@
 
 from setuptools import setup, find_packages
-from debarcer.src.version import __version__
+from debarcer.version import __version__
 
 
 # Utility function to read the README file.
-
 with open("README.md") as infile:
     content = infile.read().rstrip()
 
@@ -18,9 +17,7 @@ setup(
 	license = "MIT License",
 	keywords = "computational genomics",
 	url = "https://github.com/oicr-gsi/debarcer",
-	#packages = ['debarcer', 'tests', 'debarcer.src'],
-	#packages=find_packages(where='src'),
-    packages=find_packages(),
+	packages=find_packages(),
     
     long_description = content,
 	classifiers = [
