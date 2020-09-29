@@ -4,6 +4,7 @@ import operator
 import yaml
 from src.utilities import get_umi_from_name
 
+
 def find_closest(pos, L):
     '''
     (int, list) -> tuple

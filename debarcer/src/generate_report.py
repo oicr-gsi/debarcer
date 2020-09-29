@@ -16,6 +16,7 @@ from src.utilities import DropEmptyFiles, CheckFilePath
 from src.version import __version__
 
 
+
 def ResizeFifure(filename, scaling_factor):
     '''
     (str, float) -> (int, int)

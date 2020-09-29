@@ -10,6 +10,7 @@ from src.utilities import get_consecutive_items
 from src.utilities import GetContigs
 
 
+
 def FindRegionsCoverage(bamfile, contig, min_cov, region_size, max_depth, ignore_orphans, stepper):
     '''
     (str, str, int, int, int, bool, str) -> list

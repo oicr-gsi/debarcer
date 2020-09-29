@@ -1,7 +1,6 @@
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from debarcer.src.version import __version__
-
 
 
 # Utility function to read the README file.
@@ -19,8 +18,11 @@ setup(
 	license = "MIT License",
 	keywords = "computational genomics",
 	url = "https://github.com/oicr-gsi/debarcer",
-	packages = ['debarcer', 'tests', 'debarcer.src'],
-	long_description = content,
+	#packages = ['debarcer', 'tests', 'debarcer.src'],
+	#packages=find_packages(where='src'),
+    packages=find_packages(),
+    
+    long_description = content,
 	classifiers = [
 	"Development Status :: 3 - Alpha",
 	"Intended Audience :: Science/Research",
@@ -34,7 +36,7 @@ setup(
 	"Operating System :: Unix",
 	"Operating System :: MacOS",
 	],
-    entry_points={'console_scripts': ['debarcer = debarcer:main']},
+    entry_points={'console_scripts': ['debarcer = debarcer.debarcer:main']},
 	install_requires = ["numpy>=1.14.2", "pandas>=0.22.0", "pysam>=0.14.1",
                         "matplotlib>=3.1.2", "mistune>=0.8.4", "networkx>=1.11",
                         "pygal>=2.4.0", "scipy>=1.0.1", "seaborn>=0.9.0",
