@@ -652,8 +652,8 @@ def generate_bed(args):
     WriteTargetsBed(args.bamfile, args.bed, args.mincov, args.regionsize, args.maxdepth, args.ignoreorphans, args.stepper)
     
 
-if __name__ == '__main__':
-        
+
+def main()
     ## Argument + config parsing and error handling
     parser = argparse.ArgumentParser(prog='debarcer.py', description="A package for De-Barcoding\
                                      and Error Correction of sequencing data containing molecular barcodes")
@@ -819,4 +819,6 @@ if __name__ == '__main__':
     except AttributeError as e:
         print(e)
         print(parser.format_help())
-    
+
+if __name__ == '__main__':
+    main()
