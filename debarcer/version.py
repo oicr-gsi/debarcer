@@ -6,4 +6,4 @@ Created on Mon Oct 28 14:57:35 2019
 """
 
 # setup and code access debarcer version from this module
-__version__ = "2.1.1"
+__version__ = "2.1.3"
