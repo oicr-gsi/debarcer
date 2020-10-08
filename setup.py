@@ -36,7 +36,6 @@ setup(
     entry_points={'console_scripts': ['debarcer = debarcer.debarcer:main']},
 	install_requires = ["numpy>=1.14.2", "pandas>=0.22.0", "pysam>=0.14.1",
                         "matplotlib>=3.1.2", "mistune>=0.8.4", "networkx>=1.11",
-                        "pygal>=2.4.0", "scipy>=1.0.1", "seaborn>=0.9.0",
-                        "setuptools>=50.3.0", "pyyaml>=5.1.1"],
+                        "pygal>=2.4.0", "scipy>=1.0.1", "seaborn>=0.9.0", "pyyaml>=5.1.1"],
     python_requires=">=3.6",
 )
