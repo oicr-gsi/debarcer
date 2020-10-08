@@ -3,20 +3,22 @@ import sys
 import os
 import json
 import mistune
-from src.preprocess_fastqs import reheader_fastqs, check_library_prep
-from src.umi_error_correct import get_umi_families, umi_datafile
-from src.generate_consensus import generate_consensus_output
-from src.generate_vcf import WriteVCF
-from src.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
-from src.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
+import collections 
+
+
+from debarcer.preprocess_fastqs import reheader_fastqs, check_library_prep
+from debarcer.umi_error_correct import get_umi_families, umi_datafile
+from debarcer.generate_consensus import generate_consensus_output
+from debarcer.generate_vcf import WriteVCF
+from debarcer.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
+from debarcer.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
  FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, get_read_count
-from src.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
+from debarcer.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
  PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
  PlotIncorrectReads, PlotDataPerRegion
-from src.generate_report import WriteReport   
-from src.find_regions_coverage import WriteTargetsBed
-import collections 
+from debarcer.generate_report import WriteReport   
+from debarcer.find_regions_coverage import WriteTargetsBed
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,24 +41,26 @@ Copyright (c) 2018 GSI, Ontario Institute for Cancer Research
 
 
 
-def preprocess_reads(args):
+def preprocess_reads(outdir, read1, read2, read3, prepname, prepfile, config, prefix):
     '''
     (list) -> None
     Preprocesses fastq files by removing UMIs from reads, appending them to 
     the read names and writing new fastqs and also write QC reports in a Stats directory
 	 
-    :param outdir: Directory where new fastqs are written. From command or config
-    :param read1: Path to first FASTQ file
-    :param read2: Path to second FASTQ file
-    :param read3: Path to third FASTQ file
-    :param prepname: Name of the library preparation
-    :param prepfile: Path to the library preparation ini file. From command or config
-    :param config: Path to the config file. 
-    :param prefix: Prefix for naming umi-reheradered fastqs 
+    Parameters
+    ----------
+    - outdir (str): Directory where new fastqs are written. From command or config
+    - read1 (str): Path to first FASTQ file
+    - read2 (str or None): Path to second FASTQ file
+    - read3 (str or None): Path to third FASTQ file
+    - prepname (str): Name of the library preparation
+    - prepfile (str): Path to the library preparation ini file. From command or config
+    - config (str or None): Path to the config file. 
+    - prefix (str): Prefix for naming umi-reheradered fastqs 
     '''
         
     # get output directory from the config or command. set to current dir if not provided
-    outdir = GetOutputDir(args.config, args.outdir)
+    outdir = GetOutputDir(config, outdir)
     # create outputdir
     if os.path.isfile(outdir) == True:
         raise ValueError('ERR: Output directory cannot be a file')
@@ -64,24 +68,24 @@ def preprocess_reads(args):
         os.makedirs(outdir, exist_ok=True)
     
     # get input prep file from config or command
-    prepfile = GetInputFiles(args.config, args.prepfile, 'prep_file')
+    prepfile = GetInputFiles(config, prepfile, 'prep_file')
     
     # check library prep format
-    check_library_prep(args.prepname, prepfile)
+    check_library_prep(prepname, prepfile)
         
     # check that files are valid
-    for i in [args.read1, args.read2, args.read3]:
+    for i in [read1, read2, read3]:
         # check that argument (or file) is provided/exists 
         if i:
             # check if provided file is file
             if os.path.isfile(i) == False:
                 # raise error and exit
-                raise ValueError('ERR: prepfile is not a valid file')
+                raise ValueError('ERR: read file is not a valid file')
                 sys.exit(1)
     
     # reheader fastqs and add umi in new fastqs header
     # get a json with read counts and list of umi sequences
-    D, UmiSequences = reheader_fastqs(args.read1, outdir, args.prepname, prepfile, r2=args.read2, r3=args.read3, prefix=args.prefix)
+    D, UmiSequences = reheader_fastqs(read1, outdir, prepname, prepfile, r2=read2, r3=read3, prefix=prefix)
 	 
     # create subdirectoy structure
     CreateDirTree(outdir)
@@ -102,26 +106,28 @@ def preprocess_reads(args):
 
 
 
-def group_umis(args):
+def group_umis(outdir, region, bamfile, config, distthreshold, postthreshold, ignore, truncate, separator, readcount):
     '''
-    (list) -> None
-       
-    :param outdir: Output directory where subdirectories are created
-    :param region: A string with region coordinates chrN:posA-posB. posA and posB are 1-based included
-    :param bamfile: Path to the bam file
-    :param config: Path to your config file
-    :param distthreshold: Hamming distance threshold for connecting parent-children umis
-    :param postthreshold: Distance threshold in bp for defining families within groups
-    :param ignore: Keep the most abundant family and ignore families at other positions within each group if True. Default is False
-    :param truncate: Skip reads overlapping with the genomic interval if True. Default is False
-    :param separator: String separating the UMI from the remaining of the read name
-    :param readcount: Minimum number of reads in region required for grouping. Default is 0  
+    (str, str, str, str, int, int, bool, bool, str, int) -> None
     
     Groups by hamming distance and form families based on physical distances within groups
+    
+    Parameters
+    ----------
+    - outdir (str): Output directory where subdirectories are created
+    - region (str): A string with region coordinates chrN:posA-posB. posA and posB are 1-based included
+    - bamfile (str): Path to the bam file
+    - config (str): Path to your config file
+    - distthreshold (int): Hamming distance threshold for connecting parent-children umis
+    - postthreshold (int): Distance threshold in bp for defining families within groups
+    - ignore (bool): Keep the most abundant family and ignore families at other positions within each group if True. Default is False
+    - truncate (bool): Skip reads overlapping with the genomic interval if True. Default is False
+    - separator (str): String separating the UMI from the remaining of the read name
+    - readcount (int): Minimum number of reads in region required for grouping. Default is 0  
     '''
     
     # get output directory from the config or command. set to current dir if not provided
-    outdir = GetOutputDir(args.config, args.outdir)
+    outdir = GetOutputDir(config, outdir)
     # create outputdir
     if os.path.isfile(outdir) == True:
         raise ValueError('ERR: Output directory cannot be a file')
@@ -132,10 +138,9 @@ def group_umis(args):
     CreateDirTree(outdir)
 
     # get input bam from config or command
-    bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
+    bam_file = GetInputFiles(config, bamfile, 'bam_file')
     
     # check that region is properly formatted
-    region = args.region
     CheckRegionFormat(bam_file, region)
     # get chromosome
     contig = region.split(":")[0]
@@ -145,8 +150,8 @@ def group_umis(args):
     region_start = region_start -1
     
     # get umi position and distance thresholds 
-    pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
-    dist_threshold = GetThresholds(args.config, 'umi_edit_distance_threshold', args.distthreshold)
+    pos_threshold = GetThresholds(config, 'umi_family_pos_threshold', postthreshold)
+    dist_threshold = GetThresholds(config, 'umi_edit_distance_threshold', distthreshold)
           
     print(GetCurrentTime() + "Grouping UMIs...")
     
@@ -156,10 +161,10 @@ def group_umis(args):
     print(GetCurrentTime() + "{0} reads in {1}".format(read_count, region))
         
     # check that read count is greater than threshold
-    if read_count > args.readcount:
+    if read_count > readcount:
         # Generate UMI families within groups using the position of the most frequent umi as reference for each family
         # keep the most abundant family within group and ignore others if args.ignore is True
-        umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, args.ignore, args.truncate, args.separator)
+        umi_families, umi_groups, umi_positions, mapped_reads = get_umi_families(contig, region_start, region_end, bam_file, pos_threshold, dist_threshold, ignore, truncate, separator)
     
         # get the number of parent umis, number of children and number of parent given a number of children
         filename= os.path.join(outdir, 'Datafiles/datafile_{}.csv'.format(region))
@@ -194,37 +199,40 @@ def group_umis(args):
         print(GetCurrentTime() + 'UMI grouping complete. QC files written to {0}.'.format(os.path.join(outdir, 'Stats')))
     
     else:
-        print(GetCurrentTime() + 'Not enough reads in region {0}. Found {1} reads and more than {2} reads are required for grouping'.format(region, read_count, args.readcount))
+        print(GetCurrentTime() + 'Not enough reads in region {0}. Found {1} reads and more than {2} reads are required for grouping'.format(region, read_count, readcount))
 
-def collapse(args):
+def collapse(config, outdir, bamfile, reference, region, umifile, famsize,
+             countthreshold, percentthreshold, postthreshold, maxdepth, truncate,
+             ignoreorphans, stepper, separator, base_quality_score):
     '''
-    (list) -> None
-    
-    :param config: Path to the config file
-    :param outdir: Output directory where subdirectories are created
-    :param bamfile: Path to the BAM file
-    :param reference: Path to the reference genome
-    :param region: Region coordinates (1-based included) to search for UMIs (eg. chrN:posA-posB)
-    :param umifile: Path to the .umis file
-    :param famsize: Comma-separated list of minimum umi family size to collapase on
-    :param countthreshold: Base count threshold in pileup column
-    :param percentthreshold: Base percent threshold in pileup column
-    :param postthreshold: Umi position threshold for grouping umis together
-    :param separator: String separating the UMI from the remaining of the read name
-    :param maxdepth: Maximum read depth. Default is 1000000
-    :param truncate: Only consider pileup columns in given region. Default is False
-    :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True
-    :param stepper: Controls how the iterator advances. Accepeted values:
-                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
-                    'nofilter': uses every single read turning off any filtering
-    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
-        
+    (str, str, str, str, str, str, str, str, str, str, int, bool, bool, bool, str, int) -> None
     
     Base collapses from given BAM and umi family file
+    
+    Parameters
+    ----------
+    - config (str): Path to the config file
+    - outdir (str): Output directory where subdirectories are created
+    - bamfile (str): Path to the BAM file
+    - reference (str): Path to the reference genome
+    - region (str): Region coordinates (1-based included) to search for UMIs (eg. chrN:posA-posB)
+    - umifile (str): Path to the .umis file
+    - famsize (str): Comma-separated list of minimum umi family size to collapase on
+    - countthreshold (str): Base count threshold in pileup column
+    - percentthreshold (str): Base percent threshold in pileup column
+    - postthreshold (str): Umi position threshold for grouping umis together
+    - maxdepth (int): Maximum read depth. Default is 1000000
+    - truncate (bool): Only consider pileup columns in given region. Default is False
+    - ignoreorphans (bool): Ignore orphans (paired reads that are not in a proper pair). Default is True
+    - stepper (bool): Controls how the iterator advances. Accepeted values:
+                      'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                      'nofilter': uses every single read turning off any filtering
+    - separator (str): String separating the UMI from the remaining of the read name
+    - base_quality_score (int): Base quality score threshold. No offset of 33 needs to be subtracted
     '''
     
     # get output directory from the config or command. set to current dir if not provided
-    outdir = GetOutputDir(args.config, args.outdir)
+    outdir = GetOutputDir(config, outdir)
     # create outputdir
     if os.path.isfile(outdir) == True:
         raise ValueError('ERR: Output directory cannot be a file')
@@ -235,10 +243,9 @@ def collapse(args):
     CreateDirTree(outdir)
 
     # get input bam from config or command
-    bam_file = GetInputFiles(args.config, args.bamfile, 'bam_file')
+    bam_file = GetInputFiles(config, bamfile, 'bam_file')
 
     # check that region is properly formatted
-    region = args.region
     CheckRegionFormat(bam_file, region)
     # get chromosome 
     contig = region.split(":")[0]
@@ -249,7 +256,7 @@ def collapse(args):
     
     # load json with count of umi families per position and umi group
     try:
-        infile = open(args.umifile)
+        infile = open(umifile)
         umi_families = json.load(infile)
         infile.close()
     except:
@@ -258,42 +265,44 @@ def collapse(args):
     print(GetCurrentTime() + 'Generating consensus...')
 
     # get percent threshold 
-    consensus_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
+    consensus_threshold = GetThresholds(config, 'percent_consensus_threshold', percentthreshold)
     # get count threshold
-    count_threshold = GetThresholds(args.config, 'count_consensus_threshold', args.countthreshold)
+    count_threshold = GetThresholds(config, 'count_consensus_threshold', countthreshold)
     # get umi position threshold 
-    pos_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
+    pos_threshold = GetThresholds(config, 'umi_family_pos_threshold', postthreshold)
     
     # get comma-separated list of minimum family sizes 
-    fam_size = GetFamSize(args.config, args.famsize)
+    fam_size = GetFamSize(config, famsize)
     
     # write consensus output file
     ConsDir = os.path.join(outdir, 'Consfiles')
-    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, args.separator, args.base_quality_score, max_depth=args.maxdepth, truncate=args.truncate, ignore_orphans=args.ignoreorphans, stepper=args.stepper)
+    generate_consensus_output(contig, region_start, region_end, bam_file, umi_families, ConsDir, fam_size, pos_threshold, consensus_threshold, count_threshold, separator, base_quality_score, max_depth=maxdepth, truncate=truncate, ignore_orphans=ignoreorphans, stepper=stepper)
  
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
 
-def VCF_converter(args):
+def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filterthreshold, famsize):
     '''
-    (list) --> None
-    
-    :param config: Path to the config file
-    :param outdir: Output directory where subdirectories are created
-    :param reference: Path to the reference genome 
-    :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
-                          (ie. position with ref freq <= ref_threshold is considered variable)
-    :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
-                          (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
-    :param filter_threshold: Minimum number of reads to pass alternative variants 
-                             (ie. filter = PASS if variant depth >= alt_threshold)
-    :param famsize: Minimum UMI family size
-        
+    (str, str, str, float, float, int, int) --> None
+
     Converts consensus files into VCF format for a given family size
+
+    Parameters
+    ----------
+    - config (str): Path to the config file
+    - outdir (str): Output directory where subdirectories are created
+    - reference (str): Path to the reference genome 
+    - refthreshold (float): Maximum reference frequency (in %) to consider alternative variants
+                          (ie. position with ref freq <= ref_threshold is considered variable)
+    - altthreshold (float): Minimum allele frequency (in %) to consider an alternative allele at a variable position 
+                          (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
+    - filterthreshold (int): Minimum number of reads to pass alternative variants 
+                             (ie. filter = PASS if variant depth >= alt_threshold)
+    - famsize (int): Minimum UMI family size
     '''
 
     # get output directory from the config or command. set to current dir if not provided
-    outdir = GetOutputDir(args.config, args.outdir)
+    outdir = GetOutputDir(config, outdir)
     # create outputdir if doesn't exist
     if os.path.isfile(outdir) == True:
         raise ValueError('ERR: Output directory cannot be a file')
@@ -317,156 +326,167 @@ def VCF_converter(args):
     os.makedirs(VCFDir, exist_ok=True)
        
     # get reference threshold
-    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    ref_threshold = GetThresholds(config, 'percent_ref_threshold', refthreshold)
     # get allele threshold
-    alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
+    alt_threshold = GetThresholds(config, 'percent_alt_threshold', altthreshold)
     # get filter threshold
-    filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
+    filter_threshold = GetThresholds(config, 'filter_threshold', filterthreshold)
     
     print(GetCurrentTime() + 'Generating VCFs...')
 
     # loop over consensus files
     for filename in ConsFiles:
         # write a VCF per consensus file for fiven family size
-        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(args.famsize))
-        WriteVCF(filename, outputfile, args.reference, ref_threshold, alt_threshold, filter_threshold, args.famsize)
+        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(famsize))
+        WriteVCF(filename, outputfile, reference, ref_threshold, alt_threshold, filter_threshold, famsize)
 
     print(GetCurrentTime() + 'VCFs generated. VCF files written to {0}'.format(VCFDir))
 
 
-def merge_files(args):
+def merge_files(directory, datatype):
     '''
-    (list) -> None
-    
-    :param outdir: Output directory where subdirectories are created
-    :param datatype: Type of files to be merged.
-                     Valid options are 'datafiles', 'consensusfiles', 'umifiles'
+    (str, str) -> None
     
     Grab and merge all files of given datatype in corresponding subdirectory
+        
+    Parameters
+    ----------
+    - directory (str): Output directory where subdirectories are created
+    - datatype (str): Type of files to be merged.
+                     Valid options are 'datafiles', 'consensusfiles', 'umifiles'
     '''
     
     # check which files need to be merged
-    if args.datatype == 'datafiles':
-        MergeDataFiles(args.directory)
-    elif args.datatype == 'consensusfiles':
-        MergeConsensusFiles(args.directory)
-    elif args.datatype == 'umifiles':
-        MergeUmiFiles(args.directory)
+    if datatype == 'datafiles':
+        MergeDataFiles(directory)
+    elif datatype == 'consensusfiles':
+        MergeConsensusFiles(directory)
+    elif datatype == 'umifiles':
+        MergeUmiFiles(directory)
 
-def run_scripts(args):
+def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthreshold,
+                consensusthreshold, postthreshold, distthreshold, refthreshold,
+                altthreshold, filterthreshold, percentthreshold, maxdepth, truncate, ignoreorphans,
+                ignore, stepper, merge, plot, report, call, mincov, minratio, minumis,
+                minchildren, extension, sample, mem, mypython, mydebarcer, project,
+                separator, base_quality_score, readcount):
     '''
-    (list) -> None
+    (str, str, str, str, str, str, int, float, int, int, float, float, int, int, float,
+    bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str, str | None,
+    str, str, str, str, str, int, int) -> None
+       
+    Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
     
-    :param outdir: Output directory where subdirectories are created
-    :param config: Path to the config file
-    :param bamfile: Path to the BAM file
-    :param reference: Path to the refeence genome
-    :param famsize: Comma-separated list of minimum umi family size to collapase on
-    :param bedfile: Path to the bed file
-    :param count_threshold: Base count threshold in pileup column
-    :param consensus_threshold: Majority rule consensus threshold in pileup column
-    :param post_threshold: Umi position threshold for grouping umis together
-    :param dist_threshold: Hamming distance threshold for connecting parent-children umis
-    :param ref_threshold: Maximum reference frequency (in %) to consider alternative variants
+    Parameters
+    ----------
+    - outdir (str): Output directory where subdirectories are created
+    - config (str): Path to the config file
+    - bamfile (str): Path to the BAM file
+    - reference (str): Path to the refeence genome
+    - famsize (str): Comma-separated list of minimum umi family size to collapase on
+    - bedfile (str): Path to the bed file
+    - countthreshold (int): Base count threshold in pileup column
+    - consensus_threshold (float): Majority rule consensus threshold in pileup column
+    - postthreshold (int): Umi position threshold for grouping umis together
+    - distthreshold (int): Hamming distance threshold for connecting parent-children umis
+    - refthreshold (float): Maximum reference frequency (in %) to consider alternative variants
                           (ie. position with ref freq <= ref_threshold is considered variable)
-    :param alt_threshold: Minimum allele frequency (in %) to consider an alternative allele at a variable position 
+    - altthreshold (float): Minimum allele frequency (in %) to consider an alternative allele at a variable position 
                           (ie. allele freq >= alt_threshold and ref freq <= ref_threshold --> record alternative allele)
-    :param filter_threshold: Minimum number of reads to pass alternative variants 
+    - filterthreshold (int): Minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
-    :param maxdepth: Maximum read depth. Default is 1000000
-    :param truncate: If truncate is True and a region is given, only pileup columns
+    - percentthreshold (float): Base percent threshold in pileup column
+    - maxdepth (int): Maximum read depth. Default is 1000000
+    - truncate (bool): If truncate is True and a region is given, only pileup columns
                      in the exact region specificied are returned. Default is False
-    :param ignoreorphans: Ignore orphans (paired reads that are not in a proper pair). Default is True'
-    :param ignore: Keep the most abundant family and ignore families at other positions within each group. Default is False
-    :param stepper: Controls how the iterator advances. Accepeted values:
+    - ignoreorphans (bool): Ignore orphans (paired reads that are not in a proper pair). Default is True'
+    - ignore (bool): Keep the most abundant family and ignore families at other positions within each group. Default is False
+    - stepper (str): Controls how the iterator advances. Accepeted values:
                     'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
                     'nofilter': uses every single read turning off any filtering
-    :param merge: Merge data, json and consensus files respectively into a 1 single file. Default is True
-    :param plot: Generate figure plots if True
-    :param report: Generate analysis report if True
-    :param call: Convert consensus files to VCF if True
-    :param mincov: Minimum read depth to label regions
-    :param minratio: Minimum ratio to label regions    
-    :param minumis: Minimum number of umis to label regions
-    :param minchildren: Minimum number of umi children to label regions
-    :param extension: Figure file extension
-    :param sample: Sample name to appear in report. If empty str, outdir basename is used
-    :param mem: Requested memory for submiiting jobs to SGE. Default is 10g
-    :param mypython: Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
-    :param mydebarcer: Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
-    :param project: Project name to submit jobs on univa
-    :param separator: String separating the UMI from the remaining of the read name
-    :param base_quality_score: Base quality score threshold. No offset of 33 needs to be subtracted
-    :param readcount: Minimum number of reads in region required for grouping. Default is 0  
-        
-    Submits jobs to run Umi Grouping, Collapsing and Plotting and Reporting if activated
+    - merge (bool): Merge data, json and consensus files respectively into a 1 single file. Default is True
+    - plot (bool): Generate figure plots if True
+    - report (bool): Generate analysis report if True
+    - call (bool): Convert consensus files to VCF if True
+    - mincov (int): Minimum read depth to label regions
+    - minratio (float): Minimum ratio to label regions    
+    - minumis (int): Minimum number of umis to label regions
+    - minchildren (int): Minimum number of umi children to label regions
+    - extension (str): Figure file extension
+    - sample (str or None): Sample name to appear in report. If empty str, outdir basename is used
+    - mem (str): Requested memory for submiiting jobs to SGE. Default is 10g
+    - mypython (str): Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
+    - mydebarcer (str): Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
+    - project (str): Project name to submit jobs on univa
+    - separator (str): String separating the UMI from the remaining of the read name
+    - base_quality_score (int): Base quality score threshold. No offset of 33 needs to be subtracted
+    - readcount (int): Minimum number of reads in region required for grouping. Default is 0  
     '''
     
     # get bam file from config or command
-    bamfile = GetInputFiles(args.config, args.bamfile, 'bam_file')
-    
+    bamfile = GetInputFiles(config, bamfile, 'bam_file')
     # get reference
-    reference = GetInputFiles(args.config, args.reference, 'reference_file')
+    reference = GetInputFiles(config, reference, 'reference_file')
        
     # get output directory from the config or command. set to current dir if not provided
-    outdir = GetOutputDir(args.config, args.outdir)
+    outdir = GetOutputDir(config, outdir)
     # create outputdir
     if os.path.isfile(outdir) == True:
         raise ValueError('ERR: Output directory cannot be a file')
     else:
         os.makedirs(outdir, exist_ok=True)
-    
     # create subdirectoy structure
     CreateDirTree(outdir)
 
     # get comma-separated list of minimum family size
-    famsize = GetFamSize(args.config, args.famsize)
+    famsize = GetFamSize(config, famsize)
     
     # get thresholds from command or config
-    count_threshold = GetThresholds(args.config, 'count_consensus_threshold', args.countthreshold)
-    consensus_threshold = GetThresholds(args.config, 'percent_consensus_threshold', args.percentthreshold)
-    dist_threshold = GetThresholds(args.config, 'umi_edit_distance_threshold', args.distthreshold)
-    post_threshold = GetThresholds(args.config, 'umi_family_pos_threshold', args.postthreshold)
-    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
-    alt_threshold = GetThresholds(args.config, 'percent_alt_threshold', args.altthreshold)
-    filter_threshold = GetThresholds(args.config, 'filter_threshold', args.filterthreshold)
+    count_threshold = GetThresholds(config, 'count_consensus_threshold', countthreshold)
+    consensus_threshold = GetThresholds(config, 'percent_consensus_threshold', percentthreshold)
+    dist_threshold = GetThresholds(config, 'umi_edit_distance_threshold', distthreshold)
+    post_threshold = GetThresholds(config, 'umi_family_pos_threshold', postthreshold)
+    ref_threshold = GetThresholds(config, 'percent_ref_threshold', refthreshold)
+    alt_threshold = GetThresholds(config, 'percent_alt_threshold', altthreshold)
+    filter_threshold = GetThresholds(config, 'filter_threshold', filterthreshold)
     
     # create shell scripts and run qsubs to Group and Collapse umis 
-    submit_jobs(bamfile, outdir, reference, famsize, args.bedfile, count_threshold,
+    submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
-                alt_threshold, filter_threshold, args.maxdepth, args.truncate, args.ignoreorphans,
-                args.ignore, args.stepper, args.merge, args.plot, args.report,
-                args.call, args.mincov, args.minratio, args.minumis, args.minchildren,
-                args.extension, args.sample, args.mydebarcer, args.mypython, args.mem, args.project, args.separator, args.base_quality_score, args.readcount)
+                alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans,
+                ignore, stepper, merge, plot, report, call, mincov, minratio, minumis,
+                minchildren, extension, sample, mydebarcer, mypython, mem, project, separator,
+                base_quality_score, readcount)
   
     
-def generate_plots(args):
+def generate_figures(directory, config, extension, report, sample, min_cov, min_ratio, min_umis, min_children, ref_threshold):
     '''
-    (list) -> None
+    (str, str, str, bool, str | None, int, float, int, int, int) -> None
     
-    :param directory: Directory with subdirectories ConsFiles and Datafiles 
-    :param config: Path to the config file
-    :param extension: Figure format. Accepted values: png, pdf, jpeg, tiff
-    :param report: Boolean, generate a report if True
-    :param sample: Optional parameter, sample name to appear in report
-    :param mincov: Minimum read depth to label regions
-    :param minratio: Minimum ratio to label regions    
-    :param minumis: Minimum number of umis to label regions
-    :param minchildren: Minimum number of umi children to label regions
-    :param ref_threshold: Cut Y axis at 100 - ref_threshold
-        
     Generate plots in Figures directory
-    '''
     
+    Parameters
+    ----------
+    - directory (str): Directory with subdirectories ConsFiles and Datafiles 
+    - config (str): Path to the config file
+    - extension (str): Figure format. Accepted values: png, pdf, jpeg, tiff
+    - report (bool): Boolean, generate a report if True
+    - sample (str or None): Optional parameter, sample name to appear in report
+    - min_cov (int): Minimum read depth to label regions
+    - min_ratio (float): Minimum ratio to label regions    
+    - min_umis (int): Minimum number of umis to label regions
+    - min_children (int): Minimum number of umi children to label regions
+    - ref_threshold (int): Cut Y axis at 100 - ref_threshold
+    '''
     
     # get the reference threshold to consider variable positions
     # cut Y axis at non-ref-freq
-    ref_threshold = GetThresholds(args.config, 'percent_ref_threshold', args.refthreshold)
+    ref_threshold = GetThresholds(config, 'percent_ref_threshold', ref_threshold)
     non_ref_freq = 100 - ref_threshold
         
     # get subdirectories
     L = ['Consfiles', 'Umifiles', 'Stats', 'Datafiles']
-    T = [os.path.join(args.directory, i) for i in L]
+    T = [os.path.join(directory, i) for i in L]
     for i in T:
         if os.path.isdir(i) == False:
             raise ValueError('ERR: Expecting directory {0}'.format(i))
@@ -475,7 +495,7 @@ def generate_plots(args):
     ConsDir, UmiDir, StatsDir, DataDir =  T 
         
     # create directory to save figures if it doesn't exist
-    FigDir = os.path.join(args.directory, 'Figures')
+    FigDir = os.path.join(directory, 'Figures')
     os.makedirs(FigDir, exist_ok=True)
         
     # make a list of consensus files that are not empty
@@ -509,7 +529,7 @@ def generate_plots(args):
     # plot proportions of correct and incorrect reads seen during pre-processing
     Inputfile = os.path.join(StatsDir, 'Processing_Read_Info.json')
     CheckFilePath([Inputfile])
-    Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + args.extension)
+    Outputfile = os.path.join(FigDir, 'Proportion_correct_reads.' + extension)
     PlotIncorrectReads(Inputfile, Outputfile, 'preprocessing', 6, 6)
         
     # plot UMI occurence resulting from pre-processing
@@ -517,29 +537,29 @@ def generate_plots(args):
     CheckFilePath([Inputfile])
     # get umi occurence
     umi_occurence = GetUmiCountFromPreprocessing(Inputfile)
-    Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + args.extension)
+    Outputfile = os.path.join(FigDir, 'UMI_occurence_preprocessing.' + extension)
     PlotUMiFrequency(umi_occurence, Outputfile, 'UMI distribution after pre-processing', False, 8, 5)
     
     # plot coverage
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=args.mincov, datatype='coverage')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Coverage_Umi_Count'), mincov=min_cov, datatype='coverage')
 
     # plot graphs for each consensus file
     for filename in ConsFiles:
         # plot mean family size for each consensus file/region
         region = FormatRegion(filename).replace(':', '-')
-        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'MeanFamilySize_{0}.{1}'.format(region, extension))
         PlotMeanFamSize(filename, Colors[1:], Outputfile, 9, 6)
             
         # plot non-reference frequency
-        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'NonRefFreq_{0}.{1}'.format(region, extension))
         PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, ylabel='Non-reference allele frequency')
     
         # plot non-reference frequency limiting Y axis to 20% for visualization of low-frequency variants 
-        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'NonRefFreq_low_freq_{0}.{1}'.format(region, extension))
         PlotNonRefFreqData(filename, Colors, Outputfile, 8, 10, YLimit=non_ref_freq, title='Y axis cut at {0}%'.format(non_ref_freq), legend='legend')
         
         # plot raw and consensus depth
-        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, args.extension))    
+        Outputfile = os.path.join(FigDir, 'RawConsensusDepth_{0}.{1}'.format(region, extension))    
         PlotConsDepth(filename, Colors, Outputfile, 9, 6)
        
     # plot network and network degree for each umi file/region
@@ -550,15 +570,15 @@ def generate_plots(args):
         region = '-'.join(list(map(lambda x: x.strip(), region.split(':'))))
         
         # plot network and degree
-        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, args.extension))        
+        Outputfile = os.path.join(FigDir, 'UMI_network_degree_{0}.{1}'.format(region, extension))        
         PlotNetworkDegree(filename, Outputfile, 9, 6)
         
         # plot marginal distributions of UMI family size and read depth
-        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'UMI_size_depth_marginal_distribution_{0}.{1}'.format(region, extension))
         PlotFamSizeReadDepth(filename, Outputfile)
         
         # plot distribution of read depth for each umi families
-        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'Read_depth_per_umi_family_{0}.{1}'.format(region, extension))
         PlotReadDepth(filename, Outputfile, 10, 6)
 
     # plot umi frequency for individual umis before grouping
@@ -567,98 +587,104 @@ def generate_plots(args):
         region = region[region.index('chr'): region.index('_before')].replace(':', '-')
         # get parent+children and parent only counts
         all_umis, parent_umis = GetIndividualUmiInfo(filename)
-        Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, args.extension)) 
+        Outputfile = os.path.join(FigDir, 'UMI_freq_distribution_{0}.{1}'.format(region, extension)) 
         PlotUMiFrequency([all_umis, parent_umis], Outputfile, 'UMI distribution before grouping', True, 9, 6)
     
     # plot proportion of mapped/unmapped reads
     for filename in MappingInfo:
         region = os.path.basename(filename)
         region = region[region.rindex('_')+1:-5].replace(':', '-')
-        Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, args.extension))
+        Outputfile = os.path.join(FigDir, 'Proportion_unmapped_reads_{0}.{1}'.format(region, extension))
         PlotIncorrectReads(filename, Outputfile, 'mapping', 5, 5)
         
     # plot children to parent umi count ratio
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=args.minratio, datatype='ratio')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Child_Parent_Umis_Ratio'), minval=min_ratio, datatype='ratio')
     
     # plot total umi counts
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), minval=args.minumis, datatype='umis')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Total_Umis'), minval=min_umis, datatype='umis')
 
     # plot children umi counts
-    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), minval=args.minchildren, datatype='children')
+    PlotDataPerRegion(CovStats, DataFiles, outputfile=os.path.join(FigDir, 'Children_Umis'), minval=min_children, datatype='children')
 
     # plot children vs parent umis for each interval
-    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + args.extension), 9, 6)
+    PlotParentsToChildrenCounts(DataFiles, os.path.join(FigDir, 'PTU_vs_CTU.' + extension), 9, 6)
 
     # plot parent frequencies vs children UMI counts
-    PlotParentFreq(DataFiles, os.path.join(FigDir, 'Children_vs_ParentFreq.' + args.extension), 7, 4)
+    PlotParentFreq(DataFiles, os.path.join(FigDir, 'Children_vs_ParentFreq.' + extension), 7, 4)
     
     # check if reporting
-    if args.report == True:
-        if args.extension != 'pdf':
+    if report == True:
+        if extension != 'pdf':
             # create subdirectory
-            ReportDir = os.path.join(args.directory, 'Report')
+            ReportDir = os.path.join(directory, 'Report')
             os.makedirs(ReportDir, exist_ok=True)
             report = os.path.join(ReportDir, 'debarcer_report.html')
-            WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
+            WriteReport(directory, extension, report, min_cov, min_ratio, min_umis, min_children, renderer=mistune.Markdown(), sample=sample)
             
 
-def generate_report(args):
+def report(directory, extension, min_cov, min_ratio, min_umis, min_children, sample=None):
     '''
-    (list) -> None
-    
-    :param directory: Directory with subfolders including Figures 
-    :param extension: Extension of the figure files
-    :param Outputfile: Name of the html report
-    :param Options: Optional parameters. Accepted values: 'sample'
-    
+    (str,  str, int, float, int, int, str | None) -> None
+
     Write an html report of debarcer analysis for a given sample
+
+    Parameters
+    ----------
+    - directory (str): Directory with subfolders including Figures 
+    - extension (str): Extension of the figure files
+    - min_cov (int): Minimum coverage value. Values below are plotted in red
+    - min_ratio (float) Minimum children to parent umi ratio. Values below are plotted in red
+    - min_umis (int): Minimum umi count. Values below are plotted in red
+    - min_children (int): Minimum children umi count. Values below are plotted in red
+    - sample (str): Sample name 
     '''
     
     # create subdirectory
-    ReportDir = os.path.join(args.directory, 'Report')
+    ReportDir = os.path.join(directory, 'Report')
     os.makedirs(ReportDir, exist_ok=True)
     report = os.path.join(ReportDir, 'debarcer_report.html')
     
     # check that subdirectories with required files exist
-    T = [os.path.join(args.directory, i) for i in ['Stats', 'Datafiles', 'Figures']]
+    T = [os.path.join(directory, i) for i in ['Stats', 'Datafiles', 'Figures']]
     for i in T:
         if os.path.isdir(i) == False:
             raise ValueError('ERR: Expecting directory {0}'.format(i))
-    
-    WriteReport(args.directory, args.extension, report, args.mincov, args.minratio, args.minumis, args.minchildren, renderer=mistune.Markdown(), sample=args.sample)
+    WriteReport(directory, extension, report, min_cov, min_ratio, min_umis, min_children, renderer=mistune.Markdown(), sample=sample)
     
 
-def generate_bed(args):
+def generate_bed(bamfile, outputfile, contig, min_cov, region_size, max_depth, ignore_orphans, stepper):
     '''
-    (list) -> None
-        
-    :param bamfile: Path to the bam file
-    :param outputfile: Path to the output bed file
-    :param contig: Chromosome name, eg. chrN
-    :param min_cov: Minimum read depth for all positions in genomic interval
-    :param region_size: Minimum length of the genomic interval    
-    :param max_depth: Maximum read depth
-    :param ignore_orphans: Ignore orphan reads (paired reads not in proper pair) if True
-    :param stepper: Controls how the iterator advances. Accepeted values:
-                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
-                    'nofilter': uses every single read turning off any filtering    
-        
+    (str, str, str, int, int, int, bool, str) -> None
+    
     Write a bed file (1-based coordinates) with all genomic intervals of minimum
     length region_size for which all positions have read depth equals to min_cov or greater
         
     Precondition: bamfile is coordinate-sorted and has 'SQ' fields    
+    
+    Parameters
+    ----------
+    - bamfile (str): Path to the bam file
+    - outputfile (str): Path to the output bed file
+    - contig (str): Chromosome name, eg. chrN
+    - min_cov (int): Minimum read depth for all positions in genomic interval
+    - region_size (int): Minimum length of the genomic interval    
+    - max_depth (int): Maximum read depth
+    - ignore_orphans (bool): Ignore orphan reads (paired reads not in proper pair) if True
+    - stepper (str): Controls how the iterator advances. Accepeted values:
+                    'all': skip reads with following flags: BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP
+                    'nofilter': uses every single read turning off any filtering    
     '''
     
-    WriteTargetsBed(args.bamfile, args.bed, args.mincov, args.regionsize, args.maxdepth, args.ignoreorphans, args.stepper)
+    WriteTargetsBed(bamfile, outputfile, min_cov, region_size, max_depth, ignore_orphans, stepper)
     
 
-if __name__ == '__main__':
-        
+def main():
+    
     ## Argument + config parsing and error handling
     parser = argparse.ArgumentParser(prog='debarcer.py', description="A package for De-Barcoding\
                                      and Error Correction of sequencing data containing molecular barcodes")
-    subparsers = parser.add_subparsers()
-       		
+    subparsers = parser.add_subparsers(help='sub-command help', dest='subparser_name')
+    
     ## Preprocess command
     p_parser = subparsers.add_parser('preprocess', help="Preprocess mode for processing fastq files")
     p_parser.add_argument('-o', '--OutDir', dest='outdir', help='Output directory. Available from command or config')
@@ -670,8 +696,7 @@ if __name__ == '__main__':
     p_parser.add_argument('-pf', '--Prepfile', dest='prepfile', help='Path to your library_prep_types.ini file')
     p_parser.add_argument('-c', '--Config', dest='config', help='Path to your config file')
     p_parser.add_argument('-px', '--Prefix', dest= 'prefix', help='Prefix for naming umi-reheradered fastqs. Use Prefix from Read1 if not provided') 
-    p_parser.set_defaults(func=preprocess_reads)
-    
+        
     ## Bed command
     b_parser = subparsers.add_parser('bed', help='Generate a bed file by scanning input bam for regions of coverage')
     b_parser.add_argument('-b', '--Bamfile', dest='bamfile', help='Path to the BAM file', required=True)
@@ -683,8 +708,7 @@ if __name__ == '__main__':
     b_parser.add_argument('-stp', '--Stepper', dest='stepper', choices=['all', 'nofilter'], default='nofilter',
                           help='Filter or include reads in the pileup. Options all: skip reads with BAM_FUNMAP, BAM_FSECONDARY, BAM_FQCFAIL, BAM_FDUP flags,\
                           nofilter: uses every single read turning off any filtering')
-    b_parser.set_defaults(func=generate_bed)
-    
+        
     ## UMI group command
     g_parser = subparsers.add_parser('group', help="Groups UMIs into families.")
     g_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
@@ -697,8 +721,7 @@ if __name__ == '__main__':
     g_parser.add_argument('-t', '--Truncate', dest='truncate', choices=[True, False], default=False, type=ConvertArgToBool, help='Discard reads overlapping with the genomic region if True. Default is False')
     g_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     g_parser.add_argument('-rc', '--ReadCount', dest='readcount', default=0, type=int, help = 'Minimum number of reads in region required for grouping. Default is 0')
-    g_parser.set_defaults(func=group_umis)
-    
+        
     ## Base collapse command
     c_parser = subparsers.add_parser('collapse', help="Base collapsing from given UMI families file.")
     c_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
@@ -720,8 +743,7 @@ if __name__ == '__main__':
                           nofilter: uses every single read turning off any filtering')
     c_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     c_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
-    c_parser.set_defaults(func=collapse)
-
+    
     ## Variant call command - requires cons file (can only run after collapse)
     v_parser = subparsers.add_parser('call', help="Convert consensus file into VCF format.")
     v_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
@@ -737,8 +759,7 @@ if __name__ == '__main__':
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)')
     v_parser.add_argument('-f', '--Famsize', dest='famsize', type=int, help='Minimum UMI family size', required=True)
-    v_parser.set_defaults(func=VCF_converter)
-    
+        
     ## Run scripts command 
     r_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapsing and VCF formatting for target regions specified by the BED file.")
     r_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
@@ -780,14 +801,12 @@ if __name__ == '__main__':
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     r_parser.add_argument('-rc', '--ReadCount', dest='readcount', default=0, type=int, help = 'Minimum number of reads in region required for grouping. Default is 0')
-    r_parser.set_defaults(func=run_scripts)
-    
+        
     ## Merge files command 
     m_parser = subparsers.add_parser('merge', help="Merge files from each region into a single file")
     m_parser.add_argument('-d', '--Directory', dest='directory', help='Directory containing files to be merged')
     m_parser.add_argument('-dt', '--DataType', dest='datatype', choices=['datafiles', 'consensusfiles', 'umifiles'], help='Type of files to be merged', required=True)
-    m_parser.set_defaults(func=merge_files)
-    
+        
     ## Generate graphs	
     plot_parser = subparsers.add_parser('plot', help="Generate graphs for umi and cons data files", add_help=True)
     plot_parser.add_argument('-c', '--Config', dest='config', help='Path to the config file')
@@ -800,8 +819,7 @@ if __name__ == '__main__':
     plot_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=int, default=1000, help='Minimum umi count. Values below are plotted in red')
     plot_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=int, default=500, help='Minimum children umi count. Values below are plotted in red')
     plot_parser.add_argument('-rt', '--RefThreshold', dest='refthreshold', default=95, type=float, help='Cut Y axis at non-ref frequency, the minimum frequency to consider a position variable')
-    plot_parser.set_defaults(func=generate_plots)
-    
+        
     ## Generate report
     report_parser = subparsers.add_parser('report', help="Generate report", add_help=True)
     report_parser.add_argument('-d', '--Directory', dest='directory', help='Directory with subdirectories including Figures', required=True)
@@ -811,12 +829,78 @@ if __name__ == '__main__':
     report_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     report_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=int, default=1000, help='Minimum umi count. Values below are plotted in red')
     report_parser.add_argument('-mc', '--MinChildren', dest='minchildren', type=int, default=500, help='Minimum children umi count. Values below are plotted in red')
-    report_parser.set_defaults(func=generate_report)
+    
         
     args = parser.parse_args()
-    try:
-        args.func(args)
-    except AttributeError as e:
-        print(e)
+    
+    
+    if args.subparser_name == 'preprocess':
+        try:
+            preprocess_reads(args.outdir, args.read1, args.read2, args.read3, args.prepname, args.prepfile, args.config, args.prefix)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'bed':
+        try:
+            generate_bed(args.bamfile, args.bed, args.contig, args.mincov, args.regionsize, args.maxdepth, args.ignoreorphans, args.stepper)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'group':
+        try:
+            group_umis(args.outdir, args.region, args.bamfile, args.config, args.distthreshold, args.postthreshold, args.ignore, args.truncate, args.separator, args.readcount)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'collapse':
+        try:
+            collapse(args.config, args.outdir, args.bamfile, args.reference, args.region,
+                     args.umifile, args.famsize, args.countthreshold, args.percentthreshold,
+                     args.postthreshold, args.maxdepth, args.truncate, args.ignoreorphans, 
+                     args.stepper, args.separator, args.base_quality_score)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'call':
+        try:
+            VCF_converter(args.config, args.outdir, args.reference, args.refthreshold, args.altthreshold, args.filterthreshold, args.famsize)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'run':
+        try:
+            run_scripts(args.outdir, args.config, args.bamfile, args.reference,
+                        args.famsize, args.bedfile, args.countthreshold, args.consensusthreshold,
+                        args.postthreshold, args.distthreshold, args.refthreshold,
+                        args.altthreshold, args.filterthreshold, args.percentthreshold, args.maxdepth,
+                        args.truncate, args.ignoreorphans, args.ignore, args.stepper,
+                        args.merge, args.plot, args.report, args.call, args.mincov,
+                        args.minratio, args.minumis, args.minchildren, args.extension,
+                        args.sample, args.mem, args.mypython, args.mydebarcer, args.project,
+                        args.separator, args.base_quality_score, args.readcount)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'merge':
+        try:
+            merge_files(args.directory, args.datatype)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'plot':
+        try:
+            generate_figures(args.directory, args.config, args.extension, args.report, args.sample, args.mincov, args.minratio, args.minumis, args.minchildren, args.refthreshold)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name == 'report':
+        try:
+            report(args.directory, args.extension, args.mincov, args.minratio, args.minumis, args.minchildren, sample=args.sample)
+        except AttributeError as e:
+            print('AttributeError: {0}\n'.format(e))
+            print(parser.format_help())
+    elif args.subparser_name is None:
         print(parser.format_help())
     
+
+

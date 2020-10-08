@@ -2,7 +2,7 @@ import os
 import pysam
 import operator
 import yaml
-from src.utilities import get_umi_from_name
+from debarcer.utilities import get_umi_from_name
 
 
 def find_closest(pos, L):

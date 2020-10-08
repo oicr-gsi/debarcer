@@ -62,7 +62,7 @@ Example commands. See the [wiki](https://github.com/oicr-gsi/debarcer/wiki/) for
 
 1. Preprocess fastq files
 ```python
-python debarcer.py preprocess -o /path/to/output_dir -r1 /path/to/read1.fastq -r /path/to/read2.fastq
+debarcer preprocess -o /path/to/output_dir -r1 /path/to/read1.fastq -r /path/to/read2.fastq
 -p "SIMSENSEQ-PE" -pf /path/to/library_prep_types.ini -c /path/to/config.ini -px newfile_name
 ```
 
@@ -76,31 +76,31 @@ python debarcer.py preprocess -o /path/to/output_dir -r1 /path/to/read1.fastq -r
 
 3. Error-correct and group UMIs into families
 ```python
-python debarcer.py group -o /path/to/output_dir -r "chrN:posA-posB" -b /path/to/bamfile.bam -d 1 -p 10 -i False
+debarcer group -o /path/to/output_dir -r "chrN:posA-posB" -b /path/to/bamfile.bam -d 1 -p 10 -i False
 -t False
 ```
 
 4. Perform base collapsing
 ```python
-python debarcer.py collapse -o /path/to/output_dir -b /path/to/bamfile.bam -rf /path/to/reference_genome
+debarcer collapse -o /path/to/output_dir -b /path/to/bamfile.bam -rf /path/to/reference_genome
 -r "chrN:posA-posB" -u /path/to/Umifiles/umifile.json -f "1,3,5" -ct 1 -pt 50 -p 10 -m 1000000 -t False
 -i False -stp nofilter
 ```
 
 5. Call variants for specified umi family size
 ```python
-python debarcer.py call -o /path/to/output_dir -rf /path/to/reference_genome -rt 95 -at 2 -ft 10 -f 3
+debarcer call -o /path/to/output_dir -rf /path/to/reference_genome -rt 95 -at 2 -ft 10 -f 3
 ```
 
 6. Generate plots
 ```python
-python debarcer.py plot -d /path/to/main_directory -e png -s my_sample_name -r True -mv 1000 -mr 0.1 -mu 1000
+debarcer plot -d /path/to/main_directory -e png -s my_sample_name -r True -mv 1000 -mr 0.1 -mu 1000
 -mc 500 -rt 95
 ```
 
 7. Generate report
 ```python
-python debarcer.py report -d /path/to/main_directory -e png -s my_sample_name -mv 1000 -mr 0.1 -mu 1000
+debarcer report -d /path/to/main_directory -e png -s my_sample_name -mv 1000 -mr 0.1 -mu 1000
 -mc 500
 ```
 

@@ -11,9 +11,9 @@ import os
 import scipy.ndimage
 from itertools import zip_longest
 import base64
-from src.generate_plots import PlotDataPerRegion
-from src.utilities import DropEmptyFiles, CheckFilePath
-from src.version import __version__
+from debarcer.generate_plots import PlotDataPerRegion
+from debarcer.utilities import DropEmptyFiles, CheckFilePath
+from debarcer.version import __version__
 
 
 
