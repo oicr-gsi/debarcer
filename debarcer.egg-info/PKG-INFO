@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: debarcer
-Version: 2.1.1
+Version: 2.1.2
 Summary: A package for de-barcoding and error correction of sequencing data containing molecular barcodes.
 Home-page: https://github.com/oicr-gsi/debarcer
 Author: Richard Jovelin
