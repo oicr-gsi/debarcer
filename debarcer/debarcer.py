@@ -281,9 +281,9 @@ def collapse(config, outdir, bamfile, reference, region, umifile, famsize,
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
 
-def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filterthreshold, famsize):
+def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filterthreshold, famsize, consFiles):
     '''
-    (str, str, str, float, float, int, int) --> None
+    (str, str, str, float, float, int, int, list) --> None
 
     Converts consensus files into VCF format for a given family size
 
@@ -299,6 +299,7 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     - filterthreshold (int): Minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
     - famsize (int): Minimum UMI family size
+    - consFiles (list): List of consensus files generated during UMI collapse 
     '''
 
     # get output directory from the config or command. set to current dir if not provided
@@ -309,18 +310,10 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     else:
         os.makedirs(outdir, exist_ok=True)
     
-    # get the subdirectory with consensus files
-    ConsDir = os.path.join(outdir, 'Consfiles')
-    if os.path.isdir(ConsDir) == False:
-        raise ValueError('ERR: {0} is not a valid directory'.format(ConsDir))
-    
     # make a list of consensus files
-    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' in i]
     # remove empty files in place and print a warning
-    DropEmptyFiles(ConsFiles)
-    # check that paths to files are valid. raise ValueError if file invalid
-    CheckFilePath(ConsFiles)
-    
+    DropEmptyFiles(consFiles)
+        
     # create vcf dir if doesn't exist already
     VCFDir = os.path.join(outdir, 'VCFfiles')
     os.makedirs(VCFDir, exist_ok=True)
@@ -335,9 +328,12 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     print(GetCurrentTime() + 'Generating VCFs...')
 
     # loop over consensus files
-    for filename in ConsFiles:
+    for filename in consFiles:
         # write a VCF per consensus file for fiven family size
-        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(famsize))
+        if os.path.basename(filename)[:-5] == '.cons':
+            outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(famsize))
+        else:
+            outputfile = os.path.join(VCFDir, os.path.basename(filename) + '_famsize_{0}.vcf'.format(famsize))
         WriteVCF(filename, outputfile, reference, ref_threshold, alt_threshold, filter_threshold, famsize)
 
     print(GetCurrentTime() + 'VCFs generated. VCF files written to {0}'.format(VCFDir))
@@ -759,7 +755,8 @@ def main():
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)')
     v_parser.add_argument('-f', '--Famsize', dest='famsize', type=int, help='Minimum UMI family size', required=True)
-        
+    v_parser.add_argument('-cf', '--Consfiles', dest='consfiles', nargs = '*', help='List of consensus files', required=True)
+    
     ## Run scripts command 
     r_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapsing and VCF formatting for target regions specified by the BED file.")
     r_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
@@ -863,7 +860,7 @@ def main():
             print(parser.format_help())
     elif args.subparser_name == 'call':
         try:
-            VCF_converter(args.config, args.outdir, args.reference, args.refthreshold, args.altthreshold, args.filterthreshold, args.famsize)
+            VCF_converter(args.config, args.outdir, args.reference, args.refthreshold, args.altthreshold, args.filterthreshold, args.famsize, args.consfiles)
         except AttributeError as e:
             print('AttributeError: {0}\n'.format(e))
             print(parser.format_help())
