@@ -10,9 +10,10 @@ from debarcer.preprocess_fastqs import reheader_fastqs, check_library_prep
 from debarcer.umi_error_correct import get_umi_families, umi_datafile
 from debarcer.generate_consensus import generate_consensus_output
 from debarcer.generate_vcf import WriteVCF
-from debarcer.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
+from debarcer.run_analyses import submit_jobs
 from debarcer.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
- FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, get_read_count
+ FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, \
+ get_read_count, MergeDataFiles, MergeUmiFiles, MergeConsensusFiles
 from debarcer.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
  PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
@@ -339,26 +340,47 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     print(GetCurrentTime() + 'VCFs generated. VCF files written to {0}'.format(VCFDir))
 
 
-def merge_files(directory, datatype):
+def merge_files(outdir, files, datatype):
     '''
-    (str, str) -> None
+    (str, list, str) -> None
     
-    Grab and merge all files of given datatype in corresponding subdirectory
+    Merge all files of given datatype in a single file
         
     Parameters
     ----------
-    - directory (str): Output directory where subdirectories are created
+    - outdir (str): Output directory where subdirectories are created
+    - files (list): List of files to merge. Must be of the same datatatype
     - datatype (str): Type of files to be merged.
                      Valid options are 'datafiles', 'consensusfiles', 'umifiles'
     '''
     
+    # create outputdir if doesn't exist
+    os.makedirs(outdir, exist_ok=True)
+    # create vcf dir if doesn't exist already
+    subdirs = []
+    for i in ['VCFfiles', 'Consfiles', 'Datafiles', 'Consfiles']:
+        os.makedirs(os.path.join(outdir, i), exist_ok=True)    
+        subdirs.append(os.path.join(outdir, i))
+    VCFDir, ConsDir, DataDir, UmiDir = subdirs 
+    
     # check which files need to be merged
     if datatype == 'datafiles':
-        MergeDataFiles(directory)
+        content = MergeDataFiles(files)
+        filename = os.path.join(DataDir, 'Merged_DataFile.csv')
     elif datatype == 'consensusfiles':
-        MergeConsensusFiles(directory)
+        content = MergeConsensusFiles(files)
+        filename = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
     elif datatype == 'umifiles':
-        MergeUmiFiles(directory)
+        content = MergeUmiFiles(files)
+        filename = os.path.join(UmiDir, 'Merged_UmiFile.json')
+        
+    newfile = open(filename, 'w')
+    if datatype in ['datafiles', 'consensusfiles']:
+        newfile.write(content)
+    elif datatype == 'umifiles':
+        json.dump(content, newfile, sort_keys = True, indent=4)
+    newfile.close()
+        
 
 def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthreshold,
                 consensusthreshold, postthreshold, distthreshold, refthreshold,
@@ -801,7 +823,8 @@ def main():
         
     ## Merge files command 
     m_parser = subparsers.add_parser('merge', help="Merge files from each region into a single file")
-    m_parser.add_argument('-d', '--Directory', dest='directory', help='Directory containing files to be merged')
+    m_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
+    m_parser.add_argument('-f', '--Files', dest='files', nargs='*', help='List of files to be merged', required=True)
     m_parser.add_argument('-dt', '--DataType', dest='datatype', choices=['datafiles', 'consensusfiles', 'umifiles'], help='Type of files to be merged', required=True)
         
     ## Generate graphs	
@@ -880,7 +903,7 @@ def main():
             print(parser.format_help())
     elif args.subparser_name == 'merge':
         try:
-            merge_files(args.directory, args.datatype)
+            merge_files(args.outdir, args.files, args.datatype)
         except AttributeError as e:
             print('AttributeError: {0}\n'.format(e))
             print(parser.format_help())

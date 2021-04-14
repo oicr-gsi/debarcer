@@ -12,6 +12,8 @@ import numpy as np
 import subprocess
 import time
 import pysam
+import operator
+import json
 
 
 def GetContigs(bamfile):
@@ -484,3 +486,151 @@ def get_read_count(bamfile, contig, start, stop):
     
     return read_counts
 
+
+def MergeDataFiles(DataFiles):
+    '''
+    (list) -> str
+
+    :param DataFiles: List of data files generated during UMI grouping
+                      Each file correspond to a given region for the same sample
+    
+    Returns a string including header and merged content of all data files
+    '''
+    
+    content = ''
+    
+    #check that datafiles exist
+    if len(DataFiles) != 0:
+        Header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
+        
+        # read each datafile, store in a list
+        L = []
+        for filename in DataFiles:
+            infile = open(filename)
+            # skip header and grap data
+            infile.readline()
+            data = infile.read().rstrip()
+            infile.close()
+            # get chromosome and start and end positions
+            chromo, start = data.split()[0], int(data.split()[1])        
+            L.append((chromo, start, data))
+        # sort data on chromo and start
+        L.sort(key=operator.itemgetter(0, 1))
+    
+        content = ['\t'.join(i[-1].split()) for i in L]
+        content.insert(0, '\t'.join(Header))
+        content = '\n'.join(content)
+    return content
+        
+        
+def MergeUmiFiles(UmiFiles):
+    '''
+    (list) -> dict
+
+    :param UmiFiles: List of Umifiles containing .json umi files
+                     Each file is named after the genomic region chrN:start-end.json
+                     Each umi file corresponds to a genomic region for a same sample
+    
+    Returns a dictionary with all umi parent-child relationship for each region
+    '''
+    
+    # create a dict to hold all umi data
+    D = {}
+    
+    # make a list of umi files
+    # check that umifiles exist
+    if len(UmiFiles) != 0:
+        for umifile in UmiFiles:
+            # extract coordinates from file name
+            coord = umifile[:-5]
+            infile = open(umifile)
+            data = json.load(infile)
+            infile.close()
+            # add data in dict
+            D[coord] = data
+    return D
+       
+
+
+def MergeConsensusFiles(ConsFiles):
+    '''
+    (list) -> str
+    
+    :param ConsFiles: List of consensus files generated during UMI collapse
+                      Consensus files are named after the genomic region. chrN:start-end.cons
+                      Each file corresponds to a given region for the same sample
+    Return the merged content of all consensus files 
+    '''
+    
+    NewContent = ''
+    
+    # check that consfiles exist
+    if len(ConsFiles) != 0:
+        # make a list to store consensus records
+        MergedContent = []
+        # sort files
+        L = []
+        for i in ConsFiles:
+            filename = os.path.basename(i)
+            dirname = os.path.dirname(i)
+            # extract chromo and start from filename
+            chromo, start = filename[:filename.index(':')], int(filename[filename.index(':')+1:filename.index('-')])
+            L.append([chromo, start, filename, dirname])
+        
+        # remove chr from chromo name
+        for i in range(len(L)):
+            L[i][0] = L[i][0].replace('chr', '')
+            # reorder chromosomes, place all non-numeric chromos at begining    
+            if L[i][0].isnumeric() == False:
+                j = L.pop(i)
+                L.insert(0, j)
+        # set non-numeric chromos aside
+        aside = []
+        while L[0][0].isnumeric() == False:
+            aside.append(L.pop(0))
+        # sort non-numeric chromos
+        aside.sort()
+        # convert chromos to int
+        for i in range(len(L)):
+            L[i][0] = int(L[i][0])
+        # sort files on numeric chromo and start
+        L.sort(key=operator.itemgetter(0, 1))
+        # add back non-numeric chromos
+        L.extend(aside)
+        # add back 'chr' in chromo name
+        for i in range(len(L)):
+            L[i][0] = 'chr' + str(L[i][0])
+        
+        # make a sorted list of full paths
+        S = [os.path.join(i[-1], i[2]) for i in L]
+        # get Header
+        infile = open(S[0])
+        Header = infile.readline().rstrip().split('\t')
+        infile.close()
+    
+        # extract content from each consensus file
+        for i in S:
+            infile = open(i)
+            # skip header and grab all data
+            infile.readline()
+            data = infile.read().rstrip().split('\n')
+            infile.close()
+            MergedContent.extend(data)
+        # remove duplicate records. keep a single record if multiple duplicates
+        NewContent = []
+        if len(MergedContent) != 0:
+            # keep a single position per chromosome if positions are from overlapping regions
+            # note that nucleotide counts at same positions in overlaping regions may slightly different
+            # make a list of (chromo, pos) already recorded
+            recorded = []
+            for i in MergedContent:
+                chromo = i.split('\t')[0]
+                pos = i.split('\t')[1]
+                fam = i.split('\t')[14]
+                if (chromo, pos, fam) not in recorded:
+                    NewContent.append(i)
+                    recorded.append((chromo, pos, fam))
+        Header = '\t'.join(Header)
+        NewContent.insert(0, Header)
+        NewContent = '\n'.join(Header)
+    return NewContent   
