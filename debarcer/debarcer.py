@@ -386,8 +386,7 @@ def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthres
                 consensusthreshold, postthreshold, distthreshold, refthreshold,
                 altthreshold, filterthreshold, percentthreshold, maxdepth, truncate, ignoreorphans,
                 ignore, stepper, merge, plot, report, call, mincov, minratio, minumis,
-                minchildren, extension, sample, mem, mypython, mydebarcer, project,
-                separator, base_quality_score, readcount):
+                minchildren, extension, sample, mem, project, separator, base_quality_score, readcount):
     '''
     (str, str, str, str, str, str, int, float, int, int, float, float, int, int, float,
     bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str, str | None,
@@ -433,8 +432,6 @@ def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthres
     - extension (str): Figure file extension
     - sample (str or None): Sample name to appear in report. If empty str, outdir basename is used
     - mem (str): Requested memory for submiiting jobs to SGE. Default is 10g
-    - mypython (str): Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
-    - mydebarcer (str): Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
     - project (str): Project name to submit jobs on univa
     - separator (str): String separating the UMI from the remaining of the read name
     - base_quality_score (int): Base quality score threshold. No offset of 33 needs to be subtracted
@@ -473,8 +470,7 @@ def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthres
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans,
                 ignore, stepper, merge, plot, report, call, mincov, minratio, minumis,
-                minchildren, extension, sample, mydebarcer, mypython, mem, project, separator,
-                base_quality_score, readcount)
+                minchildren, extension, sample, mem, project, separator, base_quality_score, readcount)
   
     
 def generate_figures(directory, config, extension, report, sample, min_cov, min_ratio, min_umis, min_children, ref_threshold):
@@ -806,10 +802,6 @@ def main():
     r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
     r_parser.add_argument('-pr', '--Project', dest='project', default='gsi', help='Project for submitting jobs on Univa')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default=20, type=int, help='Requested memory for submitting jobs to SGE. Default is 20g')
-    r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
-                          help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
-    r_parser.add_argument('-db', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',
-                          help='Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py')
     r_parser.add_argument('-mv', '--MinCov', dest='mincov', type=int, default=1000, help='Minimum coverage value. Values below are plotted in red')
     r_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     r_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=int, default=1000, help='Minimum umi count. Values below are plotted in red')
@@ -896,8 +888,7 @@ def main():
                         args.truncate, args.ignoreorphans, args.ignore, args.stepper,
                         args.merge, args.plot, args.report, args.call, args.mincov,
                         args.minratio, args.minumis, args.minchildren, args.extension,
-                        args.sample, args.mem, args.mypython, args.mydebarcer, args.project,
-                        args.separator, args.base_quality_score, args.readcount)
+                        args.sample, args.mem, args.project, args.separator, args.base_quality_score, args.readcount)
         except AttributeError as e:
             print('AttributeError: {0}\n'.format(e))
             print(parser.format_help())
