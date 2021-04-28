@@ -1,6 +1,6 @@
 import os
 import subprocess
-from debarcer.utilities import CheckRegionFormat, CheckJobs, MergeDataFiles
+from debarcer.utilities import CheckRegionFormat, CheckJobs
 import uuid
 
 
@@ -171,25 +171,29 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         Regions = list(map(lambda x: x.replace(':', '-'), Regions))
         
         # submit jobs to merge 
-        MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
+        MergeCmd = 'sleep 600; {0} {1} merge -o {2} -f {3} -dt {4}'
 
         # check if Goup jobs are still running
         running_group = CheckJobs(GroupJobNames)
         if running_group == False:
             # merge datafiles
+            # make a list of datafiles
+            DataFiles = ' '.join([os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile_') and i[-4:] == '.csv'])
             MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
             newfile = open(MergeScript1, 'w')
-            newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
+            newfile.write(MergeCmd.format(mypython, mydebarcer, outdir, DataFiles, 'datafiles') + '\n') 
             newfile.close()
             jobname3 =  name_job('MergeDataFiles')
             MergeJobNames.append(jobname3)
             # run merge datafiles
             subprocess.call(QsubCmd1.format(jobname3, LogDir, project, str(mem), MergeScript1), shell=True) 
     
-            # merge umi files     
+            # merge umi files
+            # make a list of umifiles
+            UmiFiles = ' '.join([os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i[-5:] == '.json'])
             MergeScript2 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
             newfile = open(MergeScript2, 'w')
-            newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
+            newfile.write(MergeCmd.format(mypython, mydebarcer, outdir, UmiFiles, 'umifiles') + '\n')
             newfile.close()
             jobname4 = name_job('MergeUmiFiles')
             MergeJobNames.append(jobname4)
@@ -200,9 +204,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         running_collapse = CheckJobs(ConsJobNames)
         if running_collapse == False:
             # merge consensus files
+            # make a list of consensus files
+            ConsFiles = ' '.join([os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')])
             MergeScript3 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
             newfile = open(MergeScript3, 'w')
-            newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
+            newfile.write(MergeCmd.format(mypython, mydebarcer, outdir, ConsFiles, 'consensusfiles') + '\n') 
             newfile.close()
             jobname5 = name_job('MergeConsensusFiles')
             MergeJobNames.append(jobname5)
@@ -216,6 +222,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         Z = ConsJobNames + MergeJobNames
         running_groupmerge = CheckJobs(Z)  
         if running_groupmerge == False:
+            # make a list of consensus files
+            ConsFiles = ' '.join([os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' in i])
             # make a list of umi family size
             umi_fam_size =  list(map(lambda x: int(x.strip()), famsize.split(',')))
             # umi fam size 0 doesn't need to be explicitely passed to group/collapse
@@ -226,10 +234,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             for size in umi_fam_size:
                 # generate VCF from all consensus files 
                 # set up vcf command
-                VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -rt {4} -at {5} -ft {6} -f {7}'
+                VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -rt {4} -at {5} -ft {6} -f {7} -cf {8}'
                 CallScript = os.path.join(QsubDir, 'VarCall_famsize_{0}.sh'.format(str(size)))
                 newfile = open(CallScript, 'w')
-                newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, ref_threshold, alt_threshold, filter_threshold, size))
+                newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, ref_threshold, alt_threshold, filter_threshold, size, ConsFiles))
                 newfile.close()    
                 jobname6 = name_job('Call_famsize_{0}'.format(str(size)))
                 CallJobs.append(jobname6)

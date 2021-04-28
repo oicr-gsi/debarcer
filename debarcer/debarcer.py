@@ -820,7 +820,7 @@ def main():
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     r_parser.add_argument('-rc', '--ReadCount', dest='readcount', default=0, type=int, help = 'Minimum number of reads in region required for grouping. Default is 0')
-        
+    
     ## Merge files command 
     m_parser = subparsers.add_parser('merge', help="Merge files from each region into a single file")
     m_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
