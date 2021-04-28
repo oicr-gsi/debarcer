@@ -1,6 +1,4 @@
-import operator
 import os
-import json
 import subprocess
 from debarcer.utilities import CheckRegionFormat, CheckJobs
 import uuid
@@ -34,163 +32,7 @@ def ExtractRegions(bedfile):
     return L
 
 
-def MergeUmiFiles(UmiDir):
-    '''
-    (str) -> None
-
-    :param UmiDir: Directory Umifiles containing .json umi files
-    
-    Merge all .json umi files in Umifiles into a unique Merged_UmiFile.json file in Umifiles
-    '''
-    
-    # make a list of umi files
-    UmiFiles = [i for i in os.listdir(UmiDir) if i[-5:] == '.json']
-    # check that umifiles exist
-    if len(UmiFiles) != 0:
-        # create a dict to hold all umi data
-        D = {}
-    
-        for i in UmiFiles:
-            # extract coordinates from file name
-            coord = i[:-5]
-            # get umi data as dict
-            umifile = os.path.join(UmiDir, i)    
-            infile = open(umifile)
-            data = json.load(infile)
-            infile.close()
-            # add data in dict
-            D[coord] = data
-    
-        # write merged umi file
-        MergedFile = os.path.join(UmiDir, 'Merged_UmiFile.json')
-        newfile = open(MergedFile, 'w')
-        json.dump(D, newfile, sort_keys = True, indent=4)
-        newfile.close()
-       
-
-def MergeConsensusFiles(ConsDir):
-    '''
-    (str) -> None
-
-    :param ConsDir: Directory Consfiles containing .cons consensus files
-    
-    Merge all .cons consensus files in Consfiles into a unique Merged_ConsensusFile.cons file in Consfiles
-    '''
-    
-    # make a list of consensus files
-    ConsFiles = [i for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')] 
-    # check that consfiles exist
-    if len(ConsFiles) != 0:
-        # make a list to store consensus records
-        MergedContent = []
-        # sort files
-        L = []
-        for i in ConsFiles:
-            # extract chromo and start from filename
-            if ':' in i:
-                chromo, start = i[:i.index(':')], int(i[i.index(':')+1:i.index('-')])
-            elif '_' in i:
-                chromo, start = i[:i.index('_')], int(i[i.index('_')+1:i.index('-')])
-            L.append([chromo, start, i])
-        
-        # remove chr from chromo name
-        for i in range(len(L)):
-            L[i][0] = L[i][0].replace('chr', '')
-            # reorder chromosomes, place all non-numeric chromos at begining    
-            if L[i][0].isnumeric() == False:
-                j = L.pop(i)
-                L.insert(0, j)
-        # set non-numeric chromos aside
-        aside = []
-        while L[0][0].isnumeric() == False:
-            aside.append(L.pop(0))
-        # sort non-numeric chromos
-        aside.sort()
-        # convert chromos to int
-        for i in range(len(L)):
-            L[i][0] = int(L[i][0])
-        # sort files on numeric chromo and start
-        L.sort(key=operator.itemgetter(0, 1))
-        # add back non-numeric chromos
-        L.extend(aside)
-        # add back 'chr' in chromo name
-        for i in range(len(L)):
-            L[i][0] = 'chr' + str(L[i][0])
-        
-        # make a sorted list of full paths
-        S = [os.path.join(ConsDir, i[-1]) for i in L]
-        # get Header
-        infile = open(S[0])
-        Header = infile.readline().rstrip().split('\t')
-        infile.close()
-    
-        # extract content from each consensus file
-        for i in S:
-            infile = open(i)
-            # skip header and grab all data
-            infile.readline()
-            data = infile.read().rstrip().split('\n')
-            infile.close()
-            MergedContent.extend(data)
-        # remove duplicate records. keep a single record if multiple duplicates
-        NewContent = []
-        if len(MergedContent) != 0:
-            # keep a single position per chromosome if positions are from overlapping regions
-            # note that nucleotide counts at same positions in overlaping regions may slightly different
-            # make a list of (chromo, pos) already recorded
-            recorded = []
-            for i in MergedContent:
-                chromo = i.split('\t')[0]
-                pos = i.split('\t')[1]
-                fam = i.split('\t')[14]
-                if (chromo, pos, fam) not in recorded:
-                    NewContent.append(i)
-                    recorded.append((chromo, pos, fam))
-        # write merged consensus file
-        MergedFile = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
-        newfile = open(MergedFile, 'w')
-        newfile.write('\t'.join(Header) + '\n')
-        newfile.write('\n'.join(NewContent))
-                
-        newfile.close()
-    
-    
-def MergeDataFiles(DataDir):
-    '''
-    (str) -> None
-
-    :param DataDir: Directory Datafiles containing .csv data files
-    
-    Merge all csv datafiles in Datafiles into a unique Merged_DataFile.csv file in Datafiles
-    '''
-    
-    # make a list of datafiles
-    DataFiles = [os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile_') and i[-4:] == '.csv']
-    #check that datafiles exist
-    if len(DataFiles) != 0:
-        Header = ['CHR', 'START', 'END', 'PTU', 'CTU', 'CHILD_NUMS', 'FREQ_PARENTS']
-        
-        # read each datafile, store in a list
-        L = []
-        for filename in DataFiles:
-            infile = open(filename)
-            # skip header and grap data
-            infile.readline()
-            data = infile.read().rstrip()
-            infile.close()
-            # get chromosome and start and end positions
-            chromo, start = data.split()[0], int(data.split()[1])        
-            L.append((chromo, start, data))
-        # sort data on chromo and start
-        L.sort(key=operator.itemgetter(0, 1))
-    
-        # write merged datafile
-        MergedFile = os.path.join(DataDir, 'Merged_DataFile.csv')
-        newfile = open(MergedFile, 'w')
-        newfile.write('\t'.join(Header) + '\n')
-        for i in L:
-            newfile.write('\t'.join(i[-1].split()) + '\n')
-        newfile.close()
+         
 
 
 def name_job(prefix):
@@ -212,11 +54,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans, ignore, stepper,
                 merge, plot, report, call, mincov, minratio, minumis, minchildren, extension,
-                sample, mydebarcer, mypython, mem, project, separator, base_quality_score, readcount):
+                sample, mem, project, separator, base_quality_score, readcount):
     '''
     (str, str, str, str, str, int, float, int, int, float, float, int, int,
     bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str,
-    str, str, int, str, str, str) -> None
+    int, str, str, str) -> None
     
     :param bamfile: Path to the bam file
     :param outdir: Directory where .umis, and datafiles are written
@@ -250,8 +92,6 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     :param minchildren: Minimum number of umi children to label regions
     :param extension: Figure file extension
     :param sample: Sample name to appear in report. If empty str, outdir basename is used
-    :param mydebarcer: Path to the debarcer script
-    :param mypython: Path to python
     :param mem: Requested memory
     :param project: Project name to submit jobs on univa. Project and Queue are mutually exclusive
     :param separator: String separating the UMI from the remaining of the read name
@@ -269,9 +109,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
     DataDir = os.path.join(outdir, 'Datafiles')
 
     # set up group command
-    GroupCmd = '{0} {1} group -o {2} -r \"{3}\" -b {4} -d {5} -p {6} -i {7} -t {8} -s \"{9}\" -rc {10}'
+    GroupCmd = 'module load debarcer; debarcer group -o {0} -r \"{1}\" -b {2} -d {3} -p {4} -i {5} -t {6} -s \"{7}\" -rc {8}'
     # set up collapse cmd
-    CollapseCmd = 'sleep 60; {0} {1} collapse -o {2} -b {3} -r \"{4}\" -u {5} -f \"{6}\" -ct {7} -pt {8} -p {9} -m {10} -t {11} -i {12} -stp {13} -s \"{14}\" -bq {15}'
+    CollapseCmd = 'sleep 60; module load debarcer; debarcer collapse -o {0} -b {1} -r \"{2}\" -u {3} -f \"{4}\" -ct {5} -pt {6} -p {7} -m {8} -t {9} -i {10} -stp {11} -s \"{12}\" -bq {13}'
     
     # run jobs on univa
     QsubCmd1 = 'qsub -b y -cwd -N {0} -o {1} -e {1} -P {2} -l h_vmem={3}g \"bash {4}\"'
@@ -293,7 +133,7 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         # dump group cmd into a shell script  
         GroupScript = os.path.join(QsubDir, 'UmiGroup_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(GroupScript, 'w')
-        newfile.write(GroupCmd.format(mypython, mydebarcer, outdir, region, bamfile, str(dist_threshold), str(post_threshold), ignore, str(truncate), separator, str(readcount)) + '\n')
+        newfile.write(GroupCmd.format(outdir, region, bamfile, str(dist_threshold), str(post_threshold), ignore, str(truncate), separator, str(readcount)) + '\n')
         newfile.close()
         # get a umique job name
         jobname1 = name_job('UmiGroup' + '_' + region.replace(':', '-'))
@@ -309,9 +149,9 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         umifile = os.path.join(UmiDir, '{0}.json'.format(region))
         CollapseScript = os.path.join(QsubDir, 'UmiCollapse_{0}.sh'.format(region.replace(':', '_').replace('-', '_')))
         newfile = open(CollapseScript, 'w')
-        newfile.write(CollapseCmd.format(mypython, mydebarcer, outdir, bamfile, region, umifile,
-                                         str(famsize), str(count_threshold), str(consensus_threshold),
-                                         str(post_threshold), str(maxdepth), str(truncate), str(ignoreorphans), stepper, separator, str(base_quality_score)) +'\n') 
+        newfile.write(CollapseCmd.format(outdir, bamfile, region, umifile, str(famsize), str(count_threshold),
+                                         str(consensus_threshold), str(post_threshold), str(maxdepth), str(truncate),
+                                         str(ignoreorphans), stepper, separator, str(base_quality_score)) +'\n') 
         newfile.close()
         # get a umique job name
         jobname2 = name_job('UmiCollapse' + '_' + region.replace(':', '-'))
@@ -329,25 +169,29 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         Regions = list(map(lambda x: x.replace(':', '-'), Regions))
         
         # submit jobs to merge 
-        MergeCmd = 'sleep 600; {0} {1} merge -d {2} -dt {3}'
+        MergeCmd = 'sleep 600; module load debarcer; debarcer merge -o {0} -f {1} -dt {2}'
 
         # check if Goup jobs are still running
         running_group = CheckJobs(GroupJobNames)
         if running_group == False:
             # merge datafiles
+            # make a list of datafiles
+            DataFiles = ' '.join([os.path.join(DataDir, i) for i in os.listdir(DataDir) if i.startswith('datafile_') and i[-4:] == '.csv'])
             MergeScript1 = os.path.join(QsubDir, 'MergeDataFiles.sh')
             newfile = open(MergeScript1, 'w')
-            newfile.write(MergeCmd.format(mypython, mydebarcer, DataDir, 'datafiles') + '\n') 
+            newfile.write(MergeCmd.format(outdir, DataFiles, 'datafiles') + '\n') 
             newfile.close()
             jobname3 =  name_job('MergeDataFiles')
             MergeJobNames.append(jobname3)
             # run merge datafiles
             subprocess.call(QsubCmd1.format(jobname3, LogDir, project, str(mem), MergeScript1), shell=True) 
     
-            # merge umi files     
+            # merge umi files
+            # make a list of umifiles
+            UmiFiles = ' '.join([os.path.join(UmiDir, i) for i in os.listdir(UmiDir) if i[-5:] == '.json'])
             MergeScript2 = os.path.join(QsubDir, 'MergeUmiFiles.sh')
             newfile = open(MergeScript2, 'w')
-            newfile.write(MergeCmd.format(mypython, mydebarcer, UmiDir, 'umifiles') + '\n')
+            newfile.write(MergeCmd.format(outdir, UmiFiles, 'umifiles') + '\n')
             newfile.close()
             jobname4 = name_job('MergeUmiFiles')
             MergeJobNames.append(jobname4)
@@ -358,9 +202,11 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         running_collapse = CheckJobs(ConsJobNames)
         if running_collapse == False:
             # merge consensus files
+            # make a list of consensus files
+            ConsFiles = ' '.join([os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' and i.startswith('chr')])
             MergeScript3 = os.path.join(QsubDir, 'MergeConsensusFiles.sh')
             newfile = open(MergeScript3, 'w')
-            newfile.write(MergeCmd.format(mypython, mydebarcer, ConsDir, 'consensusfiles') + '\n') 
+            newfile.write(MergeCmd.format(outdir, ConsFiles, 'consensusfiles') + '\n') 
             newfile.close()
             jobname5 = name_job('MergeConsensusFiles')
             MergeJobNames.append(jobname5)
@@ -374,6 +220,8 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         Z = ConsJobNames + MergeJobNames
         running_groupmerge = CheckJobs(Z)  
         if running_groupmerge == False:
+            # make a list of consensus files
+            ConsFiles = ' '.join([os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' in i])
             # make a list of umi family size
             umi_fam_size =  list(map(lambda x: int(x.strip()), famsize.split(',')))
             # umi fam size 0 doesn't need to be explicitely passed to group/collapse
@@ -384,10 +232,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
             for size in umi_fam_size:
                 # generate VCF from all consensus files 
                 # set up vcf command
-                VarCallCmd = 'sleep 600; {0} {1} call -o {2} -rf {3} -rt {4} -at {5} -ft {6} -f {7}'
+                VarCallCmd = 'sleep 600; module load debarcer; debarcer call -o {0} -rf {1} -rt {2} -at {3} -ft {4} -f {5} -cf {6}'
                 CallScript = os.path.join(QsubDir, 'VarCall_famsize_{0}.sh'.format(str(size)))
                 newfile = open(CallScript, 'w')
-                newfile.write(VarCallCmd.format(mypython, mydebarcer, outdir, reference, ref_threshold, alt_threshold, filter_threshold, size))
+                newfile.write(VarCallCmd.format(outdir, reference, ref_threshold, alt_threshold, filter_threshold, size, ConsFiles))
                 newfile.close()    
                 jobname6 = name_job('Call_famsize_{0}'.format(str(size)))
                 CallJobs.append(jobname6)
@@ -399,10 +247,10 @@ def submit_jobs(bamfile, outdir, reference, famsize, bedfile, count_threshold,
         running_jobs = CheckJobs(L)
         if running_jobs == False:
             # generate plots and report if report is True
-            PlotCmd = 'sleep 600; {0} {1} plot -d {2} -e {3} -s "{4}" -r {5} -mv {6} -mr {7} -mu {8} -mc {9} -rt {10}'
+            PlotCmd = 'sleep 600; module load debarcer; debarcer plot -d {0} -e {1} -s "{2}" -r {3} -mv {4} -mr {5} -mu {6} -mc {7} -rt {8}'
             PlotScript = os.path.join(QsubDir, 'PlotFigures.sh')
             newfile = open(PlotScript, 'w')
-            newfile.write(PlotCmd.format(mypython, mydebarcer, outdir, extension, sample, report, mincov, minratio, minumis, minchildren, ref_threshold))
+            newfile.write(PlotCmd.format(outdir, extension, sample, report, mincov, minratio, minumis, minchildren, ref_threshold))
             newfile.close()
             jobname7 = name_job('Plot')
             subprocess.call(QsubCmd1.format(jobname7, LogDir, project, str(mem), PlotScript), shell=True)  

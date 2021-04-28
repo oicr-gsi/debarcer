@@ -10,9 +10,10 @@ from debarcer.preprocess_fastqs import reheader_fastqs, check_library_prep
 from debarcer.umi_error_correct import get_umi_families, umi_datafile
 from debarcer.generate_consensus import generate_consensus_output
 from debarcer.generate_vcf import WriteVCF
-from debarcer.run_analyses import MergeDataFiles, MergeConsensusFiles, MergeUmiFiles, submit_jobs
+from debarcer.run_analyses import submit_jobs
 from debarcer.utilities import CheckRegionFormat, GetOutputDir, GetInputFiles, GetThresholds, GetFamSize, \
- FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, get_read_count
+ FormatRegion, GroupQCWriter, CreateDirTree, DropEmptyFiles, CheckFilePath, ConvertArgToBool, GetCurrentTime, \
+ get_read_count, MergeDataFiles, MergeUmiFiles, MergeConsensusFiles
 from debarcer.generate_plots import PlotMeanFamSize, PlotNonRefFreqData, PlotConsDepth,\
  PlotParentsToChildrenCounts, PlotParentFreq, PlotNetworkDegree, PlotUMiFrequency,\
  GetUmiCountFromPreprocessing, PlotFamSizeReadDepth, PlotReadDepth, GetIndividualUmiInfo,\
@@ -281,9 +282,9 @@ def collapse(config, outdir, bamfile, reference, region, umifile, famsize,
     print(GetCurrentTime() + 'Consensus generated. Consensus file written to {0}.'.format(ConsDir))
 
 
-def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filterthreshold, famsize):
+def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filterthreshold, famsize, consFiles):
     '''
-    (str, str, str, float, float, int, int) --> None
+    (str, str, str, float, float, int, int, list) --> None
 
     Converts consensus files into VCF format for a given family size
 
@@ -299,6 +300,7 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     - filterthreshold (int): Minimum number of reads to pass alternative variants 
                              (ie. filter = PASS if variant depth >= alt_threshold)
     - famsize (int): Minimum UMI family size
+    - consFiles (list): List of consensus files generated during UMI collapse 
     '''
 
     # get output directory from the config or command. set to current dir if not provided
@@ -309,18 +311,10 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     else:
         os.makedirs(outdir, exist_ok=True)
     
-    # get the subdirectory with consensus files
-    ConsDir = os.path.join(outdir, 'Consfiles')
-    if os.path.isdir(ConsDir) == False:
-        raise ValueError('ERR: {0} is not a valid directory'.format(ConsDir))
-    
     # make a list of consensus files
-    ConsFiles = [os.path.join(ConsDir, i) for i in os.listdir(ConsDir) if i[-5:] == '.cons' in i]
     # remove empty files in place and print a warning
-    DropEmptyFiles(ConsFiles)
-    # check that paths to files are valid. raise ValueError if file invalid
-    CheckFilePath(ConsFiles)
-    
+    DropEmptyFiles(consFiles)
+        
     # create vcf dir if doesn't exist already
     VCFDir = os.path.join(outdir, 'VCFfiles')
     os.makedirs(VCFDir, exist_ok=True)
@@ -335,41 +329,64 @@ def VCF_converter(config, outdir, reference, refthreshold, altthreshold, filtert
     print(GetCurrentTime() + 'Generating VCFs...')
 
     # loop over consensus files
-    for filename in ConsFiles:
+    for filename in consFiles:
         # write a VCF per consensus file for fiven family size
-        outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(famsize))
+        if os.path.basename(filename)[:-5] == '.cons':
+            outputfile = os.path.join(VCFDir, os.path.basename(filename)[:-5] + '_famsize_{0}.vcf'.format(famsize))
+        else:
+            outputfile = os.path.join(VCFDir, os.path.basename(filename) + '_famsize_{0}.vcf'.format(famsize))
         WriteVCF(filename, outputfile, reference, ref_threshold, alt_threshold, filter_threshold, famsize)
 
     print(GetCurrentTime() + 'VCFs generated. VCF files written to {0}'.format(VCFDir))
 
 
-def merge_files(directory, datatype):
+def merge_files(outdir, files, datatype):
     '''
-    (str, str) -> None
+    (str, list, str) -> None
     
-    Grab and merge all files of given datatype in corresponding subdirectory
+    Merge all files of given datatype in a single file
         
     Parameters
     ----------
-    - directory (str): Output directory where subdirectories are created
+    - outdir (str): Output directory where subdirectories are created
+    - files (list): List of files to merge. Must be of the same datatatype
     - datatype (str): Type of files to be merged.
                      Valid options are 'datafiles', 'consensusfiles', 'umifiles'
     '''
     
+    # create outputdir if doesn't exist
+    os.makedirs(outdir, exist_ok=True)
+    # create vcf dir if doesn't exist already
+    subdirs = []
+    for i in ['VCFfiles', 'Consfiles', 'Datafiles', 'Consfiles']:
+        os.makedirs(os.path.join(outdir, i), exist_ok=True)    
+        subdirs.append(os.path.join(outdir, i))
+    VCFDir, ConsDir, DataDir, UmiDir = subdirs 
+    
     # check which files need to be merged
     if datatype == 'datafiles':
-        MergeDataFiles(directory)
+        content = MergeDataFiles(files)
+        filename = os.path.join(DataDir, 'Merged_DataFile.csv')
     elif datatype == 'consensusfiles':
-        MergeConsensusFiles(directory)
+        content = MergeConsensusFiles(files)
+        filename = os.path.join(ConsDir, 'Merged_ConsensusFile.cons')
     elif datatype == 'umifiles':
-        MergeUmiFiles(directory)
+        content = MergeUmiFiles(files)
+        filename = os.path.join(UmiDir, 'Merged_UmiFile.json')
+        
+    newfile = open(filename, 'w')
+    if datatype in ['datafiles', 'consensusfiles']:
+        newfile.write(content)
+    elif datatype == 'umifiles':
+        json.dump(content, newfile, sort_keys = True, indent=4)
+    newfile.close()
+        
 
 def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthreshold,
                 consensusthreshold, postthreshold, distthreshold, refthreshold,
                 altthreshold, filterthreshold, percentthreshold, maxdepth, truncate, ignoreorphans,
                 ignore, stepper, merge, plot, report, call, mincov, minratio, minumis,
-                minchildren, extension, sample, mem, mypython, mydebarcer, project,
-                separator, base_quality_score, readcount):
+                minchildren, extension, sample, mem, project, separator, base_quality_score, readcount):
     '''
     (str, str, str, str, str, str, int, float, int, int, float, float, int, int, float,
     bool, bool, bool, str, bool, bool, bool, bool, int, float, int, int, str, str | None,
@@ -415,8 +432,6 @@ def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthres
     - extension (str): Figure file extension
     - sample (str or None): Sample name to appear in report. If empty str, outdir basename is used
     - mem (str): Requested memory for submiiting jobs to SGE. Default is 10g
-    - mypython (str): Path to python. Default is: /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6
-    - mydebarcer (str): Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py
     - project (str): Project name to submit jobs on univa
     - separator (str): String separating the UMI from the remaining of the read name
     - base_quality_score (int): Base quality score threshold. No offset of 33 needs to be subtracted
@@ -455,8 +470,7 @@ def run_scripts(outdir, config, bamfile, reference, famsize, bedfile, countthres
                 consensus_threshold, dist_threshold, post_threshold, ref_threshold,
                 alt_threshold, filter_threshold, maxdepth, truncate, ignoreorphans,
                 ignore, stepper, merge, plot, report, call, mincov, minratio, minumis,
-                minchildren, extension, sample, mydebarcer, mypython, mem, project, separator,
-                base_quality_score, readcount)
+                minchildren, extension, sample, mem, project, separator, base_quality_score, readcount)
   
     
 def generate_figures(directory, config, extension, report, sample, min_cov, min_ratio, min_umis, min_children, ref_threshold):
@@ -759,7 +773,8 @@ def main():
                           help='Minimum number of reads to pass alternative variants\
                           (ie. filter = PASS if variant depth >= alt_threshold)')
     v_parser.add_argument('-f', '--Famsize', dest='famsize', type=int, help='Minimum UMI family size', required=True)
-        
+    v_parser.add_argument('-cf', '--Consfiles', dest='consfiles', nargs = '*', help='List of consensus files', required=True)
+    
     ## Run scripts command 
     r_parser = subparsers.add_parser('run', help="Generate scripts for umi grouping, collapsing and VCF formatting for target regions specified by the BED file.")
     r_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
@@ -787,10 +802,6 @@ def main():
     r_parser.add_argument('-sp', '--Sample', dest='sample', help='Sample name to appear to report. Optional, use Output directory basename if not provided')
     r_parser.add_argument('-pr', '--Project', dest='project', default='gsi', help='Project for submitting jobs on Univa')
     r_parser.add_argument('-mm', '--Memory', dest='mem', default=20, type=int, help='Requested memory for submitting jobs to SGE. Default is 20g')
-    r_parser.add_argument('-py', '--MyPython', dest='mypython', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6',
-                          help='Path to python. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/bin/python3.6')
-    r_parser.add_argument('-db', '--MyDebarcer', dest='mydebarcer', default='/.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py',
-                          help='Path to the file debarcer.py. Default is /.mounts/labs/PDE/Modules/sw/python/Python-3.6.4/lib/python3.6/site-packages/debarcer/debarcer.py')
     r_parser.add_argument('-mv', '--MinCov', dest='mincov', type=int, default=1000, help='Minimum coverage value. Values below are plotted in red')
     r_parser.add_argument('-mr', '--MinRatio', dest='minratio', type=float, default=0.1, help='Minimum children to parent umi ratio. Values below are plotted in red')
     r_parser.add_argument('-mu', '--MinUmis', dest='minumis', type=int, default=1000, help='Minimum umi count. Values below are plotted in red')
@@ -801,10 +812,11 @@ def main():
     r_parser.add_argument('-s', '--Separator', dest='separator', default=':', help = 'String separating the UMI from the remaining of the read name')
     r_parser.add_argument('-bq', '--Quality', dest='base_quality_score', type=int, default=25, help = 'Base quality score threshold. Bases with quality scores below the threshold are not used in the consensus. Default is 25')
     r_parser.add_argument('-rc', '--ReadCount', dest='readcount', default=0, type=int, help = 'Minimum number of reads in region required for grouping. Default is 0')
-        
+    
     ## Merge files command 
     m_parser = subparsers.add_parser('merge', help="Merge files from each region into a single file")
-    m_parser.add_argument('-d', '--Directory', dest='directory', help='Directory containing files to be merged')
+    m_parser.add_argument('-o', '--Outdir', dest='outdir', help='Output directory where subdirectories are created')
+    m_parser.add_argument('-f', '--Files', dest='files', nargs='*', help='List of files to be merged', required=True)
     m_parser.add_argument('-dt', '--DataType', dest='datatype', choices=['datafiles', 'consensusfiles', 'umifiles'], help='Type of files to be merged', required=True)
         
     ## Generate graphs	
@@ -863,7 +875,7 @@ def main():
             print(parser.format_help())
     elif args.subparser_name == 'call':
         try:
-            VCF_converter(args.config, args.outdir, args.reference, args.refthreshold, args.altthreshold, args.filterthreshold, args.famsize)
+            VCF_converter(args.config, args.outdir, args.reference, args.refthreshold, args.altthreshold, args.filterthreshold, args.famsize, args.consfiles)
         except AttributeError as e:
             print('AttributeError: {0}\n'.format(e))
             print(parser.format_help())
@@ -876,14 +888,13 @@ def main():
                         args.truncate, args.ignoreorphans, args.ignore, args.stepper,
                         args.merge, args.plot, args.report, args.call, args.mincov,
                         args.minratio, args.minumis, args.minchildren, args.extension,
-                        args.sample, args.mem, args.mypython, args.mydebarcer, args.project,
-                        args.separator, args.base_quality_score, args.readcount)
+                        args.sample, args.mem, args.project, args.separator, args.base_quality_score, args.readcount)
         except AttributeError as e:
             print('AttributeError: {0}\n'.format(e))
             print(parser.format_help())
     elif args.subparser_name == 'merge':
         try:
-            merge_files(args.directory, args.datatype)
+            merge_files(args.outdir, args.files, args.datatype)
         except AttributeError as e:
             print('AttributeError: {0}\n'.format(e))
             print(parser.format_help())
